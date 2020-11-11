@@ -8,4 +8,9 @@ UNDER DEVELOPMENT
 
 ## Development notes
 
-This section is meant for developers and provides instruction on how to work with the repository.
+This section is meant for developers and provides instruction on how to work
+with the repository.
+
+### Testing
+
+To run unit tests, run `stack test`.

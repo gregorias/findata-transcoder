@@ -1,6 +1,7 @@
 import Test.HUnit (
   Test(..)
   , assertEqual
+  , (~=?),(~:)
   , runTestTT)
 import LedgerData (
   Currency(..)
@@ -10,19 +11,19 @@ import LedgerData (
   , postingToLedger
   )
 
-main = runTestTT [testNegateValue, testShouldProducePosting]
+main = runTestTT $ TestList [negatesValue, producesPosting]
 
-testNegateValue :: Test
-testNegateValue =
-  TestCase $ assertEqual "" expected (negateValue original)
+negatesValue :: Test
+negatesValue =
+  "negates value" ~: expected ~=? (negateValue original)
   where
     original = Value 1 PLN
     expected = Value (-1) PLN
 
 
-testShouldProducePosting :: Test
-testShouldProducePosting =
-  TestCase $ assertEqual "" expected (postingToLedger posting)
+producesPosting :: Test
+producesPosting =
+  "produces posting" ~: expected ~=? (postingToLedger posting)
   where
     posting = Posting
       "A"
