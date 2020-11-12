@@ -53,3 +53,4 @@ tests:
     dependencies:
     - hledupt
     - HUnit
+    - hspec

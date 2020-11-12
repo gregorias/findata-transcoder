@@ -65,4 +65,5 @@ test-suite hledupt-test
       HUnit
     , base >=4.7 && <5
     , hledupt
+    , hspec
   default-language: Haskell2010

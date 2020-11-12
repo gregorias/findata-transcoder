@@ -5,11 +5,12 @@ module LedgerData (
   , Value(..), amount, currency
   , negateValue
   , Posting(..), account, value, balance, exchangeRate
-  , postingToLedger
+  , valueToLedger, postingToLedger
   , Transaction(..), date, description, postings, comment) where
 
 import Control.Lens (makeLenses, (^.), over)
 import Data.Decimal (Decimal)
+import Data.Function ((&))
 
 import Data.Time.Calendar (Day)
 
@@ -34,5 +35,14 @@ data Transaction = Transaction{_date :: Day
   , _comment :: String}
 makeLenses ''Transaction
 
+valueToLedger :: Value -> String
+valueToLedger (Value amount currency) = show amount ++ " " ++ show currency
+
 postingToLedger :: Posting -> String
-postingToLedger = undefined
+postingToLedger p = "  "
+  ++ (p ^. account)
+  ++ "  "
+  ++ (p ^. value & valueToLedger)
+  ++ " @ " ++ (p ^. exchangeRate & valueToLedger)
+  ++ " = "
+  ++ (p ^. balance & valueToLedger)
