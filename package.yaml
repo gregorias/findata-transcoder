@@ -28,6 +28,8 @@ library:
   - Decimal
   - time
   - lens
+  - hledger-lib
+  - parsec
 
 executables:
   hledupt-exe:
