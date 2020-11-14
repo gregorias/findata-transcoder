@@ -27,7 +27,6 @@ library
   exposed-modules:
       Hledger.Data.Lens
       LedgerData
-      Lib
       Mbank
   other-modules:
       Paths_hledupt

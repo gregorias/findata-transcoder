@@ -2,41 +2,26 @@
 
 module Main where
 
-import Main.Utf8 (withUtf8)
+import           Main.Utf8              (withUtf8)
 
-import Console.Options
-  ( FlagFrag (FlagLong, FlagShort),
-    FlagParser (FlagRequired),
-    FlagParam,
-    OptionDesc,
-    action,
-    command,
-    defaultMain,
-    description,
-    flag,
-    flagParam,
-    programDescription,
-    programName,
-    programVersion,
-    remainingArguments,
-  )
-import Control.Monad.Except
-  ( ExceptT,
-    catchError,
-    runExceptT,
-    throwError,
-  )
-import Control.Monad.IO.Class (liftIO)
-import Data.Version (makeVersion)
-import Mbank (mbankCsvToLedger)
-import Lib
-import System.Exit (exitFailure)
-import System.IO (
-  hGetContents,)
+import           Console.Options        (FlagFrag (FlagLong, FlagShort),
+                                         FlagParam, FlagParser (FlagRequired),
+                                         OptionDesc, action, command,
+                                         defaultMain, description, flag,
+                                         flagParam, programDescription,
+                                         programName, programVersion,
+                                         remainingArguments)
+import           Control.Monad.Except   (ExceptT, catchError, runExceptT,
+                                         throwError)
+import           Control.Monad.IO.Class (liftIO)
+import           Data.Version           (makeVersion)
+import           Mbank                  (mbankCsvToLedger)
+import           System.Exit            (exitFailure)
+import           System.IO              (hGetContents)
 
 filenameParser :: String -> Either String String
 filenameParser "" = Left "The provided output filename is empty."
-filenameParser s = Right s
+filenameParser s  = Right s
 
 maybeToExcept ::
   (Monad m) =>
@@ -46,7 +31,7 @@ maybeToExcept ::
 maybeToExcept ma e =
   case ma of
     Nothing -> throwError e
-    Just a -> return a
+    Just a  -> return a
 
 printError :: ExceptT String IO () -> IO ()
 printError me = do
