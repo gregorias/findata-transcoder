@@ -1,13 +1,13 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UnicodeSyntax #-}
 
 module Mbank (
   MbankTransaction(..),
   valueParser,
   fromZloteAndGrosze,
   mbankCsvParser,
-  parseMbankCsv,
-  serializeTransactionsToLedgerDat) where
+  parseMbankCsv) where
 
 import Control.Lens (makeLenses, (^.), over)
 import Data.Decimal (Decimal, realFracToDecimal)
@@ -19,29 +19,7 @@ import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Text.Megaparsec (Parsec, eof, parse, many, (<|>), oneOf, noneOf)
 import Text.Megaparsec.Char (string, newline, char)
 
-data Currency = USD
-              | EUR
-              | CHF
-              | PLN
-                  deriving (Eq, Show)
-
-data Value = Value{ _amount :: Decimal, _currency :: Currency}
-               deriving (Eq)
-makeLenses ''Value
-instance Show Value where
-  show (Value amount currency) = show amount ++ " " ++ show currency
-
-negateValue v = over amount negate v
-
-addValue (Value a0 c0) (Value a1 c1)
-  | c0 == c1 = Just $ Value (a0 + a1) c0
-  | otherwise = Nothing
-
-data Posting = Posting{account :: String, value :: Value, balance :: Value,
-                       exchangeRate :: String}
-
-data Transaction = Transaction{date :: Day, description :: String,
-                               postings :: [Posting], comment :: String}
+import LedgerData (Transaction)
 
 -- | A type representing Mbank's monetary value, i.e., a decimal with 2 decimal
 -- places
@@ -62,19 +40,7 @@ data MbankTransaction = MbankTransaction{mbankTransactionDate :: Day,
                                          mbankTransactionEndBalance :: MonetaryValue}
                                          deriving (Eq, Show)
 
-
-
-serializeTransactionToLedger :: Transaction -> String
-serializeTransactionToLedger = undefined
-
-serializeTransactionsToLedgerDat :: [Transaction] -> String
-serializeTransactionsToLedgerDat trs
-  = headerParser ++ concat (fmap serializeTransactionToLedger trs)
-
-  where headerParser = "; -*- ledger -*-\n; vim:filetype=ledger\n\n"
-
-normalizeMbankTransaction :: MbankTransaction -> Transaction
-normalizeMbankTransaction mTr = Transaction (mbankTransactionDate mTr) undefined [] undefined
+-- Parser functionality (CSV String → [MbankTransaction])
 
 type MbankParser = Parsec () String
 
@@ -113,7 +79,12 @@ mbankCsvParser = do
   headerParser
   many mbankCsvTransactionParser <* eof
 
-parseMbankCsv :: String -> String
+parseMbankCsv :: String → String
 parseMbankCsv inputCsv =
   let transactions = parse mbankCsvParser "" inputCsv
   in show transactions
+
+-- MbankTransaction to Ledger transformers
+
+mbankTransactionToLedger :: MbankTransaction -> Transaction
+mbankTransactionToLedger = undefined
