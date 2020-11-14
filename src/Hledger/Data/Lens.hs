@@ -1,13 +1,7 @@
 module Hledger.Data.Lens where
 
-import Control.Lens (
-  Lens'
-  , lens)
-import Hledger.Data.Types (
-  Amount(..)
-  , AmountStyle(..)
-  , Side(..)
-  )
+import           Control.Lens       (Lens', lens)
+import           Hledger.Data.Types (Amount (..), AmountStyle (..), Side (..))
 
 aStyle :: Lens' Amount AmountStyle
 aStyle = lens astyle setter

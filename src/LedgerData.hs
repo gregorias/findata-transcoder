@@ -8,11 +8,11 @@ module LedgerData (
   , valueToLedger, postingToLedger
   , Transaction(..), date, description, postings, comment) where
 
-import Control.Lens (makeLenses, (^.), over)
-import Data.Decimal (Decimal)
-import Data.Function ((&))
+import           Control.Lens       (makeLenses, over, (^.))
+import           Data.Decimal       (Decimal)
+import           Data.Function      ((&))
 
-import Data.Time.Calendar (Day)
+import           Data.Time.Calendar (Day)
 
 data Currency = USD | EUR | CHF | PLN deriving (Eq, Show)
 
@@ -24,15 +24,15 @@ negateValue :: Value -> Value
 negateValue v = over amount negate v
 
 data Posting = Posting{_account :: String
-  , _value :: Value
-  , _balance :: Value
-  , _exchangeRate :: Value}
+  , _value                      :: Value
+  , _balance                    :: Value
+  , _exchangeRate               :: Value}
 makeLenses ''Posting
 
 data Transaction = Transaction{_date :: Day
-  , _description :: String
-  , _postings :: [Posting]
-  , _comment :: String}
+  , _description                     :: String
+  , _postings                        :: [Posting]
+  , _comment                         :: String}
 makeLenses ''Transaction
 
 valueToLedger :: Value -> String
