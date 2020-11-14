@@ -2,6 +2,8 @@
 
 module Main where
 
+import Main.Utf8 (withUtf8)
+
 import Console.Options
   ( FlagFrag (FlagLong, FlagShort),
     FlagParser (FlagRequired),
@@ -58,7 +60,7 @@ printError me = do
 inputFileFlagName = "input_file"
 
 parseMbankIO :: FilePath -> IO ()
-parseMbankIO inputFilePath = do
+parseMbankIO inputFilePath = withUtf8 $ do
   inputFile <- readFile inputFilePath
   putStr $ parseMbankCsv inputFile
 

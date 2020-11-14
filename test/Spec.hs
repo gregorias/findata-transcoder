@@ -1,8 +1,8 @@
 import Test.HUnit (
   Test(..)
-  , assertEqual
-  , (~=?),(~:)
+  , assertEqual , (~=?),(~:)
   , runTestTT)
+import Test.Mbank (mbankTests)
 import Test.Hspec (
   hspec
   , describe
@@ -21,6 +21,7 @@ main :: IO ()
 main = hspec ledgerDataTests
 
 ledgerDataTests = do
+  mbankTests
   describe "LedgerData tests" $ do
     describe "negateValue" $ do
       it "negates a value" $ do
