@@ -1,29 +1,50 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE UnicodeSyntax #-}
+{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE UnicodeSyntax       #-}
 
 module Mbank (
   MbankTransaction(..),
   valueParser,
   fromZloteAndGrosze,
   mbankCsvParser,
-  parseMbankCsv) where
+  mTrToLedger,
+  mbankCsvToLedger, pln) where
 
-import Control.Lens (makeLenses, (^.), over)
-import Data.Decimal (Decimal, realFracToDecimal)
-import Data.Ratio ((%))
+import           Control.Lens             (makeLenses, over, (.~), (^.))
+import           Data.Decimal             (Decimal, realFracToDecimal)
+import           Data.List                (sortOn)
+import           Data.Ratio               ((%))
 
-import Data.Time.Calendar (Day)
-import Data.Time.Format (defaultTimeLocale, parseTimeM)
+import           Data.Time.Calendar       (Day)
+import           Data.Time.Format         (defaultTimeLocale, parseTimeM)
 
-import Text.Megaparsec (Parsec, eof, parse, many, (<|>), oneOf, noneOf)
-import Text.Megaparsec.Char (string, newline, char)
+import           Text.Megaparsec          (Parsec, eof, many, noneOf, oneOf,
+                                           parse, (<|>))
+import           Text.Megaparsec.Char     (char, newline, string)
 
-import LedgerData (Transaction)
+import           Data.Text                (pack)
+
+import           Hledger.Data.Amount      (amountWithCommodity, num)
+import           Hledger.Data.Posting     (balassert, nullposting, post')
+import           Hledger.Data.Transaction (showTransaction, transaction)
+import           Hledger.Data.Types       (Amount (..), AmountStyle (..),
+                                           Posting (..), Quantity (..),
+                                           Side (..), Transaction (..))
+
+import           Hledger.Data.Lens        (aStyle, asCommoditySide,
+                                           asCommoditySpaced, asPrecision)
 
 -- | A type representing Mbank's monetary value, i.e., a decimal with 2 decimal
 -- places
 type MonetaryValue = Decimal
+
+setter :: Amount -> Amount
+setter = over aStyle $ (asPrecision .~ 2) . (asCommoditySide .~ R) . (asCommoditySpaced .~ True)
+
+pln :: Quantity -> Amount
+pln d = setter rawAmt
+  where
+    rawAmt = amountWithCommodity (pack "PLN") (num d)
 
 
 fromZloteAndGrosze :: (Integral a) => a -> a -> MonetaryValue
@@ -34,10 +55,10 @@ fromZloteAndGrosze zlote grosze = zloteDec + groszeDec
 
 
 -- | mBank's transaction data fetched from their website.
-data MbankTransaction = MbankTransaction{mbankTransactionDate :: Day,
-                                         mbankTransactionTitle :: String,
-                                         mbankTransactionAmount :: MonetaryValue,
-                                         mbankTransactionEndBalance :: MonetaryValue}
+data MbankTransaction = MbankTransaction{mTrDate       :: Day,
+                                         mTrTitle      :: String,
+                                         mTrAmount     :: MonetaryValue,
+                                         mTrEndBalance :: MonetaryValue}
                                          deriving (Eq, Show)
 
 -- Parser functionality (CSV String → [MbankTransaction])
@@ -79,12 +100,30 @@ mbankCsvParser = do
   headerParser
   many mbankCsvTransactionParser <* eof
 
-parseMbankCsv :: String → String
-parseMbankCsv inputCsv =
-  let transactions = parse mbankCsvParser "" inputCsv
-  in show transactions
-
 -- MbankTransaction to Ledger transformers
 
-mbankTransactionToLedger :: MbankTransaction -> Transaction
-mbankTransactionToLedger = undefined
+sanitizeTitle :: String → String
+sanitizeTitle = beforeTheGap
+    where
+      beforeTheGap s | (take 3 s) == "   " = ""
+                     | s == ""             = ""
+                     | otherwise           = (head s) : (beforeTheGap $ tail s)
+
+
+mTrToLedger :: MbankTransaction -> Transaction
+mTrToLedger mTr = tr{tdescription=(pack $ sanitizeTitle $ mTrTitle mTr)}
+  where
+    tr = transaction
+      (show . mTrDate $ mTr)
+      [post' (pack "Assets:Liquid:mBank") (pln $ mTrAmount mTr) (balassert $ pln $ mTrEndBalance mTr),
+       nullposting{paccount=(pack "Expenses:Other")}]
+
+--
+
+mbankCsvToLedger :: String → String
+mbankCsvToLedger inputCsv =
+  let
+    Right mtransactions = parse mbankCsvParser "" inputCsv
+    sortedMTransactions = sortOn (mTrDate) mtransactions
+    ltransactions = fmap mTrToLedger sortedMTransactions
+  in foldl (++) "" (fmap showTransaction ltransactions)

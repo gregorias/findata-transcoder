@@ -28,8 +28,9 @@ library:
   - Decimal
   - time
   - lens
-  - hledger-lib
+  - hledger-lib == 1.18.1
   - megaparsec
+  - text
 
 executables:
   hledupt-exe:
@@ -60,3 +61,5 @@ tests:
     - hspec
     - megaparsec
     - time
+    - hledger-lib == 1.18.1
+    - text

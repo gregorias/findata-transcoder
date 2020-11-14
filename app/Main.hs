@@ -28,7 +28,7 @@ import Control.Monad.Except
   )
 import Control.Monad.IO.Class (liftIO)
 import Data.Version (makeVersion)
-import Mbank (parseMbankCsv)
+import Mbank (mbankCsvToLedger)
 import Lib
 import System.Exit (exitFailure)
 import System.IO (
@@ -62,7 +62,7 @@ inputFileFlagName = "input_file"
 parseMbankIO :: FilePath -> IO ()
 parseMbankIO inputFilePath = withUtf8 $ do
   inputFile <- readFile inputFilePath
-  putStr $ parseMbankCsv inputFile
+  putStr $ mbankCsvToLedger inputFile
 
 
 parseMbankAction :: FlagParam FilePath -> OptionDesc (IO ()) ()

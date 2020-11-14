@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      Hledger.Data.Lens
       LedgerData
       Lib
       Mbank
@@ -35,9 +36,10 @@ library
   build-depends:
       Decimal
     , base >=4.7 && <5
-    , hledger-lib
+    , hledger-lib ==1.18.1
     , lens
     , megaparsec
+    , text
     , time
   default-language: Haskell2010
 
@@ -69,8 +71,10 @@ test-suite hledupt-test
       Decimal
     , HUnit
     , base >=4.7 && <5
+    , hledger-lib ==1.18.1
     , hledupt
     , hspec
     , megaparsec
+    , text
     , time
   default-language: Haskell2010
