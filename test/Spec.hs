@@ -1,21 +1,8 @@
-import Test.HUnit (
-  Test(..)
-  , assertEqual , (~=?),(~:)
-  , runTestTT)
-import Test.Mbank (mbankTests)
-import Test.Hspec (
-  hspec
-  , describe
-  , it
-  , shouldBe)
-import LedgerData (
-  Currency(..)
-  , Value(..)
-  , Posting(..)
-  , negateValue
-  , valueToLedger
-  , postingToLedger
-  )
+import           LedgerData (Currency (..), Posting (..), Value (..),
+                             negateValue, postingToLedger, valueToLedger)
+import           Test.Hspec (describe, hspec, it, shouldBe)
+import           Test.HUnit (Test (..), assertEqual, runTestTT, (~:), (~=?))
+import           Test.Mbank (mbankTests)
 
 main :: IO ()
 main = hspec ledgerDataTests
@@ -25,7 +12,7 @@ ledgerDataTests = do
   describe "LedgerData tests" $ do
     describe "negateValue" $ do
       it "negates a value" $ do
-        negateValue (Value 1 PLN) `shouldBe` (Value (-1) PLN)
+        negateValue (Value 1 PLN) `shouldBe` Value (-1) PLN
 
 
     describe "valueToLedger" $ do

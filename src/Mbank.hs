@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell     #-}
+
 {-# LANGUAGE UnicodeSyntax       #-}
 
 module Mbank (
@@ -11,6 +11,7 @@ module Mbank (
   mbankCsvToLedger, pln) where
 
 import           Control.Lens             (makeLenses, over, (.~), (^.))
+import           Control.Monad            (void)
 import           Data.Decimal             (Decimal, realFracToDecimal)
 import           Data.List                (sortOn)
 import           Data.Ratio               ((%))
@@ -66,7 +67,7 @@ data MbankTransaction = MbankTransaction{mTrDate       :: Day,
 type MbankParser = Parsec () String
 
 headerParser :: MbankParser ()
-headerParser = string "#Data operacji;#Opis operacji;#Rachunek;#Kategoria;#Kwota;#Saldo po operacji;\n" >> return ()
+headerParser = void (string "#Data operacji;#Opis operacji;#Rachunek;#Kategoria;#Kwota;#Saldo po operacji;\n")
 
 dateParser :: MbankParser Day
 dateParser = do
@@ -86,13 +87,13 @@ valueParser = do
 
 mbankCsvTransactionParser :: MbankParser MbankTransaction
 mbankCsvTransactionParser = do
-  date <- (dateParser <* char ';')
-  title <- (char '"' *> many (noneOf "\";") <* char '"' <* char ';')
-  (many (noneOf ";") >> char ';')
-  (many (noneOf ";") >> char ';')
-  value <- (valueParser <* char ';')
-  balance <- (valueParser <* char ';')
-  ((newline >> return ()) <|> eof)
+  date <- dateParser <* char ';'
+  title <- char '"' *> many (noneOf "\";") <* char '"' <* char ';'
+  many (noneOf ";") >> char ';'
+  many (noneOf ";") >> char ';'
+  value <- valueParser <* char ';'
+  balance <- valueParser <* char ';'
+  void newline <|> eof
   return $ MbankTransaction date title value balance
 
 mbankCsvParser :: MbankParser [MbankTransaction]
@@ -105,18 +106,18 @@ mbankCsvParser = do
 sanitizeTitle :: String → String
 sanitizeTitle = beforeTheGap
     where
-      beforeTheGap s | (take 3 s) == "   " = ""
+      beforeTheGap s | take 3 s == "   " = ""
                      | s == ""             = ""
-                     | otherwise           = (head s) : (beforeTheGap $ tail s)
+                     | otherwise           = head s : beforeTheGap (tail s)
 
 
 mTrToLedger :: MbankTransaction -> Transaction
-mTrToLedger mTr = tr{tdescription=(pack $ sanitizeTitle $ mTrTitle mTr)}
+mTrToLedger mTr = tr{tdescription=pack $ sanitizeTitle $ mTrTitle mTr}
   where
     tr = transaction
       (show . mTrDate $ mTr)
       [post' (pack "Assets:Liquid:mBank") (pln $ mTrAmount mTr) (balassert $ pln $ mTrEndBalance mTr),
-       nullposting{paccount=(pack "Expenses:Other")}]
+       nullposting{paccount=pack "Expenses:Other"}]
 
 --
 
@@ -124,6 +125,6 @@ mbankCsvToLedger :: String → String
 mbankCsvToLedger inputCsv =
   let
     Right mtransactions = parse mbankCsvParser "" inputCsv
-    sortedMTransactions = sortOn (mTrDate) mtransactions
+    sortedMTransactions = sortOn mTrDate mtransactions
     ltransactions = fmap mTrToLedger sortedMTransactions
-  in foldl (++) "" (fmap showTransaction ltransactions)
+  in concatMap showTransaction ltransactions
