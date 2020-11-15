@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      Bcge
       Hledger.Data.Lens
       LedgerData
       Mbank
@@ -61,6 +62,7 @@ test-suite hledupt-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Test.Bcge
       Test.Mbank
       Paths_hledupt
   hs-source-dirs:
