@@ -1,6 +1,7 @@
 import           LedgerData (Currency (..), Posting (..), Value (..),
                              negateValue, postingToLedger, valueToLedger)
 import           Test.Bcge  (bcgeTests)
+import           Test.Data  (dataTests)
 import           Test.Hspec (describe, hspec, it, shouldBe)
 import           Test.HUnit (Test (..), assertEqual, runTestTT, (~:), (~=?))
 import           Test.Mbank (mbankTests)
@@ -9,6 +10,7 @@ main :: IO ()
 main = hspec ledgerDataTests
 
 ledgerDataTests = do
+  dataTests
   bcgeTests
   mbankTests
   describe "LedgerData tests" $ do

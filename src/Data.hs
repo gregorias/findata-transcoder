@@ -9,7 +9,8 @@ type MonetaryValue = Decimal
 
 
 fromUnitsAndCents :: (Integral a) => a -> a -> MonetaryValue
-fromUnitsAndCents units cents = unitsDec + centsDec
+fromUnitsAndCents units cents = unitsDec `op` centsDec
   where
     unitsDec = realFracToDecimal 0 (units % 1)
     centsDec = realFracToDecimal 2 (cents % 100)
+    op = if units >= 0 then (+) else (-)

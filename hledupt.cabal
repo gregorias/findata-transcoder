@@ -64,6 +64,7 @@ test-suite hledupt-test
   main-is: Spec.hs
   other-modules:
       Test.Bcge
+      Test.Data
       Test.Mbank
       Paths_hledupt
   hs-source-dirs:
