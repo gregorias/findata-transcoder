@@ -5,16 +5,15 @@
 module Mbank (
   MbankTransaction(..),
   valueParser,
-  fromZloteAndGrosze,
   mbankCsvParser,
   mTrToLedger,
   mbankCsvToLedger, pln) where
 
 import           Control.Lens             (makeLenses, over, (.~), (^.))
 import           Control.Monad            (void)
+import           Data                     (MonetaryValue, fromUnitsAndCents)
 import           Data.Decimal             (Decimal, realFracToDecimal)
 import           Data.List                (sortOn)
-import           Data.Ratio               ((%))
 
 import           Data.Time.Calendar       (Day)
 import           Data.Time.Format         (defaultTimeLocale, parseTimeM)
@@ -35,10 +34,6 @@ import           Hledger.Data.Types       (Amount (..), AmountStyle (..),
 import           Hledger.Data.Lens        (aStyle, asCommoditySide,
                                            asCommoditySpaced, asPrecision)
 
--- | A type representing Mbank's monetary value, i.e., a decimal with 2 decimal
--- places
-type MonetaryValue = Decimal
-
 setter :: Amount -> Amount
 setter = over aStyle $ (asPrecision .~ 2) . (asCommoditySide .~ R) . (asCommoditySpaced .~ True)
 
@@ -46,13 +41,6 @@ pln :: Quantity -> Amount
 pln d = setter rawAmt
   where
     rawAmt = amountWithCommodity (pack "PLN") (num d)
-
-
-fromZloteAndGrosze :: (Integral a) => a -> a -> MonetaryValue
-fromZloteAndGrosze zlote grosze = zloteDec + groszeDec
-  where
-    zloteDec = realFracToDecimal 0 (zlote % 1)
-    groszeDec = realFracToDecimal 2 (grosze % 100)
 
 
 -- | mBank's transaction data fetched from their website.
@@ -81,7 +69,7 @@ valueParser = do
   groszeString <- (char ',' *> many (oneOf "0123456789") <* char ' ') <|> pure "00"
   grosze :: Integer <- return $ read groszeString
   string "PLN"
-  return $ fromZloteAndGrosze zlote grosze
+  return $ fromUnitsAndCents zlote grosze
   where
     removeSpaces = filter ((/=) ' ')
 

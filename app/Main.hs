@@ -1,9 +1,11 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE UnicodeSyntax       #-}
 
 module Main where
 
 import           Main.Utf8              (withUtf8)
 
+import           Bcge                   (bcgeCsvToLedger)
 import           Console.Options        (FlagFrag (FlagLong, FlagShort),
                                          FlagParam, FlagParser (FlagRequired),
                                          OptionDesc, action, command,
@@ -44,17 +46,19 @@ printError me = do
 
 inputFileFlagName = "input_file"
 
-parseMbankIO :: FilePath -> IO ()
-parseMbankIO inputFilePath = withUtf8 $ do
+type LedgerParser = String → String
+type IOParser = FilePath → IO()
+
+parseBankIO :: LedgerParser → IOParser
+parseBankIO ledgerParser inputFilePath = withUtf8 $ do
   inputFile <- readFile inputFilePath
-  putStr $ mbankCsvToLedger inputFile
+  putStr $ ledgerParser inputFile
 
-
-parseMbankAction :: FlagParam FilePath -> OptionDesc (IO ()) ()
-parseMbankAction inputFileFlag = action
+parseBankAction :: LedgerParser -> FlagParam FilePath -> OptionDesc (IO ()) ()
+parseBankAction ledgerParser inputFileFlag = action
   $ \toParam -> printError $ do
       (inputFilePath :: FilePath) <- maybeToExcept (toParam inputFileFlag) ("Provide " ++ inputFileFlagName)
-      liftIO $ parseMbankIO inputFilePath
+      liftIO $  parseBankIO ledgerParser inputFilePath
 
 
 main :: IO ()
@@ -62,7 +66,11 @@ main = defaultMain $ do
   programName "hledupt"
   programVersion $ makeVersion [0, 1, 0, 0]
   programDescription "A program to parse financial data into a ledger-like text file"
+  command "parse-bcge" $ do
+    description "Parses BCGE's CSV file and outputs debug data"
+    inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
+    parseBankAction bcgeCsvToLedger inputFileFlag
   command "parse-mbank" $ do
     description "Parses mBank's CSV file and outputs debug data"
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
-    parseMbankAction inputFileFlag
+    parseBankAction mbankCsvToLedger inputFileFlag

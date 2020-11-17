@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Bcge
+      Data
       Hledger.Data.Lens
       LedgerData
       Mbank
