@@ -38,8 +38,7 @@ data BcgeTransaction = BcgeTransaction{
   bTrDate     :: Day
   , bTrTitle  :: String
   , bTrAmount :: MonetaryValue
-}
-                                         deriving (Eq, Show)
+} deriving (Eq, Show)
 
 data BcgeStatement = BcgeStatement{
   bStatementBalance        :: MonetaryValue
