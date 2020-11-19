@@ -39,9 +39,14 @@ mbankTests = do
     describe "mTrToLedger" $ do
       it "transforms an mbank transaction" $ do
         let ledgerTr = transaction
-                         "2019/10/28" [
-                                       post' (pack "Assets:Liquid:mBank") (pln (-15)) (balassert $ pln 100949),
-                                       nullposting{paccount=pack "Expenses:Other"}]
+                         "2019/10/28"
+                         [ post' (pack "Assets:Liquid:mBank")
+                                 (pln (-15))
+                                 (balassert $ pln 100949),
+                           nullposting{paccount=pack "Expenses:Other"}]
             ledgerTrWithDescription = ledgerTr{tdescription=pack "PRZELEW ŚRODKÓW"}
-            mbankTr  = MbankTransaction (fromGregorian 2019 10 28) "PRZELEW ŚRODKÓW" (fromUnitsAndCents (-15) 0) (fromUnitsAndCents 100949 0)
+            mbankTr  = MbankTransaction (fromGregorian 2019 10 28)
+                                        "PRZELEW ŚRODKÓW"
+                                        (fromUnitsAndCents (-15) 0)
+                                        (fromUnitsAndCents 100949 0)
         mTrToLedger mbankTr `shouldBe` ledgerTrWithDescription

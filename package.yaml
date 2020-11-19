@@ -31,6 +31,9 @@ library:
   - hledger-lib == 1.18.1
   - megaparsec
   - text
+  - mtl
+  - safe
+  - overhang
 
 executables:
   hledupt-exe:
@@ -56,6 +59,7 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - Decimal
+    - lens
     - hledupt
     - HUnit
     - hspec

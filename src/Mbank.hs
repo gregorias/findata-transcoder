@@ -30,16 +30,10 @@ import           Hledger.Data.Types       (Amount (..), AmountStyle (..),
                                            Posting (..), Quantity (..),
                                            Side (..), Transaction (..))
 
-import           Hledger.Data.Lens        (aStyle, asCommoditySide,
-                                           asCommoditySpaced, asPrecision)
-
-setter :: Amount -> Amount
-setter = over aStyle $ (asPrecision .~ 2) . (asCommoditySide .~ R) . (asCommoditySpaced .~ True)
+import           Hledger.Data.Extra       (makeCurrencyAmount)
 
 pln :: Quantity -> Amount
-pln d = setter rawAmt
-  where
-    rawAmt = amountWithCommodity (pack "PLN") (num d)
+pln = makeCurrencyAmount "PLN"
 
 
 -- | mBank's transaction data fetched from their website.
