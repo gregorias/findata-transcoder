@@ -32,6 +32,7 @@ import           Text.Megaparsec           (Parsec, eof, many, noneOf, oneOf,
                                             parse, parseMaybe, some, (<|>))
 import           Text.Megaparsec.Char      (char, eol, string)
 
+import qualified Bcge.Hint                 as Hint
 import qualified Hledger.Data.Extra        as HDE
 import           Hledger.Data.Lens         (aStyle, asCommoditySide,
                                             asCommoditySpaced, asPrecision,
@@ -140,11 +141,16 @@ csvLinesToBcgeStatement csvLines = BcgeStatement date saldo bcgeStatements
 -- | TODO
 --   * [ ] Sanitize titles
 --   * [ ] Adjust counteraccounts
-bTrToLedger :: BcgeTransaction -> Transaction
-bTrToLedger (BcgeTransaction date  title  amount) =
+bTrToLedger :: Maybe Hint.Config -> BcgeTransaction -> Transaction
+bTrToLedger maybeConfig (BcgeTransaction date  title  amount) =
   transaction (show date) []
-  & set tDescription title
+  & set tDescription description
   . set tStatus Cleared
+  where
+    maybeHint = do
+      config <- maybeConfig
+      Hint.transactionTitleToHint config title
+    description = maybe title Hint.title maybeHint
 
 saldoToLedger :: Day -> MonetaryValue -> Transaction
 saldoToLedger date balance =
@@ -157,17 +163,17 @@ saldoToLedger date balance =
       & set pAccount bcgeAccount
       . set pBalanceAssertion (balassert . HDE.makeCurrencyAmount "CHF" $ balance)
 
-bStToLedger :: BcgeStatement -> [Transaction]
-bStToLedger (BcgeStatement date balance trs) = execWriter collectTrs
+bStToLedger :: Maybe Hint.Config -> BcgeStatement -> [Transaction]
+bStToLedger config (BcgeStatement date balance trs) = execWriter collectTrs
   where
   collectTrs = do
-    tell $ fmap bTrToLedger (reverse trs)
+    tell $ fmap (bTrToLedger config) (reverse trs)
     tell [saldoToLedger date balance]
 
-bcgeCsvToLedger :: String → String
-bcgeCsvToLedger input =
+bcgeCsvToLedger :: Maybe Hint.Config → String → String
+bcgeCsvToLedger config input =
   let
     Right lines = parse bcgeCsvParser "" input
     bcgeStatement = csvLinesToBcgeStatement lines
-    ledgerTransactions = bStToLedger bcgeStatement
+    ledgerTransactions = bStToLedger config bcgeStatement
   in concatMap showTransaction ledgerTransactions

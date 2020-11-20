@@ -69,7 +69,7 @@ main = defaultMain $ do
   command "parse-bcge" $ do
     description "Parses BCGE's CSV file and outputs debug data"
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
-    parseBankAction bcgeCsvToLedger inputFileFlag
+    parseBankAction (bcgeCsvToLedger Nothing) inputFileFlag
   command "parse-mbank" $ do
     description "Parses mBank's CSV file and outputs debug data"
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
