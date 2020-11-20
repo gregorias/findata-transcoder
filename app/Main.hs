@@ -1,29 +1,41 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE UnicodeSyntax       #-}
+{-# LANGUAGE UnicodeSyntax #-}
 
 module Main where
 
-import           Main.Utf8              (withUtf8)
-
-import           Bcge                   (bcgeCsvToLedger)
-import           Console.Options        (FlagFrag (FlagLong, FlagShort),
-                                         FlagParam, FlagParser (FlagRequired),
-                                         OptionDesc, action, command,
-                                         defaultMain, description, flag,
-                                         flagParam, programDescription,
-                                         programName, programVersion,
-                                         remainingArguments)
-import           Control.Monad.Except   (ExceptT, catchError, runExceptT,
-                                         throwError)
-import           Control.Monad.IO.Class (liftIO)
-import           Data.Version           (makeVersion)
-import           Mbank                  (mbankCsvToLedger)
-import           System.Exit            (exitFailure)
-import           System.IO              (hGetContents)
+import Bcge (bcgeCsvToLedger)
+import Console.Options
+  ( FlagFrag (FlagLong, FlagShort),
+    FlagParam,
+    FlagParser (FlagRequired),
+    OptionDesc,
+    action,
+    command,
+    defaultMain,
+    description,
+    flag,
+    flagParam,
+    programDescription,
+    programName,
+    programVersion,
+    remainingArguments,
+  )
+import Control.Monad.Except
+  ( ExceptT,
+    catchError,
+    runExceptT,
+    throwError,
+  )
+import Control.Monad.IO.Class (liftIO)
+import Data.Version (makeVersion)
+import Main.Utf8 (withUtf8)
+import Mbank (mbankCsvToLedger)
+import System.Exit (exitFailure)
+import System.IO (hGetContents)
 
 filenameParser :: String -> Either String String
 filenameParser "" = Left "The provided output filename is empty."
-filenameParser s  = Right s
+filenameParser s = Right s
 
 maybeToExcept ::
   (Monad m) =>
@@ -33,7 +45,7 @@ maybeToExcept ::
 maybeToExcept ma e =
   case ma of
     Nothing -> throwError e
-    Just a  -> return a
+    Just a -> return a
 
 printError :: ExceptT String IO () -> IO ()
 printError me = do
@@ -46,20 +58,20 @@ printError me = do
 
 inputFileFlagName = "input_file"
 
-type LedgerParser = String → String
-type IOParser = FilePath → IO()
+type LedgerParser = String -> String
 
-parseBankIO :: LedgerParser → IOParser
+type IOParser = FilePath -> IO ()
+
+parseBankIO :: LedgerParser -> IOParser
 parseBankIO ledgerParser inputFilePath = withUtf8 $ do
   inputFile <- readFile inputFilePath
   putStr $ ledgerParser inputFile
 
 parseBankAction :: LedgerParser -> FlagParam FilePath -> OptionDesc (IO ()) ()
-parseBankAction ledgerParser inputFileFlag = action
-  $ \toParam -> printError $ do
-      (inputFilePath :: FilePath) <- maybeToExcept (toParam inputFileFlag) ("Provide " ++ inputFileFlagName)
-      liftIO $  parseBankIO ledgerParser inputFilePath
-
+parseBankAction ledgerParser inputFileFlag = action $
+  \toParam -> printError $ do
+    (inputFilePath :: FilePath) <- maybeToExcept (toParam inputFileFlag) ("Provide " ++ inputFileFlagName)
+    liftIO $ parseBankIO ledgerParser inputFilePath
 
 main :: IO ()
 main = defaultMain $ do

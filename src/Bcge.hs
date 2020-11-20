@@ -1,52 +1,80 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE UnicodeSyntax       #-}
-module Bcge(
-bcgeCsvToLedger,
-  BcgeTransaction(..),
-  CsvLine(..),
-  csvLineToBcgeTransaction,
-  parseStatementDate,
-  statementDateParser,
-  saldoToLedger
-)
+{-# LANGUAGE UnicodeSyntax #-}
+
+module Bcge
+  ( bcgeCsvToLedger,
+    BcgeTransaction (..),
+    CsvLine (..),
+    csvLineToBcgeTransaction,
+    parseStatementDate,
+    statementDateParser,
+    saldoToLedger,
+  )
 where
 
-import           Control.Lens              (makeLenses, over, set, (&), (.~),
-                                            (^.))
-import           Control.Monad             (void)
-import           Control.Monad.Writer.Lazy (execWriter, tell)
-import           Data                      (MonetaryValue, fromUnitsAndCents)
-import           Data.List                 (elemIndex, isInfixOf)
-import           Data.Time.Calendar        (Day)
-import           Data.Time.Format          (defaultTimeLocale, parseTimeM)
-import           Hledger.Data.Amount       (amountWithCommodity, num)
-import           Hledger.Data.Posting      (balassert, nullposting, post')
-import           Hledger.Data.Transaction  (showTransaction, transaction)
-import           Hledger.Data.Types        (Amount (..), AmountStyle (..),
-                                            Posting (..), Quantity (..),
-                                            Side (..), Status (..),
-                                            Transaction (..))
-import           Overhang                  (onNothing)
-import           Safe                      (headMay)
-import           Text.Megaparsec           (Parsec, eof, many, noneOf, oneOf,
-                                            parse, parseMaybe, some, (<|>))
-import           Text.Megaparsec.Char      (char, eol, string)
-
-import qualified Bcge.Hint                 as Hint
-import qualified Hledger.Data.Extra        as HDE
-import           Hledger.Data.Lens         (aStyle, asCommoditySide,
-                                            asCommoditySpaced, asPrecision,
-                                            pAccount, pBalanceAssertion,
-                                            tDescription, tStatus)
-
+import qualified Bcge.Hint as Hint
+import Control.Lens
+  ( makeLenses,
+    over,
+    set,
+    (&),
+    (.~),
+    (^.),
+  )
+import Control.Monad (void)
+import Control.Monad.Writer.Lazy (execWriter, tell)
+import Data (MonetaryValue, fromUnitsAndCents)
+import Data.List (elemIndex, isInfixOf)
+import Data.Time.Calendar (Day)
+import Data.Time.Format (defaultTimeLocale, parseTimeM)
+import Hledger.Data.Amount (amountWithCommodity, num)
+import qualified Hledger.Data.Extra as HDE
+import Hledger.Data.Lens
+  ( aStyle,
+    asCommoditySide,
+    asCommoditySpaced,
+    asPrecision,
+    pAccount,
+    pBalanceAssertion,
+    tDescription,
+    tStatus,
+  )
+import Hledger.Data.Posting (balassert, nullposting, post')
+import Hledger.Data.Transaction (showTransaction, transaction)
+import Hledger.Data.Types
+  ( Amount (..),
+    AmountStyle (..),
+    Posting (..),
+    Quantity (..),
+    Side (..),
+    Status (..),
+    Transaction (..),
+  )
+import Overhang (onNothing)
+import Safe (headMay)
+import Text.Megaparsec
+  ( Parsec,
+    eof,
+    many,
+    noneOf,
+    oneOf,
+    parse,
+    parseMaybe,
+    some,
+    (<|>),
+  )
+import Text.Megaparsec.Char (char, eol, string)
 
 bcgeAccount = "Assets:Liquid:BCGE"
 
 -- Parser functionality (CSV String → [BcgeTransaction])
 
 type CsvLine = (String, String, String)
+
 type Header = [CsvLine]
+
 type Content = [CsvLine]
+
 type BcgeParser = Parsec () String
 
 bcgeCsvLineParser :: BcgeParser CsvLine
@@ -74,34 +102,37 @@ saldoParser = do
   string "Saldo: CHF "
   betragParser
 
-parseStatementDate :: String → Maybe Day
+parseStatementDate :: String -> Maybe Day
 parseStatementDate = parseTimeM True defaultTimeLocale "%d.%m.%Y"
 
 statementDateParser :: BcgeParser Day
 statementDateParser = do
   string "Kontoauszug bis: "
   dateString <- many $ noneOf " ;"
-  date <- maybe
-    (fail "Could not parse the statement's day")
-    return
-    (parseStatementDate dateString)
+  date <-
+    maybe
+      (fail "Could not parse the statement's day")
+      return
+      (parseStatementDate dateString)
   char ' '
   return date
 
 -- Parsed Strings → Safe data (BCGE transactions)
 
 -- | BCGE's transaction data fetched from their website.
-data BcgeTransaction = BcgeTransaction{
-  bTrDate     :: Day
-  , bTrTitle  :: String
-  , bTrAmount :: MonetaryValue
-} deriving (Eq, Show)
+data BcgeTransaction = BcgeTransaction
+  { bTrDate :: Day,
+    bTrTitle :: String,
+    bTrAmount :: MonetaryValue
+  }
+  deriving (Eq, Show)
 
-data BcgeStatement = BcgeStatement{
-  bStatementDate           :: Day
-  , bStatementBalance      :: MonetaryValue
-  , bStatementTransactions :: [BcgeTransaction]
-} deriving (Eq, Show)
+data BcgeStatement = BcgeStatement
+  { bStatementDate :: Day,
+    bStatementBalance :: MonetaryValue,
+    bStatementTransactions :: [BcgeTransaction]
+  }
+  deriving (Eq, Show)
 
 headerLine :: CsvLine
 headerLine = ("Datum", "Buchungstext", "Betrag")
@@ -111,17 +142,17 @@ splitCsv csvLines = (take headerPos csvLines, drop (headerPos + 1) csvLines)
   where
     Just headerPos = elemIndex headerLine csvLines
 
-getDate :: Header → Maybe Day
+getDate :: Header -> Maybe Day
 getDate header = do
   dateString <- headMay [f0 | (f0, _, _) <- header, take 11 f0 == "Kontoauszug"]
   parseMaybe statementDateParser dateString
 
-getSaldo :: Header → Maybe MonetaryValue
+getSaldo :: Header -> Maybe MonetaryValue
 getSaldo header = do
   saldoString <- headMay [f0 | (f0, _, _) <- header, take 5 f0 == "Saldo"]
   parseMaybe saldoParser saldoString
 
-csvLineToBcgeTransaction :: CsvLine → Maybe BcgeTransaction
+csvLineToBcgeTransaction :: CsvLine -> Maybe BcgeTransaction
 csvLineToBcgeTransaction (dateString, title, amountString) = do
   date <- parseTimeM True defaultTimeLocale "%d.%m.%y" dateString
   amount <- parseMaybe betragParser amountString
@@ -142,10 +173,10 @@ csvLinesToBcgeStatement csvLines = BcgeStatement date saldo bcgeStatements
 --   * [ ] Sanitize titles
 --   * [ ] Adjust counteraccounts
 bTrToLedger :: Maybe Hint.Config -> BcgeTransaction -> Transaction
-bTrToLedger maybeConfig (BcgeTransaction date  title  amount) =
+bTrToLedger maybeConfig (BcgeTransaction date title amount) =
   transaction (show date) []
-  & set tDescription description
-  . set tStatus Cleared
+    & set tDescription description
+      . set tStatus Cleared
   where
     maybeHint = do
       config <- maybeConfig
@@ -155,25 +186,24 @@ bTrToLedger maybeConfig (BcgeTransaction date  title  amount) =
 saldoToLedger :: Day -> MonetaryValue -> Transaction
 saldoToLedger date balance =
   transaction (show date) [balancePosting]
-  & set tDescription "BCGE Status"
-  . set tStatus Cleared
+    & set tDescription "BCGE Status"
+      . set tStatus Cleared
   where
     balancePosting =
       nullposting
-      & set pAccount bcgeAccount
-      . set pBalanceAssertion (balassert . HDE.makeCurrencyAmount "CHF" $ balance)
+        & set pAccount bcgeAccount
+          . set pBalanceAssertion (balassert . HDE.makeCurrencyAmount "CHF" $ balance)
 
 bStToLedger :: Maybe Hint.Config -> BcgeStatement -> [Transaction]
 bStToLedger config (BcgeStatement date balance trs) = execWriter collectTrs
   where
-  collectTrs = do
-    tell $ fmap (bTrToLedger config) (reverse trs)
-    tell [saldoToLedger date balance]
+    collectTrs = do
+      tell $ fmap (bTrToLedger config) (reverse trs)
+      tell [saldoToLedger date balance]
 
-bcgeCsvToLedger :: Maybe Hint.Config → String → String
+bcgeCsvToLedger :: Maybe Hint.Config -> String -> String
 bcgeCsvToLedger config input =
-  let
-    Right lines = parse bcgeCsvParser "" input
-    bcgeStatement = csvLinesToBcgeStatement lines
-    ledgerTransactions = bStToLedger config bcgeStatement
-  in concatMap showTransaction ledgerTransactions
+  let Right lines = parse bcgeCsvParser "" input
+      bcgeStatement = csvLinesToBcgeStatement lines
+      ledgerTransactions = bStToLedger config bcgeStatement
+   in concatMap showTransaction ledgerTransactions

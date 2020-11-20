@@ -1,35 +1,46 @@
-{-| Bcge.Hint is a mechanism that generates from BCGE transaction titles
- - additional data that you can use to generate more informational Ledger
- - transactions.
- -
- - You can fetch config for generating hints from a CSV file to have that
- - config in a private file instead of on Github.
- -}
-module Bcge.Hint (
-  TransactionHint(..)
-  , Config
-  , configParser
-  , transactionTitleToHint
-  ) where
+-- | Bcge.Hint is a mechanism that generates from BCGE transaction titles
+-- - additional data that you can use to generate more informational Ledger
+-- - transactions.
+-- -
+-- - You can fetch config for generating hints from a CSV file to have that
+-- - config in a private file instead of on Github.
+module Bcge.Hint
+  ( TransactionHint (..),
+    Config,
+    configParser,
+    transactionTitleToHint,
+  )
+where
 
-import           Control.Monad        (void)
-import           Data.Function        ((&))
-import           Data.List            (isInfixOf)
-import           Data.Maybe           (mapMaybe)
-import           Safe                 (headMay)
-import           Text.Megaparsec      (Parsec, anySingle, eof, many, noneOf,
-                                       notFollowedBy, oneOf, some, (<|>))
-import           Text.Megaparsec.Char (char, eol, string)
+import Control.Monad (void)
+import Data.Function ((&))
+import Data.List (isInfixOf)
+import Data.Maybe (mapMaybe)
+import Safe (headMay)
+import Text.Megaparsec
+  ( Parsec,
+    anySingle,
+    eof,
+    many,
+    noneOf,
+    notFollowedBy,
+    oneOf,
+    some,
+    (<|>),
+  )
+import Text.Megaparsec.Char (char, eol, string)
 
-data TransactionHint = TransactionHint {
-  title            :: String
-  , counterAccount :: String
-} deriving (Eq, Show)
+data TransactionHint = TransactionHint
+  { title :: String,
+    counterAccount :: String
+  }
+  deriving (Eq, Show)
 
-data ConfigEntry = ConfigEntry {
-  keyword :: String
-  , hint  :: TransactionHint
-} deriving (Eq, Show)
+data ConfigEntry = ConfigEntry
+  { keyword :: String,
+    hint :: TransactionHint
+  }
+  deriving (Eq, Show)
 
 type Config = [ConfigEntry]
 
