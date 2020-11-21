@@ -53,7 +53,6 @@ import Hledger.Data.Types
     Status (..),
     Transaction (..),
   )
-import Overhang (onNothing)
 import Safe (headMay)
 import Text.Megaparsec
   ( Parsec,
@@ -172,8 +171,6 @@ csvLinesToBcgeStatement csvLines = BcgeStatement date saldo bcgeStatements
 -- Functions operating on safe data (BcgeStatement, etc.) and transforming it
 -- to Ledger.
 
--- | TODO
---   * [ ] Adjust counteraccounts
 bcgeTransactionToLedger :: Maybe Hint.Config -> BcgeTransaction -> Transaction
 bcgeTransactionToLedger maybeConfig (BcgeTransaction date title amount) =
   transaction (show date) [bcgePosting, counterPosting]
