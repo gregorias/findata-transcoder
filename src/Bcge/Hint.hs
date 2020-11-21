@@ -7,6 +7,7 @@
 module Bcge.Hint
   ( TransactionHint (..),
     Config,
+    ConfigEntry (..),
     configParser,
     transactionTitleToHint,
   )

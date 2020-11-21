@@ -1,9 +1,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE UnicodeSyntax #-}
 
 module Bcge
   ( bcgeCsvToLedger,
     BcgeTransaction (..),
+    bcgeTransactionToLedger,
     CsvLine (..),
     csvLineToBcgeTransaction,
     parseStatementDate,
@@ -25,6 +25,7 @@ import Control.Monad (void)
 import Control.Monad.Writer.Lazy (execWriter, tell)
 import Data (MonetaryValue, fromUnitsAndCents)
 import Data.List (elemIndex, isInfixOf)
+import Data.Text (pack)
 import Data.Time.Calendar (Day)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Hledger.Data.Amount (amountWithCommodity, num)
@@ -40,7 +41,9 @@ import Hledger.Data.Lens
     tStatus,
   )
 import Hledger.Data.Posting (balassert, nullposting, post')
+import qualified Hledger.Data.Posting as Hledger
 import Hledger.Data.Transaction (showTransaction, transaction)
+import qualified Hledger.Data.Transaction as Hledger
 import Hledger.Data.Types
   ( Amount (..),
     AmountStyle (..),
@@ -170,11 +173,10 @@ csvLinesToBcgeStatement csvLines = BcgeStatement date saldo bcgeStatements
 -- to Ledger.
 
 -- | TODO
---   * [ ] Sanitize titles
 --   * [ ] Adjust counteraccounts
-bTrToLedger :: Maybe Hint.Config -> BcgeTransaction -> Transaction
-bTrToLedger maybeConfig (BcgeTransaction date title amount) =
-  transaction (show date) []
+bcgeTransactionToLedger :: Maybe Hint.Config -> BcgeTransaction -> Transaction
+bcgeTransactionToLedger maybeConfig (BcgeTransaction date title amount) =
+  transaction (show date) [bcgePosting, counterPosting]
     & set tDescription description
       . set tStatus Cleared
   where
@@ -182,6 +184,15 @@ bTrToLedger maybeConfig (BcgeTransaction date title amount) =
       config <- maybeConfig
       Hint.transactionTitleToHint config title
     description = maybe title Hint.title maybeHint
+    bcgePosting =
+      Hledger.post
+        (pack "Assets:Liquid:BCGE")
+        (HDE.makeCurrencyAmount "CHF" amount)
+    counterAccount = maybe "Expenses:Other" Hint.counterAccount maybeHint
+    counterPosting =
+      Hledger.post
+        (pack counterAccount)
+        (HDE.makeCurrencyAmount "CHF" $ negate amount)
 
 saldoToLedger :: Day -> MonetaryValue -> Transaction
 saldoToLedger date balance =
@@ -198,7 +209,7 @@ bStToLedger :: Maybe Hint.Config -> BcgeStatement -> [Transaction]
 bStToLedger config (BcgeStatement date balance trs) = execWriter collectTrs
   where
     collectTrs = do
-      tell $ fmap (bTrToLedger config) (reverse trs)
+      tell $ fmap (bcgeTransactionToLedger config) (reverse trs)
       tell [saldoToLedger date balance]
 
 bcgeCsvToLedger :: Maybe Hint.Config -> String -> String
