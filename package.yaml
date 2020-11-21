@@ -46,6 +46,7 @@ executables:
     dependencies:
     - hledupt
     - cli
+    - megaparsec
     - mtl
     - with-utf8
 
