@@ -34,7 +34,7 @@ data Value = Value {_amount :: Decimal, _currency :: Currency}
 makeLenses ''Value
 
 negateValue :: Value -> Value
-negateValue v = over amount negate v
+negateValue = over amount negate
 
 data Posting = Posting
   { _account :: String,
