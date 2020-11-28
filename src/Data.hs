@@ -1,4 +1,4 @@
-module Data (MonetaryValue (..), fromUnitsAndCents) where
+module Data (MonetaryValue, fromUnitsAndCents) where
 
 import Data.Decimal (Decimal, realFracToDecimal)
 import Data.Ratio ((%))

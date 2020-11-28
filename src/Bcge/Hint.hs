@@ -1,3 +1,5 @@
+{-# LANGUAGE DuplicateRecordFields #-}
+
 -- | Bcge.Hint is a mechanism that generates from BCGE transaction titles
 -- - additional data that you can use to generate more informational Ledger
 -- - transactions.
@@ -14,7 +16,6 @@ module Bcge.Hint
 where
 
 import Control.Monad (void)
-import Data.Function ((&))
 import Data.List (isInfixOf)
 import Data.Maybe (mapMaybe)
 import Safe (headMay)
@@ -25,7 +26,6 @@ import Text.Megaparsec
     many,
     noneOf,
     notFollowedBy,
-    oneOf,
     some,
     (<|>),
   )
@@ -46,13 +46,13 @@ data ConfigEntry = ConfigEntry
 type Config = [ConfigEntry]
 
 checkTransactionTitleToHint :: String -> ConfigEntry -> Maybe TransactionHint
-checkTransactionTitleToHint title (ConfigEntry keyword hint)
-  | keyword `isInfixOf` title = Just hint
+checkTransactionTitleToHint titleArg (ConfigEntry keywordArg hintArg)
+  | keywordArg `isInfixOf` titleArg = Just hintArg
   | otherwise = Nothing
 
 transactionTitleToHint :: Config -> String -> Maybe TransactionHint
-transactionTitleToHint config title =
-  headMay . mapMaybe (checkTransactionTitleToHint title) $ config
+transactionTitleToHint config titleArg =
+  headMay . mapMaybe (checkTransactionTitleToHint titleArg) $ config
 
 -- Config parser
 
@@ -66,13 +66,13 @@ headerParser = string "keyword,title,counterAccount" <* eolOrEof
 
 configEntryParser :: StringParser ConfigEntry
 configEntryParser = do
-  keyword <- some (noneOf ",") <* char ','
-  title <- some (noneOf ",") <* char ','
-  counterAccount <- some $ notFollowedBy eolOrEof *> anySingle
+  keywordValue <- some (noneOf ",") <* char ','
+  titleValue <- some (noneOf ",") <* char ','
+  counterAccountValue <- some $ notFollowedBy eolOrEof *> anySingle
   eolOrEof
-  return $ ConfigEntry keyword (TransactionHint title counterAccount)
+  return $ ConfigEntry keywordValue (TransactionHint titleValue counterAccountValue)
 
 configParser :: StringParser Config
 configParser = do
-  headerParser
+  _ <- headerParser
   many configEntryParser

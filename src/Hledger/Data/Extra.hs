@@ -4,7 +4,6 @@ module Hledger.Data.Extra
 where
 
 import Control.Lens (over, set, (&))
-import Data.String (IsString (..))
 import Data.Text (pack)
 import Hledger.Data.Amount (num)
 import Hledger.Data.Lens
@@ -15,8 +14,7 @@ import Hledger.Data.Lens
   )
 import Hledger.Data.Types
   ( Amount (..),
-    CommoditySymbol (..),
-    Quantity (..),
+    Quantity,
   )
 
 makeCurrencyAmount :: String -> Quantity -> Amount

@@ -4,7 +4,7 @@ module Bcge
   ( bcgeCsvToLedger,
     BcgeTransaction (..),
     bcgeTransactionToLedger,
-    CsvLine (..),
+    CsvLine,
     csvLineToBcgeTransaction,
     parseStatementDate,
     statementDateParser,
@@ -14,43 +14,28 @@ where
 
 import qualified Bcge.Hint as Hint
 import Control.Lens
-  ( makeLenses,
-    over,
-    set,
+  ( set,
     (&),
-    (.~),
-    (^.),
   )
 import Control.Monad (void)
 import Control.Monad.Writer.Lazy (execWriter, tell)
 import Data (MonetaryValue, fromUnitsAndCents)
-import Data.List (elemIndex, isInfixOf)
+import Data.List (elemIndex)
 import Data.Text (pack)
 import Data.Time.Calendar (Day)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
-import Hledger.Data.Amount (amountWithCommodity, num)
 import qualified Hledger.Data.Extra as HDE
 import Hledger.Data.Lens
-  ( aStyle,
-    asCommoditySide,
-    asCommoditySpaced,
-    asPrecision,
-    pAccount,
+  ( pAccount,
     pBalanceAssertion,
     tDescription,
     tStatus,
   )
-import Hledger.Data.Posting (balassert, nullposting, post')
+import Hledger.Data.Posting (balassert, nullposting)
 import qualified Hledger.Data.Posting as Hledger
 import Hledger.Data.Transaction (showTransaction, transaction)
-import qualified Hledger.Data.Transaction as Hledger
 import Hledger.Data.Types
-  ( Amount (..),
-    AmountStyle (..),
-    Posting (..),
-    Quantity (..),
-    Side (..),
-    Status (..),
+  ( Status (..),
     Transaction (..),
   )
 import Safe (headMay)
@@ -67,6 +52,7 @@ import Text.Megaparsec
   )
 import Text.Megaparsec.Char (char, eol, string)
 
+bcgeAccount :: String
 bcgeAccount = "Assets:Liquid:BCGE"
 
 -- Parser functionality (CSV String → [BcgeTransaction])
@@ -84,7 +70,7 @@ bcgeCsvLineParser = do
   f0 <- many (noneOf ";") <* char ';'
   f1 <- many (noneOf ";") <* char ';'
   f2 <- many (noneOf ";") <* char ';'
-  many (noneOf "\r\n") <* (void eol <|> eof)
+  _ <- many (noneOf "\r\n") <* (void eol <|> eof)
   return (f0, f1, f2)
 
 bcgeCsvParser :: BcgeParser [CsvLine]
@@ -94,14 +80,14 @@ betragParser :: BcgeParser MonetaryValue
 betragParser = do
   unitsString <- some (oneOf "-0123456789")
   units :: Integer <- return $ read unitsString
-  char '.'
+  void $ char '.'
   centsString :: String <- some $ oneOf "0123456789"
   cents :: Integer <- return $ read centsString
   return $ fromUnitsAndCents units cents
 
 saldoParser :: BcgeParser MonetaryValue
 saldoParser = do
-  string "Saldo: CHF "
+  void $ string "Saldo: CHF "
   betragParser
 
 parseStatementDate :: String -> Maybe Day
@@ -109,14 +95,14 @@ parseStatementDate = parseTimeM True defaultTimeLocale "%d.%m.%Y"
 
 statementDateParser :: BcgeParser Day
 statementDateParser = do
-  string "Kontoauszug bis: "
+  void $ string "Kontoauszug bis: "
   dateString <- many $ noneOf " ;"
   date <-
     maybe
       (fail "Could not parse the statement's day")
       return
       (parseStatementDate dateString)
-  char ' '
+  void $ char ' '
   return date
 
 -- Parsed Strings → Safe data (BCGE transactions)
@@ -211,7 +197,7 @@ bStToLedger config (BcgeStatement date balance trs) = execWriter collectTrs
 
 bcgeCsvToLedger :: Maybe Hint.Config -> String -> String
 bcgeCsvToLedger config input =
-  let Right lines = parse bcgeCsvParser "" input
-      bcgeStatement = csvLinesToBcgeStatement lines
+  let Right csvLines = parse bcgeCsvParser "" input
+      bcgeStatement = csvLinesToBcgeStatement csvLines
       ledgerTransactions = bStToLedger config bcgeStatement
    in concatMap showTransaction ledgerTransactions

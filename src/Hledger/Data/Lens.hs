@@ -17,7 +17,7 @@ import Hledger.Data.Types
   ( Amount (..),
     AmountStyle (..),
     BalanceAssertion (..),
-    CommoditySymbol (..),
+    CommoditySymbol,
     Posting (..),
     Side (..),
     Status (..),

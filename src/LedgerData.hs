@@ -55,7 +55,7 @@ data Transaction = Transaction
 makeLenses ''Transaction
 
 valueToLedger :: Value -> String
-valueToLedger (Value amount currency) = show amount ++ " " ++ show currency
+valueToLedger (Value amountArg currencyArg) = show amountArg ++ " " ++ show currencyArg
 
 postingToLedger :: Posting -> String
 postingToLedger p =

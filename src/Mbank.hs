@@ -11,24 +11,20 @@ module Mbank
   )
 where
 
-import Control.Lens (makeLenses, over, (.~), (^.))
 import Control.Monad (void)
 import Data (MonetaryValue, fromUnitsAndCents)
-import Data.Decimal (Decimal, realFracToDecimal)
+import Data.Decimal (Decimal)
 import Data.List (sortOn)
 import Data.Text (pack)
 import Data.Time.Calendar (Day)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
-import Hledger.Data.Amount (amountWithCommodity, num)
 import Hledger.Data.Extra (makeCurrencyAmount)
 import Hledger.Data.Posting (balassert, nullposting, post')
 import Hledger.Data.Transaction (showTransaction, transaction)
 import Hledger.Data.Types
   ( Amount (..),
-    AmountStyle (..),
     Posting (..),
-    Quantity (..),
-    Side (..),
+    Quantity,
     Transaction (..),
   )
 import Text.Megaparsec
@@ -72,7 +68,7 @@ valueParser = do
   zlote :: Integer <- return $ read zloteString
   groszeString <- (char ',' *> many (oneOf "0123456789") <* char ' ') <|> pure "00"
   grosze :: Integer <- return $ read groszeString
-  string "PLN"
+  void $ string "PLN"
   return $ fromUnitsAndCents zlote grosze
   where
     removeSpaces = filter ((/=) ' ')
@@ -81,8 +77,8 @@ mbankCsvTransactionParser :: MbankParser MbankTransaction
 mbankCsvTransactionParser = do
   date <- dateParser <* char ';'
   title <- char '"' *> many (noneOf "\";") <* char '"' <* char ';'
-  many (noneOf ";") >> char ';'
-  many (noneOf ";") >> char ';'
+  void $ many (noneOf ";") >> char ';'
+  void $ many (noneOf ";") >> char ';'
   value <- valueParser <* char ';'
   balance <- valueParser <* char ';'
   void newline <|> eof

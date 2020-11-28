@@ -6,7 +6,7 @@ module Main where
 import Bcge (bcgeCsvToLedger)
 import qualified Bcge.Hint as BcgeHint
 import Console.Options
-  ( FlagFrag (FlagLong, FlagShort),
+  ( FlagFrag (FlagLong),
     FlagParam,
     FlagParser (FlagOptional, FlagRequired),
     OptionDesc,
@@ -14,17 +14,14 @@ import Console.Options
     command,
     defaultMain,
     description,
-    flag,
     flagParam,
     programDescription,
     programName,
     programVersion,
-    remainingArguments,
   )
 import Control.Monad (join)
 import Control.Monad.Except
   ( ExceptT,
-    catchError,
     runExceptT,
     throwError,
   )
@@ -33,7 +30,6 @@ import Data.Version (makeVersion)
 import Main.Utf8 (withUtf8)
 import Mbank (mbankCsvToLedger)
 import System.Exit (exitFailure)
-import System.IO (hGetContents)
 import qualified Text.Megaparsec as MP
 
 filenameParser :: String -> Either String String
@@ -54,13 +50,15 @@ printError :: ExceptT String IO () -> IO ()
 printError me = do
   eitherError <- runExceptT me
   case eitherError of
-    Left error -> do
-      putStrLn error
+    Left errorMsg -> do
+      putStrLn errorMsg
       exitFailure
     Right _ -> return ()
 
+inputFileFlagName :: String
 inputFileFlagName = "input_file"
 
+hintsFileFlagName :: String
 hintsFileFlagName = "hints_file"
 
 type LedgerParser = String -> String
