@@ -30,6 +30,7 @@ library
       Data
       Hledger.Data.Extra
       Hledger.Data.Lens
+      Hledupt.Ib
       LedgerData
       Mbank
   other-modules:
@@ -73,6 +74,7 @@ test-suite hledupt-test
       Test.Bcge.Hint
       Test.Data
       Test.Hledger.Data.Extra
+      Test.Hledupt.Ib
       Test.Mbank
       Paths_hledupt
   hs-source-dirs:

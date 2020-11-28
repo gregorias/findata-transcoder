@@ -17,6 +17,7 @@ import Test.HUnit
     (~=?),
   )
 import qualified Test.Hledger.Data.Extra as HDE
+import Test.Hledupt.Ib (ibTests)
 import Test.Hspec (describe, hspec, it, shouldBe)
 import Test.Mbank (mbankTests)
 
@@ -26,6 +27,7 @@ main = hspec ledgerDataTests
 ledgerDataTests = do
   dataTests
   bcgeTests
+  ibTests
   BcgeHint.tests
   mbankTests
   HDE.tests

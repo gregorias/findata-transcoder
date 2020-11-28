@@ -27,6 +27,7 @@ import Control.Monad.Except
   )
 import Control.Monad.IO.Class (liftIO)
 import Data.Version (makeVersion)
+import Hledupt.Ib (ibCsvToLedger)
 import Main.Utf8 (withUtf8)
 import Mbank (mbankCsvToLedger)
 import System.Exit (exitFailure)
@@ -117,11 +118,15 @@ main = defaultMain $ do
   programVersion $ makeVersion [0, 1, 0, 0]
   programDescription "A program to parse financial data into a ledger-like text file"
   command "parse-bcge" $ do
-    description "Parses BCGE's CSV file and outputs debug data"
+    description "Parses BCGE's CSV file and outputs ledupt data"
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
     hintsFileFlag <- flagParam (FlagLong hintsFileFlagName) (FlagOptional Nothing (fmap Just . filenameParser))
     parseBcgeAction $ BcgeFlags inputFileFlag hintsFileFlag
   command "parse-mbank" $ do
-    description "Parses mBank's CSV file and outputs debug data"
+    description "Parses IB's CSV file and outputs ledupt data"
+    inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
+    parseBankAction ibCsvToLedger inputFileFlag
+  command "parse-mbank" $ do
+    description "Parses mBank's CSV file and outputs ledupt data"
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
     parseBankAction mbankCsvToLedger inputFileFlag
