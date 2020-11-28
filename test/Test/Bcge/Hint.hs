@@ -1,9 +1,11 @@
 module Test.Bcge.Hint (tests) where
 
 import qualified Bcge.Hint as BH
-import Test.Hspec (describe, hspec, it, shouldBe)
+import Test.Hspec (describe, it, shouldBe)
+import qualified Test.Hspec as Hspec
 import Text.Megaparsec (parseMaybe)
 
+tests :: Hspec.SpecWith ()
 tests = do
   describe "Bcge.Hint tests" $ do
     it "Correctly parses and applies first matching hint" $ do

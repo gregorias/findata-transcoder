@@ -9,22 +9,16 @@ import LedgerData
 import Test.Bcge (bcgeTests)
 import qualified Test.Bcge.Hint as BcgeHint
 import Test.Data (dataTests)
-import Test.HUnit
-  ( Test (..),
-    assertEqual,
-    runTestTT,
-    (~:),
-    (~=?),
-  )
 import qualified Test.Hledger.Data.Extra as HDE
 import Test.Hledupt.Ib (ibTests)
-import Test.Hspec (describe, hspec, it, shouldBe)
+import Test.Hspec (SpecWith, describe, hspec, it, shouldBe)
 import Test.Mbank (mbankTests)
 
 main :: IO ()
-main = hspec ledgerDataTests
+main = hspec tests
 
-ledgerDataTests = do
+tests :: SpecWith ()
+tests = do
   dataTests
   bcgeTests
   ibTests

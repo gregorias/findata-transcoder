@@ -7,7 +7,7 @@ import Data.Ratio ((%))
 -- places
 type MonetaryValue = Decimal
 
-fromUnitsAndCents :: (Integral a) => a -> a -> MonetaryValue
+fromUnitsAndCents :: Integer -> Integer -> MonetaryValue
 fromUnitsAndCents units cents = unitsDec `op` centsDec
   where
     unitsDec = realFracToDecimal 0 (units % 1)

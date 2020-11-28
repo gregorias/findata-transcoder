@@ -11,35 +11,28 @@ import Bcge
     statementDateParser,
   )
 import qualified Bcge.Hint as Hint
-import Control.Lens (over, set, (.~), (^.))
+import Control.Lens (set)
 import Data (fromUnitsAndCents)
 import Data.Function ((&))
 import Data.Time.Calendar (fromGregorian)
 import qualified Hledger.Data.Extra as HDE
 import Hledger.Data.Lens
-  ( aStyle,
-    asCommoditySide,
-    asCommoditySpaced,
-    asPrecision,
-    pAccount,
+  ( pAccount,
     pBalanceAssertion,
     tDescription,
     tStatus,
   )
-import Hledger.Data.Posting (balassert, nullposting, post')
+import Hledger.Data.Posting (balassert, nullposting)
 import qualified Hledger.Data.Posting as Hledger
 import Hledger.Data.Transaction (transaction)
-import qualified Hledger.Data.Transaction as Hledger
 import Hledger.Data.Types
-  ( Amount (..),
-    Posting (..),
-    Quantity (..),
-    Status (..),
-    Transaction (..),
+  ( Status (..),
   )
-import Test.Hspec (describe, hspec, it, shouldBe)
+import Test.Hspec (describe, it, shouldBe)
+import qualified Test.Hspec as Hspec
 import Text.Megaparsec (parseMaybe)
 
+bcgeTests :: Hspec.SpecWith ()
 bcgeTests = do
   describe "Bcge tests" $ do
     describe "parseStatementDate" $ do

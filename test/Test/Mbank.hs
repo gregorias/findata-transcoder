@@ -6,13 +6,10 @@ where
 import Data (fromUnitsAndCents)
 import Data.Text (pack)
 import Data.Time.Calendar (fromGregorian)
-import Hledger.Data.Amount (amountWithCommodity, num)
 import Hledger.Data.Posting (balassert, nullposting, post')
 import Hledger.Data.Transaction (transaction)
 import Hledger.Data.Types
-  ( Amount (..),
-    Posting (..),
-    Quantity (..),
+  ( Posting (..),
     Transaction (..),
   )
 import Mbank
@@ -23,8 +20,10 @@ import Mbank
     valueParser,
   )
 import Test.Hspec (describe, it, shouldBe)
+import qualified Test.Hspec as Hspec
 import Text.Megaparsec (parseMaybe)
 
+mbankTests :: Hspec.SpecWith ()
 mbankTests = do
   describe "Mbank tests" $ do
     describe "valueParser" $ do
