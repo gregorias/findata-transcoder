@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Test.Bcge where
+module Test.Hledupt.Bcge where
 
-import Bcge
+import Hledupt.Bcge
   ( BcgeTransaction (..),
     bcgeTransactionToLedger,
     csvLineToBcgeTransaction,
@@ -10,9 +10,9 @@ import Bcge
     saldoToLedger,
     statementDateParser,
   )
-import qualified Bcge.Hint as Hint
+import qualified Hledupt.Bcge.Hint as Hint
 import Control.Lens (set)
-import Data (fromUnitsAndCents)
+import Hledupt.Data (fromUnitsAndCents)
 import Data.Function ((&))
 import Data.Time.Calendar (fromGregorian)
 import qualified Hledger.Data.Extra as HDE

@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UnicodeSyntax #-}
 
-module Mbank
+module Hledupt.Mbank
   ( MbankTransaction (..),
     valueParser,
     mbankCsvParser,
@@ -12,7 +12,7 @@ module Mbank
 where
 
 import Control.Monad (void)
-import Data (MonetaryValue, fromUnitsAndCents)
+import Hledupt.Data (MonetaryValue, fromUnitsAndCents)
 import Data.Decimal (Decimal)
 import Data.List (sortOn)
 import Data.Text (pack)

@@ -1,6 +1,6 @@
-module Test.Data where
+module Test.Hledupt.Data where
 
-import Data (fromUnitsAndCents)
+import Hledupt.Data (fromUnitsAndCents)
 import Data.Decimal (realFracToDecimal)
 import Test.Hspec (SpecWith, describe, it, shouldBe)
 

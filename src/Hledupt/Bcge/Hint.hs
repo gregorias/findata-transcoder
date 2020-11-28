@@ -6,7 +6,7 @@
 -- -
 -- - You can fetch config for generating hints from a CSV file to have that
 -- - config in a private file instead of on Github.
-module Bcge.Hint
+module Hledupt.Bcge.Hint
   ( TransactionHint (..),
     Config,
     ConfigEntry (..),

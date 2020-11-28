@@ -6,13 +6,13 @@ import LedgerData
     postingToLedger,
     valueToLedger,
   )
-import Test.Bcge (bcgeTests)
-import qualified Test.Bcge.Hint as BcgeHint
-import Test.Data (dataTests)
 import qualified Test.Hledger.Data.Extra as HDE
+import Test.Hledupt.Bcge (bcgeTests)
+import qualified Test.Hledupt.Bcge.Hint as BcgeHint
+import Test.Hledupt.Data (dataTests)
 import Test.Hledupt.Ib (ibTests)
+import Test.Hledupt.Mbank (mbankTests)
 import Test.Hspec (SpecWith, describe, hspec, it, shouldBe)
-import Test.Mbank (mbankTests)
 
 main :: IO ()
 main = hspec tests

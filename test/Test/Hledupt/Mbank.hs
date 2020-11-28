@@ -1,9 +1,9 @@
-module Test.Mbank
+module Test.Hledupt.Mbank
   ( mbankTests,
   )
 where
 
-import Data (fromUnitsAndCents)
+import Hledupt.Data (fromUnitsAndCents)
 import Data.Text (pack)
 import Data.Time.Calendar (fromGregorian)
 import Hledger.Data.Posting (balassert, nullposting, post')
@@ -12,7 +12,7 @@ import Hledger.Data.Types
   ( Posting (..),
     Transaction (..),
   )
-import Mbank
+import Hledupt.Mbank
   ( MbankTransaction (..),
     mTrToLedger,
     mbankCsvParser,

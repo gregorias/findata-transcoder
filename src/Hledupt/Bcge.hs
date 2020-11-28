@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Bcge
+module Hledupt.Bcge
   ( bcgeCsvToLedger,
     BcgeTransaction (..),
     bcgeTransactionToLedger,
@@ -12,14 +12,14 @@ module Bcge
   )
 where
 
-import qualified Bcge.Hint as Hint
+import qualified Hledupt.Bcge.Hint as Hint
 import Control.Lens
   ( set,
     (&),
   )
 import Control.Monad (void)
 import Control.Monad.Writer.Lazy (execWriter, tell)
-import Data (MonetaryValue, fromUnitsAndCents)
+import Hledupt.Data (MonetaryValue, fromUnitsAndCents)
 import Data.List (elemIndex)
 import Data.Text (pack)
 import Data.Time.Calendar (Day)

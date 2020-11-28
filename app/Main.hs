@@ -3,8 +3,6 @@
 
 module Main where
 
-import Bcge (bcgeCsvToLedger)
-import qualified Bcge.Hint as BcgeHint
 import Console.Options
   ( FlagFrag (FlagLong),
     FlagParam,
@@ -27,9 +25,11 @@ import Control.Monad.Except
   )
 import Control.Monad.IO.Class (liftIO)
 import Data.Version (makeVersion)
+import Hledupt.Bcge (bcgeCsvToLedger)
+import qualified Hledupt.Bcge.Hint as BcgeHint
 import Hledupt.Ib (ibCsvToLedger)
+import Hledupt.Mbank (mbankCsvToLedger)
 import Main.Utf8 (withUtf8)
-import Mbank (mbankCsvToLedger)
 import System.Exit (exitFailure)
 import qualified Text.Megaparsec as MP
 

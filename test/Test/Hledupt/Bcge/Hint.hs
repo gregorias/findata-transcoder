@@ -1,6 +1,6 @@
-module Test.Bcge.Hint (tests) where
+module Test.Hledupt.Bcge.Hint (tests) where
 
-import qualified Bcge.Hint as BH
+import qualified Hledupt.Bcge.Hint as BH
 import Test.Hspec (describe, it, shouldBe)
 import qualified Test.Hspec as Hspec
 import Text.Megaparsec (parseMaybe)

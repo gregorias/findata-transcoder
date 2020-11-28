@@ -25,14 +25,14 @@ source-repository head
 
 library
   exposed-modules:
-      Bcge
-      Bcge.Hint
-      Data
       Hledger.Data.Extra
       Hledger.Data.Lens
+      Hledupt.Bcge
+      Hledupt.Bcge.Hint
+      Hledupt.Data
       Hledupt.Ib
+      Hledupt.Mbank
       LedgerData
-      Mbank
   other-modules:
       Paths_hledupt
   hs-source-dirs:
@@ -70,12 +70,12 @@ test-suite hledupt-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Test.Bcge
-      Test.Bcge.Hint
-      Test.Data
       Test.Hledger.Data.Extra
+      Test.Hledupt.Bcge
+      Test.Hledupt.Bcge.Hint
+      Test.Hledupt.Data
       Test.Hledupt.Ib
-      Test.Mbank
+      Test.Hledupt.Mbank
       Paths_hledupt
   hs-source-dirs:
       test
