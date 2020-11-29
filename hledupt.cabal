@@ -33,6 +33,7 @@ library
       Hledupt.Ib
       Hledupt.Mbank
       LedgerData
+      Text.Megaparsec.Char.Extra
   other-modules:
       Paths_hledupt
   hs-source-dirs:
@@ -40,6 +41,8 @@ library
   build-depends:
       Decimal
     , base >=4.7 && <5
+    , bytestring
+    , cassava
     , hledger-lib ==1.18.1
     , lens
     , megaparsec
@@ -48,6 +51,7 @@ library
     , safe
     , text
     , time
+    , vector
   default-language: Haskell2010
 
 executable hledupt-exe
@@ -76,6 +80,7 @@ test-suite hledupt-test
       Test.Hledupt.Data
       Test.Hledupt.Ib
       Test.Hledupt.Mbank
+      Test.Text.Megaparsec.Char.Extra
       Paths_hledupt
   hs-source-dirs:
       test
@@ -84,6 +89,7 @@ test-suite hledupt-test
       Decimal
     , HUnit
     , base >=4.7 && <5
+    , cassava
     , hledger-lib ==1.18.1
     , hledupt
     , hspec
@@ -91,4 +97,5 @@ test-suite hledupt-test
     , megaparsec
     , text
     , time
+    , vector
   default-language: Haskell2010

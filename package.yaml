@@ -26,14 +26,17 @@ library:
   source-dirs: src
   dependencies:
   - Decimal
-  - time
-  - lens
+  - bytestring
+  - cassava
   - hledger-lib == 1.18.1
+  - lens
   - megaparsec
-  - text
   - mtl
-  - safe
   - overhang
+  - safe
+  - text
+  - time
+  - vector
 
 executables:
   hledupt-exe:
@@ -60,11 +63,13 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - Decimal
-    - lens
-    - hledupt
     - HUnit
-    - hspec
-    - megaparsec
-    - time
+    - cassava
     - hledger-lib == 1.18.1
+    - hledupt
+    - hspec
+    - lens
+    - megaparsec
     - text
+    - time
+    - vector

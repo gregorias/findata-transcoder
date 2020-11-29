@@ -12,7 +12,6 @@ module Hledupt.Mbank
 where
 
 import Control.Monad (void)
-import Hledupt.Data (MonetaryValue, fromUnitsAndCents)
 import Data.Decimal (Decimal)
 import Data.List (sortOn)
 import Data.Text (pack)
@@ -27,6 +26,7 @@ import Hledger.Data.Types
     Quantity,
     Transaction (..),
   )
+import Hledupt.Data (MonetaryValue, fromUnitsAndCents)
 import Text.Megaparsec
   ( Parsec,
     eof,
@@ -36,7 +36,8 @@ import Text.Megaparsec
     parse,
     (<|>),
   )
-import Text.Megaparsec.Char (char, newline, string)
+import Text.Megaparsec.Char (char, string)
+import Text.Megaparsec.Char.Extra (eolOrEof)
 
 pln :: Quantity -> Amount
 pln = makeCurrencyAmount "PLN"
@@ -71,7 +72,7 @@ valueParser = do
   void $ string "PLN"
   return $ fromUnitsAndCents zlote grosze
   where
-    removeSpaces = filter ((/=) ' ')
+    removeSpaces = filter (' ' /=)
 
 mbankCsvTransactionParser :: MbankParser MbankTransaction
 mbankCsvTransactionParser = do
@@ -81,7 +82,7 @@ mbankCsvTransactionParser = do
   void $ many (noneOf ";") >> char ';'
   value <- valueParser <* char ';'
   balance <- valueParser <* char ';'
-  void newline <|> eof
+  void eolOrEof
   return $ MbankTransaction date title value balance
 
 mbankCsvParser :: MbankParser [MbankTransaction]

@@ -1,3 +1,4 @@
+{-# LANGUAGE ExtendedDefaultRules #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Hledupt.Bcge
@@ -12,14 +13,12 @@ module Hledupt.Bcge
   )
 where
 
-import qualified Hledupt.Bcge.Hint as Hint
 import Control.Lens
   ( set,
     (&),
   )
 import Control.Monad (void)
 import Control.Monad.Writer.Lazy (execWriter, tell)
-import Hledupt.Data (MonetaryValue, fromUnitsAndCents)
 import Data.List (elemIndex)
 import Data.Text (pack)
 import Data.Time.Calendar (Day)
@@ -38,19 +37,18 @@ import Hledger.Data.Types
   ( Status (..),
     Transaction (..),
   )
+import qualified Hledupt.Bcge.Hint as Hint
+import Hledupt.Data (MonetaryValue, decimalParser)
 import Safe (headMay)
 import Text.Megaparsec
   ( Parsec,
-    eof,
     many,
     noneOf,
-    oneOf,
     parse,
     parseMaybe,
-    some,
-    (<|>),
   )
-import Text.Megaparsec.Char (char, eol, string)
+import Text.Megaparsec.Char (char, string)
+import Text.Megaparsec.Char.Extra (eolOrEof)
 
 bcgeAccount :: String
 bcgeAccount = "Assets:Liquid:BCGE"
@@ -70,25 +68,16 @@ bcgeCsvLineParser = do
   f0 <- many (noneOf ";") <* char ';'
   f1 <- many (noneOf ";") <* char ';'
   f2 <- many (noneOf ";") <* char ';'
-  _ <- many (noneOf "\r\n") <* (void eol <|> eof)
+  void $ many (noneOf "\r\n") <* eolOrEof
   return (f0, f1, f2)
 
 bcgeCsvParser :: BcgeParser [CsvLine]
 bcgeCsvParser = many bcgeCsvLineParser
 
-betragParser :: BcgeParser MonetaryValue
-betragParser = do
-  unitsString <- some (oneOf "-0123456789")
-  units :: Integer <- return $ read unitsString
-  void $ char '.'
-  centsString :: String <- some $ oneOf "0123456789"
-  cents :: Integer <- return $ read centsString
-  return $ fromUnitsAndCents units cents
-
 saldoParser :: BcgeParser MonetaryValue
 saldoParser = do
   void $ string "Saldo: CHF "
-  betragParser
+  decimalParser
 
 parseStatementDate :: String -> Maybe Day
 parseStatementDate = parseTimeM True defaultTimeLocale "%d.%m.%Y"
@@ -143,7 +132,7 @@ getSaldo header = do
 csvLineToBcgeTransaction :: CsvLine -> Maybe BcgeTransaction
 csvLineToBcgeTransaction (dateString, title, amountString) = do
   date <- parseTimeM True defaultTimeLocale "%d.%m.%y" dateString
-  amount <- parseMaybe betragParser amountString
+  amount <- parseMaybe decimalParser amountString
   return $ BcgeTransaction date title amount
 
 csvLinesToBcgeStatement :: [CsvLine] -> BcgeStatement
