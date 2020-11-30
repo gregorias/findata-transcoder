@@ -17,6 +17,13 @@ import qualified Data.ByteString as BS
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
 import Data.List (partition)
+import Hledger.Data.Transaction (showTransaction, transaction)
+import Hledger.Data.Types
+  ( Amount (..),
+    Posting (..),
+    Quantity,
+    Transaction (..),
+  )
 import Hledupt.Data (MonetaryValue, myDecDec)
 import Text.Megaparsec
   ( Parsec,
@@ -105,5 +112,8 @@ instance Csv.FromNamedRecord PositionRecord where
       lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
       lookupAux = Csv.lookup namedRecord
 
-ibCsvToLedger :: String -> String
-ibCsvToLedger _ = "Could not parse the CSV, because the functionality is unimplemented"
+parseCsv :: String -> Either String [Transaction]
+parseCsv _ = Left "Could not parse the CSV, because the functionality is unimplemented"
+
+ibCsvToLedger :: String -> Either String String
+ibCsvToLedger = fmap (concatMap showTransaction) . parseCsv

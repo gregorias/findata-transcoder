@@ -112,9 +112,9 @@ mTrToLedger mTr = tr {tdescription = pack $ sanitizeTitle $ mTrTitle mTr}
 
 --
 
-mbankCsvToLedger :: String -> String
+mbankCsvToLedger :: String -> Either String String
 mbankCsvToLedger inputCsv =
   let Right mtransactions = parse mbankCsvParser "" inputCsv
       sortedMTransactions = sortOn mTrDate mtransactions
       ltransactions = fmap mTrToLedger sortedMTransactions
-   in concatMap showTransaction ltransactions
+   in Right $ concatMap showTransaction ltransactions

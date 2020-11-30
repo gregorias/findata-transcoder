@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UnicodeSyntax #-}
 
-module Main where
+module Main (main) where
 
 import Console.Options
   ( FlagFrag (FlagLong),
@@ -31,6 +31,7 @@ import Hledupt.Ib (ibCsvToLedger)
 import Hledupt.Mbank (mbankCsvToLedger)
 import Main.Utf8 (withUtf8)
 import System.Exit (exitFailure)
+import System.IO (hPutStr, stderr)
 import qualified Text.Megaparsec as MP
 
 filenameParser :: String -> Either String String
@@ -62,14 +63,16 @@ inputFileFlagName = "input_file"
 hintsFileFlagName :: String
 hintsFileFlagName = "hints_file"
 
-type LedgerParser = String -> String
+type LedgerParser = String -> Either String String
 
 type IOParser = FilePath -> IO ()
 
 parseBankIO :: LedgerParser -> IOParser
 parseBankIO ledgerParser inputFilePath = withUtf8 $ do
   inputFile <- readFile inputFilePath
-  putStr $ ledgerParser inputFile
+  case ledgerParser inputFile of
+    Left error -> hPutStr stderr error
+    Right output -> putStr output
 
 parseBankAction :: LedgerParser -> FlagParam FilePath -> OptionDesc (IO ()) ()
 parseBankAction ledgerParser inputFileFlag = action $
@@ -122,7 +125,7 @@ main = defaultMain $ do
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
     hintsFileFlag <- flagParam (FlagLong hintsFileFlagName) (FlagOptional Nothing (fmap Just . filenameParser))
     parseBcgeAction $ BcgeFlags inputFileFlag hintsFileFlag
-  command "parse-mbank" $ do
+  command "parse-ib" $ do
     description "Parses IB's CSV file and outputs ledupt data"
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
     parseBankAction ibCsvToLedger inputFileFlag
