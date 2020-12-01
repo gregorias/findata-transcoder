@@ -1,3 +1,5 @@
+{-# LANGUAGE ExtendedDefaultRules #-}
+
 module Test.Text.Megaparsec.Char.Extra (tests) where
 
 import Test.Hspec (describe, shouldBe)

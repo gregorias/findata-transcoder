@@ -7,6 +7,7 @@ import LedgerData
     valueToLedger,
   )
 import qualified Test.Hledger.Data.Extra as HDE
+import qualified Test.Hledger.Read.TestUtils
 import Test.Hledupt.Bcge (bcgeTests)
 import qualified Test.Hledupt.Bcge.Hint as BcgeHint
 import qualified Test.Hledupt.Data
@@ -24,6 +25,7 @@ tests = do
   BcgeHint.tests
   mbankTests
   HDE.tests
+  Test.Hledger.Read.TestUtils.tests
   Test.Hledupt.Data.dataTests
   Test.Hledupt.Ib.tests
   Test.Text.Megaparsec.Char.Extra.tests

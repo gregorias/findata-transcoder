@@ -1,11 +1,16 @@
+{-# LANGUAGE TypeFamilies #-}
+
 module Text.Megaparsec.Char.Extra (eolOrEof) where
 
 import Text.Megaparsec
-  ( Parsec,
+  ( MonadParsec,
+    Parsec,
+    Token,
+    Tokens,
     eof,
     (<|>),
   )
 import Text.Megaparsec.Char (eol, string)
 
-eolOrEof :: Parsec () String String
+eolOrEof :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m String
 eolOrEof = eol <|> (eof *> string "")

@@ -74,7 +74,9 @@ test-suite hledupt-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Hledger.Read.TestUtils
       Test.Hledger.Data.Extra
+      Test.Hledger.Read.TestUtils
       Test.Hledupt.Bcge
       Test.Hledupt.Bcge.Hint
       Test.Hledupt.Data

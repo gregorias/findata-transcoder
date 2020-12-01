@@ -1,9 +1,10 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Test.Hledupt.Mbank
   ( mbankTests,
   )
 where
 
-import Hledupt.Data (fromUnitsAndCents)
 import Data.Text (pack)
 import Data.Time.Calendar (fromGregorian)
 import Hledger.Data.Posting (balassert, nullposting, post')
@@ -12,6 +13,7 @@ import Hledger.Data.Types
   ( Posting (..),
     Transaction (..),
   )
+import Hledupt.Data (fromUnitsAndCents)
 import Hledupt.Mbank
   ( MbankTransaction (..),
     mTrToLedger,
@@ -49,12 +51,12 @@ mbankTests = do
               transaction
                 "2019/10/28"
                 [ post'
-                    (pack "Assets:Liquid:mBank")
+                    "Assets:Liquid:mBank"
                     (pln (-15))
                     (balassert $ pln 100949),
-                  nullposting {paccount = pack "Expenses:Other"}
+                  nullposting {paccount = "Expenses:Other"}
                 ]
-            ledgerTrWithDescription = ledgerTr {tdescription = pack "PRZELEW ŚRODKÓW"}
+            ledgerTrWithDescription = ledgerTr {tdescription = "PRZELEW ŚRODKÓW"}
             mbankTr =
               MbankTransaction
                 (fromGregorian 2019 10 28)

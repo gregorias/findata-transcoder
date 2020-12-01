@@ -15,6 +15,7 @@ import Hledger.Data.Lens
 import Hledger.Data.Types
   ( Amount (..),
     Quantity,
+    Transaction,
   )
 
 makeCurrencyAmount :: String -> Quantity -> Amount
