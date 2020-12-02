@@ -4,20 +4,32 @@ module Hledger.Data.Lens
     asPrecision,
     asCommoditySide,
     asCommoditySpaced,
+    maAmount,
+    maMaybeAmount,
     pAccount,
+    pAmount,
+    pMamount,
+    pMaybeAmount,
     pBalanceAssertion,
     tDescription,
     tStatus,
   )
 where
 
-import Control.Lens (Lens', lens)
+import Control.Lens
+  ( Lens',
+    Prism',
+    Traversal',
+    lens,
+    prism',
+  )
 import Data.Text (pack, unpack)
 import Hledger.Data.Types
   ( Amount (..),
     AmountStyle (..),
     BalanceAssertion (..),
     CommoditySymbol,
+    MixedAmount (..),
     Posting (..),
     Side (..),
     Status (..),
@@ -53,6 +65,34 @@ pAccount :: Lens' Posting String
 pAccount = lens (unpack . paccount) setter
   where
     setter p a = p {paccount = pack a}
+
+pMamount :: Lens' Posting MixedAmount
+pMamount = lens pamount setter
+  where
+    setter p ma = p {pamount = ma}
+
+maAmount :: Prism' MixedAmount Amount
+maAmount = prism' setter getter
+  where
+    setter = Mixed . (: [])
+    getter (Mixed (a : _)) = Just a
+    getter (Mixed _) = Nothing
+
+maMaybeAmount :: Lens' MixedAmount (Maybe Amount)
+maMaybeAmount = lens getter setter
+  where
+    setter (Mixed (a : as)) (Just a') = Mixed (a' : as)
+    setter (Mixed (a : as)) Nothing = Mixed as
+    setter (Mixed []) (Just a') = Mixed [a']
+    setter (Mixed []) Nothing = Mixed []
+    getter (Mixed (a : _)) = Just a
+    getter (Mixed _) = Nothing
+
+pAmount :: Traversal' Posting Amount
+pAmount = pMamount . maAmount
+
+pMaybeAmount :: Lens' Posting (Maybe Amount)
+pMaybeAmount = pMamount . maMaybeAmount
 
 pBalanceAssertion :: Lens' Posting (Maybe BalanceAssertion)
 pBalanceAssertion = lens pbalanceassertion setter

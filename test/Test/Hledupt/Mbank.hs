@@ -13,6 +13,7 @@ import Hledger.Data.Types
   ( Posting (..),
     Transaction (..),
   )
+import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.Data (fromUnitsAndCents)
 import Hledupt.Mbank
   ( MbankTransaction (..),
@@ -48,19 +49,14 @@ mbankTests = do
     describe "mTrToLedger" $ do
       it "transforms an mbank transaction" $ do
         let ledgerTr =
-              transaction
-                "2019/10/28"
-                [ post'
-                    "Assets:Liquid:mBank"
-                    (pln (-15))
-                    (balassert $ pln 100949),
-                  nullposting {paccount = "Expenses:Other"}
-                ]
-            ledgerTrWithDescription = ledgerTr {tdescription = "PRZELEW ŚRODKÓW"}
+              parseTransactionUnsafe
+                "2019/10/28 PRZELEW ŚRODKÓW\n\
+                \  Assets:Liquid:mBank  PLN -15 = PLN 100949\n\
+                \  Expenses:Other"
             mbankTr =
               MbankTransaction
                 (fromGregorian 2019 10 28)
                 "PRZELEW ŚRODKÓW"
                 (fromUnitsAndCents (-15) 0)
                 (fromUnitsAndCents 100949 0)
-        mTrToLedger mbankTr `shouldBe` ledgerTrWithDescription
+        mTrToLedger mbankTr `shouldBe` ledgerTr

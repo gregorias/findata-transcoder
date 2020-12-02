@@ -34,6 +34,7 @@ library
       Hledupt.Mbank
       LedgerData
       Text.Megaparsec.Char.Extra
+      Text.Megaparsec.Extra
   other-modules:
       Paths_hledupt
   hs-source-dirs:
@@ -48,6 +49,7 @@ library
     , megaparsec
     , mtl
     , overhang
+    , parser-combinators
     , safe
     , text
     , time
@@ -76,6 +78,7 @@ test-suite hledupt-test
   other-modules:
       Hledger.Read.TestUtils
       Test.Hledger.Data.Extra
+      Test.Hledger.Data.Lens
       Test.Hledger.Read.TestUtils
       Test.Hledupt.Bcge
       Test.Hledupt.Bcge.Hint
@@ -97,6 +100,7 @@ test-suite hledupt-test
     , hspec
     , lens
     , megaparsec
+    , parser-combinators
     , text
     , time
     , vector

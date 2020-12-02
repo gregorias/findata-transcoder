@@ -1,5 +1,6 @@
 module Hledger.Data.Extra
   ( makeCurrencyAmount,
+    makeCommodityAmount,
   )
 where
 
@@ -18,12 +19,16 @@ import Hledger.Data.Types
     Transaction,
   )
 
+makeCommodityAmount :: String -> Quantity -> Amount
+makeCommodityAmount commodity quantity =
+  num quantity
+    & set aCommodity (pack commodity)
+
 makeCurrencyAmount :: String -> Quantity -> Amount
 makeCurrencyAmount currency quantity =
-  num quantity
-    & set aCommodity (pack currency)
-      . over
-        aStyle
-        ( set asPrecision 2
-            . set asCommoditySpaced True
-        )
+  makeCommodityAmount currency quantity
+    & over
+      aStyle
+      ( set asPrecision 2
+          . set asCommoditySpaced True
+      )

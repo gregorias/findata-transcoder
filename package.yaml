@@ -37,6 +37,7 @@ library:
   - text
   - time
   - vector
+  - parser-combinators
 
 executables:
   hledupt-exe:
@@ -73,3 +74,4 @@ tests:
     - text
     - time
     - vector
+    - parser-combinators
