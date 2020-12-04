@@ -43,7 +43,6 @@ packages:
 # extra-deps: []
 extra-deps:
 - cli-0.2.0
-- ghc-exactprint-0.6.3.3@sha256:384e1066c192ed60dc12443b7aca75a4a4adcc47f829336c21ed007596fe683f,9446
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

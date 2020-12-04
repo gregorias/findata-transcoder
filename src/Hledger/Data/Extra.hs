@@ -1,3 +1,6 @@
+{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE TypeFamilies #-}
+
 module Hledger.Data.Extra
   ( makeCurrencyAmount,
     makeCommodityAmount,
@@ -16,7 +19,6 @@ import Hledger.Data.Lens
 import Hledger.Data.Types
   ( Amount (..),
     Quantity,
-    Transaction,
   )
 
 makeCommodityAmount :: String -> Quantity -> Amount

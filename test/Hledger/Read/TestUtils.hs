@@ -13,7 +13,6 @@ import Control.Monad (liftM2)
 import Control.Monad.Combinators
   ( manyTill,
     optional,
-    sepBy1,
     someTill,
   )
 import Data.Function ((&))
@@ -26,48 +25,36 @@ import Hledger.Data.Extra
     makeCurrencyAmount,
   )
 import Hledger.Data.Lens
-  ( aCommodity,
-    aStyle,
-    asCommoditySpaced,
-    asPrecision,
-    pAmount,
-    pBalanceAssertion,
+  ( pBalanceAssertion,
     pMaybeAmount,
     tDescription,
     tStatus,
   )
-import Hledger.Data.Posting (balassert, nullposting, post')
+import Hledger.Data.Posting (balassert, nullposting)
 import qualified Hledger.Data.Transaction as Tr
 import Hledger.Data.Types
   ( Amount (..),
     BalanceAssertion (..),
     Posting (..),
-    Quantity,
     Status (..),
     Transaction,
   )
-import qualified Hledger.Data.Types as T
 import Hledupt.Data (decimalParser)
 import Text.Megaparsec
   ( MonadParsec,
     Token,
     Tokens,
     anySingle,
-    lookAhead,
     many,
-    notFollowedBy,
     some,
     try,
     (<|>),
   )
 import qualified Text.Megaparsec as MP
-import Text.Megaparsec.Char (alphaNumChar, char, newline, printChar, string)
+import Text.Megaparsec.Char (alphaNumChar, char, newline, printChar)
 import qualified Text.Megaparsec.Char as Char
-import Text.Megaparsec.Char.Extra (eolOrEof)
-import Text.Megaparsec.Extra (butNot, noConsume)
-
-space :: (MonadParsec e s m, Token s ~ Char) => m Char
-space = MP.single ' '
+import Text.Megaparsec.Char.Extra (eolOrEof, space)
+import Text.Megaparsec.Extra (noConsume)
 
 doubleSpace :: (MonadParsec e s m, Token s ~ Char) => m [Char]
 doubleSpace = MP.count 2 space
@@ -95,7 +82,6 @@ commodity = do
               return (symbol, amount)
           )
   many space
-  let symbolSetter = maybe id (L.set aCommodity . pack) symbol
   return $
     case symbol of
       Just symbol ->

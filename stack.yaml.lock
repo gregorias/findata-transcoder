@@ -11,13 +11,6 @@ packages:
       sha256: 1c70b41905cf8169e4ff1b8db222892aecbc61a458d9ee29e84443bacffd71be
   original:
     hackage: cli-0.2.0
-- completed:
-    hackage: ghc-exactprint-0.6.3.3@sha256:384e1066c192ed60dc12443b7aca75a4a4adcc47f829336c21ed007596fe683f,9446
-    pantry-tree:
-      size: 86248
-      sha256: c43b6e600634f5d5df2feb69e27e745fff25fe60503a30d3e5c86428882b686f
-  original:
-    hackage: ghc-exactprint-0.6.3.3@sha256:384e1066c192ed60dc12443b7aca75a4a4adcc47f829336c21ed007596fe683f,9446
 snapshots:
 - completed:
     size: 532413

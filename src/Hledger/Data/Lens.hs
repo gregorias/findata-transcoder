@@ -81,8 +81,8 @@ maAmount = prism' setter getter
 maMaybeAmount :: Lens' MixedAmount (Maybe Amount)
 maMaybeAmount = lens getter setter
   where
-    setter (Mixed (a : as)) (Just a') = Mixed (a' : as)
-    setter (Mixed (a : as)) Nothing = Mixed as
+    setter (Mixed (_ : as)) (Just a') = Mixed (a' : as)
+    setter (Mixed (_ : as)) Nothing = Mixed as
     setter (Mixed []) (Just a') = Mixed [a']
     setter (Mixed []) Nothing = Mixed []
     getter (Mixed (a : _)) = Just a

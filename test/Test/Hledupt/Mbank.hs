@@ -5,21 +5,13 @@ module Test.Hledupt.Mbank
   )
 where
 
-import Data.Text (pack)
 import Data.Time.Calendar (fromGregorian)
-import Hledger.Data.Posting (balassert, nullposting, post')
-import Hledger.Data.Transaction (transaction)
-import Hledger.Data.Types
-  ( Posting (..),
-    Transaction (..),
-  )
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.Data (fromUnitsAndCents)
 import Hledupt.Mbank
   ( MbankTransaction (..),
     mTrToLedger,
     mbankCsvParser,
-    pln,
     valueParser,
   )
 import Test.Hspec (describe, it, shouldBe)

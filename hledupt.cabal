@@ -31,6 +31,7 @@ library
       Hledupt.Bcge.Hint
       Hledupt.Data
       Hledupt.Ib
+      Hledupt.Ib.Csv
       Hledupt.Mbank
       LedgerData
       Text.Megaparsec.Char.Extra

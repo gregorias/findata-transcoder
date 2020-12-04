@@ -1,5 +1,4 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE UnicodeSyntax #-}
 
 module Hledupt.Mbank
   ( MbankTransaction (..),

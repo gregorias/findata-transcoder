@@ -1,119 +1,74 @@
+{-# LANGUAGE ExtendedDefaultRules #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Hledupt.Ib
   ( ibCsvToLedger,
-    IbCsvs (..),
-    rawStatementParser,
-    PositionRecord (..),
-    PositionRecordCurrency (..),
-    PositionRecordAssetClass (..),
+    parseCsv,
   )
 where
 
 import qualified Control.Lens as L
-import Control.Monad (void)
-import qualified Data.ByteString as BS
-import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
-import Data.List (partition)
+import Data.Function ((&))
+import Data.Maybe (mapMaybe)
+import Hledger (Amount, Posting, balassert, nullposting)
+import Hledger.Data.Extra (makeCommodityAmount, makeCurrencyAmount)
+import Hledger.Data.Lens
+  ( pAccount,
+    pBalanceAssertion,
+    pMaybeAmount,
+    tDescription,
+  )
 import Hledger.Data.Transaction (showTransaction, transaction)
 import Hledger.Data.Types
-  ( Amount (..),
-    Posting (..),
-    Quantity,
-    Transaction (..),
+  ( Transaction (..),
   )
-import Hledupt.Data (MonetaryValue, myDecDec)
-import Text.Megaparsec
-  ( Parsec,
-    anySingle,
-    many,
-    noneOf,
-    notFollowedBy,
-    some,
-  )
-import Text.Megaparsec.Char (char)
-import Text.Megaparsec.Char.Extra (eolOrEof)
+import qualified Hledupt.Ib.Csv as IbCsv
 
--- Parsing (Raw Account Statement → IbCsvs)
-
-type Csv = String
-
-data CsvLine = CsvLine
-  { header :: String,
-    remainingLine :: String
-  }
-  deriving (Eq, Show)
-
-data IbCsvs = IbCsvs
-  { statement :: Csv,
-    positions :: Csv
-  }
-  deriving (Eq, Show)
-
-type IbParser = Parsec () String
-
-rawStatementLineParser :: IbParser CsvLine
-rawStatementLineParser = do
-  headerString <- many $ noneOf ("," :: String)
-  void $ char ','
-  rest <- some $ notFollowedBy eolOrEof *> anySingle
-  end <- eolOrEof
-  return $ CsvLine headerString (rest ++ end)
-
-rawStatementParser :: IbParser IbCsvs
-rawStatementParser = do
-  ibCsvLines <- many rawStatementLineParser
-  let (stmtLines, nonStmtLines) = partition ((== "Statement") . header) ibCsvLines
-      statusLines = filter ((== "Positions and Mark-to-Market Profit and Loss") . header) nonStmtLines
-      stmtCsv = concatMap remainingLine stmtLines
-      statusCsv = concatMap remainingLine statusLines
-  return $ IbCsvs {statement = stmtCsv, positions = statusCsv}
-
--- Parsing (IbCsvs → Status)
-
-data PositionRecordAssetClass = Stocks | Forex | Other
+data AssetClass = Stocks | Forex
   deriving (Show, Eq)
 
-data PositionRecordCurrency = USD | CHF
-  deriving (Show, Eq)
+csvAssetClassToLedgerAssetClass :: IbCsv.PositionRecordAssetClass -> Maybe AssetClass
+csvAssetClassToLedgerAssetClass IbCsv.Stocks = Just Stocks
+csvAssetClassToLedgerAssetClass IbCsv.Forex = Just Forex
+csvAssetClassToLedgerAssetClass IbCsv.Other = Nothing
 
-data PositionRecord = PositionRecord
-  { assetClass :: PositionRecordAssetClass,
-    currency :: PositionRecordCurrency,
-    symbol :: String,
-    description :: String,
-    quantity :: Decimal,
-    price :: MonetaryValue
-  }
-  deriving (Show, Eq)
+makeAmount :: AssetClass -> String -> Decimal -> Amount
+makeAmount aClass = maker
+  where
+    maker = case aClass of
+      Stocks -> makeCommodityAmount
+      Forex -> makeCurrencyAmount
 
-instance Csv.FromField PositionRecordAssetClass where
-  parseField "Stocks" = pure Stocks
-  parseField "Forex" = pure Forex
-  parseField _ = pure Other
+accountPrefix :: AssetClass -> String
+accountPrefix Stocks = "Assets:Investments:IB"
+accountPrefix Forex = "Assets:Liquid:IB"
 
-instance Csv.FromField PositionRecordCurrency where
-  parseField "USD" = pure USD
-  parseField "CHF" = pure CHF
-  parseField _ = fail "Expected CHF/USD as currency"
+positionRecordToPosting :: IbCsv.PositionRecord -> Maybe Posting
+positionRecordToPosting record = do
+  assetClass <- csvAssetClassToLedgerAssetClass . IbCsv.assetClass $ record
+  let symbol = IbCsv.symbol record
+  let accountName = accountPrefix assetClass ++ ":" ++ IbCsv.symbol record
+  return $
+    nullposting
+      & L.set pAccount accountName
+        . L.set pMaybeAmount (Just $ makeAmount assetClass symbol 0)
+        . L.set
+          pBalanceAssertion
+          (balassert . makeAmount assetClass symbol $ IbCsv.quantity record)
 
-instance Csv.FromNamedRecord PositionRecord where
-  parseNamedRecord namedRecord =
-    PositionRecord
-      <$> lookupAux "Asset Class"
-      <*> lookupAux "Currency"
-      <*> lookupAux "Symbol"
-      <*> lookupAux "Description"
-      <*> (L.view myDecDec <$> lookupAux "Quantity")
-      <*> (L.view myDecDec <$> lookupAux "Price")
-    where
-      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
-      lookupAux = Csv.lookup namedRecord
-
-parseCsv :: String -> Either String [Transaction]
-parseCsv _ = Left "Could not parse the CSV, because the functionality is unimplemented"
+-- | Parses IB MtoM CSV statement into a Ledger status transaction
+parseCsv :: String -> Either String Transaction
+parseCsv csv = do
+  statement <- IbCsv.parse csv
+  let posRecords = IbCsv.positionRecords statement
+  return $
+    transaction
+      (show . IbCsv.lastStatementDay $ statement)
+      (mapMaybe positionRecordToPosting posRecords)
+      & L.set tDescription "IB Status"
 
 ibCsvToLedger :: String -> Either String String
-ibCsvToLedger = fmap (concatMap showTransaction) . parseCsv
+ibCsvToLedger = fmap showTransaction . parseCsv

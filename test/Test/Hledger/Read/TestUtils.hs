@@ -7,24 +7,20 @@ import qualified Control.Lens as L
 import Data.Function ((&))
 import Hledger.Data.Extra
   ( makeCommodityAmount,
-    makeCurrencyAmount,
   )
 import Hledger.Data.Lens (tDescription, tStatus)
 import Hledger.Data.Posting
   ( balassert,
     nullposting,
     post,
-    post',
   )
 import Hledger.Data.Transaction (transaction)
 import Hledger.Data.Types
   ( MixedAmount (..),
     Posting (..),
     Status (..),
-    Transaction (..),
   )
 import Hledger.Read.TestUtils (parseTransactionUnsafe, postingParser)
-import Hledupt.Mbank (pln)
 import Test.Hspec (describe, it, shouldBe)
 import qualified Test.Hspec as Hspec
 import Text.Megaparsec (parseMaybe)
