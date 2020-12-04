@@ -44,13 +44,11 @@ data CsvLine = CsvLine
   { header :: String,
     remainingLine :: String
   }
-  deriving (Eq, Show)
 
 data Csvs = Csvs
   { statement :: Csv,
     positions :: Csv
   }
-  deriving (Eq, Show)
 
 rawStatementLineParser ::
   (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>
@@ -114,7 +112,6 @@ instance Csv.FromField PositionRecordAssetClass where
   parseField _ = pure Other
 
 data PositionRecordCurrency = USD | CHF
-  deriving (Show, Eq)
 
 instance Csv.FromField PositionRecordCurrency where
   parseField "USD" = pure USD
@@ -128,7 +125,6 @@ data PositionRecord = PositionRecord
     quantity :: Decimal,
     price :: MonetaryValue
   }
-  deriving (Show, Eq)
 
 instance Csv.FromNamedRecord PositionRecord where
   parseNamedRecord namedRecord =

@@ -28,7 +28,6 @@ import Hledger.Data.Types
 import qualified Hledupt.Ib.Csv as IbCsv
 
 data AssetClass = Stocks | Forex
-  deriving (Show, Eq)
 
 csvAssetClassToLedgerAssetClass :: IbCsv.PositionRecordAssetClass -> Maybe AssetClass
 csvAssetClassToLedgerAssetClass IbCsv.Stocks = Just Stocks
