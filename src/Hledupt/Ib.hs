@@ -29,10 +29,9 @@ import qualified Hledupt.Ib.Csv as IbCsv
 
 data AssetClass = Stocks | Forex
 
-csvAssetClassToLedgerAssetClass :: IbCsv.PositionRecordAssetClass -> Maybe AssetClass
-csvAssetClassToLedgerAssetClass IbCsv.Stocks = Just Stocks
-csvAssetClassToLedgerAssetClass IbCsv.Forex = Just Forex
-csvAssetClassToLedgerAssetClass IbCsv.Other = Nothing
+csvAssetClassToLedgerAssetClass :: IbCsv.PositionRecordAssetClass -> AssetClass
+csvAssetClassToLedgerAssetClass IbCsv.Stocks = Stocks
+csvAssetClassToLedgerAssetClass IbCsv.Forex = Forex
 
 makeAmount :: AssetClass -> String -> Decimal -> Amount
 makeAmount aClass = maker
@@ -47,7 +46,7 @@ accountPrefix Forex = "Assets:Liquid:IB"
 
 positionRecordToPosting :: IbCsv.PositionRecord -> Maybe Posting
 positionRecordToPosting record = do
-  assetClass <- csvAssetClassToLedgerAssetClass . IbCsv.assetClass $ record
+  let assetClass = csvAssetClassToLedgerAssetClass . IbCsv.assetClass $ record
   let symbol = IbCsv.symbol record
   let accountName = accountPrefix assetClass ++ ":" ++ IbCsv.symbol record
   return $

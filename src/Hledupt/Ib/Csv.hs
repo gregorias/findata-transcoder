@@ -21,6 +21,7 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
 import Data.List (partition)
+import Data.Maybe (mapMaybe)
 import Data.Time.Calendar (Day, fromGregorian)
 import qualified Data.Vector as V
 import Hledupt.Data (MonetaryValue, myDecDec)
@@ -103,13 +104,13 @@ periodPhraseParser = do
 statementDateParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Day
 statementDateParser = snd <$> MP.someTill_ anySingle (try periodPhraseParser)
 
-data PositionRecordAssetClass = Stocks | Forex | Other
+data PositionRecordAssetClass = Stocks | Forex
   deriving (Show, Eq)
 
 instance Csv.FromField PositionRecordAssetClass where
   parseField "Stocks" = pure Stocks
   parseField "Forex" = pure Forex
-  parseField _ = pure Other
+  parseField _ = fail "Expected Stocks or Forex"
 
 data PositionRecordCurrency = USD | CHF
 
@@ -126,6 +127,10 @@ data PositionRecord = PositionRecord
     price :: MonetaryValue
   }
 
+newtype PositionOrTotalRecord = PositionOrTotalRecord
+  { positionRecord :: Maybe PositionRecord
+  }
+
 instance Csv.FromNamedRecord PositionRecord where
   parseNamedRecord namedRecord =
     PositionRecord
@@ -137,6 +142,11 @@ instance Csv.FromNamedRecord PositionRecord where
     where
       lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
       lookupAux = Csv.lookup namedRecord
+
+instance Csv.FromNamedRecord PositionOrTotalRecord where
+  parseNamedRecord namedRecord =
+    (PositionOrTotalRecord . Just <$> Csv.parseNamedRecord namedRecord)
+      <|> pure (PositionOrTotalRecord Nothing)
 
 -- | Useful information gleaned directly from IB's CSV statement.
 data Statement = Statement
@@ -151,6 +161,7 @@ parse csv = do
       parsecErrToString = first show
   csvs <- parsecErrToString $ MP.parse rawStatementParser "" csv
   date <- parsecErrToString $ MP.parse statementDateParser "" (statement csvs)
-  positions :: [PositionRecord] <-
+  maybePositions :: [PositionOrTotalRecord] <-
     V.toList . snd <$> Csv.decodeByName (C.pack $ positions csvs)
+  let positions = mapMaybe positionRecord maybePositions
   return $ Statement date positions

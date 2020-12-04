@@ -31,6 +31,7 @@ parseTests = do
             \Account Information,Data,Name,John Doe\n\
             \Positions and Mark-to-Market Profit and Loss,Header,Asset Class,Currency,Symbol,Description,Prior Quantity,Quantity,Prior Price,Price,Prior Market Value,Market Value,Position,Trading,Comm.,Other,Total\n\
             \Positions and Mark-to-Market Profit and Loss,Data,Stocks,USD,ACWF,ISHARES MSCI GLOBAL MULTIFAC,123,123,32.24,32.24,1001.01,1001.01,0,0,0,0,0\n\
+            \Positions and Mark-to-Market Profit and Loss,Data,Total,USD,,,,,,,123,123,0,0,0,0,0\n\
             \Positions and Mark-to-Market Profit and Loss,Data,Forex,CHF,CHF, ,100.0011305,100.0011305,1,1,100.0011305,100.0011305,0,0,0,0,0"
       parseCsv csv
         `shouldBe` Right
