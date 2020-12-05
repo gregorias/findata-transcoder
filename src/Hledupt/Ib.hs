@@ -50,8 +50,8 @@ accountPrefix :: AssetClass -> String
 accountPrefix Stocks = "Assets:Investments:IB"
 accountPrefix Forex = "Assets:Liquid:IB"
 
-positionRecordToPosting :: IbCsv.PositionRecord -> Posting
-positionRecordToPosting record = do
+positionRecordToStatusPosting :: IbCsv.PositionRecord -> Posting
+positionRecordToStatusPosting record =
   let assetClass = csvAssetClassToLedgerAssetClass . IbCsv.assetClass $ record
       symbol = IbCsv.symbol record
       accountName = accountPrefix assetClass ++ ":" ++ IbCsv.symbol record
@@ -65,6 +65,8 @@ positionRecordToPosting record = do
 positionRecordToStockPrice :: Day -> IbCsv.PositionRecord -> Maybe MarketPrice
 positionRecordToStockPrice day rec = do
   guard $ IbCsv.assetClass rec == IbCsv.Stocks
+  -- Records of stocks that I do not own miss the price data.
+  guard $ IbCsv.quantity rec > 0
   return $
     MarketPrice
       day
@@ -74,14 +76,15 @@ positionRecordToStockPrice day rec = do
 
 data IbData = IbData
   { stockPrices :: [MarketPrice],
-    status :: Transaction
+    status :: Maybe Transaction
   }
   deriving (Eq, Show)
 
 -- | Shows IbData in Ledger format
 showIbData :: IbData -> String
-showIbData (IbData stockPrices status) =
-  concatMap showMarketPrice stockPrices ++ "\n" ++ showTransaction status
+showIbData (IbData stockPrices maybeStatus) =
+  concatMap showMarketPrice stockPrices ++ "\n"
+    ++ maybe "" showTransaction maybeStatus
 
 -- | Parses IB MtoM CSV statement into a Ledger status transaction
 parseCsv :: String -> Either String IbData
@@ -89,13 +92,17 @@ parseCsv csv = do
   statement <- IbCsv.parse csv
   let posRecords = IbCsv.positionRecords statement
       statementDay = IbCsv.lastStatementDay statement
+      statusPostings = fmap positionRecordToStatusPosting posRecords
   return $
     IbData
       (mapMaybe (positionRecordToStockPrice statementDay) posRecords)
-      ( transaction
-          (show statementDay)
-          (fmap positionRecordToPosting posRecords)
-          & L.set tDescription "IB Status"
+      ( do
+          guard $ not (null statusPostings)
+          return $
+            transaction
+              (show statementDay)
+              statusPostings
+              & L.set tDescription "IB Status"
       )
 
 ibCsvToLedger :: String -> Either String String

@@ -47,10 +47,11 @@ parseTests = do
                   "USD"
                   (fromRational $ 3224 % 100)
               ]
-              ( parseTransactionUnsafe
-                  "2020/11/26 IB Status\n\
-                  \  Assets:Investments:IB:ACWF  0 ACWF = ACWF 123\n\
-                  \  Assets:Liquid:IB:CHF  CHF 0 = CHF 100.0011305"
+              ( Just $
+                  parseTransactionUnsafe
+                    "2020/11/26 IB Status\n\
+                    \  Assets:Investments:IB:ACWF  0 ACWF = ACWF 123\n\
+                    \  Assets:Liquid:IB:CHF  CHF 0 = CHF 100.0011305"
               )
           )
 
@@ -69,6 +70,15 @@ parseTests = do
       (IbCsv.lastStatementDay <$> IbCsv.parse csv)
         `shouldBe` Right (fromGregorian 2020 12 4)
 
+    it "Doesn't return much when there's no data" $ do
+      let csv =
+            "\65279Statement,Header,Field Name,Field Value\n\
+            \Statement,Data,Period,\"December 11, 2019 - December 4, 2020\"\n\
+            \Positions and Mark-to-Market Profit and Loss,Header,Asset Class,Currency,Symbol,Description,Prior Quantity,Quantity,Prior Price,Price,Prior Market Value,Market Value,Position,Trading,Comm.,Other,Total\n"
+      parseCsv csv
+        `shouldBe` Right
+          (IbData [] Nothing)
+
   describe "showIbData" $ do
     it "formats IbData" $ do
       showIbData
@@ -79,10 +89,11 @@ parseTests = do
                 "USD"
                 (fromRational $ 3224 % 100)
             ]
-            ( parseTransactionUnsafe
-                "2020/11/26 IB Status\n\
-                \  Assets:Investments:IB:ACWF  0 ACWF = ACWF 123\n\
-                \  Assets:Liquid:IB:CHF  CHF 0 = CHF 100.0011305"
+            ( Just $
+                parseTransactionUnsafe
+                  "2020/11/26 IB Status\n\
+                  \  Assets:Investments:IB:ACWF  0 ACWF = ACWF 123\n\
+                  \  Assets:Liquid:IB:CHF  CHF 0 = CHF 100.0011305"
             )
         )
         `shouldBe` "P 2020-11-26 ACWF 32.24 USD\n\
