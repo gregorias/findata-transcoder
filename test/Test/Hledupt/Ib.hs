@@ -6,8 +6,10 @@ module Test.Hledupt.Ib
   )
 where
 
+import Data.Either (isRight)
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.Ib
+import qualified Hledupt.Ib.Csv as IbCsv
 import Test.Hspec (describe, shouldBe)
 import qualified Test.Hspec as Hspec
 
@@ -40,3 +42,10 @@ parseTests = do
               \  Assets:Investments:IB:ACWF  0 ACWF = ACWF 123\n\
               \  Assets:Liquid:IB:CHF  CHF 0 = CHF 100.0011305"
           )
+
+    Hspec.it "parses the BOM character" $ do
+      let csv =
+            "\65279Statement,Header,Field Name,Field Value\n\
+            \Statement,Data,Period,\"November 26, 2020\"\n\
+            \Positions and Mark-to-Market Profit and Loss,Header,Asset Class,Currency,Symbol,Description,Prior Quantity,Quantity,Prior Price,Price,Prior Market Value,Market Value,Position,Trading,Comm.,Other,Total\n"
+      isRight (IbCsv.parse csv)

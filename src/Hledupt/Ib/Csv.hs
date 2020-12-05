@@ -31,11 +31,12 @@ import Text.Megaparsec
     Tokens,
     anySingle,
     count,
+    eof,
     try,
   )
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (char, digitChar, letterChar, printChar, string)
-import Text.Megaparsec.Char.Extra (eolOrEof, space)
+import Text.Megaparsec.Char.Extra (bom, eolOrEof, space)
 
 -- Parsing (Raw Account Statement → Csvs)
 
@@ -50,6 +51,7 @@ data Csvs = Csvs
   { statement :: Csv,
     positions :: Csv
   }
+  deriving (Show)
 
 rawStatementLineParser ::
   (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>
@@ -61,11 +63,16 @@ rawStatementLineParser = do
 
 rawStatementParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Csvs
 rawStatementParser = do
+  optional bom
   ibCsvLines <- many rawStatementLineParser
   let (stmtLines, nonStmtLines) = partition ((== "Statement") . header) ibCsvLines
-      statusLines = filter ((== "Positions and Mark-to-Market Profit and Loss") . header) nonStmtLines
+      statusLines =
+        filter
+          ((== "Positions and Mark-to-Market Profit and Loss") . header)
+          nonStmtLines
       stmtCsv = concatMap remainingLine stmtLines
       statusCsv = concatMap remainingLine statusLines
+  eof
   return $ Csvs {statement = stmtCsv, positions = statusCsv}
 
 -- Proper CSV parsing (Csvs → data and records)
@@ -113,6 +120,7 @@ instance Csv.FromField PositionRecordAssetClass where
   parseField _ = fail "Expected Stocks or Forex"
 
 data PositionRecordCurrency = USD | CHF
+  deriving (Show)
 
 instance Csv.FromField PositionRecordCurrency where
   parseField "USD" = pure USD
@@ -126,10 +134,12 @@ data PositionRecord = PositionRecord
     quantity :: Decimal,
     price :: MonetaryValue
   }
+  deriving (Show)
 
 newtype PositionOrTotalRecord = PositionOrTotalRecord
   { positionRecord :: Maybe PositionRecord
   }
+  deriving (Show)
 
 instance Csv.FromNamedRecord PositionRecord where
   parseNamedRecord namedRecord =
@@ -153,6 +163,7 @@ data Statement = Statement
   { lastStatementDay :: Day,
     positionRecords :: [PositionRecord]
   }
+  deriving (Show)
 
 -- | Parses an M-to-M IB CSV statement into individual data points and records.
 parse :: String -> Either String Statement
@@ -160,8 +171,12 @@ parse csv = do
   let parsecErrToString :: (Show a) => Either a b -> Either String b
       parsecErrToString = first show
   csvs <- parsecErrToString $ MP.parse rawStatementParser "" csv
-  date <- parsecErrToString $ MP.parse statementDateParser "" (statement csvs)
+  date <-
+    parsecErrToString (MP.parse statementDateParser "" (statement csvs))
+      <|> Left "Could not parse the statement's date."
   maybePositions :: [PositionOrTotalRecord] <-
-    V.toList . snd <$> Csv.decodeByName (C.pack $ positions csvs)
+    (V.toList . snd <$> Csv.decodeByName (C.pack $ positions csvs))
+      <|> Left "Could not parse positions."
+
   let positions = mapMaybe positionRecord maybePositions
   return $ Statement date positions
