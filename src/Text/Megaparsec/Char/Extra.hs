@@ -7,6 +7,7 @@ module Text.Megaparsec.Char.Extra
   )
 where
 
+import Data.Functor (($>))
 import Text.Megaparsec
   ( MonadParsec,
     Token,
@@ -15,10 +16,10 @@ import Text.Megaparsec
     single,
     (<|>),
   )
-import Text.Megaparsec.Char (eol, string)
+import Text.Megaparsec.Char (eol)
 
 eolOrEof :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m String
-eolOrEof = eol <|> (eof *> string "")
+eolOrEof = eol <|> (eof $> "")
 
 bom :: (MonadParsec e s m, Token s ~ Char) => m Char
 bom = single '\65279'

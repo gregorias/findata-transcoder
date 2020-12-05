@@ -36,8 +36,8 @@ import Text.Megaparsec
     try,
   )
 import qualified Text.Megaparsec as MP
-import Text.Megaparsec.Char (char, digitChar, letterChar, printChar, string)
-import Text.Megaparsec.Char.Extra (bom, eolOrEof, space)
+import Text.Megaparsec.Char (char, digitChar, eol, letterChar, printChar, string)
+import Text.Megaparsec.Char.Extra (bom, space)
 
 -- Parsing (Raw Account Statement → Csvs)
 
@@ -59,7 +59,8 @@ rawStatementLineParser ::
   m CsvLine
 rawStatementLineParser = do
   headerString <- MP.someTill printChar (char ',')
-  (rest, end) <- MP.someTill_ printChar (try eolOrEof)
+  rest <- MP.some printChar
+  end <- try eol <|> return ""
   return $ CsvLine headerString (rest ++ end)
 
 rawStatementParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Csvs
