@@ -25,9 +25,7 @@ makeCommodityAmount :: String -> Quantity -> Amount
 makeCommodityAmount commodity quantity =
   num quantity
     & set aCommodity (pack commodity)
-      . over
-        aStyle
-        (set asCommoditySpaced True)
+      . set (aStyle . asCommoditySpaced) True
 
 makeCurrencyAmount :: String -> Quantity -> Amount
 makeCurrencyAmount currency quantity =

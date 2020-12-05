@@ -7,10 +7,13 @@ module Test.Hledupt.Ib
 where
 
 import Data.Either (isRight)
+import Data.Ratio ((%))
+import Data.Time (fromGregorian)
+import Hledger (MarketPrice (MarketPrice))
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.Ib
 import qualified Hledupt.Ib.Csv as IbCsv
-import Test.Hspec (describe, shouldBe)
+import Test.Hspec (describe, it, shouldBe)
 import qualified Test.Hspec as Hspec
 
 tests :: Hspec.SpecWith ()
@@ -37,10 +40,18 @@ parseTests = do
             \Positions and Mark-to-Market Profit and Loss,Data,Forex,CHF,CHF, ,100.0011305,100.0011305,1,1,100.0011305,100.0011305,0,0,0,0,0"
       parseCsv csv
         `shouldBe` Right
-          ( parseTransactionUnsafe
-              "2020/11/26 IB Status\n\
-              \  Assets:Investments:IB:ACWF  0 ACWF = ACWF 123\n\
-              \  Assets:Liquid:IB:CHF  CHF 0 = CHF 100.0011305"
+          ( IbData
+              [ MarketPrice
+                  (fromGregorian 2020 11 26)
+                  "ACWF"
+                  "USD"
+                  (fromRational $ 3224 % 100)
+              ]
+              ( parseTransactionUnsafe
+                  "2020/11/26 IB Status\n\
+                  \  Assets:Investments:IB:ACWF  0 ACWF = ACWF 123\n\
+                  \  Assets:Liquid:IB:CHF  CHF 0 = CHF 100.0011305"
+              )
           )
 
     Hspec.it "parses the BOM character" $ do
@@ -49,3 +60,26 @@ parseTests = do
             \Statement,Data,Period,\"November 26, 2020\"\n\
             \Positions and Mark-to-Market Profit and Loss,Header,Asset Class,Currency,Symbol,Description,Prior Quantity,Quantity,Prior Price,Price,Prior Market Value,Market Value,Position,Trading,Comm.,Other,Total\n"
       isRight (IbCsv.parse csv)
+  describe "showIbData" $ do
+    it "formats IbData" $ do
+      showIbData
+        ( IbData
+            [ MarketPrice
+                (fromGregorian 2020 11 26)
+                "ACWF"
+                "USD"
+                (fromRational $ 3224 % 100)
+            ]
+            ( parseTransactionUnsafe
+                "2020/11/26 IB Status\n\
+                \  Assets:Investments:IB:ACWF  0 ACWF = ACWF 123\n\
+                \  Assets:Liquid:IB:CHF  CHF 0 = CHF 100.0011305"
+            )
+        )
+        `shouldBe` "P 2020-11-26 ACWF 32.24 USD\n\
+                   \\n\
+                   \2020-11-26 IB Status\n\
+                   \    Assets:Investments:IB:ACWF               0 = ACWF 123\n\
+                   \    Assets:Liquid:IB:CHF                     0 = CHF 100.00\n\n"
+
+      return ()

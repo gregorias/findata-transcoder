@@ -8,6 +8,7 @@ import LedgerData
   )
 import qualified Test.Hledger.Data.Extra as HDE
 import qualified Test.Hledger.Data.Lens
+import qualified Test.Hledger.Data.MarketPrice.Extra
 import qualified Test.Hledger.Read.TestUtils
 import Test.Hledupt.Bcge (bcgeTests)
 import qualified Test.Hledupt.Bcge.Hint as BcgeHint
@@ -27,6 +28,7 @@ tests = do
   mbankTests
   HDE.tests
   Test.Hledger.Data.Lens.tests
+  Test.Hledger.Data.MarketPrice.Extra.tests
   Test.Hledger.Read.TestUtils.tests
   Test.Hledupt.Data.dataTests
   Test.Hledupt.Ib.tests
