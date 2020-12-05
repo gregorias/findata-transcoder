@@ -32,6 +32,7 @@ import Text.Megaparsec
     anySingle,
     count,
     eof,
+    single,
     try,
   )
 import qualified Text.Megaparsec as MP
@@ -100,13 +101,21 @@ monthParser = do
     "December" -> return 12
     _ -> mzero
 
-periodPhraseParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Day
-periodPhraseParser = do
-  string "Period,\""
+datePhraseParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Day
+datePhraseParser = do
   month <- monthParser <* space
   day <- some digitChar <* string ", "
   year <- count 4 digitChar
   return $ fromGregorian (read year) month (read day)
+
+periodPhraseParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Day
+periodPhraseParser = do
+  string "Period,\""
+  date <-
+    try (datePhraseParser >> string " - " >> datePhraseParser)
+      <|> datePhraseParser
+  single '"'
+  return date
 
 statementDateParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Day
 statementDateParser = snd <$> MP.someTill_ anySingle (try periodPhraseParser)
@@ -120,7 +129,7 @@ instance Csv.FromField PositionRecordAssetClass where
   parseField _ = fail "Expected Stocks or Forex"
 
 data PositionRecordCurrency = USD | CHF
-  deriving (Show)
+  deriving (Eq, Show)
 
 instance Csv.FromField PositionRecordCurrency where
   parseField "USD" = pure USD
@@ -134,12 +143,12 @@ data PositionRecord = PositionRecord
     quantity :: Decimal,
     price :: MonetaryValue
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 newtype PositionOrTotalRecord = PositionOrTotalRecord
   { positionRecord :: Maybe PositionRecord
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 instance Csv.FromNamedRecord PositionRecord where
   parseNamedRecord namedRecord =
@@ -163,7 +172,7 @@ data Statement = Statement
   { lastStatementDay :: Day,
     positionRecords :: [PositionRecord]
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 -- | Parses an M-to-M IB CSV statement into individual data points and records.
 parse :: String -> Either String Statement

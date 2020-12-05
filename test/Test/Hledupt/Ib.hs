@@ -24,7 +24,7 @@ tests = do
 parseTests :: Hspec.SpecWith ()
 parseTests = do
   describe "parse" $ do
-    Hspec.it "parses a CSV" $ do
+    it "parses a CSV" $ do
       let csv =
             "Statement,Header,Field Name,Field Value\n\
             \Statement,Data,BrokerName,Interactive Brokers\n\
@@ -54,12 +54,21 @@ parseTests = do
               )
           )
 
-    Hspec.it "parses the BOM character" $ do
+    it "parses the BOM character" $ do
       let csv =
             "\65279Statement,Header,Field Name,Field Value\n\
             \Statement,Data,Period,\"November 26, 2020\"\n\
             \Positions and Mark-to-Market Profit and Loss,Header,Asset Class,Currency,Symbol,Description,Prior Quantity,Quantity,Prior Price,Price,Prior Market Value,Market Value,Position,Trading,Comm.,Other,Total\n"
       isRight (IbCsv.parse csv)
+
+    it "parses a range date correctly" $ do
+      let csv =
+            "\65279Statement,Header,Field Name,Field Value\n\
+            \Statement,Data,Period,\"December 11, 2019 - December 4, 2020\"\n\
+            \Positions and Mark-to-Market Profit and Loss,Header,Asset Class,Currency,Symbol,Description,Prior Quantity,Quantity,Prior Price,Price,Prior Market Value,Market Value,Position,Trading,Comm.,Other,Total\n"
+      (IbCsv.lastStatementDay <$> IbCsv.parse csv)
+        `shouldBe` Right (fromGregorian 2020 12 4)
+
   describe "showIbData" $ do
     it "formats IbData" $ do
       showIbData
@@ -81,5 +90,3 @@ parseTests = do
                    \2020-11-26 IB Status\n\
                    \    Assets:Investments:IB:ACWF               0 = ACWF 123\n\
                    \    Assets:Liquid:IB:CHF                     0 = CHF 100.00\n\n"
-
-      return ()
