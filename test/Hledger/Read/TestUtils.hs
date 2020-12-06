@@ -40,16 +40,7 @@ import Hledger.Data.Types
     Transaction,
   )
 import Hledupt.Data (decimalParser)
-import Text.Megaparsec
-  ( MonadParsec,
-    Token,
-    Tokens,
-    anySingle,
-    many,
-    some,
-    try,
-    (<|>),
-  )
+import Text.Megaparsec (MonadParsec, Token, Tokens, anySingle, choice, many, single, some, try, (<|>))
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (alphaNumChar, char, newline, printChar)
 import qualified Text.Megaparsec.Char as Char
@@ -103,17 +94,25 @@ balanceAssertion = do
   MP.single '=' >> some space
   fmap (fromJust . balassert) commodity <* many space
 
+statusParser :: (MonadParsec e s m, Token s ~ Char) => m Status
+statusParser =
+  choice
+    [ try (single '*') $> Cleared,
+      try (single '!') $> Pending,
+      pure Unmarked
+    ]
+
 -- | A partial Posting parser
 postingParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Posting
 postingParser = do
-  some space
+  status <- many space *> statusParser <* many space
   account <- accountParser
   amount <- optional (try commodity)
   let amountSetter = maybe id (L.set pMaybeAmount . Just) amount
   balAssert <- optional (try balanceAssertion)
   eolOrEof
   return $
-    nullposting {paccount = pack account}
+    nullposting {paccount = pack account, pstatus = status}
       & amountSetter
         . L.set pBalanceAssertion balAssert
 
@@ -124,9 +123,7 @@ postingParser = do
 transactionParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Transaction
 transactionParser = do
   dateString <- manyTill MP.anySingle (some $ char ' ')
-  status <-
-    try ((char '*' $> Cleared) <* some (char ' '))
-      <|> pure Unmarked
+  status <- statusParser <* many space
   title <- manyTill anySingle (try newline)
   ps <- some postingParser
   return $

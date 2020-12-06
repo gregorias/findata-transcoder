@@ -5,8 +5,9 @@
 
 module Hledupt.Ib.Csv
   ( PositionRecordAssetClass (..),
-    PositionRecordCurrency (..),
+    Currency (..),
     PositionRecord (..),
+    CashMovement (..),
     Statement (..),
     parse,
   )
@@ -22,7 +23,9 @@ import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
 import Data.List (partition)
 import Data.Maybe (mapMaybe)
+import Data.Time (parseTimeM)
 import Data.Time.Calendar (Day, fromGregorian)
+import Data.Time.Format (defaultTimeLocale)
 import qualified Data.Vector as V
 import Hledupt.Data (MonetaryValue, myDecDec)
 import Text.Megaparsec
@@ -50,7 +53,8 @@ data CsvLine = CsvLine
 
 data Csvs = Csvs
   { statement :: Csv,
-    positions :: Csv
+    positions :: Csv,
+    depositsAndWithdrawals :: Csv
   }
   deriving (Show)
 
@@ -68,14 +72,24 @@ rawStatementParser = do
   optional bom
   ibCsvLines <- many rawStatementLineParser
   let (stmtLines, nonStmtLines) = partition ((== "Statement") . header) ibCsvLines
-      statusLines =
-        filter
+      (statusLines, nonStatutNorStmtLines) =
+        partition
           ((== "Positions and Mark-to-Market Profit and Loss") . header)
           nonStmtLines
+      cashLines =
+        filter
+          ((== "Deposits & Withdrawals") . header)
+          nonStatutNorStmtLines
       stmtCsv = concatMap remainingLine stmtLines
       statusCsv = concatMap remainingLine statusLines
+      cashCsv = concatMap remainingLine cashLines
   eof
-  return $ Csvs {statement = stmtCsv, positions = statusCsv}
+  return $
+    Csvs
+      { statement = stmtCsv,
+        positions = statusCsv,
+        depositsAndWithdrawals = cashCsv
+      }
 
 -- Proper CSV parsing (Csvs → data and records)
 
@@ -129,17 +143,17 @@ instance Csv.FromField PositionRecordAssetClass where
   parseField "Forex" = pure Forex
   parseField _ = fail "Expected Stocks or Forex"
 
-data PositionRecordCurrency = USD | CHF
+data Currency = USD | CHF
   deriving (Eq, Show)
 
-instance Csv.FromField PositionRecordCurrency where
+instance Csv.FromField Currency where
   parseField "USD" = pure USD
   parseField "CHF" = pure CHF
   parseField _ = fail "Expected CHF/USD as currency"
 
 data PositionRecord = PositionRecord
   { assetClass :: PositionRecordAssetClass,
-    currency :: PositionRecordCurrency,
+    currency :: Currency,
     symbol :: String,
     quantity :: Decimal,
     price :: MonetaryValue
@@ -168,10 +182,38 @@ instance Csv.FromNamedRecord PositionOrTotalRecord where
     (PositionOrTotalRecord . Just <$> Csv.parseNamedRecord namedRecord)
       <|> pure (PositionOrTotalRecord Nothing)
 
+data CashMovement = CashMovement
+  { cmDate :: Day,
+    cmCurrency :: Currency,
+    cmAmount :: MonetaryValue
+  }
+  deriving (Eq, Show)
+
+instance Csv.FromNamedRecord CashMovement where
+  parseNamedRecord namedRecord =
+    CashMovement
+      <$> (lookupAux "Settle Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
+      <*> lookupAux "Currency"
+      <*> (L.view myDecDec <$> lookupAux "Amount")
+    where
+      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
+      lookupAux = Csv.lookup namedRecord
+
+newtype MaybeCashMovement = MaybeCashMovement
+  { cashMovement :: Maybe CashMovement
+  }
+  deriving (Eq, Show)
+
+instance Csv.FromNamedRecord MaybeCashMovement where
+  parseNamedRecord namedRecord =
+    (MaybeCashMovement . Just <$> Csv.parseNamedRecord namedRecord)
+      <|> pure (MaybeCashMovement Nothing)
+
 -- | Useful information gleaned directly from IB's CSV statement.
 data Statement = Statement
-  { lastStatementDay :: Day,
-    positionRecords :: [PositionRecord]
+  { sLastStatementDay :: Day,
+    sPositionRecords :: [PositionRecord],
+    sCashMovements :: [CashMovement]
   }
   deriving (Eq, Show)
 
@@ -187,6 +229,19 @@ parse csv = do
   maybePositions :: [PositionOrTotalRecord] <-
     (V.toList . snd <$> Csv.decodeByName (C.pack $ positions csvs))
       <|> Left "Could not parse positions."
+  let cashCsv = depositsAndWithdrawals csvs
+  maybeCashMovements <-
+    if null cashCsv
+      then return []
+      else
+        ( V.toList . snd
+            <$> Csv.decodeByName (C.pack cashCsv)
+        )
+          <|> Left "Could not parse cashMovements."
 
   let positions = mapMaybe positionRecord maybePositions
-  return $ Statement date positions
+  return $
+    Statement
+      date
+      positions
+      (mapMaybe cashMovement maybeCashMovements)

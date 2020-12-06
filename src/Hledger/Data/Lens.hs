@@ -1,16 +1,17 @@
 module Hledger.Data.Lens
   ( aCommodity,
     aStyle,
-    asPrecision,
     asCommoditySide,
     asCommoditySpaced,
+    asPrecision,
     maAmount,
     maMaybeAmount,
     pAccount,
     pAmount,
+    pBalanceAssertion,
     pMamount,
     pMaybeAmount,
-    pBalanceAssertion,
+    pStatus,
     tDescription,
     tStatus,
   )
@@ -98,6 +99,11 @@ pBalanceAssertion :: Lens' Posting (Maybe BalanceAssertion)
 pBalanceAssertion = lens pbalanceassertion setter
   where
     setter p ba = p {pbalanceassertion = ba}
+
+pStatus :: Lens' Posting Status
+pStatus = lens pstatus setter
+  where
+    setter p ba = p {pstatus = ba}
 
 tDescription :: Lens' Transaction String
 tDescription = lens (unpack . tdescription) setter

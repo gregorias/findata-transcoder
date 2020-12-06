@@ -18,13 +18,22 @@ import Data.Function ((&))
 import Data.Maybe (mapMaybe)
 import qualified Data.Text as T
 import Data.Time (Day)
-import Hledger (Amount, MarketPrice (MarketPrice), Posting, balassert, nullposting)
+import Hledger
+  ( Amount,
+    MarketPrice (MarketPrice),
+    Posting,
+    Status (Cleared, Pending),
+    balassert,
+    nullposting,
+  )
 import Hledger.Data.Extra (makeCommodityAmount, makeCurrencyAmount)
 import Hledger.Data.Lens
   ( pAccount,
     pBalanceAssertion,
     pMaybeAmount,
+    pStatus,
     tDescription,
+    tStatus,
   )
 import Hledger.Data.MarketPrice.Extra (showMarketPrice)
 import Hledger.Data.Transaction (showTransaction, transaction)
@@ -50,13 +59,15 @@ accountPrefix :: AssetClass -> String
 accountPrefix Stocks = "Assets:Investments:IB"
 accountPrefix Forex = "Assets:Liquid:IB"
 
+accountName :: AssetClass -> String -> String
+accountName assetClass symbol = accountPrefix assetClass ++ ":" ++ symbol
+
 positionRecordToStatusPosting :: IbCsv.PositionRecord -> Posting
 positionRecordToStatusPosting record =
   let assetClass = csvAssetClassToLedgerAssetClass . IbCsv.assetClass $ record
       symbol = IbCsv.symbol record
-      accountName = accountPrefix assetClass ++ ":" ++ IbCsv.symbol record
    in nullposting
-        & L.set pAccount accountName
+        & L.set pAccount (accountName assetClass symbol)
           . L.set pMaybeAmount (Just $ makeAmount assetClass symbol 0)
           . L.set
             pBalanceAssertion
@@ -75,27 +86,44 @@ positionRecordToStockPrice day rec = do
       (IbCsv.price rec)
 
 data IbData = IbData
-  { stockPrices :: [MarketPrice],
-    status :: Maybe Transaction
+  { idStockPrices :: [MarketPrice],
+    idTransactions :: [Transaction],
+    idStatus :: Maybe Transaction
   }
   deriving (Eq, Show)
 
+cashMovementToTransaction :: IbCsv.CashMovement -> Transaction
+cashMovementToTransaction
+  (IbCsv.CashMovement date currency amount) =
+    transaction
+      (show date)
+      [ nullposting
+          & L.set pAccount (accountName Forex (show currency))
+            . L.set pMaybeAmount (Just $ makeAmount Forex (show currency) amount)
+            . L.set pStatus Cleared,
+        nullposting
+          & L.set pAccount "Todo"
+            . L.set pStatus Pending
+      ]
+      & L.set tDescription "IB Deposit/Withdrawal"
+
 -- | Shows IbData in Ledger format
 showIbData :: IbData -> String
-showIbData (IbData stockPrices maybeStatus) =
-  concatMap showMarketPrice stockPrices ++ "\n"
+showIbData (IbData stockPrices cashMovements maybeStatus) =
+  concatMap showTransaction cashMovements
+    ++ concatMap showMarketPrice stockPrices
+    ++ "\n"
     ++ maybe "" showTransaction maybeStatus
 
 -- | Parses IB MtoM CSV statement into a Ledger status transaction
 parseCsv :: String -> Either String IbData
 parseCsv csv = do
-  statement <- IbCsv.parse csv
-  let posRecords = IbCsv.positionRecords statement
-      statementDay = IbCsv.lastStatementDay statement
-      statusPostings = fmap positionRecordToStatusPosting posRecords
+  IbCsv.Statement statementDay posRecords cashMovements <- IbCsv.parse csv
+  let statusPostings = fmap positionRecordToStatusPosting posRecords
   return $
     IbData
       (mapMaybe (positionRecordToStockPrice statementDay) posRecords)
+      (map cashMovementToTransaction cashMovements)
       ( do
           guard $ not (null statusPostings)
           return $
@@ -103,6 +131,7 @@ parseCsv csv = do
               (show statementDay)
               statusPostings
               & L.set tDescription "IB Status"
+                . L.set tStatus Cleared
       )
 
 ibCsvToLedger :: String -> Either String String

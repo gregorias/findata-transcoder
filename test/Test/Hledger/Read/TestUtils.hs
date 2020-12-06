@@ -33,9 +33,17 @@ tests = do
         let p = "  Expenses:Other"
             expectedP = nullposting {paccount = "Expenses:Other"}
         parseMaybe postingParser p `shouldBe` Just expectedP
-      it "parses a posting transaction" $ do
+      it "parses a posting transaction with spaces" $ do
         let p = "  Assets:Bank With Spaces\n"
             expectedP = nullposting {paccount = "Assets:Bank With Spaces"}
+        parseMaybe postingParser p `shouldBe` Just expectedP
+      it "parses a cleared posting" $ do
+        let p = "*  Expenses:Other"
+            expectedP =
+              nullposting
+                { paccount = "Expenses:Other",
+                  pstatus = Cleared
+                }
         parseMaybe postingParser p `shouldBe` Just expectedP
 
     describe "transactionParser" $ do
