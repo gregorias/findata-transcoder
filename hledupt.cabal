@@ -88,6 +88,7 @@ test-suite hledupt-test
       Test.Hledupt.Bcge.Hint
       Test.Hledupt.Data
       Test.Hledupt.Ib
+      Test.Hledupt.Ib.Csv.RawParse
       Test.Hledupt.Mbank
       Test.Text.Megaparsec.Char.Extra
       Paths_hledupt
