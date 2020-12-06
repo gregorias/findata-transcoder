@@ -33,6 +33,7 @@ library
       Hledupt.Data
       Hledupt.Ib
       Hledupt.Ib.Csv
+      Hledupt.Ib.Csv.RawParse
       Hledupt.Mbank
       LedgerData
       Text.Megaparsec.Char.Extra

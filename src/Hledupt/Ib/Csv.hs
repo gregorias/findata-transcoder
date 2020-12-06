@@ -21,75 +21,26 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
-import Data.List (partition)
 import Data.Maybe (mapMaybe)
 import Data.Time (parseTimeM)
 import Data.Time.Calendar (Day, fromGregorian)
 import Data.Time.Format (defaultTimeLocale)
 import qualified Data.Vector as V
 import Hledupt.Data (MonetaryValue, myDecDec)
+import Hledupt.Ib.Csv.RawParse (Csvs (..))
+import qualified Hledupt.Ib.Csv.RawParse as RawParse
 import Text.Megaparsec
   ( MonadParsec,
     Token,
     Tokens,
     anySingle,
     count,
-    eof,
     single,
     try,
   )
 import qualified Text.Megaparsec as MP
-import Text.Megaparsec.Char (char, digitChar, eol, letterChar, printChar, string)
-import Text.Megaparsec.Char.Extra (bom, space)
-
--- Parsing (Raw Account Statement → Csvs)
-
-type Csv = String
-
-data CsvLine = CsvLine
-  { header :: String,
-    remainingLine :: String
-  }
-
-data Csvs = Csvs
-  { statement :: Csv,
-    positions :: Csv,
-    depositsAndWithdrawals :: Csv
-  }
-  deriving (Show)
-
-rawStatementLineParser ::
-  (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>
-  m CsvLine
-rawStatementLineParser = do
-  headerString <- MP.someTill printChar (char ',')
-  rest <- MP.some printChar
-  end <- try eol <|> return ""
-  return $ CsvLine headerString (rest ++ end)
-
-rawStatementParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Csvs
-rawStatementParser = do
-  optional bom
-  ibCsvLines <- many rawStatementLineParser
-  let (stmtLines, nonStmtLines) = partition ((== "Statement") . header) ibCsvLines
-      (statusLines, nonStatutNorStmtLines) =
-        partition
-          ((== "Positions and Mark-to-Market Profit and Loss") . header)
-          nonStmtLines
-      cashLines =
-        filter
-          ((== "Deposits & Withdrawals") . header)
-          nonStatutNorStmtLines
-      stmtCsv = concatMap remainingLine stmtLines
-      statusCsv = concatMap remainingLine statusLines
-      cashCsv = concatMap remainingLine cashLines
-  eof
-  return $
-    Csvs
-      { statement = stmtCsv,
-        positions = statusCsv,
-        depositsAndWithdrawals = cashCsv
-      }
+import Text.Megaparsec.Char (digitChar, letterChar, string)
+import Text.Megaparsec.Char.Extra (space)
 
 -- Proper CSV parsing (Csvs → data and records)
 
@@ -222,14 +173,14 @@ parse :: String -> Either String Statement
 parse csv = do
   let parsecErrToString :: (Show a) => Either a b -> Either String b
       parsecErrToString = first show
-  csvs <- parsecErrToString $ MP.parse rawStatementParser "" csv
+  csvs <- parsecErrToString $ RawParse.parse csv
   date <-
-    parsecErrToString (MP.parse statementDateParser "" (statement csvs))
+    parsecErrToString (MP.parse statementDateParser "" (cStatement csvs))
       <|> Left "Could not parse the statement's date."
   maybePositions :: [PositionOrTotalRecord] <-
-    (V.toList . snd <$> Csv.decodeByName (C.pack $ positions csvs))
+    (V.toList . snd <$> Csv.decodeByName (C.pack $ cPositions csvs))
       <|> Left "Could not parse positions."
-  let cashCsv = depositsAndWithdrawals csvs
+  let cashCsv = cDepositsAndWithdrawals csvs
   maybeCashMovements <-
     if null cashCsv
       then return []
