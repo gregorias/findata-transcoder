@@ -8,9 +8,19 @@ module Hledupt.Ib.Csv.RawParse
   )
 where
 
--- Parsing (Raw Account Statement → Csvs)
-
-import Text.Megaparsec (MonadParsec, ParseErrorBundle, Token, Tokens, eof, many, optional, some, someTill, try, (<|>))
+import Text.Megaparsec
+  ( MonadParsec,
+    ParseErrorBundle,
+    Token,
+    Tokens,
+    eof,
+    many,
+    optional,
+    some,
+    someTill,
+    try,
+    (<|>),
+  )
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (char, eol, printChar)
 import Text.Megaparsec.Char.Extra (bom)
@@ -39,7 +49,12 @@ rawStatementLineParser = do
   end <- try eol <|> return ""
   return $ CsvLine headerString (rest ++ end)
 
-rawStatementParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Csvs
+rawStatementParser ::
+  ( MonadParsec e s m,
+    Token s ~ Char,
+    Tokens s ~ String
+  ) =>
+  m Csvs
 rawStatementParser = do
   optional bom
   ibCsvLines <- many rawStatementLineParser
