@@ -7,13 +7,11 @@ module Test.Hledupt.Ib
   )
 where
 
-import qualified Data.Csv as Csv
 import Data.Ratio ((%))
 import Data.Time (fromGregorian)
 import Hledger (MarketPrice (MarketPrice))
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.Ib
-import qualified Hledupt.Ib.Csv as IbCsv
 import Test.Hspec (describe, it, shouldBe)
 import qualified Test.Hspec as Hspec
 
@@ -63,14 +61,6 @@ parseTests = do
               )
           )
 
-    it "parses a range date correctly" $ do
-      let csv =
-            "\65279Statement,Header,Field Name,Field Value\n\
-            \Statement,Data,Period,\"December 11, 2019 - December 4, 2020\"\n\
-            \Positions and Mark-to-Market Profit and Loss,Header,Asset Class,Currency,Symbol,Description,Prior Quantity,Quantity,Prior Price,Price,Prior Market Value,Market Value,Position,Trading,Comm.,Other,Total\n"
-      (IbCsv.sLastStatementDay <$> IbCsv.parse csv)
-        `shouldBe` Right (fromGregorian 2020 12 4)
-
     it "Doesn't return much when there's no data" $ do
       let csv =
             "\65279Statement,Header,Field Name,Field Value\n\
@@ -79,39 +69,6 @@ parseTests = do
       parseCsv csv
         `shouldBe` Right
           (IbData [] [] Nothing)
-
-    it "Parses cash movements" $ do
-      let csv =
-            "\65279Statement,Header,Field Name,Field Value\n\
-            \Statement,Data,Period,\"December 11, 2019 - December 4, 2020\"\n\
-            \Positions and Mark-to-Market Profit and Loss,Header,Asset Class,Currency,Symbol,Description,Prior Quantity,Quantity,Prior Price,Price,Prior Market Value,Market Value,Position,Trading,Comm.,Other,Total\n\
-            \Deposits & Withdrawals,Header,Currency,Settle Date,Description,Amount\n\
-            \Deposits & Withdrawals,Data,CHF,2020-01-20,title,100.32\n\
-            \Deposits & Withdrawals,Data,Total,,,100.32"
-      IbCsv.parse csv
-        `shouldBe` Right
-          ( IbCsv.Statement
-              (fromGregorian 2020 12 4)
-              []
-              [ IbCsv.CashMovement
-                  (fromGregorian 2020 1 20)
-                  IbCsv.CHF
-                  (fromRational (10032 % 100))
-              ]
-          )
-
-  describe "CashMovement" $ do
-    it "Parses CashMovement Lines" $ do
-      let csv =
-            "Header,Currency,Settle Date,Description,Amount\n\
-            \Data,CHF,2020-01-20,title,100.32"
-      fmap snd (Csv.decodeByName csv)
-        `shouldBe` Right
-          [ IbCsv.CashMovement
-              (fromGregorian 2020 1 20)
-              IbCsv.CHF
-              (fromRational (10032 % 100))
-          ]
 
   describe "showIbData" $ do
     it "formats IbData" $ do

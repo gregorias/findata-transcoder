@@ -4,6 +4,7 @@
 -- This module parses original IB Mark-to-Market CSV into its constituent parts.
 module Hledupt.Ib.Csv.RawParse
   ( Csvs (..),
+    nullcsvs,
     parse,
   )
 where
@@ -39,6 +40,9 @@ data Csvs = Csvs
     cWithholdingTax :: String
   }
   deriving (Eq, Show)
+
+nullcsvs :: Csvs
+nullcsvs = Csvs "" "" "" "" ""
 
 rawStatementLineParser ::
   (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>

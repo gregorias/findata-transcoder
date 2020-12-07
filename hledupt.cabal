@@ -33,6 +33,7 @@ library
       Hledupt.Data
       Hledupt.Ib
       Hledupt.Ib.Csv
+      Hledupt.Ib.Csv.CsvParse
       Hledupt.Ib.Csv.RawParse
       Hledupt.Mbank
       LedgerData
@@ -88,6 +89,7 @@ test-suite hledupt-test
       Test.Hledupt.Bcge.Hint
       Test.Hledupt.Data
       Test.Hledupt.Ib
+      Test.Hledupt.Ib.Csv.CsvParse
       Test.Hledupt.Ib.Csv.RawParse
       Test.Hledupt.Mbank
       Test.Text.Megaparsec.Char.Extra
