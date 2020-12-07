@@ -103,11 +103,11 @@ instance Csv.FromField Currency where
   parseField _ = fail "Expected CHF/USD as currency"
 
 data PositionRecord = PositionRecord
-  { assetClass :: PositionRecordAssetClass,
-    currency :: Currency,
-    symbol :: String,
-    quantity :: Decimal,
-    price :: MonetaryValue
+  { prAssetClass :: PositionRecordAssetClass,
+    prCurrency :: Currency,
+    prSymbol :: String,
+    prQuantity :: Decimal,
+    prPrice :: MonetaryValue
   }
   deriving (Eq, Show)
 

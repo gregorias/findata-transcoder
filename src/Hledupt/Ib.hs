@@ -64,26 +64,26 @@ accountName assetClass symbol = accountPrefix assetClass ++ ":" ++ symbol
 
 positionRecordToStatusPosting :: IbCsv.PositionRecord -> Posting
 positionRecordToStatusPosting record =
-  let assetClass = csvAssetClassToLedgerAssetClass . IbCsv.assetClass $ record
-      symbol = IbCsv.symbol record
+  let assetClass = csvAssetClassToLedgerAssetClass . IbCsv.prAssetClass $ record
+      symbol = IbCsv.prSymbol record
    in nullposting
         & L.set pAccount (accountName assetClass symbol)
           . L.set pMaybeAmount (Just $ makeAmount assetClass symbol 0)
           . L.set
             pBalanceAssertion
-            (balassert . makeAmount assetClass symbol $ IbCsv.quantity record)
+            (balassert . makeAmount assetClass symbol $ IbCsv.prQuantity record)
 
 positionRecordToStockPrice :: Day -> IbCsv.PositionRecord -> Maybe MarketPrice
 positionRecordToStockPrice day rec = do
-  guard $ IbCsv.assetClass rec == IbCsv.Stocks
+  guard $ IbCsv.prAssetClass rec == IbCsv.Stocks
   -- Records of stocks that I do not own miss the price data.
-  guard $ IbCsv.quantity rec > 0
+  guard $ IbCsv.prQuantity rec > 0
   return $
     MarketPrice
       day
-      (T.pack $ IbCsv.symbol rec)
-      (T.pack . show . IbCsv.currency $ rec)
-      (IbCsv.price rec)
+      (T.pack $ IbCsv.prSymbol rec)
+      (T.pack . show . IbCsv.prCurrency $ rec)
+      (IbCsv.prPrice rec)
 
 data IbData = IbData
   { idStockPrices :: [MarketPrice],
