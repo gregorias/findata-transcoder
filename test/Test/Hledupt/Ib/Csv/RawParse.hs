@@ -2,6 +2,7 @@
 
 module Test.Hledupt.Ib.Csv.RawParse (tests) where
 
+import Data.Either (isRight)
 import Hledupt.Ib.Csv.RawParse
 import Test.Hspec
 
@@ -17,3 +18,9 @@ tests = do
         `shouldBe` ( "Header,Currency,Date,Description,Amount\n",
                      "Header,Currency,Date,Description,Amount,Code"
                    )
+    it "parses the BOM character" $ do
+      let csv =
+            "\65279Statement,Header,Field Name,Field Value\n\
+            \Statement,Data,Period,\"November 26, 2020\"\n\
+            \Positions and Mark-to-Market Profit and Loss,Header,Asset Class,Currency,Symbol,Description,Prior Quantity,Quantity,Prior Price,Price,Prior Market Value,Market Value,Position,Trading,Comm.,Other,Total\n"
+      parse csv `shouldSatisfy` isRight

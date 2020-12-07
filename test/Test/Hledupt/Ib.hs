@@ -8,7 +8,6 @@ module Test.Hledupt.Ib
 where
 
 import qualified Data.Csv as Csv
-import Data.Either (isRight)
 import Data.Ratio ((%))
 import Data.Time (fromGregorian)
 import Hledger (MarketPrice (MarketPrice))
@@ -63,13 +62,6 @@ parseTests = do
                     \  Assets:Liquid:IB:CHF  CHF 0 = CHF 100.0011305"
               )
           )
-
-    it "parses the BOM character" $ do
-      let csv =
-            "\65279Statement,Header,Field Name,Field Value\n\
-            \Statement,Data,Period,\"November 26, 2020\"\n\
-            \Positions and Mark-to-Market Profit and Loss,Header,Asset Class,Currency,Symbol,Description,Prior Quantity,Quantity,Prior Price,Price,Prior Market Value,Market Value,Position,Trading,Comm.,Other,Total\n"
-      isRight (IbCsv.parse csv)
 
     it "parses a range date correctly" $ do
       let csv =
