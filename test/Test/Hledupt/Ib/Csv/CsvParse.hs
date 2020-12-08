@@ -59,8 +59,6 @@ tests = do
                     ]
                 }
             )
-      -- Add a readable error message for every failure
-      -- Use https://hackage.haskell.org/package/replace-megaparsec-1.4.4.0/docs/Replace-Megaparsec.html for pattern matching
       it "Gives a readable error string when dividends can't be parsed." $ do
         let csv =
               nullcsvs

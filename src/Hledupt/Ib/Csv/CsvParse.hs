@@ -246,7 +246,9 @@ parse csvs = do
   maybeCashMovements :: [MaybeCashMovement] <-
     if null cashCsv
       then return []
-      else decodeAndListify cashCsv
+      else
+        addErrorMessage "Could not parse cash movement data." $
+          decodeAndListify cashCsv
 
   let dividendCsv = cDividends csvs
   dividends <-
