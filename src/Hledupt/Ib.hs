@@ -118,7 +118,8 @@ showIbData (IbData stockPrices cashMovements maybeStatus) =
 -- | Parses IB MtoM CSV statement into a Ledger status transaction
 parseCsv :: String -> Either String IbData
 parseCsv csv = do
-  IbCsv.Statement statementDay posRecords cashMovements <- IbCsv.parse csv
+  IbCsv.Statement statementDay posRecords cashMovements _ <-
+    IbCsv.parse csv
   let statusPostings = fmap positionRecordToStatusPosting posRecords
   return $
     IbData

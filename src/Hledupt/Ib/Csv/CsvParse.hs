@@ -7,15 +7,18 @@
 -- This module contains parsers for CSV tables contained in Mark-to-Market an IB
 -- statement.
 module Hledupt.Ib.Csv.CsvParse
-  ( Currency (..),
+  ( CashMovement (..),
+    Currency (..),
+    Dividend (..),
+    DividendRecord (..),
     PositionRecord (..),
-    CashMovement (..),
-    Statement (..),
     PositionRecordAssetClass (..),
+    Statement (..),
     parse,
   )
 where
 
+import Control.Applicative (Alternative (empty))
 import qualified Control.Lens as L
 import Control.Monad (MonadPlus (mzero))
 import Data.Bifunctor (Bifunctor (first))
@@ -23,10 +26,11 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
+import Data.List (isInfixOf)
 import Data.Maybe (mapMaybe)
 import Data.Time (Day, defaultTimeLocale, fromGregorian, parseTimeM)
 import qualified Data.Vector as V
-import Hledupt.Data (MonetaryValue, myDecDec)
+import Hledupt.Data (MonetaryValue, decimalParser, myDecDec)
 import Hledupt.Ib.Csv.RawParse (Csvs (..))
 import Text.Megaparsec
   ( MonadParsec,
@@ -34,6 +38,7 @@ import Text.Megaparsec
     Tokens,
     anySingle,
     count,
+    label,
     single,
     some,
     someTill_,
@@ -41,7 +46,7 @@ import Text.Megaparsec
     (<|>),
   )
 import qualified Text.Megaparsec as MP
-import Text.Megaparsec.Char (digitChar, letterChar, space, string)
+import Text.Megaparsec.Char (alphaNumChar, char, digitChar, letterChar, space, string)
 
 data Currency = USD | CHF
   deriving (Eq, Show)
@@ -165,30 +170,96 @@ instance Csv.FromNamedRecord MaybeCashMovement where
     (MaybeCashMovement . Just <$> Csv.parseNamedRecord namedRecord)
       <|> pure (MaybeCashMovement Nothing)
 
+data Dividend = Dividend
+  { dDate :: Day,
+    dSymbol :: String,
+    dDividendPerShare :: MonetaryValue,
+    dTotalAmount :: MonetaryValue
+  }
+  deriving (Eq, Show)
+
+symbolDpsParser ::
+  (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>
+  m (String, MonetaryValue)
+symbolDpsParser = do
+  symbol <- some letterChar
+  label "ISIN" $ char '(' >> some alphaNumChar >> char ')'
+  string " Cash Dividend USD "
+  dps <- decimalParser
+  string " per Share (Ordinary Dividend)"
+  return (symbol, dps)
+
+instance Csv.FromNamedRecord Dividend where
+  parseNamedRecord namedRecord =
+    dividend
+      <$> (lookupAux "Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
+      <*> ( do
+              desc :: String <- lookupAux "Description"
+              let parsed = MP.parse symbolDpsParser "" desc
+              either
+                ( \err ->
+                    fail $
+                      "Could not parse (symbol, dps).\n" ++ show err
+                )
+                return
+                parsed
+          )
+      <*> (L.view myDecDec <$> lookupAux "Amount")
+    where
+      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
+      lookupAux = Csv.lookup namedRecord
+      dividend date (symbol, dps) total = Dividend date symbol dps total
+
+data DividendRecord
+  = DividendRecord Dividend
+  | TotalDividendsRecord
+  deriving (Eq, Show)
+
+instance Csv.FromNamedRecord DividendRecord where
+  parseNamedRecord namedRecord = do
+    currencyField <- Csv.lookup namedRecord "Currency"
+    if "Total" `isInfixOf` currencyField
+      then return TotalDividendsRecord
+      else fmap DividendRecord (Csv.parseNamedRecord namedRecord)
+
 -- | Useful information gleaned directly from IB's CSV statement.
 data Statement = Statement
   { sLastStatementDay :: Day,
     sPositionRecords :: [PositionRecord],
-    sCashMovements :: [CashMovement]
+    sCashMovements :: [CashMovement],
+    sDividends :: [DividendRecord]
   }
   deriving (Eq, Show)
 
 -- | Parses an M-to-M IB CSVs into individual data points and records.
 parse :: Csvs -> Either String Statement
 parse csvs = do
+  let decodeAndListify :: (Csv.FromNamedRecord a) => String -> Either String [a]
+      decodeAndListify csv = V.toList . snd <$> Csv.decodeByName (C.pack csv)
+      addErrorMessage errMsg = first ((errMsg ++ "\n") ++)
+
   date <- first show $ MP.parse statementDateParser "" (cStatement csvs)
   maybePositions :: [PositionOrTotalRecord] <-
-    V.toList . snd <$> Csv.decodeByName (C.pack $ cPositions csvs)
+    decodeAndListify $ cPositions csvs
+
   let cashCsv = cDepositsAndWithdrawals csvs
   maybeCashMovements :: [MaybeCashMovement] <-
     if null cashCsv
       then return []
+      else decodeAndListify cashCsv
+
+  let dividendCsv = cDividends csvs
+  dividends <-
+    if null dividendCsv
+      then return empty
       else
-        V.toList . snd
-          <$> Csv.decodeByName (C.pack cashCsv)
+        addErrorMessage "Could not parse dividends data." $
+          decodeAndListify dividendCsv
+
   let positions = mapMaybe potrPositionRecord maybePositions
   return $
     Statement
       date
       positions
       (mapMaybe mcmCashMovement maybeCashMovements)
+      dividends

@@ -1,7 +1,7 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Text.Megaparsec.Match (matches, (~=)) where
+module Text.Megaparsec.Match (matches, (=~)) where
 
 import Data.Maybe (isJust)
 import Replace.Megaparsec (breakCap)
@@ -19,11 +19,11 @@ matches ::
 matches input pattern = isJust . breakCap (chunk pattern) $ input
 
 -- | The infix synonym of @matches@
-(~=) ::
+(=~) ::
   (Stream s, Tokens s ~ s) =>
   -- | The input stream of text
   s ->
   -- | The pattern to match
   s ->
   Bool
-(~=) = matches
+(=~) = matches
