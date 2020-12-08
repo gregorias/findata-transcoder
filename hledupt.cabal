@@ -93,6 +93,8 @@ test-suite hledupt-test
       Test.Hledupt.Ib.Csv.RawParse
       Test.Hledupt.Mbank
       Test.Text.Megaparsec.Char.Extra
+      Test.Text.Megaparsec.Match
+      Text.Megaparsec.Match
       Paths_hledupt
   hs-source-dirs:
       test
@@ -108,6 +110,7 @@ test-suite hledupt-test
     , lens
     , megaparsec
     , parser-combinators
+    , replace-megaparsec
     , text
     , time
     , vector

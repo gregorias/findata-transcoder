@@ -19,6 +19,7 @@ import qualified Test.Hledupt.Ib.Csv.RawParse
 import Test.Hledupt.Mbank (mbankTests)
 import Test.Hspec (SpecWith, describe, hspec, it, shouldBe)
 import qualified Test.Text.Megaparsec.Char.Extra
+import qualified Test.Text.Megaparsec.Match
 
 main :: IO ()
 main = hspec tests
@@ -37,6 +38,7 @@ tests = do
   Test.Hledupt.Ib.Csv.RawParse.tests
   Test.Hledupt.Ib.tests
   Test.Text.Megaparsec.Char.Extra.tests
+  Test.Text.Megaparsec.Match.tests
   describe "LedgerData tests" $ do
     describe "negateValue" $ do
       it "negates a value" $ do

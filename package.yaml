@@ -71,7 +71,8 @@ tests:
     - hspec
     - lens
     - megaparsec
+    - parser-combinators
+    - replace-megaparsec
     - text
     - time
     - vector
-    - parser-combinators
