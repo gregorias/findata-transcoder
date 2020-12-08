@@ -22,6 +22,9 @@ tests = do
 
 parseTests :: Hspec.SpecWith ()
 parseTests = do
+  describe "statementToIbData" $ do
+    return ()
+
   describe "parse" $ do
     it "parses a CSV" $ do
       let csv =

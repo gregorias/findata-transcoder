@@ -8,6 +8,7 @@ module Hledupt.Ib
     parseCsv,
     IbData (..),
     showIbData,
+    statementToIbData,
   )
 where
 
@@ -115,13 +116,9 @@ showIbData (IbData stockPrices cashMovements maybeStatus) =
     ++ "\n"
     ++ maybe "" showTransaction maybeStatus
 
--- | Parses IB MtoM CSV statement into a Ledger status transaction
-parseCsv :: String -> Either String IbData
-parseCsv csv = do
-  IbCsv.Statement statementDay posRecords cashMovements _ <-
-    IbCsv.parse csv
-  let statusPostings = fmap positionRecordToStatusPosting posRecords
-  return $
+statementToIbData :: IbCsv.Statement -> IbData
+statementToIbData
+  (IbCsv.Statement statementDay posRecords cashMovements _) =
     IbData
       (mapMaybe (positionRecordToStockPrice statementDay) posRecords)
       (map cashMovementToTransaction cashMovements)
@@ -134,6 +131,13 @@ parseCsv csv = do
               & L.set tDescription "IB Status"
                 . L.set tStatus Cleared
       )
+    where
+      statusPostings = fmap positionRecordToStatusPosting posRecords
 
+-- | Parses IB MtoM CSV statement into a Ledger status transaction
+parseCsv :: String -> Either String IbData
+parseCsv csv = IbCsv.parse csv >>= (return . statementToIbData)
+
+-- | Parses IB MtoM CSV statement into a Ledger text file.
 ibCsvToLedger :: String -> Either String String
 ibCsvToLedger = fmap showIbData . parseCsv
