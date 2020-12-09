@@ -5,16 +5,18 @@
 
 module Hledupt.Ib.Csv
   ( PositionRecordAssetClass (..),
-    Currency (..),
-    PositionRecord (..),
     CashMovement (..),
+    Currency (..),
+    Dividend (..),
+    DividendRecord (..),
+    PositionRecord (..),
     Statement (..),
     parse,
   )
 where
 
 import Data.Bifunctor (Bifunctor (first))
-import Hledupt.Ib.Csv.CsvParse (CashMovement, Currency, PositionRecord, PositionRecordAssetClass, Statement)
+import Hledupt.Ib.Csv.CsvParse (CashMovement, Currency, Dividend, DividendRecord, PositionRecord, PositionRecordAssetClass, Statement)
 import qualified Hledupt.Ib.Csv.CsvParse as CsvParse
 import qualified Hledupt.Ib.Csv.RawParse as RawParse
 

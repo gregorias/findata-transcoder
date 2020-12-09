@@ -1,4 +1,5 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -16,6 +17,7 @@ import qualified Control.Lens as L
 import Control.Monad (guard)
 import Data.Decimal (Decimal)
 import Data.Function ((&))
+import Data.List (sortOn)
 import Data.Maybe (mapMaybe)
 import qualified Data.Text as T
 import Data.Time (Day)
@@ -108,6 +110,28 @@ cashMovementToTransaction
       ]
       & L.set tDescription "IB Deposit/Withdrawal"
 
+dividendToTransaction :: IbCsv.Dividend -> Transaction
+dividendToTransaction
+  IbCsv.Dividend
+    { IbCsv.dDate = d,
+      IbCsv.dSymbol = sym,
+      IbCsv.dDividendPerShare = dps,
+      IbCsv.dTotalAmount = amt
+    } =
+    transaction
+      (show d)
+      [ nullposting
+          & L.set pAccount "Assets:Liquid:IB:USD"
+            . L.set pMaybeAmount (Just $ makeAmount Forex "USD" amt),
+        nullposting
+          & L.set pAccount "Income:Capital Gains"
+            . L.set pMaybeAmount (Just $ makeAmount Forex "USD" (- amt))
+      ]
+      & L.set tDescription title
+        . L.set tStatus Cleared
+    where
+      title = sym ++ " dividend @ " ++ show dps ++ " per share"
+
 -- | Shows IbData in Ledger format
 showIbData :: IbData -> String
 showIbData (IbData stockPrices cashMovements maybeStatus) =
@@ -118,10 +142,15 @@ showIbData (IbData stockPrices cashMovements maybeStatus) =
 
 statementToIbData :: IbCsv.Statement -> IbData
 statementToIbData
-  (IbCsv.Statement statementDay posRecords cashMovements _) =
+  ( IbCsv.Statement
+      statementDay
+      posRecords
+      cashMovements
+      dividendRecords
+    ) =
     IbData
       (mapMaybe (positionRecordToStockPrice statementDay) posRecords)
-      (map cashMovementToTransaction cashMovements)
+      (sortOn tdate $ cmTrs ++ dividendTrs)
       ( do
           guard $ not (null statusPostings)
           return $
@@ -133,6 +162,17 @@ statementToIbData
       )
     where
       statusPostings = fmap positionRecordToStatusPosting posRecords
+
+      cmTrs = map cashMovementToTransaction cashMovements
+
+      dividendTrs =
+        mapMaybe
+          ( \case
+              IbCsv.DividendRecord dividend ->
+                dividendToTransaction <$> Just dividend
+              IbCsv.TotalDividendsRecord -> Nothing
+          )
+          dividendRecords
 
 -- | Parses IB MtoM CSV statement into a Ledger status transaction
 parseCsv :: String -> Either String IbData

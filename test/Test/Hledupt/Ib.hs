@@ -12,6 +12,7 @@ import Data.Time (fromGregorian)
 import Hledger (MarketPrice (MarketPrice))
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.Ib
+import qualified Hledupt.Ib.Csv as IbCsv
 import Test.Hspec (describe, it, shouldBe)
 import qualified Test.Hspec as Hspec
 
@@ -23,7 +24,31 @@ tests = do
 parseTests :: Hspec.SpecWith ()
 parseTests = do
   describe "statementToIbData" $ do
-    return ()
+    it "Translates dividends into transactions" $ do
+      let stmt =
+            IbCsv.Statement
+              (fromGregorian 2020 12 8)
+              []
+              []
+              [ IbCsv.DividendRecord $
+                  IbCsv.Dividend
+                    (fromGregorian 2020 1 1)
+                    "VOO"
+                    (fromRational $ 45 % 100)
+                    (fromRational 450),
+                IbCsv.TotalDividendsRecord
+              ]
+      statementToIbData stmt
+        `shouldBe` IbData
+          { idStockPrices = [],
+            idTransactions =
+              [ parseTransactionUnsafe
+                  "2020/01/01 * VOO dividend @ 0.45 per share\n\
+                  \  Assets:Liquid:IB:USD  USD 450\n\
+                  \  Income:Capital Gains  USD -450"
+              ],
+            idStatus = Nothing
+          }
 
   describe "parse" $ do
     it "parses a CSV" $ do
