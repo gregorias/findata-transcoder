@@ -16,7 +16,7 @@ matches ::
   -- | The pattern to match
   s ->
   Bool
-matches input pattern = isJust . breakCap (chunk pattern) $ input
+matches input pat = isJust . breakCap (chunk pat) $ input
 
 -- | The infix synonym of @matches@
 (=~) ::
