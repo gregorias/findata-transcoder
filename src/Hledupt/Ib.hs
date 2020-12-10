@@ -147,6 +147,7 @@ statementToIbData
       posRecords
       cashMovements
       dividendRecords
+      withholdingTaxRecords
     ) =
     IbData
       (mapMaybe (positionRecordToStockPrice statementDay) posRecords)

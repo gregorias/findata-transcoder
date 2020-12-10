@@ -14,6 +14,8 @@ module Hledupt.Ib.Csv.CsvParse
     PositionRecord (..),
     PositionRecordAssetClass (..),
     Statement (..),
+    WithholdingTax (..),
+    WithholdingTaxRecord (..),
     parse,
   )
 where
@@ -178,11 +180,16 @@ data Dividend = Dividend
   }
   deriving (Eq, Show)
 
+symbolParser ::
+  (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>
+  m String
+symbolParser = some letterChar
+
 symbolDpsParser ::
   (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>
   m (String, MonetaryValue)
 symbolDpsParser = do
-  symbol <- some letterChar
+  symbol <- symbolParser
   label "ISIN" $ char '(' >> some alphaNumChar >> char ')'
   string " Cash Dividend USD "
   dps <- decimalParser
@@ -222,12 +229,53 @@ instance Csv.FromNamedRecord DividendRecord where
       then return TotalDividendsRecord
       else fmap DividendRecord (Csv.parseNamedRecord namedRecord)
 
+data WithholdingTax = WithholdingTax
+  { wtDate :: Day,
+    wtSymbol :: String,
+    wtTotalAmount :: MonetaryValue
+  }
+  deriving (Eq, Show)
+
+instance Csv.FromNamedRecord WithholdingTax where
+  parseNamedRecord namedRecord =
+    do
+      WithholdingTax
+      <$> (lookupAux "Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
+        <*> ( do
+                desc :: String <- lookupAux "Description"
+                let parsed = MP.parse symbolParser "" desc
+                either
+                  ( \err ->
+                      fail $
+                        "Could not parse symbol.\n" ++ show err
+                  )
+                  return
+                  parsed
+            )
+        <*> (L.view myDecDec <$> lookupAux "Amount")
+    where
+      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
+      lookupAux = Csv.lookup namedRecord
+
+data WithholdingTaxRecord
+  = WithholdingTaxRecord WithholdingTax
+  | TotalWithholdingTaxRecord
+  deriving (Eq, Show)
+
+instance Csv.FromNamedRecord WithholdingTaxRecord where
+  parseNamedRecord namedRecord = do
+    currencyField <- Csv.lookup namedRecord "Currency"
+    if "Total" `isInfixOf` currencyField
+      then return TotalWithholdingTaxRecord
+      else WithholdingTaxRecord <$> Csv.parseNamedRecord namedRecord
+
 -- | Useful information gleaned directly from IB's CSV statement.
 data Statement = Statement
   { sLastStatementDay :: Day,
     sPositionRecords :: [PositionRecord],
     sCashMovements :: [CashMovement],
-    sDividends :: [DividendRecord]
+    sDividends :: [DividendRecord],
+    sWithholdingTaxes :: [WithholdingTax]
   }
   deriving (Eq, Show)
 
@@ -258,6 +306,14 @@ parse csvs = do
         addErrorMessage "Could not parse dividends data." $
           decodeAndListify dividendCsv
 
+  let taxCsv = cWithholdingTax csvs
+  taxes <-
+    if null taxCsv
+      then return empty
+      else
+        addErrorMessage "Could not parse taxes data." $
+          decodeAndListify taxCsv
+
   let positions = mapMaybe potrPositionRecord maybePositions
   return $
     Statement
@@ -265,3 +321,4 @@ parse csvs = do
       positions
       (mapMaybe mcmCashMovement maybeCashMovements)
       dividends
+      taxes

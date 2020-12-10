@@ -38,6 +38,7 @@ parseTests = do
                     (fromRational 450),
                 IbCsv.TotalDividendsRecord
               ]
+              []
       statementToIbData stmt
         `shouldBe` IbData
           { idStockPrices = [],

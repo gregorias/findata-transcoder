@@ -56,7 +56,8 @@ tests = do
                           (fromRational $ 42537 % 100000)
                           (fromRational $ 105024 % 100),
                       TotalDividendsRecord
-                    ]
+                    ],
+                  sWithholdingTaxes = []
                 }
             )
       it "Gives a readable error string when dividends can't be parsed." $ do
@@ -72,6 +73,20 @@ tests = do
         parse csv
           `shouldSatisfy` \case
             Left errorMsg -> (errorMsg =~ "Could not parse dividends data.")
+            Right _ -> False
+      it "Gives a readable error string when taxes can't be parsed." $ do
+        let csv =
+              nullcsvs
+                { cStatement =
+                    "Header,Field Name,Field Value\n\
+                    \Data,Period,\"December 11, 2019 - December 4, 2020\"\n",
+                  cPositions =
+                    "Header,Asset Class,Currency,Symbol,Description,Prior Quantity,Quantity,Prior Price,Price,Prior Market Value,Market Value,Position,Trading,Comm.,Other,Total\n",
+                  cWithholdingTax = "Mangled CSV"
+                }
+        parse csv
+          `shouldSatisfy` \case
+            Left errorMsg -> (errorMsg =~ "Could not parse taxes data.")
             Right _ -> False
 
     describe "CashMovement" $ do
@@ -100,3 +115,23 @@ tests = do
                 (fromRational $ 42537 % 100000)
                 (fromRational $ 105024 % 100)
             ]
+
+    describe "WithholdingTaxRecord" $ do
+      it "FromNamedRecord parses a Quellensteuer entry" $ do
+        let csv =
+              "Header,Currency,Date,Description,Amount,Code\n\
+              \Data,USD,2019-09-06,BND(US9219378356) Cash Dividend USD 0.188198 per Share - US Tax,-2.72"
+        fmap snd (Csv.decodeByName csv)
+          `shouldBe` Right
+            [ WithholdingTaxRecord $
+                WithholdingTax
+                  (fromGregorian 2019 9 6)
+                  "BND"
+                  (fromRational $ -272 % 100)
+            ]
+      it "FromNamedRecord parses a total entry" $ do
+        let csv =
+              "Header,Currency,Date,Description,Amount,Code\n\
+              \Data,Total,,,-1585.38,\n"
+        fmap snd (Csv.decodeByName csv)
+          `shouldBe` Right [TotalWithholdingTaxRecord]
