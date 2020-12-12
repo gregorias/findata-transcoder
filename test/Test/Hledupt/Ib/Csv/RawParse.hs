@@ -13,11 +13,16 @@ tests = do
       let csv =
             "Dividends,Header,Currency,Date,Description,Amount\n\
             \Withholding Tax,Header,Currency,Date,Description,Amount,Code"
-          Right stmt = parse csv
-      (cDividends stmt, cWithholdingTaxes stmt)
-        `shouldBe` ( "Header,Currency,Date,Description,Amount\n",
-                     "Header,Currency,Date,Description,Amount,Code"
-                   )
+          stmt = parse csv
+      case stmt of
+        Left _ -> expectationFailure "Could not parse the CSV"
+        Right stmt ->
+          ( cDividends stmt,
+            cWithholdingTaxes stmt
+          )
+            `shouldBe` ( "Header,Currency,Date,Description,Amount\n",
+                         "Header,Currency,Date,Description,Amount,Code"
+                       )
     it "parses the BOM character" $ do
       let csv =
             "\65279Statement,Header,Field Name,Field Value\n\

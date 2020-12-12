@@ -1,4 +1,5 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Hledupt.Bcge
@@ -114,10 +115,10 @@ data BcgeStatement = BcgeStatement
 headerLine :: CsvLine
 headerLine = ("Datum", "Buchungstext", "Betrag")
 
-splitCsv :: [CsvLine] -> (Header, Content)
-splitCsv csvLines = (take headerPos csvLines, drop (headerPos + 1) csvLines)
-  where
-    Just headerPos = elemIndex headerLine csvLines
+splitCsv :: [CsvLine] -> Maybe (Header, Content)
+splitCsv csvLines = do
+  headerPos <- elemIndex headerLine csvLines
+  return (take headerPos csvLines, drop (headerPos + 1) csvLines)
 
 getDate :: Header -> Maybe Day
 getDate header = do
@@ -135,13 +136,13 @@ csvLineToBcgeTransaction (dateString, title, amountString) = do
   amount <- parseMaybe decimalParser amountString
   return $ BcgeTransaction date title amount
 
-csvLinesToBcgeStatement :: [CsvLine] -> BcgeStatement
-csvLinesToBcgeStatement csvLines = BcgeStatement date saldo bcgeStatements
-  where
-    (header, content) = splitCsv csvLines
-    Just date = getDate header
-    Just saldo = getSaldo header
-    Just bcgeStatements = traverse csvLineToBcgeTransaction content
+csvLinesToBcgeStatement :: [CsvLine] -> Maybe BcgeStatement
+csvLinesToBcgeStatement csvLines = do
+  (header, content) <- splitCsv csvLines
+  date <- getDate header
+  saldo <- getSaldo header
+  bcgeStatements <- traverse csvLineToBcgeTransaction content
+  return $ BcgeStatement date saldo bcgeStatements
 
 -- Functions operating on safe data (BcgeStatement, etc.) and transforming it
 -- to Ledger.
@@ -186,7 +187,13 @@ bStToLedger config (BcgeStatement date balance trs) = execWriter collectTrs
 
 bcgeCsvToLedger :: Maybe Hint.Config -> String -> String
 bcgeCsvToLedger config input =
-  let Right csvLines = parse bcgeCsvParser "" input
-      bcgeStatement = csvLinesToBcgeStatement csvLines
-      ledgerTransactions = bStToLedger config bcgeStatement
-   in concatMap showTransaction ledgerTransactions
+  case result of
+    Left err -> show err
+    Right Nothing -> "Something went wrong in the transformation process."
+    Right (Just res) -> res
+  where
+    csvLines = parse bcgeCsvParser "" input
+    bcgeStatement :: Either _ (Maybe BcgeStatement) =
+      fmap csvLinesToBcgeStatement csvLines
+    ledgerTransactions = fmap (fmap (bStToLedger config)) bcgeStatement
+    result = fmap (fmap (concatMap showTransaction)) ledgerTransactions

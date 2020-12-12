@@ -94,17 +94,18 @@ data BcgeOptions = BcgeOptions
     bcgeOptionsHintsFile :: Maybe FilePath
   }
 
-parseBcgeHints :: FilePath -> IO BcgeHint.Config
+parseBcgeHints :: FilePath -> IO (Maybe BcgeHint.Config)
 parseBcgeHints hintsFilePath = do
   contents <- readFile hintsFilePath
-  let Just config = MP.parseMaybe BcgeHint.configParser contents
-  return config
+  return $ MP.parseMaybe BcgeHint.configParser contents
 
 parseBcgeIO :: BcgeOptions -> IO ()
 parseBcgeIO bcgeOptions = withUtf8 $ do
   inputFile <- readFile $ bcgeOptionsInputFile bcgeOptions
   let maybeHintsFilePath = bcgeOptionsHintsFile bcgeOptions
-  hints :: Maybe BcgeHint.Config <- mapM parseBcgeHints maybeHintsFilePath
+  hints :: Maybe BcgeHint.Config <-
+    join
+      <$> mapM parseBcgeHints maybeHintsFilePath
   putStr $ bcgeCsvToLedger hints inputFile
 
 parseBcgeAction :: BcgeFlags -> OptionDesc (IO ()) ()

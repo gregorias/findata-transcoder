@@ -11,6 +11,7 @@ module Hledupt.Mbank
 where
 
 import Control.Monad (void)
+import Data.Bifunctor (Bifunctor (first))
 import Data.Decimal (Decimal)
 import Data.List (sortOn)
 import Data.Text (pack)
@@ -109,11 +110,10 @@ mTrToLedger mTr = tr {tdescription = pack $ sanitizeTitle $ mTrTitle mTr}
           nullposting {paccount = pack "Expenses:Other"}
         ]
 
---
-
 mbankCsvToLedger :: String -> Either String String
-mbankCsvToLedger inputCsv =
-  let Right mtransactions = parse mbankCsvParser "" inputCsv
-      sortedMTransactions = sortOn mTrDate mtransactions
+mbankCsvToLedger inputCsv = do
+  let parserErrorToString err = "Could not parse mBank's CSV.\n" ++ show err
+  mtransactions <- first parserErrorToString $ parse mbankCsvParser "" inputCsv
+  let sortedMTransactions = sortOn mTrDate mtransactions
       ltransactions = fmap mTrToLedger sortedMTransactions
-   in Right $ concatMap showTransaction ltransactions
+  return $ concatMap showTransaction ltransactions

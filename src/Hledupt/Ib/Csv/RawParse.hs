@@ -9,6 +9,7 @@ module Hledupt.Ib.Csv.RawParse
   )
 where
 
+import qualified Control.Lens as L
 import Text.Megaparsec
   ( MonadParsec,
     ParseErrorBundle,
@@ -63,29 +64,31 @@ rawStatementParser = do
   optional bom
   ibCsvLines <- many rawStatementLineParser
   let headerIs header = (== header) . clHeader
-      [ stmtLines,
+      ( stmtLines,
         statusLines,
         cashLines,
         dividendLines,
         withholdingTaxLines
-        ] =
-          map
+        ) =
+          L.over
+            L.each
             (\header -> filter (headerIs header) ibCsvLines)
-            [ "Statement",
+            ( "Statement",
               "Positions and Mark-to-Market Profit and Loss",
               "Deposits & Withdrawals",
               "Dividends",
               "Withholding Tax"
-            ]
-      [stmtCsv, statusCsv, cashCsv, dividendCsv, withholdingTaxCsv] =
-        map
+            )
+      (stmtCsv, statusCsv, cashCsv, dividendCsv, withholdingTaxCsv) =
+        L.over
+          L.each
           (concatMap clBody)
-          [ stmtLines,
+          ( stmtLines,
             statusLines,
             cashLines,
             dividendLines,
             withholdingTaxLines
-          ]
+          )
   eof
   return $
     Csvs
