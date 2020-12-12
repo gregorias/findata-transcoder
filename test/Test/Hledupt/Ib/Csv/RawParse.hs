@@ -14,7 +14,7 @@ tests = do
             "Dividends,Header,Currency,Date,Description,Amount\n\
             \Withholding Tax,Header,Currency,Date,Description,Amount,Code"
           Right stmt = parse csv
-      (cDividends stmt, cWithholdingTax stmt)
+      (cDividends stmt, cWithholdingTaxes stmt)
         `shouldBe` ( "Header,Currency,Date,Description,Amount\n",
                      "Header,Currency,Date,Description,Amount,Code"
                    )

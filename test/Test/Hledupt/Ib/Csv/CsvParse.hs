@@ -40,7 +40,11 @@ tests = do
                   cDividends =
                     "Header,Currency,Date,Description,Amount\n\
                     \Data,USD,2019-12-20,ACWF(US46434V3160) Cash Dividend USD 0.42537 per Share (Ordinary Dividend),1050.24\n\
-                    \Data,Total,,,10813.42"
+                    \Data,Total,,,10813.42",
+                  cWithholdingTaxes =
+                    "Header,Currency,Date,Description,Amount,Code\n\
+                    \Data,USD,2019-09-06,BND(US9219378356) Cash Dividend USD 0.188198 per Share - US Tax,-2.72\n\
+                    \Data,Total,,,-1585.38,"
                 }
         parse csv
           `shouldBe` Right
@@ -57,7 +61,14 @@ tests = do
                           (fromRational $ 105024 % 100),
                       TotalDividendsRecord
                     ],
-                  sWithholdingTaxes = []
+                  sWithholdingTaxes =
+                    [ WithholdingTaxRecord $
+                        WithholdingTax
+                          (fromGregorian 2019 9 6)
+                          "BND"
+                          (fromRational $ -272 % 100),
+                      TotalWithholdingTaxRecord
+                    ]
                 }
             )
       it "Gives a readable error string when dividends can't be parsed." $ do
@@ -82,7 +93,7 @@ tests = do
                     \Data,Period,\"December 11, 2019 - December 4, 2020\"\n",
                   cPositions =
                     "Header,Asset Class,Currency,Symbol,Description,Prior Quantity,Quantity,Prior Price,Price,Prior Market Value,Market Value,Position,Trading,Comm.,Other,Total\n",
-                  cWithholdingTax = "Mangled CSV"
+                  cWithholdingTaxes = "Mangled CSV"
                 }
         parse csv
           `shouldSatisfy` \case

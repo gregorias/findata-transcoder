@@ -37,7 +37,7 @@ data Csvs = Csvs
     cPositions :: String,
     cDepositsAndWithdrawals :: String,
     cDividends :: String,
-    cWithholdingTax :: String
+    cWithholdingTaxes :: String
   }
   deriving (Eq, Show)
 
@@ -93,7 +93,7 @@ rawStatementParser = do
         cPositions = statusCsv,
         cDepositsAndWithdrawals = cashCsv,
         cDividends = dividendCsv,
-        cWithholdingTax = withholdingTaxCsv
+        cWithholdingTaxes = withholdingTaxCsv
       }
 
 parse :: (Ord e) => String -> Either (ParseErrorBundle String e) Csvs

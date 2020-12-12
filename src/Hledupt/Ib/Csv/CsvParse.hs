@@ -275,7 +275,7 @@ data Statement = Statement
     sPositionRecords :: [PositionRecord],
     sCashMovements :: [CashMovement],
     sDividends :: [DividendRecord],
-    sWithholdingTaxes :: [WithholdingTax]
+    sWithholdingTaxes :: [WithholdingTaxRecord]
   }
   deriving (Eq, Show)
 
@@ -306,7 +306,7 @@ parse csvs = do
         addErrorMessage "Could not parse dividends data." $
           decodeAndListify dividendCsv
 
-  let taxCsv = cWithholdingTax csvs
+  let taxCsv = cWithholdingTaxes csvs
   taxes <-
     if null taxCsv
       then return empty
