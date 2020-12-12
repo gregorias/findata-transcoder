@@ -11,12 +11,24 @@ module Hledupt.Ib.Csv
     DividendRecord (..),
     PositionRecord (..),
     Statement (..),
+    WithholdingTax (..),
+    WithholdingTaxRecord (..),
     parse,
   )
 where
 
 import Data.Bifunctor (Bifunctor (first))
-import Hledupt.Ib.Csv.CsvParse (CashMovement, Currency, Dividend, DividendRecord, PositionRecord, PositionRecordAssetClass, Statement)
+import Hledupt.Ib.Csv.CsvParse
+  ( CashMovement,
+    Currency,
+    Dividend,
+    DividendRecord,
+    PositionRecord,
+    PositionRecordAssetClass,
+    Statement,
+    WithholdingTax,
+    WithholdingTaxRecord,
+  )
 import qualified Hledupt.Ib.Csv.CsvParse as CsvParse
 import qualified Hledupt.Ib.Csv.RawParse as RawParse
 

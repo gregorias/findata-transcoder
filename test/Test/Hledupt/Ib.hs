@@ -1,4 +1,5 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -7,13 +8,14 @@ module Test.Hledupt.Ib
   )
 where
 
+import Data.List (isInfixOf)
 import Data.Ratio ((%))
 import Data.Time (fromGregorian)
 import Hledger (MarketPrice (MarketPrice))
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.Ib
 import qualified Hledupt.Ib.Csv as IbCsv
-import Test.Hspec (describe, it, shouldBe)
+import Test.Hspec (describe, it, shouldBe, shouldSatisfy)
 import qualified Test.Hspec as Hspec
 
 tests :: Hspec.SpecWith ()
@@ -40,19 +42,49 @@ parseTests = do
               ]
               []
       statementToIbData stmt
-        `shouldBe` IbData
-          { idStockPrices = [],
-            idTransactions =
-              [ parseTransactionUnsafe
-                  "2020/01/01 * VOO dividend @ 0.45 per share\n\
-                  \  Assets:Liquid:IB:USD  USD 450\n\
-                  \  Income:Capital Gains  USD -450"
-              ],
-            idStatus = Nothing
-          }
+        `shouldBe` Right
+          ( IbData
+              { idStockPrices = [],
+                idTransactions =
+                  [ parseTransactionUnsafe
+                      "2020/01/01 * VOO dividend @ 0.45 per share\n\
+                      \  Assets:Liquid:IB:USD\n\
+                      \  Assets:Illiquid:IB Withholding Tax  USD 0\n\
+                      \  Income:Capital Gains  USD -450"
+                  ],
+                idStatus = Nothing
+              }
+          )
+
+    it "Returns a meaningful error on unmatched taxes." $ do
+      let stmt =
+            IbCsv.Statement
+              { IbCsv.sLastStatementDay = fromGregorian 2020 12 8,
+                IbCsv.sPositionRecords = [],
+                IbCsv.sCashMovements = [],
+                IbCsv.sDividends = [],
+                IbCsv.sWithholdingTaxes =
+                  [ IbCsv.WithholdingTaxRecord $
+                      IbCsv.WithholdingTax
+                        { IbCsv.wtDate = fromGregorian 2020 1 1,
+                          IbCsv.wtSymbol = "VOO",
+                          IbCsv.wtTotalAmount = fromRational 1
+                        }
+                  ]
+              }
+      statementToIbData stmt
+        `shouldSatisfy` \case
+          Left errorMsg ->
+            ( "Could not find a dividend match for VOO withholding tax \
+              \from 2020-01-01. This could happen due to IB statement \
+              \cut-off (fetch a broader statement) or wrong data \
+              \assumptions."
+                `isInfixOf` errorMsg
+            )
+          Right _ -> False
 
   describe "parse" $ do
-    it "parses a CSV" $ do
+    it "Parses a CSV" $ do
       let csv =
             "Statement,Header,Field Name,Field Value\n\
             \Statement,Data,BrokerName,Interactive Brokers\n\
@@ -67,7 +99,13 @@ parseTests = do
             \Positions and Mark-to-Market Profit and Loss,Data,Total,USD,,,,,,,123,123,0,0,0,0,0\n\
             \Positions and Mark-to-Market Profit and Loss,Data,Forex,CHF,CHF, ,100.0011305,100.0011305,1,1,100.0011305,100.0011305,0,0,0,0,0\n\
             \Deposits & Withdrawals,Header,Currency,Settle Date,Description,Amount\n\
-            \Deposits & Withdrawals,Data,CHF,2020-01-20,title,100.32"
+            \Deposits & Withdrawals,Data,CHF,2020-01-20,title,100.32\n\
+            \Dividends,Header,Currency,Date,Description,Amount\n\
+            \Dividends,Data,USD,2020-10-02,VOO(US9229083632) Cash Dividend USD 1.3085 per Share (Ordinary Dividend),1.31\n\
+            \Dividends,Data,Total,,,1.31\n\
+            \Withholding Tax,Header,Currency,Date,Description,Amount,Code\n\
+            \Withholding Tax,Data,USD,2020-10-02,VOO(US9229083632) Cash Dividend USD 1.3085 per Share - US Tax,-0.25,\n\
+            \Withholding Tax,Data,Total,,,-0.25,\n"
       parseCsv csv
         `shouldBe` Right
           ( IbData
@@ -80,7 +118,12 @@ parseTests = do
               [ parseTransactionUnsafe
                   "2020/01/20 IB Deposit/Withdrawal\n\
                   \*  Assets:Liquid:IB:CHF  CHF 100.32\n\
-                  \!  Todo"
+                  \!  Todo",
+                parseTransactionUnsafe
+                  "2020/10/02 * VOO dividend @ 1.3085 per share\n\
+                  \  Assets:Liquid:IB:USD\n\
+                  \  Assets:Illiquid:IB Withholding Tax  USD 0.25\n\
+                  \  Income:Capital Gains  USD -1.31"
               ]
               ( Just $
                   parseTransactionUnsafe
@@ -100,7 +143,7 @@ parseTests = do
           (IbData [] [] Nothing)
 
   describe "showIbData" $ do
-    it "formats IbData" $ do
+    it "Formats IbData" $ do
       showIbData
         ( IbData
             [ MarketPrice

@@ -48,6 +48,7 @@ library
     , base >=4.7 && <5
     , bytestring
     , cassava
+    , containers
     , hledger-lib ==1.18.1
     , lens
     , megaparsec

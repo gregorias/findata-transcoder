@@ -38,6 +38,7 @@ library:
   - time
   - vector
   - parser-combinators
+  - containers
 
 executables:
   hledupt-exe:

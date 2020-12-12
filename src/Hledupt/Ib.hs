@@ -15,10 +15,12 @@ where
 
 import qualified Control.Lens as L
 import Control.Monad (guard)
+import Data.Bifunctor (Bifunctor (first))
 import Data.Decimal (Decimal)
 import Data.Function ((&))
 import Data.List (sortOn)
-import Data.Maybe (mapMaybe)
+import qualified Data.Map as Map
+import Data.Maybe (listToMaybe, mapMaybe)
 import qualified Data.Text as T
 import Data.Time (Day)
 import Hledger
@@ -43,7 +45,9 @@ import Hledger.Data.Transaction (showTransaction, transaction)
 import Hledger.Data.Types
   ( Transaction (..),
   )
+import Hledupt.Data (MonetaryValue)
 import qualified Hledupt.Ib.Csv as IbCsv
+import Text.Printf (printf)
 
 data AssetClass = Stocks | Forex
 
@@ -88,6 +92,8 @@ positionRecordToStockPrice day rec = do
       (T.pack . show . IbCsv.prCurrency $ rec)
       (IbCsv.prPrice rec)
 
+-- | Ledger representation of Interactive Brokers data found in a Mark-to-Market
+-- statement.
 data IbData = IbData
   { idStockPrices :: [MarketPrice],
     idTransactions :: [Transaction],
@@ -110,22 +116,106 @@ cashMovementToTransaction
       ]
       & L.set tDescription "IB Deposit/Withdrawal"
 
-dividendToTransaction :: IbCsv.Dividend -> Transaction
+data DividendWithTax = DividendWithTax
+  { dDate :: Day,
+    dSymbol :: String,
+    dDividendPerShare :: MonetaryValue,
+    dTotalDividendAmount :: MonetaryValue,
+    dTotalTaxAmount :: MonetaryValue
+  }
+
+dividentToDividendWithTax :: IbCsv.Dividend -> DividendWithTax
+dividentToDividendWithTax div =
+  DividendWithTax
+    { dDate = IbCsv.dDate div,
+      dSymbol = IbCsv.dSymbol div,
+      dDividendPerShare = IbCsv.dDividendPerShare div,
+      dTotalDividendAmount = IbCsv.dTotalAmount div,
+      dTotalTaxAmount = fromRational 0
+    }
+
+mergeDividendWithTax ::
+  IbCsv.Dividend ->
+  IbCsv.WithholdingTax ->
+  DividendWithTax
+mergeDividendWithTax div tax =
+  (dividentToDividendWithTax div)
+    { dTotalTaxAmount = IbCsv.wtTotalAmount tax
+    }
+
+data UnmatchedWithholdingTax = UnmatchedWithholdingTax
+  { _uwtDate :: Day,
+    _uwtSymbol :: String
+  }
+
+withholdingTaxToUnmatchedWithholdingTax :: IbCsv.WithholdingTax -> UnmatchedWithholdingTax
+withholdingTaxToUnmatchedWithholdingTax (IbCsv.WithholdingTax day symbol _) =
+  UnmatchedWithholdingTax day symbol
+
+unmatchedWithholdingTaxToErrorMessage ::
+  UnmatchedWithholdingTax -> String
+unmatchedWithholdingTaxToErrorMessage (UnmatchedWithholdingTax date symbol) =
+  printf
+    "Could not find a dividend match for %s withholding tax from %s.\
+    \ This could happen due to IB statement cut-off (fetch a broader \
+    \statement) or wrong data assumptions."
+    symbol
+    (show date)
+
+type Key = (Day, String)
+
+type Accum = (Map.Map Key IbCsv.WithholdingTax, [DividendWithTax])
+
+joinDividendAndTaxRecords ::
+  [IbCsv.Dividend] ->
+  [IbCsv.WithholdingTax] ->
+  Either UnmatchedWithholdingTax [DividendWithTax]
+joinDividendAndTaxRecords divs taxes =
+  maybe
+    (pure dwts)
+    (Left . withholdingTaxToUnmatchedWithholdingTax)
+    remainingTax
+  where
+    dividendToKey dividend = (IbCsv.dDate dividend, IbCsv.dSymbol dividend)
+    taxToKey tax = (IbCsv.wtDate tax, IbCsv.wtSymbol tax)
+    fromList :: (Ord k) => (a -> k) -> [a] -> Map.Map k a
+    fromList key as = Map.fromList $ map (\a -> (key a, a)) as
+    taxMap = fromList taxToKey taxes
+
+    update :: (IbCsv.Dividend -> Accum -> Accum)
+    update div (m, dwts) = (m', newDwt : dwts)
+      where
+        divKey = dividendToKey div
+        (maybeTax, m') = Map.updateLookupWithKey (\_ _ -> Nothing) divKey m
+        newDwt = case maybeTax of
+          Just tax -> mergeDividendWithTax div tax
+          Nothing -> dividentToDividendWithTax div
+    (remainingTaxMap, dwts) = foldr update (taxMap, []) divs
+    remainingTax = listToMaybe $ Map.elems remainingTaxMap
+
+dividendToTransaction :: DividendWithTax -> Transaction
 dividendToTransaction
-  IbCsv.Dividend
-    { IbCsv.dDate = d,
-      IbCsv.dSymbol = sym,
-      IbCsv.dDividendPerShare = dps,
-      IbCsv.dTotalAmount = amt
+  DividendWithTax
+    { dDate = d,
+      dSymbol = sym,
+      dDividendPerShare = dps,
+      dTotalDividendAmount = divAmt,
+      dTotalTaxAmount = taxAmt
     } =
     transaction
       (show d)
       [ nullposting
-          & L.set pAccount "Assets:Liquid:IB:USD"
-            . L.set pMaybeAmount (Just $ makeAmount Forex "USD" amt),
+          & L.set pAccount "Assets:Liquid:IB:USD",
+        nullposting
+          & L.set pAccount "Assets:Illiquid:IB Withholding Tax"
+            . L.set
+              pMaybeAmount
+              (Just $ makeAmount Forex "USD" (- taxAmt)),
         nullposting
           & L.set pAccount "Income:Capital Gains"
-            . L.set pMaybeAmount (Just $ makeAmount Forex "USD" (- amt))
+            . L.set
+              pMaybeAmount
+              (Just $ makeAmount Forex "USD" (- divAmt))
       ]
       & L.set tDescription title
         . L.set tStatus Cleared
@@ -140,7 +230,7 @@ showIbData (IbData stockPrices cashMovements maybeStatus) =
     ++ "\n"
     ++ maybe "" showTransaction maybeStatus
 
-statementToIbData :: IbCsv.Statement -> IbData
+statementToIbData :: IbCsv.Statement -> Either String IbData
 statementToIbData
   ( IbCsv.Statement
       statementDay
@@ -148,36 +238,46 @@ statementToIbData
       cashMovements
       dividendRecords
       withholdingTaxRecords
-    ) =
-    IbData
-      (mapMaybe (positionRecordToStockPrice statementDay) posRecords)
-      (sortOn tdate $ cmTrs ++ dividendTrs)
-      ( do
-          guard $ not (null statusPostings)
-          return $
-            transaction
-              (show statementDay)
-              statusPostings
-              & L.set tDescription "IB Status"
-                . L.set tStatus Cleared
-      )
-    where
-      statusPostings = fmap positionRecordToStatusPosting posRecords
-
-      cmTrs = map cashMovementToTransaction cashMovements
-
-      dividendTrs =
-        mapMaybe
-          ( \case
-              IbCsv.DividendRecord dividend ->
-                dividendToTransaction <$> Just dividend
-              IbCsv.TotalDividendsRecord -> Nothing
-          )
-          dividendRecords
+    ) = do
+    let statusPostings = fmap positionRecordToStatusPosting posRecords
+        cmTrs = map cashMovementToTransaction cashMovements
+        dividends =
+          mapMaybe
+            ( \case
+                IbCsv.DividendRecord div -> Just div
+                IbCsv.TotalDividendsRecord -> Nothing
+            )
+            dividendRecords
+        taxes =
+          mapMaybe
+            ( \case
+                IbCsv.WithholdingTaxRecord tax -> Just tax
+                IbCsv.TotalWithholdingTaxRecord -> Nothing
+            )
+            withholdingTaxRecords
+    dividendsWithTaxes <-
+      first unmatchedWithholdingTaxToErrorMessage $
+        joinDividendAndTaxRecords dividends taxes
+    return $
+      IbData
+        (mapMaybe (positionRecordToStockPrice statementDay) posRecords)
+        ( sortOn tdate $
+            cmTrs
+              ++ fmap dividendToTransaction dividendsWithTaxes
+        )
+        ( do
+            guard $ not (null statusPostings)
+            return $
+              transaction
+                (show statementDay)
+                statusPostings
+                & L.set tDescription "IB Status"
+                  . L.set tStatus Cleared
+        )
 
 -- | Parses IB MtoM CSV statement into a Ledger status transaction
 parseCsv :: String -> Either String IbData
-parseCsv csv = IbCsv.parse csv >>= (return . statementToIbData)
+parseCsv csv = IbCsv.parse csv >>= statementToIbData
 
 -- | Parses IB MtoM CSV statement into a Ledger text file.
 ibCsvToLedger :: String -> Either String String
