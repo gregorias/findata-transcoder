@@ -32,7 +32,6 @@ library:
   - lens
   - megaparsec
   - mtl
-  - overhang
   - safe
   - text
   - time
@@ -65,7 +64,6 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - Decimal
-    - HUnit
     - cassava
     - hledger-lib
     - hledupt
@@ -76,4 +74,3 @@ tests:
     - replace-megaparsec
     - text
     - time
-    - vector
