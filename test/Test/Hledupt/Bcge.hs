@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Test.Hledupt.Bcge where
+module Test.Hledupt.Bcge (tests) where
 
 import Control.Lens (set)
 import Data.Function ((&))
@@ -32,9 +32,9 @@ import Test.Hspec (describe, it, shouldBe)
 import qualified Test.Hspec as Hspec
 import Text.Megaparsec (parseMaybe)
 
-bcgeTests :: Hspec.SpecWith ()
-bcgeTests = do
-  describe "Bcge tests" $ do
+tests :: Hspec.SpecWith ()
+tests = do
+  describe "Hledupt.Bcge" $ do
     describe "parseStatementDate" $ do
       it "parses statement date" $ do
         parseStatementDate "08.11.2020" `shouldBe` Just (fromGregorian 2020 11 8)

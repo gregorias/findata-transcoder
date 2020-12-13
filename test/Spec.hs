@@ -10,7 +10,7 @@ import qualified Test.Hledger.Data.Extra as HDE
 import qualified Test.Hledger.Data.Lens
 import qualified Test.Hledger.Data.MarketPrice.Extra
 import qualified Test.Hledger.Read.TestUtils
-import Test.Hledupt.Bcge (bcgeTests)
+import qualified Test.Hledupt.Bcge
 import qualified Test.Hledupt.Bcge.Hint as BcgeHint
 import qualified Test.Hledupt.Data
 import qualified Test.Hledupt.Ib
@@ -26,13 +26,13 @@ main = hspec tests
 
 tests :: SpecWith ()
 tests = do
-  bcgeTests
   BcgeHint.tests
   mbankTests
   HDE.tests
   Test.Hledger.Data.Lens.tests
   Test.Hledger.Data.MarketPrice.Extra.tests
   Test.Hledger.Read.TestUtils.tests
+  Test.Hledupt.Bcge.tests
   Test.Hledupt.Data.dataTests
   Test.Hledupt.Ib.Csv.CsvParse.tests
   Test.Hledupt.Ib.Csv.RawParse.tests
