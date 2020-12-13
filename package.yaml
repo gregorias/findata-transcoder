@@ -41,7 +41,7 @@ library:
   - containers
 
 executables:
-  hledupt-exe:
+  hledupt:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
