@@ -10,6 +10,7 @@ module Hledupt.Ib.Csv.RawParse
 where
 
 import qualified Control.Lens as L
+import Control.Monad (void)
 import Text.Megaparsec
   ( MonadParsec,
     ParseErrorBundle,
@@ -61,7 +62,7 @@ rawStatementParser ::
   ) =>
   m Csvs
 rawStatementParser = do
-  optional bom
+  void $ optional bom
   ibCsvLines <- many rawStatementLineParser
   let headerIs header = (== header) . clHeader
       ( stmtLines,

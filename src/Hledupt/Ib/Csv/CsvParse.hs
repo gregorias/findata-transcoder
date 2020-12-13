@@ -23,7 +23,7 @@ where
 
 import Control.Applicative (Alternative (empty))
 import qualified Control.Lens as L
-import Control.Monad (MonadPlus (mzero))
+import Control.Monad (MonadPlus (mzero), void)
 import Data.Bifunctor (Bifunctor (first))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.Char8 as C
@@ -93,11 +93,11 @@ datePhraseParser = do
 
 periodPhraseParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Day
 periodPhraseParser = do
-  string "Period,\""
+  void $ string "Period,\""
   date <-
     try (datePhraseParser >> string " - " >> datePhraseParser)
       <|> datePhraseParser
-  single '"'
+  void $ single '"'
   return date
 
 statementDateParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Day
@@ -191,10 +191,10 @@ symbolDpsParser ::
   m (String, MonetaryValue)
 symbolDpsParser = do
   symbol <- symbolParser
-  label "ISIN" $ char '(' >> some alphaNumChar >> char ')'
-  string " Cash Dividend USD "
+  void $ label "ISIN" $ char '(' >> some alphaNumChar >> char ')'
+  void $ string " Cash Dividend USD "
   dps <- decimalParser
-  string " per Share (Ordinary Dividend)"
+  void $ string " per Share (Ordinary Dividend)"
   return (symbol, dps)
 
 instance Csv.FromNamedRecord Dividend where

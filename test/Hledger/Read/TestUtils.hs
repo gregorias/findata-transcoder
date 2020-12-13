@@ -9,7 +9,7 @@ module Hledger.Read.TestUtils
 where
 
 import qualified Control.Lens as L
-import Control.Monad (liftM2)
+import Control.Monad (liftM2, void)
 import Control.Monad.Combinators
   ( manyTill,
     optional,
@@ -64,7 +64,7 @@ commodity = do
     try
       ( do
           symbol <- commoditySymbol
-          some space
+          void $ some space
           amount <- decimalParser
           return (Just symbol, amount)
       )
@@ -73,7 +73,7 @@ commodity = do
               symbol <- optional (some space >> commoditySymbol)
               return (symbol, amount)
           )
-  many space
+  void $ many space
   return $
     case symbol of
       Just symbol ->
@@ -92,7 +92,7 @@ accountParser =
 
 balanceAssertion :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m BalanceAssertion
 balanceAssertion = do
-  MP.single '=' >> some space
+  void $ MP.single '=' >> some space
   fmap (fromJust . balassert) commodity <* many space
 
 statusParser :: (MonadParsec e s m, Token s ~ Char) => m Status
@@ -111,7 +111,7 @@ postingParser = do
   amount <- optional (try commodity)
   let amountSetter = maybe id (L.set pMaybeAmount . Just) amount
   balAssert <- optional (try balanceAssertion)
-  eolOrEof
+  void eolOrEof
   return $
     nullposting {paccount = pack account, pstatus = status}
       & amountSetter
