@@ -60,7 +60,7 @@ isCurrency = flip elem ["CHF", "USD", "PLN", "EUR"]
 -- todo parse until combinator
 commodity :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Amount
 commodity = do
-  (symbol, amount) <-
+  (maybeSymbol, amount) <-
     try
       ( do
           symbol <- commoditySymbol
@@ -75,7 +75,7 @@ commodity = do
           )
   void $ many space
   return $
-    case symbol of
+    case maybeSymbol of
       Just symbol ->
         if isCurrency symbol
           then makeCurrencyAmount symbol amount

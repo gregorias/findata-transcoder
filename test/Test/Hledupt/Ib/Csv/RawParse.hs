@@ -13,8 +13,8 @@ tests = do
       let csv =
             "Dividends,Header,Currency,Date,Description,Amount\n\
             \Withholding Tax,Header,Currency,Date,Description,Amount,Code"
-          stmt = parse csv
-      case stmt of
+          eitherStmt = parse csv
+      case eitherStmt of
         Left _ -> expectationFailure "Could not parse the CSV"
         Right stmt ->
           ( cDividends stmt,

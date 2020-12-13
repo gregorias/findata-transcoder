@@ -125,12 +125,12 @@ data DividendWithTax = DividendWithTax
   }
 
 dividentToDividendWithTax :: IbCsv.Dividend -> DividendWithTax
-dividentToDividendWithTax div =
+dividentToDividendWithTax dividend =
   DividendWithTax
-    { dDate = IbCsv.dDate div,
-      dSymbol = IbCsv.dSymbol div,
-      dDividendPerShare = IbCsv.dDividendPerShare div,
-      dTotalDividendAmount = IbCsv.dTotalAmount div,
+    { dDate = IbCsv.dDate dividend,
+      dSymbol = IbCsv.dSymbol dividend,
+      dDividendPerShare = IbCsv.dDividendPerShare dividend,
+      dTotalDividendAmount = IbCsv.dTotalAmount dividend,
       dTotalTaxAmount = fromRational 0
     }
 
@@ -138,8 +138,8 @@ mergeDividendWithTax ::
   IbCsv.Dividend ->
   IbCsv.WithholdingTax ->
   DividendWithTax
-mergeDividendWithTax div tax =
-  (dividentToDividendWithTax div)
+mergeDividendWithTax dividend tax =
+  (dividentToDividendWithTax dividend)
     { dTotalTaxAmount = IbCsv.wtTotalAmount tax
     }
 
@@ -183,13 +183,13 @@ joinDividendAndTaxRecords divs taxes =
     taxMap = fromList taxToKey taxes
 
     update :: (IbCsv.Dividend -> Accum -> Accum)
-    update div (m, dwts) = (m', newDwt : dwts)
+    update dividend (m, dwts') = (m', newDwt : dwts')
       where
-        divKey = dividendToKey div
+        divKey = dividendToKey dividend
         (maybeTax, m') = Map.updateLookupWithKey (\_ _ -> Nothing) divKey m
         newDwt = case maybeTax of
-          Just tax -> mergeDividendWithTax div tax
-          Nothing -> dividentToDividendWithTax div
+          Just tax -> mergeDividendWithTax dividend tax
+          Nothing -> dividentToDividendWithTax dividend
     (remainingTaxMap, dwts) = foldr update (taxMap, []) divs
     remainingTax = listToMaybe $ Map.elems remainingTaxMap
 
@@ -244,7 +244,7 @@ statementToIbData
         dividends =
           mapMaybe
             ( \case
-                IbCsv.DividendRecord div -> Just div
+                IbCsv.DividendRecord dividend -> Just dividend
                 IbCsv.TotalDividendsRecord -> Nothing
             )
             dividendRecords

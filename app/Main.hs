@@ -71,7 +71,7 @@ parseBankIO :: LedgerParser -> IOParser
 parseBankIO ledgerParser inputFilePath = withUtf8 $ do
   inputFile <- readFile inputFilePath
   case ledgerParser inputFile of
-    Left error -> hPutStr stderr error
+    Left err -> hPutStr stderr err
     Right output -> putStr output
 
 parseBankAction :: LedgerParser -> FlagParam FilePath -> OptionDesc (IO ()) ()
