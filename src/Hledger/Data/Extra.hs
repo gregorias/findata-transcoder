@@ -18,6 +18,7 @@ import Hledger.Data.Lens
   )
 import Hledger.Data.Types
   ( Amount (..),
+    AmountPrecision (..),
     Quantity,
   )
 
@@ -32,6 +33,6 @@ makeCurrencyAmount currency quantity =
   makeCommodityAmount currency quantity
     & over
       aStyle
-      ( set asPrecision 2
+      ( set asPrecision (Precision 2)
           . set asCommoditySpaced True
       )

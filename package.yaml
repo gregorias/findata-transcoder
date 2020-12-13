@@ -28,7 +28,7 @@ library:
   - Decimal
   - bytestring
   - cassava
-  - hledger-lib == 1.18.1
+  - hledger-lib >= 1.19
   - lens
   - megaparsec
   - mtl
@@ -67,7 +67,7 @@ tests:
     - Decimal
     - HUnit
     - cassava
-    - hledger-lib == 1.18.1
+    - hledger-lib
     - hledupt
     - hspec
     - lens

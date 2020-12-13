@@ -149,7 +149,7 @@ csvLinesToBcgeStatement csvLines = do
 
 bcgeTransactionToLedger :: Maybe Hint.Config -> BcgeTransaction -> Transaction
 bcgeTransactionToLedger maybeConfig (BcgeTransaction date title amount) =
-  transaction (show date) [bcgePosting, counterPosting]
+  transaction date [bcgePosting, counterPosting]
     & set tDescription description
       . set tStatus Cleared
   where
@@ -169,7 +169,7 @@ bcgeTransactionToLedger maybeConfig (BcgeTransaction date title amount) =
 
 saldoToLedger :: Day -> MonetaryValue -> Transaction
 saldoToLedger date balance =
-  transaction (show date) [balancePosting]
+  transaction date [balancePosting]
     & set tDescription "BCGE Status"
       . set tStatus Cleared
   where

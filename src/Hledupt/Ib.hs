@@ -105,7 +105,7 @@ cashMovementToTransaction :: IbCsv.CashMovement -> Transaction
 cashMovementToTransaction
   (IbCsv.CashMovement date currency amount) =
     transaction
-      (show date)
+      date
       [ nullposting
           & L.set pAccount (accountName Forex (show currency))
             . L.set pMaybeAmount (Just $ makeAmount Forex (show currency) amount)
@@ -203,7 +203,7 @@ dividendToTransaction
       dTotalTaxAmount = taxAmt
     } =
     transaction
-      (show d)
+      d
       [ nullposting
           & L.set pAccount "Assets:Liquid:IB:USD",
         nullposting
@@ -269,7 +269,7 @@ statementToIbData
             guard $ not (null statusPostings)
             return $
               transaction
-                (show statementDay)
+                statementDay
                 statusPostings
                 & L.set tDescription "IB Status"
                   . L.set tStatus Cleared

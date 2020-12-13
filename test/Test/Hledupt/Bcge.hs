@@ -2,17 +2,7 @@
 
 module Test.Hledupt.Bcge where
 
-import Hledupt.Bcge
-  ( BcgeTransaction (..),
-    bcgeTransactionToLedger,
-    csvLineToBcgeTransaction,
-    parseStatementDate,
-    saldoToLedger,
-    statementDateParser,
-  )
-import qualified Hledupt.Bcge.Hint as Hint
 import Control.Lens (set)
-import Hledupt.Data (fromUnitsAndCents)
 import Data.Function ((&))
 import Data.Time.Calendar (fromGregorian)
 import qualified Hledger.Data.Extra as HDE
@@ -28,6 +18,16 @@ import Hledger.Data.Transaction (transaction)
 import Hledger.Data.Types
   ( Status (..),
   )
+import Hledupt.Bcge
+  ( BcgeTransaction (..),
+    bcgeTransactionToLedger,
+    csvLineToBcgeTransaction,
+    parseStatementDate,
+    saldoToLedger,
+    statementDateParser,
+  )
+import qualified Hledupt.Bcge.Hint as Hint
+import Hledupt.Data (fromUnitsAndCents)
 import Test.Hspec (describe, it, shouldBe)
 import qualified Test.Hspec as Hspec
 import Text.Megaparsec (parseMaybe)
@@ -59,7 +59,7 @@ bcgeTests = do
             saldoTransaction =
               set tStatus Cleared
                 . set tDescription "BCGE Status"
-                $ transaction "2020/01/01" [balancePosting]
+                $ transaction (fromGregorian 2020 1 1) [balancePosting]
         saldoToLedger (fromGregorian 2020 1 1) (fromUnitsAndCents 1234 56)
           `shouldBe` saldoTransaction
 
@@ -83,7 +83,7 @@ bcgeTests = do
                 "Assets:Special"
                 (HDE.makeCurrencyAmount "CHF" $ fromUnitsAndCents (-3) 50)
             expectedTransaction =
-              transaction "2020/11/21" [bcgePosting, counterPosting]
+              transaction (fromGregorian 2020 11 21) [bcgePosting, counterPosting]
                 & set tDescription "NewTitle"
                   . set tStatus Cleared
          in bcgeTransactionToLedger (Just config) bcgeTr

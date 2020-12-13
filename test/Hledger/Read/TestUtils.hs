@@ -19,6 +19,7 @@ import Data.Function ((&))
 import Data.Functor (($>))
 import Data.Maybe (fromJust)
 import Data.Text (pack)
+import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Hledger.Data.Amount (num)
 import Hledger.Data.Extra
   ( makeCommodityAmount,
@@ -120,14 +121,16 @@ postingParser = do
 --
 -- This parser parses typical Transaction syntax.
 -- It does not conform to the full Ledger spec.
-transactionParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Transaction
+transactionParser :: (MonadFail m, MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Transaction
 transactionParser = do
-  dateString <- manyTill MP.anySingle (some $ char ' ')
+  date <-
+    manyTill MP.anySingle (some $ char ' ')
+      >>= parseTimeM True defaultTimeLocale "%Y/%m/%d"
   status <- statusParser <* many space
   title <- manyTill anySingle (try newline)
   ps <- some postingParser
   return $
-    Tr.transaction dateString ps
+    Tr.transaction date ps
       & L.set tStatus status
         . L.set tDescription title
 

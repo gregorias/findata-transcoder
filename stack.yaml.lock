@@ -13,8 +13,7 @@ packages:
     hackage: cli-0.2.0
 snapshots:
 - completed:
-    size: 532835
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/24.yaml
-    sha256: cf2b52420b2262fe9cf0f6744929120131abd6675b1c3fb2d8b155a47f80d103
-  original:
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/24.yaml
+    size: 556770
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2020/12/13.yaml
+    sha256: f28fdde5d1513d530830a8cee8354ec928dbbd510d86140758114ddf84f4ca39
+  original: nightly-2020-12-13

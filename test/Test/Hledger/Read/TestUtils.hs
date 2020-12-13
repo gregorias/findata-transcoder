@@ -1,10 +1,12 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Test.Hledger.Read.TestUtils (tests) where
 
 import qualified Control.Lens as L
 import Data.Function ((&))
+import Data.Time (fromGregorian)
 import Hledger.Data.Extra
   ( makeCommodityAmount,
   )
@@ -30,15 +32,15 @@ tests = do
   describe "Test.Hledger.Read.TestUtils" $ do
     describe "postingParser" $ do
       it "parses a posting transaction" $ do
-        let p = "  Expenses:Other"
+        let p :: String = "  Expenses:Other"
             expectedP = nullposting {paccount = "Expenses:Other"}
         parseMaybe postingParser p `shouldBe` Just expectedP
       it "parses a posting transaction with spaces" $ do
-        let p = "  Assets:Bank With Spaces\n"
+        let p :: String = "  Assets:Bank With Spaces\n"
             expectedP = nullposting {paccount = "Assets:Bank With Spaces"}
         parseMaybe postingParser p `shouldBe` Just expectedP
       it "parses a cleared posting" $ do
-        let p = "*  Expenses:Other"
+        let p :: String = "*  Expenses:Other"
             expectedP =
               nullposting
                 { paccount = "Expenses:Other",
@@ -54,7 +56,7 @@ tests = do
               \  Expenses:Other"
             expectedTrBase =
               transaction
-                "2019/10/28"
+                (fromGregorian 2019 10 28)
                 [ nullposting {paccount = "Assets:Bank With Spaces"},
                   nullposting {paccount = "Expenses:Other"}
                 ]
@@ -70,7 +72,7 @@ tests = do
               \  Expenses:Other"
             expectedTrBase =
               transaction
-                "2019/10/28"
+                (fromGregorian 2019 10 28)
                 [ post
                     "Assets:Bank With Spaces"
                     (makeCommodityAmount "SPY" (-15)),
@@ -90,7 +92,7 @@ tests = do
               \  Expenses:Other"
             expectedTrBase =
               transaction
-                "2019/10/28"
+                (fromGregorian 2019 10 28)
                 [ nullposting
                     { paccount = "Assets:Bank",
                       pbalanceassertion =
@@ -110,7 +112,7 @@ tests = do
               \  Expenses:Other"
             expectedTrBase =
               transaction
-                "2019/10/28"
+                (fromGregorian 2019 10 28)
                 [ nullposting
                     { paccount = "Assets:Bank",
                       pbalanceassertion =

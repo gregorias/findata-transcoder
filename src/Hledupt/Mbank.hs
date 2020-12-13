@@ -105,7 +105,7 @@ mTrToLedger mTr = tr {tdescription = pack $ sanitizeTitle $ mTrTitle mTr}
   where
     tr =
       transaction
-        (show . mTrDate $ mTr)
+        (mTrDate mTr)
         [ post' (pack "Assets:Liquid:mBank") (pln $ mTrAmount mTr) (balassert $ pln $ mTrEndBalance mTr),
           nullposting {paccount = pack "Expenses:Other"}
         ]

@@ -27,6 +27,7 @@ import Control.Lens
 import Data.Text (pack, unpack)
 import Hledger.Data.Types
   ( Amount (..),
+    AmountPrecision,
     AmountStyle (..),
     BalanceAssertion (..),
     CommoditySymbol,
@@ -47,7 +48,7 @@ aStyle = lens astyle setter
   where
     setter amount as = amount {astyle = as}
 
-asPrecision :: Lens' AmountStyle Int
+asPrecision :: Lens' AmountStyle AmountPrecision
 asPrecision = lens asprecision setter
   where
     setter as prec = as {asprecision = prec}
