@@ -288,8 +288,16 @@ parse csvs = do
       addErrorMessage errMsg = first ((errMsg ++ "\n") ++)
 
   date <- first show $ MP.parse statementDateParser "" (cStatement csvs)
+
+  let positionCsv = cPositions csvs
   maybePositions :: [PositionOrTotalRecord] <-
-    decodeAndListify $ cPositions csvs
+    if null positionCsv
+      then
+        Left
+          "Got empty positionCsv, which is unexpected as it would\
+          \ indicate there are no holdings in IB. You should \
+          \probably fix raw parsing implementation."
+      else decodeAndListify positionCsv
 
   let cashCsv = cDepositsAndWithdrawals csvs
   maybeCashMovements :: [MaybeCashMovement] <-
