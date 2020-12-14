@@ -28,6 +28,7 @@ library:
   - Decimal
   - bytestring
   - cassava
+  - either
   - hledger-lib >= 1.19
   - lens
   - megaparsec
@@ -65,6 +66,7 @@ tests:
     dependencies:
     - Decimal
     - cassava
+    - containers
     - hledger-lib
     - hledupt
     - hspec

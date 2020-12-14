@@ -3,29 +3,42 @@
 module Test.Hledupt.Ib.Csv.RawParse (tests) where
 
 import Data.Either (isRight)
+import Data.List (isInfixOf)
+import qualified Data.Map.Strict as Map
 import Hledupt.Ib.Csv.RawParse
 import Test.Hspec
 
 tests :: SpecWith ()
 tests = do
   describe "Hledupt.Ib.Csv.RawParse" $ do
-    it "Finds dividend and withholding tax sections." $ do
-      let csv =
-            "Dividends,Header,Currency,Date,Description,Amount\n\
-            \Withholding Tax,Header,Currency,Date,Description,Amount,Code"
-          eitherStmt = parse csv
-      case eitherStmt of
+    it "Finds and groups sections." $ do
+      let statement =
+            "Dividends,Header,Date\n\
+            \Dividends,Data,2019-12-08\n\
+            \Withholding Tax,Header,Currency\n\
+            \Withholding Tax,Data,CHF"
+      case parse statement of
         Left _ -> expectationFailure "Could not parse the CSV"
-        Right stmt ->
-          ( cDividends stmt,
-            cWithholdingTaxes stmt
-          )
-            `shouldBe` ( "Header,Currency,Date,Description,Amount\n",
-                         "Header,Currency,Date,Description,Amount,Code"
-                       )
-    it "parses the BOM character" $ do
+        Right ibCsvs ->
+          ibCsvs
+            `shouldBe` Map.fromList
+              [ ("Dividends", "Header,Date\nData,2019-12-08\n"),
+                ("Withholding Tax", "Header,Currency\nData,CHF")
+              ]
+
+    it "Parses the BOM character" $ do
       let csv =
             "\65279Statement,Header,Field Name,Field Value\n\
             \Statement,Data,Period,\"November 26, 2020\"\n\
-            \Positions and Mark-to-Market Profit and Loss,Header,Asset Class,Currency,Symbol,Description,Prior Quantity,Quantity,Prior Price,Price,Prior Market Value,Market Value,Position,Trading,Comm.,Other,Total\n"
+            \Positions and Mark-to-Market Profit and Loss,Header\n"
       parse csv `shouldSatisfy` isRight
+
+    it "Gives a readable error message" $
+      case parse "mangledtext" of
+        Left errorMsg ->
+          errorMsg
+            `shouldSatisfy` isInfixOf
+              "Could not parse the IB CSV statement."
+        Right _ ->
+          expectationFailure
+            "`parse` should not have parsed the mangled text"

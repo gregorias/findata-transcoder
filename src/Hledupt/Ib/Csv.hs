@@ -17,7 +17,6 @@ module Hledupt.Ib.Csv
   )
 where
 
-import Data.Bifunctor (Bifunctor (first))
 import Hledupt.Ib.Csv.CsvParse
   ( CashMovement,
     Currency,
@@ -35,5 +34,5 @@ import qualified Hledupt.Ib.Csv.RawParse as RawParse
 -- | Parses an M-to-M IB CSV statement into individual data points and records.
 parse :: String -> Either String Statement
 parse csv = do
-  csvs <- first show $ RawParse.parse csv
-  CsvParse.parse csvs
+  csvs <- RawParse.parse csv
+  CsvParse.parseMtmStatement csvs

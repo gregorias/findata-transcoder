@@ -1,22 +1,26 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeFamilies #-}
 
 -- |
--- This module parses original IB Mark-to-Market CSV into its constituent parts.
+-- This module parses an IB statement (Activities or Mark-to-Market) CSV into
+-- its constituent parts.
 module Hledupt.Ib.Csv.RawParse
-  ( Csvs (..),
-    nullcsvs,
+  ( IbCsvs,
+    Csv,
+    CsvName,
     parse,
   )
 where
 
-import qualified Control.Lens as L
 import Control.Monad (void)
+import Data.Bifunctor (Bifunctor (first))
+import Data.List.NonEmpty (NonEmpty (..), groupWith)
+import qualified Data.Map.Strict as Map
+import Data.Void (Void)
 import Text.Megaparsec
-  ( MonadParsec,
-    ParseErrorBundle,
-    Token,
-    Tokens,
+  ( Parsec,
     eof,
+    errorBundlePretty,
     many,
     optional,
     some,
@@ -34,71 +38,40 @@ data CsvLine = CsvLine
   }
   deriving (Eq, Show)
 
-data Csvs = Csvs
-  { cStatement :: String,
-    cPositions :: String,
-    cDepositsAndWithdrawals :: String,
-    cDividends :: String,
-    cWithholdingTaxes :: String
-  }
-  deriving (Eq, Show)
+-- | A string containing a CSV file
+type Csv = String
 
-nullcsvs :: Csvs
-nullcsvs = Csvs "" "" "" "" ""
+-- | A name of a single CSV in an IB statement
+type CsvName = String
 
-rawStatementLineParser ::
-  (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>
-  m CsvLine
+-- | A collection of CSV files that form subsections in a single IB statement.
+type IbCsvs = Map.Map CsvName Csv
+
+rawStatementLineParser :: Parsec Void String CsvLine
 rawStatementLineParser = do
   headerString <- someTill printChar (char ',')
   rest <- some printChar
   end <- try eol <|> return ""
   return $ CsvLine headerString (rest ++ end)
 
-rawStatementParser ::
-  ( MonadParsec e s m,
-    Token s ~ Char,
-    Tokens s ~ String
-  ) =>
-  m Csvs
+groupByHeader :: [CsvLine] -> [(String, NonEmpty String)]
+groupByHeader ls =
+  map
+    (\case a :| as -> (clHeader a, clBody a :| map clBody as))
+    (groupWith clHeader ls)
+
+linesToIbCsvs :: [CsvLine] -> IbCsvs
+linesToIbCsvs = fmap concat . Map.fromList . groupByHeader
+
+rawStatementParser :: Parsec Void String IbCsvs
 rawStatementParser = do
   void $ optional bom
-  ibCsvLines <- many rawStatementLineParser
-  let headerIs header = (== header) . clHeader
-      ( stmtLines,
-        statusLines,
-        cashLines,
-        dividendLines,
-        withholdingTaxLines
-        ) =
-          L.over
-            L.each
-            (\header -> filter (headerIs header) ibCsvLines)
-            ( "Statement",
-              "Positions and Mark-to-Market Profit and Loss",
-              "Deposits & Withdrawals",
-              "Dividends",
-              "Withholding Tax"
-            )
-      (stmtCsv, statusCsv, cashCsv, dividendCsv, withholdingTaxCsv) =
-        L.over
-          L.each
-          (concatMap clBody)
-          ( stmtLines,
-            statusLines,
-            cashLines,
-            dividendLines,
-            withholdingTaxLines
-          )
+  csvLines <- many rawStatementLineParser
   eof
-  return $
-    Csvs
-      { cStatement = stmtCsv,
-        cPositions = statusCsv,
-        cDepositsAndWithdrawals = cashCsv,
-        cDividends = dividendCsv,
-        cWithholdingTaxes = withholdingTaxCsv
-      }
+  return $ linesToIbCsvs csvLines
 
-parse :: (Ord e) => String -> Either (ParseErrorBundle String e) Csvs
-parse = MP.parse rawStatementParser ""
+-- | Parses an IB CSV Statement
+parse :: String -> Either String IbCsvs
+parse = first ((errorMsg ++) . errorBundlePretty) . MP.parse rawStatementParser ""
+  where
+    errorMsg = "Could not parse the IB CSV statement.\n"

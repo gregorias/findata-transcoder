@@ -17,7 +17,7 @@ module Hledupt.Ib.Csv.CsvParse
     Statement (..),
     WithholdingTax (..),
     WithholdingTaxRecord (..),
-    parse,
+    parseMtmStatement,
   )
 where
 
@@ -29,18 +29,23 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
+import Data.Either.Combinators (maybeToRight)
 import Data.List (isInfixOf)
+import qualified Data.Map.Strict as Map
 import Data.Maybe (mapMaybe)
 import Data.Time (Day, defaultTimeLocale, fromGregorian, parseTimeM)
 import qualified Data.Vector as V
+import Data.Void (Void)
 import Hledupt.Data (MonetaryValue, decimalParser, myDecDec)
-import Hledupt.Ib.Csv.RawParse (Csvs (..))
+import Hledupt.Ib.Csv.RawParse (Csv, CsvName, IbCsvs)
 import Text.Megaparsec
   ( MonadParsec,
+    Parsec,
     Token,
     Tokens,
     anySingle,
     count,
+    errorBundlePretty,
     label,
     single,
     some,
@@ -100,7 +105,7 @@ periodPhraseParser = do
   void $ single '"'
   return date
 
-statementDateParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Day
+statementDateParser :: Parsec Void String Day
 statementDateParser = snd <$> someTill_ anySingle (try periodPhraseParser)
 
 -- Positions AKA Status parsers
@@ -281,25 +286,27 @@ data Statement = Statement
   deriving (Eq, Show)
 
 -- | Parses an M-to-M IB CSVs into individual data points and records.
-parse :: Csvs -> Either String Statement
-parse csvs = do
+parseMtmStatement :: IbCsvs -> Either String Statement
+parseMtmStatement csvs = do
   let decodeAndListify :: (Csv.FromNamedRecord a) => String -> Either String [a]
       decodeAndListify csv = V.toList . snd <$> Csv.decodeByName (C.pack csv)
       addErrorMessage errMsg = first ((errMsg ++ "\n") ++)
+      fetchCsv :: CsvName -> IbCsvs -> Either String Csv
+      fetchCsv name = maybeToRight ("Could not find " ++ name ++ " among the CSVs.") . Map.lookup name
+      fetchCsvOrEmpty :: CsvName -> IbCsvs -> Csv
+      fetchCsvOrEmpty = Map.findWithDefault ""
 
-  date <- first show $ MP.parse statementDateParser "" (cStatement csvs)
+  date <- do
+    stmtCsv <- fetchCsv "Statement" csvs
+    first errorBundlePretty $ MP.parse statementDateParser "" stmtCsv
 
-  let positionCsv = cPositions csvs
+  let positionCsv = fetchCsvOrEmpty "Positions and Mark-to-Market Profit and Loss" csvs
   maybePositions :: [PositionOrTotalRecord] <-
     if null positionCsv
-      then
-        Left
-          "Got empty positionCsv, which is unexpected as it would\
-          \ indicate there are no holdings in IB. You should \
-          \probably fix raw parsing implementation."
+      then return []
       else decodeAndListify positionCsv
 
-  let cashCsv = cDepositsAndWithdrawals csvs
+  let cashCsv = fetchCsvOrEmpty "Deposits & Withdrawals" csvs
   maybeCashMovements :: [MaybeCashMovement] <-
     if null cashCsv
       then return []
@@ -307,7 +314,7 @@ parse csvs = do
         addErrorMessage "Could not parse cash movement data." $
           decodeAndListify cashCsv
 
-  let dividendCsv = cDividends csvs
+  let dividendCsv = fetchCsvOrEmpty "Dividends" csvs
   dividends <-
     if null dividendCsv
       then return empty
@@ -315,7 +322,7 @@ parse csvs = do
         addErrorMessage "Could not parse dividends data." $
           decodeAndListify dividendCsv
 
-  let taxCsv = cWithholdingTaxes csvs
+  let taxCsv = fetchCsvOrEmpty "Withholding Tax" csvs
   taxes <-
     if null taxCsv
       then return empty
