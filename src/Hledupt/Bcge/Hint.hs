@@ -18,6 +18,7 @@ where
 import Control.Monad (void)
 import Data.List (isInfixOf)
 import Data.Maybe (mapMaybe)
+import Data.Void (Void)
 import Safe (headMay)
 import Text.Megaparsec
   ( Parsec,
@@ -56,7 +57,7 @@ transactionTitleToHint config titleArg =
 
 -- Config parser
 
-type StringParser = Parsec () String
+type StringParser = Parsec Void String
 
 -- TODO generalize
 eolOrEof :: StringParser ()
@@ -67,8 +68,8 @@ headerParser = string "keyword,title,counterAccount" <* eolOrEof
 
 configEntryParser :: StringParser ConfigEntry
 configEntryParser = do
-  keywordValue <- some (noneOf ",") <* char ','
-  titleValue <- some (noneOf ",") <* char ','
+  keywordValue <- some (noneOf [',']) <* char ','
+  titleValue <- some (noneOf [',']) <* char ','
   counterAccountValue <- some $ notFollowedBy eolOrEof *> anySingle
   eolOrEof
   return $ ConfigEntry keywordValue (TransactionHint titleValue counterAccountValue)

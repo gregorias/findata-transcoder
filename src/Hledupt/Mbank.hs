@@ -65,9 +65,9 @@ dateParser = do
 
 valueParser :: MbankParser Decimal
 valueParser = do
-  zloteString <- removeSpaces <$> many (oneOf "-0123456789 ")
+  zloteString <- removeSpaces <$> many (oneOf ("-0123456789 " :: [Char]))
   zlote :: Integer <- return $ read zloteString
-  groszeString <- (char ',' *> many (oneOf "0123456789") <* char ' ') <|> pure "00"
+  groszeString <- (char ',' *> many (oneOf ['0' .. '9']) <* char ' ') <|> pure "00"
   grosze :: Integer <- return $ read groszeString
   void $ string "PLN"
   return $ fromUnitsAndCents zlote grosze
@@ -77,9 +77,9 @@ valueParser = do
 mbankCsvTransactionParser :: MbankParser MbankTransaction
 mbankCsvTransactionParser = do
   date <- dateParser <* char ';'
-  title <- char '"' *> many (noneOf "\";") <* char '"' <* char ';'
-  void $ many (noneOf ";") >> char ';'
-  void $ many (noneOf ";") >> char ';'
+  title <- char '"' *> many (noneOf ['"', ';']) <* char '"' <* char ';'
+  void $ many (noneOf [';']) >> char ';'
+  void $ many (noneOf [';']) >> char ';'
   value <- valueParser <* char ';'
   balance <- valueParser <* char ';'
   void eolOrEof

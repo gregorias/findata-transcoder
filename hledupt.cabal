@@ -43,6 +43,7 @@ library
       Paths_hledupt
   hs-source-dirs:
       src
+  default-extensions: GeneralisedNewtypeDeriving LambdaCase ScopedTypeVariables TupleSections
   build-depends:
       Decimal
     , base >=4.7 && <5
@@ -67,6 +68,7 @@ executable hledupt
       Paths_hledupt
   hs-source-dirs:
       app
+  default-extensions: GeneralisedNewtypeDeriving LambdaCase ScopedTypeVariables TupleSections
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
@@ -99,6 +101,7 @@ test-suite hledupt-test
       Paths_hledupt
   hs-source-dirs:
       test
+  default-extensions: GeneralisedNewtypeDeriving LambdaCase ScopedTypeVariables TupleSections
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       Decimal
