@@ -21,7 +21,6 @@ module Hledupt.Ib.Csv.CsvParse
   )
 where
 
-import Control.Applicative (Alternative (empty))
 import qualified Control.Lens as L
 import Control.Monad (MonadPlus (mzero), void)
 import Data.Bifunctor (Bifunctor (first))
@@ -285,14 +284,20 @@ data Statement = Statement
   }
   deriving (Eq, Show)
 
+parseCsv :: (Csv.FromNamedRecord a) => String -> Either String [a]
+parseCsv csv =
+  if null csv
+    then return []
+    else V.toList . snd <$> Csv.decodeByName (C.pack csv)
+
 -- | Parses an M-to-M IB CSVs into individual data points and records.
 parseMtmStatement :: IbCsvs -> Either String Statement
 parseMtmStatement csvs = do
-  let decodeAndListify :: (Csv.FromNamedRecord a) => String -> Either String [a]
-      decodeAndListify csv = V.toList . snd <$> Csv.decodeByName (C.pack csv)
-      addErrorMessage errMsg = first ((errMsg ++ "\n") ++)
+  let addErrorMessage errMsg = first ((errMsg ++ "\n") ++)
       fetchCsv :: CsvName -> IbCsvs -> Either String Csv
-      fetchCsv name = maybeToRight ("Could not find " ++ name ++ " among the CSVs.") . Map.lookup name
+      fetchCsv name =
+        maybeToRight ("Could not find " ++ name ++ " among the CSVs.")
+          . Map.lookup name
       fetchCsvOrEmpty :: CsvName -> IbCsvs -> Csv
       fetchCsvOrEmpty = Map.findWithDefault ""
 
@@ -302,33 +307,23 @@ parseMtmStatement csvs = do
 
   let positionCsv = fetchCsvOrEmpty "Positions and Mark-to-Market Profit and Loss" csvs
   maybePositions :: [PositionOrTotalRecord] <-
-    if null positionCsv
-      then return []
-      else decodeAndListify positionCsv
+    addErrorMessage "Could not parse cash position records." $
+      parseCsv positionCsv
 
   let cashCsv = fetchCsvOrEmpty "Deposits & Withdrawals" csvs
   maybeCashMovements :: [MaybeCashMovement] <-
-    if null cashCsv
-      then return []
-      else
-        addErrorMessage "Could not parse cash movement data." $
-          decodeAndListify cashCsv
+    addErrorMessage "Could not parse cash movement data." $
+      parseCsv cashCsv
 
   let dividendCsv = fetchCsvOrEmpty "Dividends" csvs
   dividends <-
-    if null dividendCsv
-      then return empty
-      else
-        addErrorMessage "Could not parse dividends data." $
-          decodeAndListify dividendCsv
+    addErrorMessage "Could not parse dividends data." $
+      parseCsv dividendCsv
 
   let taxCsv = fetchCsvOrEmpty "Withholding Tax" csvs
   taxes <-
-    if null taxCsv
-      then return empty
-      else
-        addErrorMessage "Could not parse taxes data." $
-          decodeAndListify taxCsv
+    addErrorMessage "Could not parse taxes data." $
+      parseCsv taxCsv
 
   let positions = mapMaybe potrPositionRecord maybePositions
   return $
