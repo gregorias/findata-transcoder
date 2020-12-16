@@ -331,12 +331,16 @@ parseCsv csv =
     then return []
     else V.toList . snd <$> Csv.decodeByName (C.pack csv)
 
+prependErrorMessage :: String -> Either String a -> Either String a
+prependErrorMessage err = L._Left L.%~ (errln ++)
+  where
+    errln = err ++ "\n"
+
 parseCsv' :: (Csv.FromNamedRecord a) => CsvParser a b -> IbCsvs -> Either String [b]
 parseCsv' (CsvParser name l) csvs = do
-  let addErrorMessage errMsg = first ((errMsg ++ "\n") ++)
-      csv = fetchCsvOrEmpty name csvs
+  let csv = fetchCsvOrEmpty name csvs
   fullRecords <-
-    addErrorMessage
+    prependErrorMessage
       ("Could not parse " ++ name ++ "records.")
       $ parseCsv csv
   return $ mapMaybe l fullRecords
@@ -352,19 +356,18 @@ dividendsParser =
 -- | Parses an M-to-M IB CSVs into individual data points and records.
 parseMtmStatement :: IbCsvs -> Either String Statement
 parseMtmStatement csvs = do
-  let addErrorMessage errMsg = first ((errMsg ++ "\n") ++)
   date <- do
     stmtCsv <- fetchCsv "Statement" csvs
     first errorBundlePretty $ MP.parse statementDateParser "" stmtCsv
 
   let positionCsv = fetchCsvOrEmpty "Positions and Mark-to-Market Profit and Loss" csvs
   maybePositions :: [PositionOrTotalRecord] <-
-    addErrorMessage "Could not parse cash position records." $
+    prependErrorMessage "Could not parse cash position records." $
       parseCsv positionCsv
 
   let cashCsv = fetchCsvOrEmpty "Deposits & Withdrawals" csvs
   maybeCashMovements :: [CashMovementRecord] <-
-    addErrorMessage "Could not parse cash movement data." $
+    prependErrorMessage "Could not parse cash movement data." $
       parseCsv cashCsv
 
   dividends <- parseCsv' dividendsParser csvs
@@ -372,7 +375,7 @@ parseMtmStatement csvs = do
   let taxCsv = fetchCsvOrEmpty "Withholding Tax" csvs
   taxes <-
     fmap (mapMaybe (L.preview _WithholdingTaxRecord))
-      <$> addErrorMessage "Could not parse taxes data."
+      <$> prependErrorMessage "Could not parse taxes data."
       $ parseCsv taxCsv
 
   let positions = mapMaybe potrPosition maybePositions
