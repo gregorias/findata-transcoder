@@ -89,5 +89,5 @@ tests = do
               ]
         parseMtmStatement csv
           `shouldSatisfy` \case
-            Left errorMsg -> (errorMsg =~ "Could not parse taxes data.")
+            Left errorMsg -> (errorMsg =~ "Could not parse Withholding Tax records.")
             Right _ -> False

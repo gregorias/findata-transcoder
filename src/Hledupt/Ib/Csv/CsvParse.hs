@@ -29,11 +29,9 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
 import Data.Either.Combinators (maybeToRight)
-import Data.Kind (Type)
 import Data.List (isInfixOf)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (mapMaybe)
-import Data.String (IsString)
 import Data.Time (Day, defaultTimeLocale, fromGregorian, parseTimeM)
 import qualified Data.Vector as V
 import Data.Void (Void)
@@ -116,16 +114,6 @@ data CsvParser recordType dataType = CsvParser
     _cpPrism :: recordType -> Maybe dataType
   }
 
-newtype IbCsvName a = IbCsvName
-  { unIbCsvName :: String
-  }
-  deriving (IsString)
-
-class FromIbCsvs d where
-  type Record d :: Type
-  csvName :: IbCsvName d
-  fromRecord :: Record d -> Maybe d
-
 data PositionAssetClass = Stocks | Forex
   deriving (Show, Eq)
 
@@ -163,6 +151,13 @@ instance Csv.FromNamedRecord PositionOrTotalRecord where
           <*> (L.view myDecDec <$> lookupAux "Quantity")
           <*> (L.view myDecDec <$> lookupAux "Price")
 
+mtmPositionsParser :: CsvParser PositionOrTotalRecord Position
+mtmPositionsParser =
+  CsvParser
+    { _cpCsvName = "Positions and Mark-to-Market Profit and Loss",
+      _cpPrism = potrPosition
+    }
+
 -- Cash Movement section parsers
 
 data CashMovement = CashMovement
@@ -177,6 +172,12 @@ newtype CashMovementRecord = CashMovementRecord
   }
   deriving (Eq, Show)
 
+_CashMovementRecord :: L.Prism' CashMovementRecord CashMovement
+_CashMovementRecord =
+  L.prism'
+    (CashMovementRecord . Just)
+    cmrCashMovement
+
 instance Csv.FromNamedRecord CashMovementRecord where
   parseNamedRecord namedRecord =
     (CashMovementRecord . Just <$> cashMovement)
@@ -190,6 +191,13 @@ instance Csv.FromNamedRecord CashMovementRecord where
           <*> lookupAux "Currency"
           <*> (L.view myDecDec <$> lookupAux "Amount")
 
+depositsAndWithdrawalsParser :: CsvParser CashMovementRecord CashMovement
+depositsAndWithdrawalsParser =
+  CsvParser
+    { _cpCsvName = "Deposits & Withdrawals",
+      _cpPrism = L.preview _CashMovementRecord
+    }
+
 data Dividend = Dividend
   { dDate :: Day,
     dSymbol :: String,
@@ -197,11 +205,6 @@ data Dividend = Dividend
     dTotalAmount :: MonetaryValue
   }
   deriving (Eq, Show)
-
-instance FromIbCsvs Dividend where
-  type Record Dividend = DividendRecord
-  csvName = "Dividends"
-  fromRecord = L.preview _DividendRecord
 
 symbolParser ::
   (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>
@@ -259,6 +262,13 @@ instance Csv.FromNamedRecord DividendRecord where
               )
           <*> (L.view myDecDec <$> lookupAux "Amount")
 
+dividendsParser :: CsvParser DividendRecord Dividend
+dividendsParser =
+  CsvParser
+    { _cpCsvName = "Dividends",
+      _cpPrism = L.preview _DividendRecord
+    }
+
 data WithholdingTax = WithholdingTax
   { wtDate :: Day,
     wtSymbol :: String,
@@ -307,6 +317,13 @@ _WithholdingTaxRecord =
         WithholdingTaxRecord tax -> Just tax
     )
 
+withholdingTaxParser :: CsvParser WithholdingTaxRecord WithholdingTax
+withholdingTaxParser =
+  CsvParser
+    { _cpCsvName = "Withholding Tax",
+      _cpPrism = L.preview _WithholdingTaxRecord
+    }
+
 -- | Useful information gleaned directly from IB's CSV statement.
 data Statement = Statement
   { sLastStatementDay :: Day,
@@ -341,17 +358,9 @@ parseCsv' (CsvParser name l) csvs = do
   let csv = fetchCsvOrEmpty name csvs
   fullRecords <-
     prependErrorMessage
-      ("Could not parse " ++ name ++ "records.")
+      ("Could not parse " ++ name ++ " records.")
       $ parseCsv csv
   return $ mapMaybe l fullRecords
-
--- TODO Delete CsvParser, rely on FromIbCsvs
-dividendsParser :: CsvParser DividendRecord Dividend
-dividendsParser =
-  CsvParser
-    { _cpCsvName = unIbCsvName (csvName :: IbCsvName Dividend),
-      _cpPrism = fromRecord
-    }
 
 -- | Parses an M-to-M IB CSVs into individual data points and records.
 parseMtmStatement :: IbCsvs -> Either String Statement
@@ -359,30 +368,14 @@ parseMtmStatement csvs = do
   date <- do
     stmtCsv <- fetchCsv "Statement" csvs
     first errorBundlePretty $ MP.parse statementDateParser "" stmtCsv
-
-  let positionCsv = fetchCsvOrEmpty "Positions and Mark-to-Market Profit and Loss" csvs
-  maybePositions :: [PositionOrTotalRecord] <-
-    prependErrorMessage "Could not parse cash position records." $
-      parseCsv positionCsv
-
-  let cashCsv = fetchCsvOrEmpty "Deposits & Withdrawals" csvs
-  maybeCashMovements :: [CashMovementRecord] <-
-    prependErrorMessage "Could not parse cash movement data." $
-      parseCsv cashCsv
-
+  positions <- parseCsv' mtmPositionsParser csvs
+  cashMovements <- parseCsv' depositsAndWithdrawalsParser csvs
   dividends <- parseCsv' dividendsParser csvs
-
-  let taxCsv = fetchCsvOrEmpty "Withholding Tax" csvs
-  taxes <-
-    fmap (mapMaybe (L.preview _WithholdingTaxRecord))
-      <$> prependErrorMessage "Could not parse taxes data."
-      $ parseCsv taxCsv
-
-  let positions = mapMaybe potrPosition maybePositions
+  taxes <- parseCsv' withholdingTaxParser csvs
   return $
     Statement
       date
       positions
-      (mapMaybe cmrCashMovement maybeCashMovements)
+      cashMovements
       dividends
       taxes
