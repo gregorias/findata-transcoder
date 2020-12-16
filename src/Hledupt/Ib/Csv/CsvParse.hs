@@ -1,6 +1,8 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 
@@ -11,12 +13,10 @@ module Hledupt.Ib.Csv.CsvParse
   ( CashMovement (..),
     Currency (..),
     Dividend (..),
-    DividendRecord (..),
-    PositionRecord (..),
-    PositionRecordAssetClass (..),
+    Position (..),
+    PositionAssetClass (..),
     Statement (..),
     WithholdingTax (..),
-    WithholdingTaxRecord (..),
     parseMtmStatement,
   )
 where
@@ -109,16 +109,21 @@ statementDateParser = snd <$> someTill_ anySingle (try periodPhraseParser)
 
 -- Positions AKA Status parsers
 
-data PositionRecordAssetClass = Stocks | Forex
+data CsvParser recordType dataType = CsvParser
+  { _cpCsvName :: String,
+    _cpPrism :: L.Prism' recordType dataType
+  }
+
+data PositionAssetClass = Stocks | Forex
   deriving (Show, Eq)
 
-instance Csv.FromField PositionRecordAssetClass where
+instance Csv.FromField PositionAssetClass where
   parseField "Stocks" = pure Stocks
   parseField "Forex" = pure Forex
   parseField _ = fail "Expected Stocks or Forex"
 
-data PositionRecord = PositionRecord
-  { prAssetClass :: PositionRecordAssetClass,
+data Position = Position
+  { prAssetClass :: PositionAssetClass,
     prCurrency :: Currency,
     prSymbol :: String,
     prQuantity :: Decimal,
@@ -126,9 +131,9 @@ data PositionRecord = PositionRecord
   }
   deriving (Eq, Show)
 
-instance Csv.FromNamedRecord PositionRecord where
+instance Csv.FromNamedRecord Position where
   parseNamedRecord namedRecord =
-    PositionRecord
+    Position
       <$> lookupAux "Asset Class"
       <*> lookupAux "Currency"
       <*> lookupAux "Symbol"
@@ -139,7 +144,7 @@ instance Csv.FromNamedRecord PositionRecord where
       lookupAux = Csv.lookup namedRecord
 
 newtype PositionOrTotalRecord = PositionOrTotalRecord
-  { potrPositionRecord :: Maybe PositionRecord
+  { potrPosition :: Maybe Position
   }
   deriving (Eq, Show)
 
@@ -157,25 +162,23 @@ data CashMovement = CashMovement
   }
   deriving (Eq, Show)
 
-instance Csv.FromNamedRecord CashMovement where
-  parseNamedRecord namedRecord =
-    CashMovement
-      <$> (lookupAux "Settle Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
-      <*> lookupAux "Currency"
-      <*> (L.view myDecDec <$> lookupAux "Amount")
-    where
-      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
-      lookupAux = Csv.lookup namedRecord
-
-newtype MaybeCashMovement = MaybeCashMovement
-  { mcmCashMovement :: Maybe CashMovement
+newtype CashMovementRecord = CashMovementRecord
+  { cmrCashMovement :: Maybe CashMovement
   }
   deriving (Eq, Show)
 
-instance Csv.FromNamedRecord MaybeCashMovement where
+instance Csv.FromNamedRecord CashMovementRecord where
   parseNamedRecord namedRecord =
-    (MaybeCashMovement . Just <$> Csv.parseNamedRecord namedRecord)
-      <|> pure (MaybeCashMovement Nothing)
+    (CashMovementRecord . Just <$> cashMovement)
+      <|> pure (CashMovementRecord Nothing)
+    where
+      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
+      lookupAux = Csv.lookup namedRecord
+      cashMovement =
+        CashMovement
+          <$> (lookupAux "Settle Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
+          <*> lookupAux "Currency"
+          <*> (L.view myDecDec <$> lookupAux "Amount")
 
 data Dividend = Dividend
   { dDate :: Day,
@@ -227,6 +230,15 @@ data DividendRecord
   | TotalDividendsRecord
   deriving (Eq, Show)
 
+_DividendRecord :: L.Prism' DividendRecord Dividend
+_DividendRecord =
+  L.prism'
+    DividendRecord
+    ( \case
+        TotalDividendsRecord -> Nothing
+        DividendRecord dividend -> Just dividend
+    )
+
 instance Csv.FromNamedRecord DividendRecord where
   parseNamedRecord namedRecord = do
     currencyField <- Csv.lookup namedRecord "Currency"
@@ -241,27 +253,7 @@ data WithholdingTax = WithholdingTax
   }
   deriving (Eq, Show)
 
-instance Csv.FromNamedRecord WithholdingTax where
-  parseNamedRecord namedRecord =
-    do
-      WithholdingTax
-      <$> (lookupAux "Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
-        <*> ( do
-                desc :: String <- lookupAux "Description"
-                let parsed = MP.parse symbolParser "" desc
-                either
-                  ( \err ->
-                      fail $
-                        "Could not parse symbol.\n" ++ show err
-                  )
-                  return
-                  parsed
-            )
-        <*> (L.view myDecDec <$> lookupAux "Amount")
-    where
-      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
-      lookupAux = Csv.lookup namedRecord
-
+-- | A record that appears in "Withholding Tax" CSV
 data WithholdingTaxRecord
   = WithholdingTaxRecord WithholdingTax
   | TotalWithholdingTaxRecord
@@ -272,17 +264,53 @@ instance Csv.FromNamedRecord WithholdingTaxRecord where
     currencyField <- Csv.lookup namedRecord "Currency"
     if "Total" `isInfixOf` currencyField
       then return TotalWithholdingTaxRecord
-      else WithholdingTaxRecord <$> Csv.parseNamedRecord namedRecord
+      else WithholdingTaxRecord <$> withholdingTax
+    where
+      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
+      lookupAux = Csv.lookup namedRecord
+      withholdingTax =
+        do
+          WithholdingTax
+          <$> (lookupAux "Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
+            <*> ( do
+                    desc :: String <- lookupAux "Description"
+                    let parsed = MP.parse symbolParser "" desc
+                    either
+                      ( \err ->
+                          fail $
+                            "Could not parse symbol.\n" ++ show err
+                      )
+                      return
+                      parsed
+                )
+            <*> (L.view myDecDec <$> lookupAux "Amount")
+
+_WithholdingTaxRecord :: L.Prism' WithholdingTaxRecord WithholdingTax
+_WithholdingTaxRecord =
+  L.prism'
+    WithholdingTaxRecord
+    ( \case
+        TotalWithholdingTaxRecord -> Nothing
+        WithholdingTaxRecord tax -> Just tax
+    )
 
 -- | Useful information gleaned directly from IB's CSV statement.
 data Statement = Statement
   { sLastStatementDay :: Day,
-    sPositionRecords :: [PositionRecord],
+    sPositions :: [Position],
     sCashMovements :: [CashMovement],
-    sDividends :: [DividendRecord],
-    sWithholdingTaxes :: [WithholdingTaxRecord]
+    sDividends :: [Dividend],
+    sWithholdingTaxes :: [WithholdingTax]
   }
   deriving (Eq, Show)
+
+fetchCsv :: CsvName -> IbCsvs -> Either String Csv
+fetchCsv name =
+  maybeToRight ("Could not find " ++ name ++ " among the CSVs.")
+    . Map.lookup name
+
+fetchCsvOrEmpty :: CsvName -> IbCsvs -> Csv
+fetchCsvOrEmpty = Map.findWithDefault ""
 
 parseCsv :: (Csv.FromNamedRecord a) => String -> Either String [a]
 parseCsv csv =
@@ -290,17 +318,33 @@ parseCsv csv =
     then return []
     else V.toList . snd <$> Csv.decodeByName (C.pack csv)
 
+parseCsv' :: (Csv.FromNamedRecord a) => CsvParser a b -> IbCsvs -> Either String [b]
+parseCsv' (CsvParser csvName l) csvs = do
+  let addErrorMessage errMsg = first ((errMsg ++ "\n") ++)
+      csv = fetchCsvOrEmpty csvName csvs
+  fullRecords <-
+    addErrorMessage
+      ("Could not parse " ++ csvName ++ "records.")
+      $ parseCsv csv
+  return $ mapMaybe (L.preview l) fullRecords
+
+dividendsParser :: CsvParser DividendRecord Dividend
+dividendsParser =
+  CsvParser
+    { _cpCsvName = "Dividends",
+      _cpPrism =
+        L.prism'
+          DividendRecord
+          ( \case
+              TotalDividendsRecord -> Nothing
+              DividendRecord dividend -> Just dividend
+          )
+    }
+
 -- | Parses an M-to-M IB CSVs into individual data points and records.
 parseMtmStatement :: IbCsvs -> Either String Statement
 parseMtmStatement csvs = do
   let addErrorMessage errMsg = first ((errMsg ++ "\n") ++)
-      fetchCsv :: CsvName -> IbCsvs -> Either String Csv
-      fetchCsv name =
-        maybeToRight ("Could not find " ++ name ++ " among the CSVs.")
-          . Map.lookup name
-      fetchCsvOrEmpty :: CsvName -> IbCsvs -> Csv
-      fetchCsvOrEmpty = Map.findWithDefault ""
-
   date <- do
     stmtCsv <- fetchCsv "Statement" csvs
     first errorBundlePretty $ MP.parse statementDateParser "" stmtCsv
@@ -311,25 +355,23 @@ parseMtmStatement csvs = do
       parseCsv positionCsv
 
   let cashCsv = fetchCsvOrEmpty "Deposits & Withdrawals" csvs
-  maybeCashMovements :: [MaybeCashMovement] <-
+  maybeCashMovements :: [CashMovementRecord] <-
     addErrorMessage "Could not parse cash movement data." $
       parseCsv cashCsv
 
-  let dividendCsv = fetchCsvOrEmpty "Dividends" csvs
-  dividends <-
-    addErrorMessage "Could not parse dividends data." $
-      parseCsv dividendCsv
+  dividends <- parseCsv' dividendsParser csvs
 
   let taxCsv = fetchCsvOrEmpty "Withholding Tax" csvs
   taxes <-
-    addErrorMessage "Could not parse taxes data." $
-      parseCsv taxCsv
+    fmap (mapMaybe (L.preview _WithholdingTaxRecord))
+      <$> addErrorMessage "Could not parse taxes data."
+      $ parseCsv taxCsv
 
-  let positions = mapMaybe potrPositionRecord maybePositions
+  let positions = mapMaybe potrPosition maybePositions
   return $
     Statement
       date
       positions
-      (mapMaybe mcmCashMovement maybeCashMovements)
+      (mapMaybe cmrCashMovement maybeCashMovements)
       dividends
       taxes

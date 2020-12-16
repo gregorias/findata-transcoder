@@ -15,8 +15,9 @@ import Hledger (MarketPrice (MarketPrice))
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.Ib
 import qualified Hledupt.Ib.Csv as IbCsv
-import Test.Hspec (describe, it, shouldBe, shouldSatisfy)
+import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
+import Test.Hspec.Expectations.Pretty (shouldBe, shouldSatisfy)
 
 tests :: Hspec.SpecWith ()
 tests = do
@@ -32,13 +33,11 @@ parseTests = do
               (fromGregorian 2020 12 8)
               []
               []
-              [ IbCsv.DividendRecord $
-                  IbCsv.Dividend
-                    (fromGregorian 2020 1 1)
-                    "VOO"
-                    (fromRational $ 45 % 100)
-                    (fromRational 450),
-                IbCsv.TotalDividendsRecord
+              [ IbCsv.Dividend
+                  (fromGregorian 2020 1 1)
+                  "VOO"
+                  (fromRational $ 45 % 100)
+                  (fromRational 450)
               ]
               []
       statementToIbData stmt
@@ -60,16 +59,15 @@ parseTests = do
       let stmt =
             IbCsv.Statement
               { IbCsv.sLastStatementDay = fromGregorian 2020 12 8,
-                IbCsv.sPositionRecords = [],
+                IbCsv.sPositions = [],
                 IbCsv.sCashMovements = [],
                 IbCsv.sDividends = [],
                 IbCsv.sWithholdingTaxes =
-                  [ IbCsv.WithholdingTaxRecord $
-                      IbCsv.WithholdingTax
-                        { IbCsv.wtDate = fromGregorian 2020 1 1,
-                          IbCsv.wtSymbol = "VOO",
-                          IbCsv.wtTotalAmount = fromRational 1
-                        }
+                  [ IbCsv.WithholdingTax
+                      { IbCsv.wtDate = fromGregorian 2020 1 1,
+                        IbCsv.wtSymbol = "VOO",
+                        IbCsv.wtTotalAmount = fromRational 1
+                      }
                   ]
               }
       statementToIbData stmt

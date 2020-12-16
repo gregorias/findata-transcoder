@@ -77,6 +77,7 @@ tests:
     - hledger-lib
     - hledupt
     - hspec
+    - hspec-expectations-pretty-diff
     - lens
     - megaparsec
     - parser-combinators

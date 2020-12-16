@@ -4,15 +4,13 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Hledupt.Ib.Csv
-  ( PositionRecordAssetClass (..),
+  ( PositionAssetClass (..),
     CashMovement (..),
     Currency (..),
     Dividend (..),
-    DividendRecord (..),
-    PositionRecord (..),
+    Position (..),
     Statement (..),
     WithholdingTax (..),
-    WithholdingTaxRecord (..),
     parse,
   )
 where
@@ -21,12 +19,10 @@ import Hledupt.Ib.Csv.CsvParse
   ( CashMovement,
     Currency,
     Dividend,
-    DividendRecord,
-    PositionRecord,
-    PositionRecordAssetClass,
+    Position,
+    PositionAssetClass,
     Statement,
     WithholdingTax,
-    WithholdingTaxRecord,
   )
 import qualified Hledupt.Ib.Csv.CsvParse as CsvParse
 import qualified Hledupt.Ib.Csv.RawParse as RawParse

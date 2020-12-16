@@ -1,5 +1,4 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -51,7 +50,7 @@ import Text.Printf (printf)
 
 data AssetClass = Stocks | Forex
 
-csvAssetClassToLedgerAssetClass :: IbCsv.PositionRecordAssetClass -> AssetClass
+csvAssetClassToLedgerAssetClass :: IbCsv.PositionAssetClass -> AssetClass
 csvAssetClassToLedgerAssetClass IbCsv.Stocks = Stocks
 csvAssetClassToLedgerAssetClass IbCsv.Forex = Forex
 
@@ -69,7 +68,7 @@ accountPrefix Forex = "Assets:Liquid:IB"
 accountName :: AssetClass -> String -> String
 accountName assetClass symbol = accountPrefix assetClass ++ ":" ++ symbol
 
-positionRecordToStatusPosting :: IbCsv.PositionRecord -> Posting
+positionRecordToStatusPosting :: IbCsv.Position -> Posting
 positionRecordToStatusPosting record =
   let assetClass = csvAssetClassToLedgerAssetClass . IbCsv.prAssetClass $ record
       symbol = IbCsv.prSymbol record
@@ -80,7 +79,7 @@ positionRecordToStatusPosting record =
             pBalanceAssertion
             (balassert . makeAmount assetClass symbol $ IbCsv.prQuantity record)
 
-positionRecordToStockPrice :: Day -> IbCsv.PositionRecord -> Maybe MarketPrice
+positionRecordToStockPrice :: Day -> IbCsv.Position -> Maybe MarketPrice
 positionRecordToStockPrice day rec = do
   guard $ IbCsv.prAssetClass rec == IbCsv.Stocks
   -- Records of stocks that I do not own miss the price data.
@@ -236,25 +235,12 @@ statementToIbData
       statementDay
       posRecords
       cashMovements
-      dividendRecords
-      withholdingTaxRecords
+      dividends
+      withholdingTaxes
     ) = do
     let statusPostings = fmap positionRecordToStatusPosting posRecords
         cmTrs = map cashMovementToTransaction cashMovements
-        dividends =
-          mapMaybe
-            ( \case
-                IbCsv.DividendRecord dividend -> Just dividend
-                IbCsv.TotalDividendsRecord -> Nothing
-            )
-            dividendRecords
-        taxes =
-          mapMaybe
-            ( \case
-                IbCsv.WithholdingTaxRecord tax -> Just tax
-                IbCsv.TotalWithholdingTaxRecord -> Nothing
-            )
-            withholdingTaxRecords
+        taxes = withholdingTaxes
     dividendsWithTaxes <-
       first unmatchedWithholdingTaxToErrorMessage $
         joinDividendAndTaxRecords dividends taxes
