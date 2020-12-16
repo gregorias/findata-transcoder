@@ -131,18 +131,6 @@ data Position = Position
   }
   deriving (Eq, Show)
 
-instance Csv.FromNamedRecord Position where
-  parseNamedRecord namedRecord =
-    Position
-      <$> lookupAux "Asset Class"
-      <*> lookupAux "Currency"
-      <*> lookupAux "Symbol"
-      <*> (L.view myDecDec <$> lookupAux "Quantity")
-      <*> (L.view myDecDec <$> lookupAux "Price")
-    where
-      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
-      lookupAux = Csv.lookup namedRecord
-
 newtype PositionOrTotalRecord = PositionOrTotalRecord
   { potrPosition :: Maybe Position
   }
@@ -150,8 +138,18 @@ newtype PositionOrTotalRecord = PositionOrTotalRecord
 
 instance Csv.FromNamedRecord PositionOrTotalRecord where
   parseNamedRecord namedRecord =
-    (PositionOrTotalRecord . Just <$> Csv.parseNamedRecord namedRecord)
+    (PositionOrTotalRecord . Just <$> position)
       <|> pure (PositionOrTotalRecord Nothing)
+    where
+      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
+      lookupAux = Csv.lookup namedRecord
+      position =
+        Position
+          <$> lookupAux "Asset Class"
+          <*> lookupAux "Currency"
+          <*> lookupAux "Symbol"
+          <*> (L.view myDecDec <$> lookupAux "Quantity")
+          <*> (L.view myDecDec <$> lookupAux "Price")
 
 -- Cash Movement section parsers
 
@@ -204,27 +202,6 @@ symbolDpsParser = do
   void $ string " per Share (Ordinary Dividend)"
   return (symbol, dps)
 
-instance Csv.FromNamedRecord Dividend where
-  parseNamedRecord namedRecord =
-    dividend
-      <$> (lookupAux "Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
-      <*> ( do
-              desc :: String <- lookupAux "Description"
-              let parsed = MP.parse symbolDpsParser "" desc
-              either
-                ( \err ->
-                    fail $
-                      "Could not parse (symbol, dps).\n" ++ show err
-                )
-                return
-                parsed
-          )
-      <*> (L.view myDecDec <$> lookupAux "Amount")
-    where
-      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
-      lookupAux = Csv.lookup namedRecord
-      dividend date (symbol, dps) total = Dividend date symbol dps total
-
 data DividendRecord
   = DividendRecord Dividend
   | TotalDividendsRecord
@@ -244,7 +221,26 @@ instance Csv.FromNamedRecord DividendRecord where
     currencyField <- Csv.lookup namedRecord "Currency"
     if "Total" `isInfixOf` currencyField
       then return TotalDividendsRecord
-      else fmap DividendRecord (Csv.parseNamedRecord namedRecord)
+      else fmap DividendRecord dividend
+    where
+      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
+      lookupAux = Csv.lookup namedRecord
+      dividendAux date (symbol, dps) total = Dividend date symbol dps total
+      dividend =
+        dividendAux
+          <$> (lookupAux "Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
+          <*> ( do
+                  desc :: String <- lookupAux "Description"
+                  let parsed = MP.parse symbolDpsParser "" desc
+                  either
+                    ( \err ->
+                        fail $
+                          "Could not parse (symbol, dps).\n" ++ show err
+                    )
+                    return
+                    parsed
+              )
+          <*> (L.view myDecDec <$> lookupAux "Amount")
 
 data WithholdingTax = WithholdingTax
   { wtDate :: Day,

@@ -5,7 +5,6 @@
 
 module Test.Hledupt.Ib.Csv.CsvParse (tests) where
 
-import qualified Data.Csv as Csv
 import qualified Data.Map.Strict as Map
 import Data.Ratio ((%))
 import Data.Time (fromGregorian)
@@ -92,17 +91,3 @@ tests = do
           `shouldSatisfy` \case
             Left errorMsg -> (errorMsg =~ "Could not parse taxes data.")
             Right _ -> False
-
-    describe "Dividend" $ do
-      it "FromNamedRecord parses Dividend lines" $ do
-        let csv =
-              "Header,Currency,Date,Description,Amount\n\
-              \Data,USD,2019-12-20,ACWF(US46434V3160) Cash Dividend USD 0.42537 per Share (Ordinary Dividend),1050.24"
-        fmap snd (Csv.decodeByName csv)
-          `shouldBe` Right
-            [ Dividend
-                (fromGregorian 2019 12 20)
-                "ACWF"
-                (fromRational $ 42537 % 100000)
-                (fromRational $ 105024 % 100)
-            ]
