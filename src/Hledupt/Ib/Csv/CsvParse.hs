@@ -29,9 +29,11 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
 import Data.Either.Combinators (maybeToRight)
+import Data.Kind (Type)
 import Data.List (isInfixOf)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (mapMaybe)
+import Data.String (IsString)
 import Data.Time (Day, defaultTimeLocale, fromGregorian, parseTimeM)
 import qualified Data.Vector as V
 import Data.Void (Void)
@@ -111,8 +113,18 @@ statementDateParser = snd <$> someTill_ anySingle (try periodPhraseParser)
 
 data CsvParser recordType dataType = CsvParser
   { _cpCsvName :: String,
-    _cpPrism :: L.Prism' recordType dataType
+    _cpPrism :: recordType -> Maybe dataType
   }
+
+newtype IbCsvName a = IbCsvName
+  { unIbCsvName :: String
+  }
+  deriving (IsString)
+
+class FromIbCsvs d where
+  type Record d :: Type
+  csvName :: IbCsvName d
+  fromRecord :: Record d -> Maybe d
 
 data PositionAssetClass = Stocks | Forex
   deriving (Show, Eq)
@@ -185,6 +197,11 @@ data Dividend = Dividend
     dTotalAmount :: MonetaryValue
   }
   deriving (Eq, Show)
+
+instance FromIbCsvs Dividend where
+  type Record Dividend = DividendRecord
+  csvName = "Dividends"
+  fromRecord = L.preview _DividendRecord
 
 symbolParser ::
   (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>
@@ -315,26 +332,21 @@ parseCsv csv =
     else V.toList . snd <$> Csv.decodeByName (C.pack csv)
 
 parseCsv' :: (Csv.FromNamedRecord a) => CsvParser a b -> IbCsvs -> Either String [b]
-parseCsv' (CsvParser csvName l) csvs = do
+parseCsv' (CsvParser name l) csvs = do
   let addErrorMessage errMsg = first ((errMsg ++ "\n") ++)
-      csv = fetchCsvOrEmpty csvName csvs
+      csv = fetchCsvOrEmpty name csvs
   fullRecords <-
     addErrorMessage
-      ("Could not parse " ++ csvName ++ "records.")
+      ("Could not parse " ++ name ++ "records.")
       $ parseCsv csv
-  return $ mapMaybe (L.preview l) fullRecords
+  return $ mapMaybe l fullRecords
 
+-- TODO Delete CsvParser, rely on FromIbCsvs
 dividendsParser :: CsvParser DividendRecord Dividend
 dividendsParser =
   CsvParser
-    { _cpCsvName = "Dividends",
-      _cpPrism =
-        L.prism'
-          DividendRecord
-          ( \case
-              TotalDividendsRecord -> Nothing
-              DividendRecord dividend -> Just dividend
-          )
+    { _cpCsvName = unIbCsvName (csvName :: IbCsvName Dividend),
+      _cpPrism = fromRecord
     }
 
 -- | Parses an M-to-M IB CSVs into individual data points and records.
