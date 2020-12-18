@@ -7,8 +7,10 @@
 {-# LANGUAGE TypeFamilies #-}
 
 -- |
--- This module contains parsers for CSV tables contained in Mark-to-Market an IB
--- statement.
+-- This module contains parsers for CSV tables of the following IB statements:
+--
+-- * Activity Statement
+-- * Mark-to-Market Statement
 module Hledupt.Ib.Csv.CsvParse
   ( CashMovement (..),
     ActivityStatement (..),
@@ -64,12 +66,7 @@ instance Csv.FromField Currency where
 
 -- Statement info parsers
 
-monthParser ::
-  ( MonadParsec e s m,
-    Token s ~ Char,
-    Tokens s ~ String
-  ) =>
-  m Int
+monthParser :: Parsec Void String Int
 monthParser = do
   monthString <- some letterChar
   case monthString of
@@ -87,7 +84,7 @@ monthParser = do
     "December" -> return 12
     _ -> mzero
 
-datePhraseParser :: (MonadFail m, MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Day
+datePhraseParser :: Parsec Void String Day
 datePhraseParser = do
   month <- monthParser <* space
   day <- some digitChar <* string ", "
@@ -100,7 +97,7 @@ datePhraseParser = do
     Just d -> return d
     Nothing -> fail "Could not parse date"
 
-periodPhraseParser :: (MonadFail m, MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Day
+periodPhraseParser :: Parsec Void String Day
 periodPhraseParser = do
   void $ string "Period,\""
   date <-
