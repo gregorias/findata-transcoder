@@ -89,3 +89,4 @@ tests:
     - replace-megaparsec
     - text
     - time
+    - vector

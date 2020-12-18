@@ -1,4 +1,5 @@
 import Relude
+import qualified Test.Data.Csv.Extra
 import qualified Test.Hledger.Data.Extra as HDE
 import qualified Test.Hledger.Data.Lens
 import qualified Test.Hledger.Data.MarketPrice.Extra
@@ -22,6 +23,7 @@ tests = do
   BcgeHint.tests
   mbankTests
   HDE.tests
+  Test.Data.Csv.Extra.tests
   Test.Hledger.Data.Lens.tests
   Test.Hledger.Data.MarketPrice.Extra.tests
   Test.Hledger.Read.TestUtils.tests
