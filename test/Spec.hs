@@ -1,11 +1,3 @@
-import LedgerData
-  ( Currency (..),
-    Posting (..),
-    Value (..),
-    negateValue,
-    postingToLedger,
-    valueToLedger,
-  )
 import Relude
 import qualified Test.Hledger.Data.Extra as HDE
 import qualified Test.Hledger.Data.Lens
@@ -18,7 +10,7 @@ import qualified Test.Hledupt.Ib
 import qualified Test.Hledupt.Ib.Csv.CsvParse
 import qualified Test.Hledupt.Ib.Csv.RawParse
 import Test.Hledupt.Mbank (mbankTests)
-import Test.Hspec (SpecWith, describe, hspec, it, shouldBe)
+import Test.Hspec (SpecWith, hspec)
 import qualified Test.Text.Megaparsec.Char.Extra
 import qualified Test.Text.Megaparsec.Match
 
@@ -40,24 +32,3 @@ tests = do
   Test.Hledupt.Ib.tests
   Test.Text.Megaparsec.Char.Extra.tests
   Test.Text.Megaparsec.Match.tests
-  describe "LedgerData tests" $ do
-    describe "negateValue" $ do
-      it "negates a value" $ do
-        negateValue (Value 1 PLN) `shouldBe` Value (-1) PLN
-
-    describe "valueToLedger" $ do
-      it "produces a value string" $ do
-        valueToLedger (Value 100 PLN) `shouldBe` "100 PLN"
-
-    describe "postingToLedger" $ do
-      it "produces a posting" $ do
-        postingToLedger posting `shouldBe` expected
-  where
-    posting =
-      Posting
-        "A"
-        (Value 100 PLN)
-        (Value 200 PLN)
-        (Value 0.25 CHF)
-    expected :: String
-    expected = "  A  100 PLN @ 0.25 CHF = 200 PLN"

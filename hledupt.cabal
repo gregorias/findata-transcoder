@@ -37,7 +37,6 @@ library
       Hledupt.Ib.Csv.CsvParse
       Hledupt.Ib.Csv.RawParse
       Hledupt.Mbank
-      LedgerData
       Text.Megaparsec.Char.Extra
       Text.Megaparsec.Extra
   other-modules:
