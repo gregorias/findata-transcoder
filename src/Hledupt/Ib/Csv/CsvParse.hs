@@ -29,9 +29,9 @@ module Hledupt.Ib.Csv.CsvParse
 where
 
 import qualified Control.Lens as L
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.Char8 as C
-import qualified Data.Csv as Csv
+import qualified Data.Csv as Csv hiding (FromNamedRecord, decodeByName, lookup)
+import qualified Data.Csv.Extra as Csv
 import Data.Decimal (Decimal)
 import Data.List (isInfixOf)
 import qualified Data.Map.Strict as Map
@@ -132,16 +132,16 @@ data StockPosition = StockPosition
   deriving (Eq, Show)
 
 instance Csv.FromNamedRecord OpenPositionsRecord where
-  parseNamedRecord namedRecord = do
-    header <- Csv.lookup namedRecord "Header"
+  parseNamedRecord = do
+    header <- Csv.lookup "Header"
     if header == "Total"
       then return TotalOpenPositionsRecord
       else StockPositionRecord <$> stockPosition
     where
       stockPosition =
-        StockPosition <$> Csv.lookup namedRecord "Symbol"
-          <*> Csv.lookup namedRecord "Quantity"
-          <*> (L.view myDecDec <$> Csv.lookup namedRecord "Close Price")
+        StockPosition <$> Csv.lookup "Symbol"
+          <*> Csv.lookup "Quantity"
+          <*> (L.view myDecDec <$> Csv.lookup "Close Price")
 
 data OpenPositionsRecord
   = StockPositionRecord StockPosition
@@ -171,19 +171,17 @@ newtype PositionOrTotalRecord = PositionOrTotalRecord
   deriving (Eq, Show)
 
 instance Csv.FromNamedRecord PositionOrTotalRecord where
-  parseNamedRecord namedRecord =
+  parseNamedRecord =
     (PositionOrTotalRecord . Just <$> position)
       <|> pure (PositionOrTotalRecord Nothing)
     where
-      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
-      lookupAux = Csv.lookup namedRecord
       position =
         Position
-          <$> lookupAux "Asset Class"
-          <*> lookupAux "Currency"
-          <*> lookupAux "Symbol"
-          <*> (L.view myDecDec <$> lookupAux "Quantity")
-          <*> (L.view myDecDec <$> lookupAux "Price")
+          <$> Csv.lookup "Asset Class"
+          <*> Csv.lookup "Currency"
+          <*> Csv.lookup "Symbol"
+          <*> (L.view myDecDec <$> Csv.lookup "Quantity")
+          <*> (L.view myDecDec <$> Csv.lookup "Price")
 
 mtmPositionsParser :: CsvParser PositionOrTotalRecord Position
 mtmPositionsParser =
@@ -206,22 +204,22 @@ data TradeRecord
   | TotalTradeRecord
 
 instance Csv.FromNamedRecord TradeRecord where
-  parseNamedRecord namedRecord = do
-    header <- Csv.lookup namedRecord "Header"
+  parseNamedRecord = do
+    header <- Csv.lookup "Header"
     if header `elem` ["SubTotal", "Total"]
       then return TotalTradeRecord
       else
         DataTradeRecord
           <$> ( Trade
                   <$> ( do
-                          dtString <- Csv.lookup namedRecord "Date/Time"
+                          dtString <- Csv.lookup "Date/Time"
                           let eitherDate = MP.parse dateTimeParser "" dtString
                           either (const mzero) return eitherDate
                       )
-                  <*> Csv.lookup namedRecord "Symbol"
-                  <*> Csv.lookup namedRecord "Quantity"
-                  <*> (L.view myDecDec <$> Csv.lookup namedRecord "Proceeds")
-                  <*> (L.view myDecDec <$> Csv.lookup namedRecord "Comm/Fee")
+                  <*> Csv.lookup "Symbol"
+                  <*> Csv.lookup "Quantity"
+                  <*> (L.view myDecDec <$> Csv.lookup "Proceeds")
+                  <*> (L.view myDecDec <$> Csv.lookup "Comm/Fee")
               )
     where
       dateTimeParser :: Parsec Void String Day
@@ -257,17 +255,15 @@ _CashMovementRecord =
     cmrCashMovement
 
 instance Csv.FromNamedRecord CashMovementRecord where
-  parseNamedRecord namedRecord =
+  parseNamedRecord =
     (CashMovementRecord . Just <$> cashMovement)
       <|> pure (CashMovementRecord Nothing)
     where
-      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
-      lookupAux = Csv.lookup namedRecord
       cashMovement =
         CashMovement
-          <$> (lookupAux "Settle Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
-          <*> lookupAux "Currency"
-          <*> (L.view myDecDec <$> lookupAux "Amount")
+          <$> (Csv.lookup "Settle Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
+          <*> Csv.lookup "Currency"
+          <*> (L.view myDecDec <$> Csv.lookup "Amount")
 
 depositsAndWithdrawalsParser :: CsvParser CashMovementRecord CashMovement
 depositsAndWithdrawalsParser =
@@ -315,20 +311,18 @@ _DividendRecord =
     )
 
 instance Csv.FromNamedRecord DividendRecord where
-  parseNamedRecord namedRecord = do
-    currencyField <- Csv.lookup namedRecord "Currency"
+  parseNamedRecord = do
+    currencyField <- Csv.lookup "Currency"
     if "Total" `isInfixOf` currencyField
       then return TotalDividendsRecord
       else fmap DividendRecord dividend
     where
-      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
-      lookupAux = Csv.lookup namedRecord
       dividendAux date (symbol, dps) total = Dividend date symbol dps total
       dividend =
         dividendAux
-          <$> (lookupAux "Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
+          <$> (Csv.lookup "Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
           <*> ( do
-                  desc :: String <- lookupAux "Description"
+                  desc :: String <- Csv.lookup "Description"
                   let parsed = MP.parse symbolDpsParser "" desc
                   either
                     ( \err ->
@@ -338,7 +332,7 @@ instance Csv.FromNamedRecord DividendRecord where
                     return
                     parsed
               )
-          <*> (L.view myDecDec <$> lookupAux "Amount")
+          <*> (L.view myDecDec <$> Csv.lookup "Amount")
 
 dividendsParser :: CsvParser DividendRecord Dividend
 dividendsParser =
@@ -361,20 +355,18 @@ data WithholdingTaxRecord
   deriving (Eq, Show)
 
 instance Csv.FromNamedRecord WithholdingTaxRecord where
-  parseNamedRecord namedRecord = do
-    currencyField <- Csv.lookup namedRecord "Currency"
+  parseNamedRecord = do
+    currencyField <- Csv.lookup "Currency"
     if "Total" `isInfixOf` currencyField
       then return TotalWithholdingTaxRecord
       else WithholdingTaxRecord <$> withholdingTax
     where
-      lookupAux :: Csv.FromField a => BS.ByteString -> Csv.Parser a
-      lookupAux = Csv.lookup namedRecord
       withholdingTax =
         do
           WithholdingTax
-          <$> (lookupAux "Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
+          <$> (Csv.lookup "Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
             <*> ( do
-                    desc :: String <- lookupAux "Description"
+                    desc :: String <- Csv.lookup "Description"
                     let parsed = MP.parse symbolParser "" desc
                     either
                       ( \err ->
@@ -384,7 +376,7 @@ instance Csv.FromNamedRecord WithholdingTaxRecord where
                       return
                       parsed
                 )
-            <*> (L.view myDecDec <$> lookupAux "Amount")
+            <*> (L.view myDecDec <$> Csv.lookup "Amount")
 
 _WithholdingTaxRecord :: L.Prism' WithholdingTaxRecord WithholdingTax
 _WithholdingTaxRecord =
@@ -414,14 +406,14 @@ data CashReportRecord
   deriving (Eq, Show)
 
 instance Csv.FromNamedRecord CashReportRecord where
-  parseNamedRecord namedRecord = do
-    currencySummaryField <- Csv.lookup namedRecord "Currency Summary"
-    currencyField <- Csv.lookup namedRecord "Currency"
+  parseNamedRecord = do
+    currencySummaryField <- Csv.lookup "Currency Summary"
+    currencyField <- Csv.lookup "Currency"
     if currencySummaryField /= "Ending Cash" || currencyField == "Base Currency Summary"
       then return OtherCashReportRecord
       else
         EndingCashRecord . EndingCash currencyField
-          <$> (L.view myDecDec <$> Csv.lookup namedRecord "Total")
+          <$> (L.view myDecDec <$> Csv.lookup "Total")
 
 cashReportParser :: CsvParser CashReportRecord EndingCash
 cashReportParser =
