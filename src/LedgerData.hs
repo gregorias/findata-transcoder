@@ -23,8 +23,8 @@ where
 
 import Control.Lens (makeLenses, over, (^.))
 import Data.Decimal (Decimal)
-import Data.Function ((&))
 import Data.Time.Calendar (Day)
+import Relude
 
 data Currency = USD | EUR | CHF | PLN deriving (Eq, Show)
 

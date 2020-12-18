@@ -3,7 +3,7 @@
 
 module Text.Megaparsec.Match (matches, (=~)) where
 
-import Data.Maybe (isJust)
+import Relude
 import Replace.Megaparsec (breakCap)
 import Text.Megaparsec (Stream, chunk)
 import Text.Megaparsec.Stream (Stream (Tokens))

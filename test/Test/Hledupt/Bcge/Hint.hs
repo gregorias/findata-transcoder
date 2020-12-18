@@ -1,6 +1,7 @@
 module Test.Hledupt.Bcge.Hint (tests) where
 
 import qualified Hledupt.Bcge.Hint as BH
+import Relude
 import Test.Hspec (describe, expectationFailure, it, shouldBe)
 import qualified Test.Hspec as Hspec
 import Text.Megaparsec (parseMaybe)

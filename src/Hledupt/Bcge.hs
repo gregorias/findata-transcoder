@@ -16,9 +16,7 @@ where
 
 import Control.Lens
   ( set,
-    (&),
   )
-import Control.Monad (void)
 import Control.Monad.Writer.Lazy (execWriter, tell)
 import Data.List (elemIndex)
 import Data.Text (pack)
@@ -40,10 +38,10 @@ import Hledger.Data.Types
   )
 import qualified Hledupt.Bcge.Hint as Hint
 import Hledupt.Data (MonetaryValue, decimalParser)
+import Relude
 import Safe (headMay)
 import Text.Megaparsec
   ( Parsec,
-    many,
     noneOf,
     parse,
     parseMaybe,

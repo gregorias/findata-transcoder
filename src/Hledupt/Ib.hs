@@ -13,13 +13,8 @@ module Hledupt.Ib
 where
 
 import qualified Control.Lens as L
-import Control.Monad (guard)
-import Data.Bifunctor (Bifunctor (first))
 import Data.Decimal (Decimal)
-import Data.Function ((&))
-import Data.List (sortOn)
 import qualified Data.Map as Map
-import Data.Maybe (listToMaybe, mapMaybe)
 import qualified Data.Text as T
 import Data.Time (Day)
 import Hledger
@@ -46,6 +41,7 @@ import Hledger.Data.Types
   )
 import Hledupt.Data (MonetaryValue)
 import qualified Hledupt.Ib.Csv as IbCsv
+import Relude
 import Text.Printf (printf)
 
 data AssetClass = Stocks | Forex
@@ -177,9 +173,9 @@ joinDividendAndTaxRecords divs taxes =
   where
     dividendToKey dividend = (IbCsv.dDate dividend, IbCsv.dSymbol dividend)
     taxToKey tax = (IbCsv.wtDate tax, IbCsv.wtSymbol tax)
-    fromList :: (Ord k) => (a -> k) -> [a] -> Map.Map k a
-    fromList key as = Map.fromList $ map (\a -> (key a, a)) as
-    taxMap = fromList taxToKey taxes
+    fromList' :: (Ord k) => (a -> k) -> [a] -> Map.Map k a
+    fromList' key as = Map.fromList $ map (\a -> (key a, a)) as
+    taxMap = fromList' taxToKey taxes
 
     update :: (IbCsv.Dividend -> Accum -> Accum)
     update dividend (m, dwts') = (m', newDwt : dwts')

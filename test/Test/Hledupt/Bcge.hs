@@ -3,7 +3,6 @@
 module Test.Hledupt.Bcge (tests) where
 
 import Control.Lens (set)
-import Data.Function ((&))
 import Data.Time.Calendar (fromGregorian)
 import qualified Hledger.Data.Extra as HDE
 import Hledger.Data.Lens
@@ -28,6 +27,7 @@ import Hledupt.Bcge
   )
 import qualified Hledupt.Bcge.Hint as Hint
 import Hledupt.Data (fromUnitsAndCents)
+import Relude
 import Test.Hspec (describe, it, shouldBe)
 import qualified Test.Hspec as Hspec
 import Text.Megaparsec (parseMaybe)

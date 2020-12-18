@@ -1,5 +1,6 @@
 module Test.Text.Megaparsec.Match (tests) where
 
+import Relude
 import Test.Hspec
 import Text.Megaparsec.Match (matches, (=~))
 

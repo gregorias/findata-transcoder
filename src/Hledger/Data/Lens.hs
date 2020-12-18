@@ -37,6 +37,7 @@ import Hledger.Data.Types
     Status (..),
     Transaction (..),
   )
+import Relude
 
 aCommodity :: Lens' Amount CommoditySymbol
 aCommodity = lens acommodity setter

@@ -9,8 +9,8 @@ import Data.ByteString.Char8 (unpack)
 import Data.Char (digitToInt)
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal, realFracToDecimal)
-import Data.Foldable (foldl')
 import Data.Ratio ((%))
+import Relude
 import Text.Megaparsec (MonadParsec, Token)
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (char, digitChar)
@@ -26,11 +26,13 @@ decimalFractionParser = do
       . reverse
       $ fractionalString
 
-decimalParser :: (MonadParsec e s m, Token s ~ Char) => m Decimal
+decimalParser :: (MonadFail m, MonadParsec e s m, Token s ~ Char) => m Decimal
 decimalParser = do
   negMod <- MP.try (char '-' >> pure negate) MP.<|> pure id
   unitsString <- MP.some digitChar
-  units :: Integer <- return $ read unitsString
+  units :: Integer <- case readMaybe unitsString of
+    Just u -> return u
+    Nothing -> fail "Could not parse units"
   fract <- (char '.' >> decimalFractionParser) MP.<|> pure 0
   return $ negMod $ fromRational (units % 1 + fract)
 

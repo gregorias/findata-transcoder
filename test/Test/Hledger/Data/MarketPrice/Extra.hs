@@ -6,6 +6,7 @@ import Data.Ratio ((%))
 import Data.Time (fromGregorian)
 import Hledger (MarketPrice (MarketPrice))
 import Hledger.Data.MarketPrice.Extra
+import Relude
 import Test.Hspec (describe, it, shouldBe)
 import qualified Test.Hspec as Hspec
 

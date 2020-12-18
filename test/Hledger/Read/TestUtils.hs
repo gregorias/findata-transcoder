@@ -9,14 +9,11 @@ module Hledger.Read.TestUtils
 where
 
 import qualified Control.Lens as L
-import Control.Monad (liftM2, void)
+import Control.Monad (liftM2)
 import Control.Monad.Combinators
   ( manyTill,
-    optional,
     someTill,
   )
-import Data.Function ((&))
-import Data.Functor (($>))
 import Data.Maybe (fromJust)
 import Data.Text (pack)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
@@ -41,7 +38,15 @@ import Hledger.Data.Types
     Transaction,
   )
 import Hledupt.Data (decimalParser)
-import Text.Megaparsec (MonadParsec, Token, Tokens, anySingle, choice, many, single, some, try, (<|>))
+import Relude
+import Text.Megaparsec
+  ( MonadParsec,
+    Token,
+    anySingle,
+    choice,
+    single,
+    try,
+  )
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (alphaNumChar, char, newline, printChar)
 import qualified Text.Megaparsec.Char as Char
@@ -58,7 +63,7 @@ isCurrency :: String -> Bool
 isCurrency = flip elem ["CHF", "USD", "PLN", "EUR"]
 
 -- todo parse until combinator
-commodity :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Amount
+commodity :: MP.Parsec Void String Amount
 commodity = do
   (maybeSymbol, amount) <-
     try
@@ -82,7 +87,7 @@ commodity = do
           else makeCommodityAmount symbol amount
       Nothing -> num amount
 
-accountParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m String
+accountParser :: MP.Parsec Void String String
 accountParser =
   someTill
     printChar
@@ -90,7 +95,7 @@ accountParser =
         <|> try (many space >> noConsume eolOrEof)
     )
 
-balanceAssertion :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m BalanceAssertion
+balanceAssertion :: MP.Parsec Void String BalanceAssertion
 balanceAssertion = do
   void $ MP.single '=' >> some space
   fmap (fromJust . balassert) commodity <* many space
@@ -104,7 +109,7 @@ statusParser =
     ]
 
 -- | A partial Posting parser
-postingParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Posting
+postingParser :: MP.Parsec Void String Posting
 postingParser = do
   status <- many space *> statusParser <* many space
   account <- accountParser
@@ -121,7 +126,7 @@ postingParser = do
 --
 -- This parser parses typical Transaction syntax.
 -- It does not conform to the full Ledger spec.
-transactionParser :: (MonadFail m, MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Transaction
+transactionParser :: MP.Parsec Void String Transaction
 transactionParser = do
   date <-
     manyTill MP.anySingle (some $ char ' ')

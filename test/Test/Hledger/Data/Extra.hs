@@ -3,6 +3,7 @@ module Test.Hledger.Data.Extra (tests) where
 import Hledger.Data.Amount (showAmount)
 import qualified Hledger.Data.Extra as HDE
 import Hledupt.Data (fromUnitsAndCents)
+import Relude
 import qualified Test.Hspec as Hspec
 
 tests :: Hspec.SpecWith ()

@@ -1,5 +1,6 @@
 module Text.Megaparsec.Extra (butNot, noConsume) where
 
+import Relude
 import Text.Megaparsec
 
 -- | @'butNot' this notThat@ succeeds if notThat fails and this succeeds.

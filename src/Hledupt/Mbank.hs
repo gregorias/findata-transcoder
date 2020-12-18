@@ -10,10 +10,7 @@ module Hledupt.Mbank
   )
 where
 
-import Control.Monad (void)
-import Data.Bifunctor (Bifunctor (first))
 import Data.Decimal (Decimal)
-import Data.List (sortOn)
 import Data.Text (pack)
 import Data.Time.Calendar (Day)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
@@ -27,14 +24,13 @@ import Hledger.Data.Types
     Transaction (..),
   )
 import Hledupt.Data (MonetaryValue, fromUnitsAndCents)
+import Relude
 import Text.Megaparsec
   ( Parsec,
     eof,
-    many,
     noneOf,
     oneOf,
     parse,
-    (<|>),
   )
 import Text.Megaparsec.Char (char, string)
 import Text.Megaparsec.Char.Extra (eolOrEof)
@@ -66,9 +62,13 @@ dateParser = do
 valueParser :: MbankParser Decimal
 valueParser = do
   zloteString <- removeSpaces <$> many (oneOf ("-0123456789 " :: [Char]))
-  zlote :: Integer <- return $ read zloteString
+  zlote :: Integer <- case readMaybe zloteString of
+    Just z -> return z
+    Nothing -> fail ""
   groszeString <- (char ',' *> many (oneOf ['0' .. '9']) <* char ' ') <|> pure "00"
-  grosze :: Integer <- return $ read groszeString
+  grosze :: Integer <- case readMaybe groszeString of
+    Just g -> return g
+    Nothing -> fail ""
   void $ string "PLN"
   return $ fromUnitsAndCents zlote grosze
   where
@@ -95,10 +95,10 @@ mbankCsvParser = do
 sanitizeTitle :: String -> String
 sanitizeTitle = beforeTheGap
   where
-    beforeTheGap s
-      | take 3 s == "   " = ""
-      | s == "" = ""
-      | otherwise = head s : beforeTheGap (tail s)
+    beforeTheGap title@(s : ss)
+      | take 3 title == "   " = ""
+      | otherwise = s : beforeTheGap ss
+    beforeTheGap _ = ""
 
 mTrToLedger :: MbankTransaction -> Transaction
 mTrToLedger mTr = tr {tdescription = pack $ sanitizeTitle $ mTrTitle mTr}

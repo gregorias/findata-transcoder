@@ -28,6 +28,7 @@ import Hledupt.Ib.Csv.CsvParse
   )
 import qualified Hledupt.Ib.Csv.CsvParse as CsvParse
 import qualified Hledupt.Ib.Csv.RawParse as RawParse
+import Relude
 
 -- | Parses an M-to-M IB CSV statement into individual data points and records.
 parse :: String -> Either String MtmStatement

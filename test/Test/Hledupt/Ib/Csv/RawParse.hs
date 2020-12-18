@@ -2,10 +2,10 @@
 
 module Test.Hledupt.Ib.Csv.RawParse (tests) where
 
-import Data.Either (isRight)
 import Data.List (isInfixOf)
 import qualified Data.Map.Strict as Map
 import Hledupt.Ib.Csv.RawParse
+import Relude
 import Test.Hspec
 
 tests :: SpecWith ()

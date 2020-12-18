@@ -9,6 +9,7 @@ import qualified Data.Map.Strict as Map
 import Data.Ratio ((%))
 import Data.Time (fromGregorian)
 import Hledupt.Ib.Csv.CsvParse
+import Relude
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe, shouldSatisfy)
 import Text.Megaparsec.Match ((=~))

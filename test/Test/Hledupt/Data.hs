@@ -7,6 +7,7 @@ import qualified Data.Csv as Csv
 import Data.Decimal (realFracToDecimal)
 import Data.Ratio ((%))
 import Hledupt.Data (MyDecimal (..), decimalParser, fromUnitsAndCents)
+import Relude
 import Test.Hspec (SpecWith, describe, it, shouldBe)
 import Text.Megaparsec (parseMaybe)
 

@@ -23,11 +23,13 @@ dependencies:
 - base >= 4.7 && < 5
 
 # Defaults recommended by https://kowainik.github.io/posts/2019-02-06-style-guide#default-extensions
+# Also use Relude
 default-extensions:
   GeneralisedNewtypeDeriving
   LambdaCase
   ScopedTypeVariables
   TupleSections
+  NoImplicitPrelude
 
 library:
   source-dirs: src
@@ -36,12 +38,12 @@ library:
   - bytestring
   - cassava
   - containers
-  - either
   - hledger-lib >= 1.19
   - lens
   - megaparsec
   - mtl
   - parser-combinators
+  - relude
   - safe
   - text
   - time
@@ -61,6 +63,7 @@ executables:
     - cli
     - megaparsec
     - mtl
+    - relude
     - with-utf8
 
 tests:
@@ -82,6 +85,7 @@ tests:
     - lens
     - megaparsec
     - parser-combinators
+    - relude
     - replace-megaparsec
     - text
     - time

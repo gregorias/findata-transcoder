@@ -7,7 +7,7 @@ module Hledger.Data.Extra
   )
 where
 
-import Control.Lens (over, set, (&))
+import Control.Lens (over, set)
 import Data.Text (pack)
 import Hledger.Data.Amount (num)
 import Hledger.Data.Lens
@@ -21,6 +21,7 @@ import Hledger.Data.Types
     AmountPrecision (..),
     Quantity,
   )
+import Relude
 
 makeCommodityAmount :: String -> Quantity -> Amount
 makeCommodityAmount commodity quantity =

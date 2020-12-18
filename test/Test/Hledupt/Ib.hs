@@ -15,6 +15,7 @@ import Hledger (MarketPrice (MarketPrice))
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.Ib
 import qualified Hledupt.Ib.Csv as IbCsv
+import Relude
 import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
 import Test.Hspec.Expectations.Pretty (shouldBe, shouldSatisfy)

@@ -7,14 +7,13 @@ module Text.Megaparsec.Char.Extra
   )
 where
 
-import Data.Functor (($>))
+import Relude
 import Text.Megaparsec
   ( MonadParsec,
     Token,
     Tokens,
     eof,
     single,
-    (<|>),
   )
 import Text.Megaparsec.Char (eol)
 

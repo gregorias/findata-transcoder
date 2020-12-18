@@ -14,6 +14,7 @@ import Hledupt.Mbank
     mbankCsvParser,
     valueParser,
   )
+import Relude
 import Test.Hspec (describe, it, shouldBe)
 import qualified Test.Hspec as Hspec
 import Text.Megaparsec (parseMaybe)

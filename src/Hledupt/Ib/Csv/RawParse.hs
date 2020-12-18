@@ -11,21 +11,15 @@ module Hledupt.Ib.Csv.RawParse
   )
 where
 
-import Control.Monad (void)
-import Data.Bifunctor (Bifunctor (first))
-import Data.List.NonEmpty (NonEmpty (..), groupWith)
+import Data.List.NonEmpty (groupWith)
 import qualified Data.Map.Strict as Map
-import Data.Void (Void)
+import Relude
 import Text.Megaparsec
   ( Parsec,
     eof,
     errorBundlePretty,
-    many,
-    optional,
-    some,
     someTill,
     try,
-    (<|>),
   )
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (char, eol, printChar)

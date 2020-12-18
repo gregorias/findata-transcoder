@@ -27,21 +27,17 @@ module Hledupt.Ib.Csv.CsvParse
 where
 
 import qualified Control.Lens as L
-import Control.Monad (MonadPlus (mzero), void)
-import Data.Bifunctor (Bifunctor (first))
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
-import Data.Either.Combinators (maybeToRight)
 import Data.List (isInfixOf)
 import qualified Data.Map.Strict as Map
-import Data.Maybe (mapMaybe)
 import Data.Time (Day, defaultTimeLocale, fromGregorian, parseTimeM)
 import qualified Data.Vector as V
-import Data.Void (Void)
 import Hledupt.Data (MonetaryValue, decimalParser, myDecDec)
 import Hledupt.Ib.Csv.RawParse (Csv, CsvName, IbCsvs)
+import Relude
 import Text.Megaparsec
   ( MonadParsec,
     Parsec,
@@ -52,10 +48,8 @@ import Text.Megaparsec
     errorBundlePretty,
     label,
     single,
-    some,
     someTill_,
     try,
-    (<|>),
   )
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (alphaNumChar, char, digitChar, letterChar, space, string)
@@ -93,14 +87,20 @@ monthParser = do
     "December" -> return 12
     _ -> mzero
 
-datePhraseParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Day
+datePhraseParser :: (MonadFail m, MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Day
 datePhraseParser = do
   month <- monthParser <* space
   day <- some digitChar <* string ", "
   year <- count 4 digitChar
-  return $ fromGregorian (read year) month (read day)
+  let date = do
+        yearInt <- readMaybe year
+        dayInt <- readMaybe day
+        return $ fromGregorian yearInt month dayInt
+  case date of
+    Just d -> return d
+    Nothing -> fail "Could not parse date"
 
-periodPhraseParser :: (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Day
+periodPhraseParser :: (MonadFail m, MonadParsec e s m, Token s ~ Char, Tokens s ~ String) => m Day
 periodPhraseParser = do
   void $ string "Period,\""
   date <-
@@ -293,7 +293,7 @@ symbolParser ::
 symbolParser = some letterChar
 
 symbolDpsParser ::
-  (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>
+  (MonadFail m, MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>
   m (String, MonetaryValue)
 symbolDpsParser = do
   symbol <- symbolParser

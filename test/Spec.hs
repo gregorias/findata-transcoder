@@ -6,6 +6,7 @@ import LedgerData
     postingToLedger,
     valueToLedger,
   )
+import Relude
 import qualified Test.Hledger.Data.Extra as HDE
 import qualified Test.Hledger.Data.Lens
 import qualified Test.Hledger.Data.MarketPrice.Extra

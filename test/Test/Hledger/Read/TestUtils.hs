@@ -5,7 +5,6 @@
 module Test.Hledger.Read.TestUtils (tests) where
 
 import qualified Control.Lens as L
-import Data.Function ((&))
 import Data.Time (fromGregorian)
 import Hledger.Data.Extra
   ( makeCommodityAmount,
@@ -23,6 +22,7 @@ import Hledger.Data.Types
     Status (..),
   )
 import Hledger.Read.TestUtils (parseTransactionUnsafe, postingParser)
+import Relude
 import Test.Hspec (describe, it, shouldBe)
 import qualified Test.Hspec as Hspec
 import Text.Megaparsec (parseMaybe)

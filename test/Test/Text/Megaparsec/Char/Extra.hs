@@ -2,6 +2,7 @@
 
 module Test.Text.Megaparsec.Char.Extra (tests) where
 
+import Relude
 import Test.Hspec (describe, shouldBe)
 import qualified Test.Hspec as Hspec
 import qualified Text.Megaparsec as MP

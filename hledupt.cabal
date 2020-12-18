@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      Data.Csv.Extra
       Hledger.Data.Extra
       Hledger.Data.Lens
       Hledger.Data.MarketPrice.Extra
@@ -43,19 +44,19 @@ library
       Paths_hledupt
   hs-source-dirs:
       src
-  default-extensions: GeneralisedNewtypeDeriving LambdaCase ScopedTypeVariables TupleSections
+  default-extensions: GeneralisedNewtypeDeriving LambdaCase ScopedTypeVariables TupleSections NoImplicitPrelude
   build-depends:
       Decimal
     , base >=4.7 && <5
     , bytestring
     , cassava
     , containers
-    , either
     , hledger-lib >=1.19
     , lens
     , megaparsec
     , mtl
     , parser-combinators
+    , relude
     , safe
     , text
     , time
@@ -69,7 +70,7 @@ executable hledupt
       Paths_hledupt
   hs-source-dirs:
       app
-  default-extensions: GeneralisedNewtypeDeriving LambdaCase ScopedTypeVariables TupleSections
+  default-extensions: GeneralisedNewtypeDeriving LambdaCase ScopedTypeVariables TupleSections NoImplicitPrelude
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
@@ -77,6 +78,7 @@ executable hledupt
     , hledupt
     , megaparsec
     , mtl
+    , relude
     , with-utf8
   default-language: Haskell2010
 
@@ -102,7 +104,7 @@ test-suite hledupt-test
       Paths_hledupt
   hs-source-dirs:
       test
-  default-extensions: GeneralisedNewtypeDeriving LambdaCase ScopedTypeVariables TupleSections
+  default-extensions: GeneralisedNewtypeDeriving LambdaCase ScopedTypeVariables TupleSections NoImplicitPrelude
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       Decimal
@@ -116,6 +118,7 @@ test-suite hledupt-test
     , lens
     , megaparsec
     , parser-combinators
+    , relude
     , replace-megaparsec
     , text
     , time

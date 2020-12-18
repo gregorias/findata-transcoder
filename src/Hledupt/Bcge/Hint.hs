@@ -15,20 +15,15 @@ module Hledupt.Bcge.Hint
   )
 where
 
-import Control.Monad (void)
 import Data.List (isInfixOf)
-import Data.Maybe (mapMaybe)
-import Data.Void (Void)
+import Relude
 import Safe (headMay)
 import Text.Megaparsec
   ( Parsec,
     anySingle,
     eof,
-    many,
     noneOf,
     notFollowedBy,
-    some,
-    (<|>),
   )
 import Text.Megaparsec.Char (char, eol, string)
 
