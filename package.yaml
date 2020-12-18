@@ -35,17 +35,18 @@ library:
   - Decimal
   - bytestring
   - cassava
+  - containers
   - either
   - hledger-lib >= 1.19
   - lens
   - megaparsec
   - mtl
+  - parser-combinators
   - safe
   - text
   - time
+  - transformers
   - vector
-  - parser-combinators
-  - containers
 
 executables:
   hledupt:

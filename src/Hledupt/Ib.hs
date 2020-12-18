@@ -229,9 +229,9 @@ showIbData (IbData stockPrices cashMovements maybeStatus) =
     ++ "\n"
     ++ maybe "" showTransaction maybeStatus
 
-statementToIbData :: IbCsv.Statement -> Either String IbData
+statementToIbData :: IbCsv.MtmStatement -> Either String IbData
 statementToIbData
-  ( IbCsv.Statement
+  ( IbCsv.MtmStatement
       statementDay
       posRecords
       cashMovements

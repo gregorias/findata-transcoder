@@ -29,7 +29,7 @@ parseTests = do
   describe "statementToIbData" $ do
     it "Translates dividends into transactions" $ do
       let stmt =
-            IbCsv.Statement
+            IbCsv.MtmStatement
               (fromGregorian 2020 12 8)
               []
               []
@@ -57,12 +57,12 @@ parseTests = do
 
     it "Returns a meaningful error on unmatched taxes." $ do
       let stmt =
-            IbCsv.Statement
-              { IbCsv.sLastStatementDay = fromGregorian 2020 12 8,
-                IbCsv.sPositions = [],
-                IbCsv.sCashMovements = [],
-                IbCsv.sDividends = [],
-                IbCsv.sWithholdingTaxes =
+            IbCsv.MtmStatement
+              { IbCsv.mtmsLastStatementDay = fromGregorian 2020 12 8,
+                IbCsv.mtmsPositions = [],
+                IbCsv.mtmsCashMovements = [],
+                IbCsv.mtmsDividends = [],
+                IbCsv.mtmsWithholdingTaxes =
                   [ IbCsv.WithholdingTax
                       { IbCsv.wtDate = fromGregorian 2020 1 1,
                         IbCsv.wtSymbol = "VOO",
