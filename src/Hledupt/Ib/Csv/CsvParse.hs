@@ -12,8 +12,8 @@
 -- * Activity Statement
 -- * Mark-to-Market Statement
 module Hledupt.Ib.Csv.CsvParse
-  ( CashMovement (..),
-    ActivityStatement (..),
+  ( ActivityStatement (..),
+    CashMovement (..),
     Currency (..),
     Dividend (..),
     EndingCash (..),

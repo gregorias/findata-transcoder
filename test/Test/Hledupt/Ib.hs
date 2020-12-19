@@ -27,7 +27,7 @@ tests = do
 
 parseTests :: Hspec.SpecWith ()
 parseTests = do
-  describe "statementToIbData" $ do
+  describe "statementMtmToIbData" $ do
     it "Translates dividends into transactions" $ do
       let stmt =
             IbCsv.MtmStatement
@@ -41,7 +41,7 @@ parseTests = do
                   (fromRational 450)
               ]
               []
-      statementToIbData stmt
+      statementMtmToIbData stmt
         `shouldBe` Right
           ( IbData
               { idStockPrices = [],
@@ -71,7 +71,7 @@ parseTests = do
                       }
                   ]
               }
-      statementToIbData stmt
+      statementMtmToIbData stmt
         `shouldSatisfy` \case
           Left errorMsg ->
             ( "Could not find a dividend match for VOO withholding tax \
@@ -105,7 +105,7 @@ parseTests = do
             \Withholding Tax,Header,Currency,Date,Description,Amount,Code\n\
             \Withholding Tax,Data,USD,2020-10-02,VOO(US9229083632) Cash Dividend USD 1.3085 per Share - US Tax,-0.25,\n\
             \Withholding Tax,Data,Total,,,-0.25,\n"
-      parseCsv csv
+      parseMtmCsv csv
         `shouldBe` Right
           ( IbData
               [ MarketPrice
@@ -137,7 +137,7 @@ parseTests = do
             "\65279Statement,Header,Field Name,Field Value\n\
             \Statement,Data,Period,\"December 11, 2019 - December 4, 2020\"\n\
             \Positions and Mark-to-Market Profit and Loss,Header,Asset Class,Currency,Symbol,Description,Prior Quantity,Quantity,Prior Price,Price,Prior Market Value,Market Value,Position,Trading,Comm.,Other,Total\n"
-      parseCsv csv
+      parseMtmCsv csv
         `shouldBe` Right
           (IbData [] [] Nothing)
 

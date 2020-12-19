@@ -23,7 +23,7 @@ import Control.Monad.Except
 import Data.Version (makeVersion)
 import Hledupt.Bcge (bcgeCsvToLedger)
 import qualified Hledupt.Bcge.Hint as BcgeHint
-import Hledupt.Ib (ibCsvToLedger)
+import Hledupt.Ib (ibMtmCsvToLedger)
 import Hledupt.Mbank (mbankCsvToLedger)
 import Main.Utf8 (withUtf8)
 import Relude
@@ -125,7 +125,7 @@ main = defaultMain $ do
   command "parse-ib" $ do
     description "Parses IB's CSV file and outputs ledupt data"
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
-    parseBankAction ibCsvToLedger inputFileFlag
+    parseBankAction ibMtmCsvToLedger inputFileFlag
   command "parse-mbank" $ do
     description "Parses mBank's CSV file and outputs ledupt data"
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)

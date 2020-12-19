@@ -4,11 +4,14 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Hledupt.Ib
-  ( ibCsvToLedger,
-    parseCsv,
-    IbData (..),
+  ( IbData (..),
+    ibActivityCsvToLedger,
+    ibMtmCsvToLedger,
+    parseActivityCsv,
+    parseMtmCsv,
     showIbData,
-    statementToIbData,
+    statementActivityToIbData,
+    statementMtmToIbData,
   )
 where
 
@@ -225,8 +228,8 @@ showIbData (IbData stockPrices cashMovements maybeStatus) =
     ++ "\n"
     ++ maybe "" showTransaction maybeStatus
 
-statementToIbData :: IbCsv.MtmStatement -> Either String IbData
-statementToIbData
+statementMtmToIbData :: IbCsv.MtmStatement -> Either String IbData
+statementMtmToIbData
   ( IbCsv.MtmStatement
       statementDay
       posRecords
@@ -257,10 +260,21 @@ statementToIbData
                   . L.set tStatus Cleared
         )
 
+statementActivityToIbData :: IbCsv.ActivityStatement -> Either String IbData
+statementActivityToIbData = const $ Left "unimplemented"
+
 -- | Parses IB MtoM CSV statement into a Ledger status transaction
-parseCsv :: String -> Either String IbData
-parseCsv csv = IbCsv.parse csv >>= statementToIbData
+parseMtmCsv :: String -> Either String IbData
+parseMtmCsv csv = IbCsv.parseMtm csv >>= statementMtmToIbData
+
+-- | Parses an Activity CSV statement into a Ledger status transaction
+parseActivityCsv :: String -> Either String IbData
+parseActivityCsv csv = IbCsv.parseActivity csv >>= statementActivityToIbData
 
 -- | Parses IB MtoM CSV statement into a Ledger text file.
-ibCsvToLedger :: String -> Either String String
-ibCsvToLedger = fmap showIbData . parseCsv
+ibMtmCsvToLedger :: String -> Either String String
+ibMtmCsvToLedger = fmap showIbData . parseMtmCsv
+
+-- | Parses IB MtoM CSV statement into a Ledger text file.
+ibActivityCsvToLedger :: String -> Either String String
+ibActivityCsvToLedger = fmap showIbData . parseActivityCsv
