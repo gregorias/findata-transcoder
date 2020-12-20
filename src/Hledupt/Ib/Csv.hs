@@ -11,7 +11,6 @@ module Hledupt.Ib.Csv
     Currency (..),
     Dividend (..),
     EndingCash (..),
-    MtmStatement (..),
     Position (..),
     PositionAssetClass (..),
     StockPosition (..),
@@ -20,36 +19,28 @@ module Hledupt.Ib.Csv
 
     -- * Parsers
     parseActivity,
-    parseMtm,
   )
 where
 
-import Hledupt.Ib.Csv.CsvParse
+import Hledupt.Ib.Csv.ActivityStatementParse
   ( ActivityStatement (..),
-    CashMovement,
-    Currency,
-    Dividend,
+    CashMovement (..),
+    Currency (..),
+    Dividend (..),
     EndingCash (..),
-    MtmStatement,
-    Position,
-    PositionAssetClass,
+    Position (..),
+    PositionAssetClass (..),
     StockPosition (..),
     Trade (..),
-    WithholdingTax,
+    WithholdingTax (..),
     nullActivityStatement,
+    parseActivityStatement,
   )
-import qualified Hledupt.Ib.Csv.CsvParse as CsvParse
 import qualified Hledupt.Ib.Csv.RawParse as RawParse
 import Relude
-
--- | Parses an M-to-M IB CSV statement into individual data points and records.
-parseMtm :: String -> Either String MtmStatement
-parseMtm csv = do
-  csvs <- RawParse.parse csv
-  CsvParse.parseMtmStatement csvs
 
 -- | Parses an Activity IB CSV statement into individual data points and records.
 parseActivity :: String -> Either String ActivityStatement
 parseActivity csv = do
   csvs <- RawParse.parse csv
-  CsvParse.parseActivityStatement csvs
+  parseActivityStatement csvs

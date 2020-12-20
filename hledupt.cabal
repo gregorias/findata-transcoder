@@ -34,9 +34,8 @@ library
       Hledupt.Data
       Hledupt.Ib
       Hledupt.Ib.Csv
-      Hledupt.Ib.Csv.CsvParse
+      Hledupt.Ib.Csv.ActivityStatementParse
       Hledupt.Ib.Csv.RawParse
-      Hledupt.Ib.Csv.RawParseNew
       Hledupt.Mbank
       Text.Megaparsec.Char.Extra
       Text.Megaparsec.Extra
@@ -96,9 +95,8 @@ test-suite hledupt-test
       Test.Hledupt.Bcge.Hint
       Test.Hledupt.Data
       Test.Hledupt.Ib
-      Test.Hledupt.Ib.Csv.CsvParse
+      Test.Hledupt.Ib.Csv.ActivityStatementParse
       Test.Hledupt.Ib.Csv.RawParse
-      Test.Hledupt.Ib.Csv.RawParseNew
       Test.Hledupt.Mbank
       Test.Text.Megaparsec.Char.Extra
       Test.Text.Megaparsec.Match

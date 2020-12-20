@@ -1,70 +1,179 @@
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE TypeFamilies #-}
 
 -- |
--- This module parses an IB statement (Activities or Mark-to-Market) CSV into
--- its constituent parts.
+-- This module does a first-pass parsing of an IB statement CSV
+-- into individual CSVs.
 module Hledupt.Ib.Csv.RawParse
-  ( IbCsvs,
-    Csv,
-    CsvName,
+  ( Statement (..),
+    Section (..),
+    Csv (..),
     parse,
   )
 where
 
-import Data.List.NonEmpty (groupWith)
-import qualified Data.Map.Strict as Map
+import qualified Control.Lens as L
+import Data.List.NonEmpty (some1)
+import qualified Data.Map as Map
 import Relude
 import Text.Megaparsec
-  ( Parsec,
-    eof,
+  ( MonadParsec (eof, label, lookAhead, takeWhileP, try),
+    ParseErrorBundle (bundleErrors),
+    Parsec,
+    Stream,
+    VisualStream,
+    anySingle,
     errorBundlePretty,
-    someTill,
-    try,
+    manyTill,
+    parseErrorPretty,
+    satisfy,
+    single,
   )
 import qualified Text.Megaparsec as MP
-import Text.Megaparsec.Char (char, eol, printChar)
+import Text.Megaparsec.Char (newline)
 import Text.Megaparsec.Char.Extra (bom)
 
-data CsvLine = CsvLine
-  { clHeader :: String,
-    clBody :: String
+newtype Statement = Statement
+  { unStatement :: Map.Map String Section
   }
-  deriving (Eq, Show)
+  deriving newtype (Eq, Show)
 
--- | A string containing a CSV file
-type Csv = String
+newtype Section = Section
+  { unSection :: NonEmpty Csv
+  }
+  deriving newtype (Eq, Show)
 
--- | A name of a single CSV in an IB statement
-type CsvName = String
+-- TODO IsList also doesn't work
 
--- | A collection of CSV files that form subsections in a single IB statement.
-type IbCsvs = Map.Map CsvName Csv
+newtype Csv = Csv
+  { unCsv :: String
+  }
+  deriving newtype (IsString, Eq, Show)
 
-rawStatementLineParser :: Parsec Void String CsvLine
-rawStatementLineParser = do
-  headerString <- someTill printChar (char ',')
-  rest <- some printChar
-  end <- try eol <|> return ""
-  return $ CsvLine headerString (rest ++ end)
+data IbCsvLine = IbCsvLine
+  { iclSection :: String,
+    iclHeader :: String,
+    iclRest :: String
+  }
+  deriving (Eq, Ord)
 
-groupByHeader :: [CsvLine] -> [(String, NonEmpty String)]
-groupByHeader ls =
-  map
-    (\case a :| as -> (clHeader a, clBody a :| map clBody as))
-    (groupWith clHeader ls)
+data Hord = Header | Data
+  deriving (Eq, Ord, Show)
 
-linesToIbCsvs :: [CsvLine] -> IbCsvs
-linesToIbCsvs = fmap concat . Map.fromList . groupByHeader
+data IbCsvHordLine = IbCsvHordLine
+  { ichlSection :: String,
+    ichlHeader :: Hord,
+    ichlRest :: String
+  }
+  deriving (Eq, Ord)
 
-rawStatementParser :: Parsec Void String IbCsvs
+toMaybeHordLine :: IbCsvLine -> Maybe IbCsvHordLine
+toMaybeHordLine
+  IbCsvLine
+    { iclSection = sec,
+      iclHeader = header,
+      iclRest = rest
+    }
+    | header == "Header" = Just $ IbCsvHordLine sec Header rest
+    | header == "Data" = Just $ IbCsvHordLine sec Data rest
+    | otherwise = Nothing
+
+showIbCsvHordLine :: IbCsvHordLine -> [Char]
+showIbCsvHordLine
+  IbCsvHordLine
+    { ichlSection = sec,
+      ichlHeader = header,
+      ichlRest = rest
+    } =
+    sec ++ "," ++ show header ++ "," ++ rest ++ "\n"
+
+newtype IbCsvLines = IbCsvLines
+  { unIbCsvLines :: [IbCsvHordLine]
+  }
+
+-- TODO Why doesn't deriving newtype Stream work?
+
+instance Stream IbCsvLines where
+  type Token IbCsvLines = IbCsvHordLine
+  type Tokens IbCsvLines = [IbCsvHordLine]
+  tokenToChunk Proxy = pure
+  tokensToChunk Proxy = id
+  chunkToTokens Proxy = id
+  chunkLength Proxy = length
+  chunkEmpty Proxy = null
+  take1_ (IbCsvLines []) = Nothing
+  take1_ (IbCsvLines (t : ts)) = Just (t, IbCsvLines ts)
+  takeN_ n icl@(IbCsvLines s)
+    | n <= 0 = Just ([], icl)
+    | null s = Nothing
+    | otherwise = Just (L.over L._2 IbCsvLines $ splitAt n s)
+  takeWhile_ f = L.over L._2 IbCsvLines . MP.takeWhile_ f . unIbCsvLines
+
+instance VisualStream IbCsvLines where
+  showTokens Proxy (l :| ls) = concatMap showIbCsvHordLine (l : ls)
+  tokensLength proxy = length . MP.showTokens proxy
+
+ibCsvLineParser :: Parsec Void String IbCsvLine
+ibCsvLineParser = do
+  section <- takeWhileP (Just "not a comma") (/= ',')
+  void $ single ','
+  header <- takeWhileP (Just "not a comma") (/= ',')
+  void $ single ','
+  rest <- manyTill anySingle (void newline <|> eof)
+  return $ IbCsvLine section header (rest ++ "\n")
+
+rawStatementParser :: Parsec Void String [IbCsvLine]
 rawStatementParser = do
   void $ optional bom
-  csvLines <- many rawStatementLineParser
+  icls <- many ibCsvLineParser
   eof
-  return $ linesToIbCsvs csvLines
+  return icls
+
+headerLine :: Parsec Void IbCsvLines (String, String)
+headerLine = label "header line" $
+  try $ do
+    (IbCsvHordLine section Header rest) <- anySingle
+    return (section, rest)
+
+headerLineWithSection :: String -> Parsec Void IbCsvLines String
+headerLineWithSection sectionName = label "header line" $
+  try $ do
+    (IbCsvHordLine section Header rest) <- anySingle
+    guard $ sectionName == section
+    return rest
+
+dataLine :: String -> Parsec Void IbCsvLines String
+dataLine sectionName = label "data line" $
+  try $ do
+    (IbCsvHordLine _ Data rest) <- satisfy ((== sectionName) . ichlSection)
+    return rest
+
+csvParser :: String -> Parsec Void IbCsvLines Csv
+csvParser sectionName = label "IB statement's single CSV" $ do
+  headerRest <- headerLineWithSection sectionName
+  dataRests <- many $ try $ dataLine sectionName
+  return $ Csv $ headerRest ++ concat dataRests
+
+sectionParser :: Parsec Void IbCsvLines (String, Section)
+sectionParser = label "IB statement section" $ do
+  (section, _) <- lookAhead headerLine
+  csvs <- some1 $ csvParser section
+  return (section, Section csvs)
+
+lineParser :: Parsec Void IbCsvLines Statement
+lineParser = (Statement . Map.fromList <$> many (try sectionParser)) <* eof
 
 -- | Parses an IB CSV Statement
-parse :: String -> Either String IbCsvs
-parse = first ((errorMsg ++) . errorBundlePretty) . MP.parse rawStatementParser ""
+parse :: String -> Either String Statement
+parse csv = do
+  ibCsvLines <-
+    prependErrorMessagePretty
+      "Could not parse IB CSV statement into individual structured lines.\n"
+      $ MP.parse rawStatementParser "" csv
+  let ibCsvHordLines = mapMaybe toMaybeHordLine ibCsvLines
+  prependErrorMessage
+    "Could not parse the IB CSV statement.\n"
+    $ MP.parse lineParser "" (IbCsvLines ibCsvHordLines)
   where
-    errorMsg = "Could not parse the IB CSV statement.\n"
+    prependErrorMessagePretty errMsg = first ((errMsg ++) . errorBundlePretty)
+    prependErrorMessage errMsg = first ((errMsg ++) . parseErrorPretty . head . bundleErrors)

@@ -11,11 +11,6 @@ module Hledupt.Ib
     ibActivityCsvToLedger,
     parseActivityCsv,
     statementActivityToIbData,
-
-    -- * Parsing an MTM statement
-    ibMtmCsvToLedger,
-    parseMtmCsv,
-    statementMtmToIbData,
   )
 where
 
@@ -48,17 +43,17 @@ import Hledger.Data.Types
   ( Transaction (..),
   )
 import Hledupt.Data (MonetaryValue)
-import Hledupt.Ib.Csv (ActivityStatement (..), StockPosition (StockPosition), Trade (Trade))
+import Hledupt.Ib.Csv
+  ( ActivityStatement (..),
+    EndingCash (..),
+    StockPosition (StockPosition),
+    Trade (Trade),
+  )
 import qualified Hledupt.Ib.Csv as IbCsv
-import Hledupt.Ib.Csv.CsvParse (EndingCash (EndingCash))
 import Relude
 import Text.Printf (printf)
 
 data AssetClass = Stocks | Forex
-
-csvAssetClassToLedgerAssetClass :: IbCsv.PositionAssetClass -> AssetClass
-csvAssetClassToLedgerAssetClass IbCsv.Stocks = Stocks
-csvAssetClassToLedgerAssetClass IbCsv.Forex = Forex
 
 makeAmount :: AssetClass -> String -> Decimal -> Amount
 makeAmount aClass = maker
@@ -73,17 +68,6 @@ accountPrefix Forex = "Assets:Liquid:IB"
 
 accountName :: AssetClass -> String -> String
 accountName assetClass symbol = accountPrefix assetClass ++ ":" ++ symbol
-
-positionRecordToStatusPosting :: IbCsv.Position -> Posting
-positionRecordToStatusPosting record =
-  let assetClass = csvAssetClassToLedgerAssetClass . IbCsv.prAssetClass $ record
-      symbol = IbCsv.prSymbol record
-   in nullposting
-        & L.set pAccount (accountName assetClass symbol)
-          . L.set pMaybeAmount (Just $ makeAmount assetClass symbol 0)
-          . L.set
-            pBalanceAssertion
-            (balassert . makeAmount assetClass symbol $ IbCsv.prQuantity record)
 
 endingCashToPosting :: EndingCash -> Posting
 endingCashToPosting (EndingCash currency amount) =
@@ -102,18 +86,6 @@ stockPositionToPosting (StockPosition symbol quantity _price) =
       . L.set
         pBalanceAssertion
         (balassert . makeAmount Stocks symbol $ fromRational $ quantity % 1)
-
-positionRecordToStockPrice :: Day -> IbCsv.Position -> Maybe MarketPrice
-positionRecordToStockPrice day rec = do
-  guard $ IbCsv.prAssetClass rec == IbCsv.Stocks
-  -- Records of stocks that I do not own miss the price data.
-  guard $ IbCsv.prQuantity rec > 0
-  return $
-    MarketPrice
-      day
-      (T.pack $ IbCsv.prSymbol rec)
-      (T.pack . show . IbCsv.prCurrency $ rec)
-      (IbCsv.prPrice rec)
 
 stockPositionToStockPrice :: Day -> StockPosition -> MarketPrice
 stockPositionToStockPrice day (StockPosition sym _q price) =
@@ -280,38 +252,6 @@ showIbData (IbData stockPrices cashMovements maybeStatus) =
     ++ "\n"
     ++ maybe "" showTransaction maybeStatus
 
-statementMtmToIbData :: IbCsv.MtmStatement -> Either String IbData
-statementMtmToIbData
-  ( IbCsv.MtmStatement
-      statementDay
-      posRecords
-      cashMovements
-      dividends
-      withholdingTaxes
-    ) = do
-    let statusPostings = fmap positionRecordToStatusPosting posRecords
-        cmTrs = map cashMovementToTransaction cashMovements
-        taxes = withholdingTaxes
-    dividendsWithTaxes <-
-      first unmatchedWithholdingTaxToErrorMessage $
-        joinDividendAndTaxRecords dividends taxes
-    return $
-      IbData
-        (mapMaybe (positionRecordToStockPrice statementDay) posRecords)
-        ( sortOn tdate $
-            cmTrs
-              ++ fmap dividendToTransaction dividendsWithTaxes
-        )
-        ( do
-            guard $ not (null statusPostings)
-            return $
-              transaction
-                statementDay
-                statusPostings
-                & L.set tDescription "IB Status"
-                  . L.set tStatus Cleared
-        )
-
 statementActivityToIbData :: IbCsv.ActivityStatement -> Either String IbData
 statementActivityToIbData
   ActivityStatement
@@ -346,18 +286,10 @@ statementActivityToIbData
                   . L.set tStatus Cleared
         )
 
--- | Parses IB MtoM CSV statement into a Ledger status transaction
-parseMtmCsv :: String -> Either String IbData
-parseMtmCsv csv = IbCsv.parseMtm csv >>= statementMtmToIbData
-
--- | Parses an Activity CSV statement into a Ledger status transaction
+-- | Parses an IB Activity CSV statement into a Ledger status transaction
 parseActivityCsv :: String -> Either String IbData
 parseActivityCsv csv = IbCsv.parseActivity csv >>= statementActivityToIbData
 
--- | Parses IB MtoM CSV statement into a Ledger text file.
-ibMtmCsvToLedger :: String -> Either String String
-ibMtmCsvToLedger = fmap showIbData . parseMtmCsv
-
--- | Parses IB Activity CSV statement into a Ledger text file.
+-- | Parses an IB Activity CSV statement into a Ledger text file.
 ibActivityCsvToLedger :: String -> Either String String
 ibActivityCsvToLedger = fmap showIbData . parseActivityCsv

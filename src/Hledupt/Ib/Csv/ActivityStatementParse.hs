@@ -1,17 +1,15 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 
 -- |
--- This module contains parsers for CSV tables of the following IB statements:
---
--- * Activity Statement
--- * Mark-to-Market Statement
-module Hledupt.Ib.Csv.CsvParse
+-- This module parses IB CSV activity statements.
+module Hledupt.Ib.Csv.ActivityStatementParse
   ( -- * Types
     ActivityStatement (..),
     nullActivityStatement,
@@ -19,7 +17,6 @@ module Hledupt.Ib.Csv.CsvParse
     Currency (..),
     Dividend (..),
     EndingCash (..),
-    MtmStatement (..),
     Position (..),
     PositionAssetClass (..),
     StockPosition (..),
@@ -28,7 +25,6 @@ module Hledupt.Ib.Csv.CsvParse
 
     -- * Parsing
     parseActivityStatement,
-    parseMtmStatement,
   )
 where
 
@@ -42,7 +38,11 @@ import qualified Data.Map.Strict as Map
 import Data.Time (Day, defaultTimeLocale, fromGregorian, parseTimeM)
 import qualified Data.Vector as V
 import Hledupt.Data (MonetaryValue, decimalParser, myDecDec)
-import Hledupt.Ib.Csv.RawParse (Csv, CsvName, IbCsvs)
+import Hledupt.Ib.Csv.RawParse
+  ( Csv (..),
+    Section (..),
+    Statement (..),
+  )
 import Relude
 import Text.Megaparsec
   ( MonadParsec,
@@ -115,11 +115,6 @@ statementDateParser = snd <$> someTill_ anySingle (try periodPhraseParser)
 
 -- Positions AKA Status parsers
 
-data CsvParser recordType dataType = CsvParser
-  { _cpCsvName :: String,
-    _cpPrism :: recordType -> Maybe dataType
-  }
-
 data PositionAssetClass = Stocks | Forex
   deriving (Show, Eq)
 
@@ -135,33 +130,11 @@ data StockPosition = StockPosition
   }
   deriving (Eq, Show)
 
-data OpenPositionsRecord
-  = StockPositionRecord StockPosition
-  | TotalOpenPositionsRecord
-  | NotesOpenPositionsRecord
-
-instance Csv.FromNamedRecord OpenPositionsRecord where
+instance Csv.FromNamedRecord StockPosition where
   parseNamedRecord = do
-    header <- Csv.lookup "Header"
-    case header of
-      "Total" -> return TotalOpenPositionsRecord
-      "Notes" -> return NotesOpenPositionsRecord
-      _ -> StockPositionRecord <$> stockPosition
-    where
-      stockPosition =
-        StockPosition <$> Csv.lookup "Symbol"
-          <*> Csv.lookup "Quantity"
-          <*> (L.view myDecDec <$> Csv.lookup "Close Price")
-
-stockPositionParser :: CsvParser OpenPositionsRecord StockPosition
-stockPositionParser =
-  CsvParser
-    { _cpCsvName = "Open Positions",
-      _cpPrism = \case
-        TotalOpenPositionsRecord -> Nothing
-        NotesOpenPositionsRecord -> Nothing
-        StockPositionRecord sp -> Just sp
-    }
+    StockPosition <$> Csv.lookup "Symbol"
+      <*> Csv.lookup "Quantity"
+      <*> (L.view myDecDec <$> Csv.lookup "Close Price")
 
 data Position = Position
   { prAssetClass :: PositionAssetClass,
@@ -190,13 +163,6 @@ instance Csv.FromNamedRecord PositionOrTotalRecord where
           <*> (L.view myDecDec <$> Csv.lookup "Quantity")
           <*> (L.view myDecDec <$> Csv.lookup "Price")
 
-mtmPositionsParser :: CsvParser PositionOrTotalRecord Position
-mtmPositionsParser =
-  CsvParser
-    { _cpCsvName = "Positions and Mark-to-Market Profit and Loss",
-      _cpPrism = potrPosition
-    }
-
 data Trade = Trade
   { tradeDate :: Day,
     tradeSymbol :: String,
@@ -206,48 +172,30 @@ data Trade = Trade
   }
   deriving (Eq, Show)
 
-data TradeRecord
-  = DataTradeRecord Trade
-  | TotalTradeRecord
-
-instance Csv.FromNamedRecord TradeRecord where
-  parseNamedRecord = do
-    header <- Csv.lookup "Header"
-    if header `elem` ["SubTotal", "Total"]
-      then return TotalTradeRecord
-      else
-        DataTradeRecord
-          <$> ( Trade
-                  <$> ( do
-                          dtString <- Csv.lookup "Date/Time"
-                          let eitherDate = MP.parse dateTimeParser "" dtString
-                          either
-                            ( const $
-                                fail $
-                                  "Could not parse Date/Time: " ++ dtString ++ "."
-                            )
-                            return
-                            eitherDate
-                      )
-                  <*> Csv.lookup "Symbol"
-                  <*> Csv.lookup "Quantity"
-                  <*> (L.view myDecDec <$> Csv.lookup "Proceeds")
-                  <*> (L.view myDecDec <$> Csv.lookup "Comm/Fee")
-              )
+instance Csv.FromNamedRecord Trade where
+  parseNamedRecord =
+    ( Trade
+        <$> ( do
+                dtString <- Csv.lookup "Date/Time"
+                let eitherDate = MP.parse dateTimeParser "" dtString
+                either
+                  ( const $
+                      fail $
+                        "Could not parse Date/Time: " ++ dtString ++ "."
+                  )
+                  return
+                  eitherDate
+            )
+        <*> Csv.lookup "Symbol"
+        <*> Csv.lookup "Quantity"
+        <*> (L.view myDecDec <$> Csv.lookup "Proceeds")
+        <*> (L.view myDecDec <$> Csv.lookup "Comm/Fee")
+    )
     where
       dateTimeParser :: Parsec Void String Day
       dateTimeParser =
         MP.manyTill anySingle (single ',')
           >>= parseTimeM True defaultTimeLocale "%Y-%m-%d"
-
-tradeParser :: CsvParser TradeRecord Trade
-tradeParser =
-  CsvParser
-    { _cpCsvName = "Trades",
-      _cpPrism = \case
-        TotalTradeRecord -> Nothing
-        DataTradeRecord t -> Just t
-    }
 
 data CashMovement = CashMovement
   { cmDate :: Day,
@@ -257,15 +205,9 @@ data CashMovement = CashMovement
   deriving (Eq, Show)
 
 newtype CashMovementRecord = CashMovementRecord
-  { cmrCashMovement :: Maybe CashMovement
+  { unCashMovementRecord :: Maybe CashMovement
   }
   deriving (Eq, Show)
-
-_CashMovementRecord :: L.Prism' CashMovementRecord CashMovement
-_CashMovementRecord =
-  L.prism'
-    (CashMovementRecord . Just)
-    cmrCashMovement
 
 instance Csv.FromNamedRecord CashMovementRecord where
   parseNamedRecord =
@@ -277,13 +219,6 @@ instance Csv.FromNamedRecord CashMovementRecord where
           <$> (Csv.lookup "Settle Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
           <*> Csv.lookup "Currency"
           <*> (L.view myDecDec <$> Csv.lookup "Amount")
-
-depositsAndWithdrawalsParser :: CsvParser CashMovementRecord CashMovement
-depositsAndWithdrawalsParser =
-  CsvParser
-    { _cpCsvName = "Deposits & Withdrawals",
-      _cpPrism = L.preview _CashMovementRecord
-    }
 
 data Dividend = Dividend
   { dDate :: Day,
@@ -347,13 +282,6 @@ instance Csv.FromNamedRecord DividendRecord where
               )
           <*> (L.view myDecDec <$> Csv.lookup "Amount")
 
-dividendsParser :: CsvParser DividendRecord Dividend
-dividendsParser =
-  CsvParser
-    { _cpCsvName = "Dividends",
-      _cpPrism = L.preview _DividendRecord
-    }
-
 data WithholdingTax = WithholdingTax
   { wtDate :: Day,
     wtSymbol :: String,
@@ -400,13 +328,6 @@ _WithholdingTaxRecord =
         WithholdingTaxRecord tax -> Just tax
     )
 
-withholdingTaxParser :: CsvParser WithholdingTaxRecord WithholdingTax
-withholdingTaxParser =
-  CsvParser
-    { _cpCsvName = "Withholding Tax",
-      _cpPrism = L.preview _WithholdingTaxRecord
-    }
-
 data EndingCash = EndingCash
   { ecCurrency :: String,
     ecAmount :: MonetaryValue
@@ -418,6 +339,10 @@ data CashReportRecord
   | OtherCashReportRecord
   deriving (Eq, Show)
 
+unCashReportRecord :: CashReportRecord -> Maybe EndingCash
+unCashReportRecord OtherCashReportRecord = Nothing
+unCashReportRecord (EndingCashRecord ec) = Just ec
+
 instance Csv.FromNamedRecord CashReportRecord where
   parseNamedRecord = do
     currencySummaryField <- Csv.lookup "Currency Summary"
@@ -428,22 +353,18 @@ instance Csv.FromNamedRecord CashReportRecord where
         EndingCashRecord . EndingCash currencyField
           <$> (L.view myDecDec <$> Csv.lookup "Total")
 
-cashReportParser :: CsvParser CashReportRecord EndingCash
-cashReportParser =
-  CsvParser
-    { _cpCsvName = "Cash Report",
-      _cpPrism = \case
-        OtherCashReportRecord -> Nothing
-        EndingCashRecord ec -> Just ec
-    }
-
-fetchCsv :: CsvName -> IbCsvs -> Either String Csv
+fetchCsv :: String -> Statement -> Either String Csv
 fetchCsv name =
-  maybeToRight ("Could not find " ++ name ++ " among the CSVs.")
+  fmap (head . unSection)
+    . maybeToRight ("Could not find " ++ name ++ " among the CSVs.")
     . Map.lookup name
+    . unStatement
 
-fetchCsvOrEmpty :: CsvName -> IbCsvs -> Csv
-fetchCsvOrEmpty = Map.findWithDefault ""
+fetchCsvOrEmpty :: String -> Statement -> Csv
+fetchCsvOrEmpty name (Statement stmt) = csv
+  where
+    emptySection = Section [""]
+    csv :| _ = unSection $ Map.findWithDefault emptySection name stmt
 
 parseCsv :: (Csv.FromNamedRecord a) => String -> Either String [a]
 parseCsv csv =
@@ -456,14 +377,12 @@ prependErrorMessage err = L._Left L.%~ (errln ++)
   where
     errln = err ++ "\n"
 
-parseCsv' :: (Csv.FromNamedRecord a) => CsvParser a b -> IbCsvs -> Either String [b]
-parseCsv' (CsvParser name l) csvs = do
-  let csv = fetchCsvOrEmpty name csvs
-  fullRecords <-
-    prependErrorMessage
-      ("Could not parse " ++ name ++ " records.")
-      $ parseCsv csv
-  return $ mapMaybe l fullRecords
+parseCsv' :: (Csv.FromNamedRecord a) => String -> Statement -> Either String [a]
+parseCsv' name stmt = do
+  let csv = fetchCsvOrEmpty name stmt
+  prependErrorMessage
+    ("Could not parse " ++ name ++ " records.")
+    $ parseCsv (unCsv csv)
 
 -- | Useful information gleaned directly from IB's CSV activity statement.
 data ActivityStatement = ActivityStatement
@@ -480,17 +399,25 @@ data ActivityStatement = ActivityStatement
 nullActivityStatement :: Day -> ActivityStatement
 nullActivityStatement date = ActivityStatement date [] [] [] [] [] []
 
-parseActivityStatement :: IbCsvs -> Either String ActivityStatement
+parseActivityStatement :: Statement -> Either String ActivityStatement
 parseActivityStatement csvs = do
   date <- do
     stmtCsv <- fetchCsv "Statement" csvs
-    first errorBundlePretty $ MP.parse statementDateParser "" stmtCsv
-  cashPositions <- parseCsv' cashReportParser csvs
-  stockPositions <- parseCsv' stockPositionParser csvs
-  trades <- parseCsv' tradeParser csvs
-  cashTransfers <- parseCsv' depositsAndWithdrawalsParser csvs
-  dividends <- parseCsv' dividendsParser csvs
-  taxes <- parseCsv' withholdingTaxParser csvs
+    first errorBundlePretty $ MP.parse statementDateParser "" (unCsv stmtCsv)
+  cashPositions <-
+    mapMaybe unCashReportRecord
+      <$> parseCsv' "Cash Report" csvs
+  stockPositions <- parseCsv' "Open Positions" csvs
+  trades <- parseCsv' "Trades" csvs
+  cashTransfers <-
+    mapMaybe unCashMovementRecord
+      <$> parseCsv' "Deposits & Withdrawals" csvs
+  dividends <-
+    mapMaybe (L.preview _DividendRecord)
+      <$> parseCsv' "Dividends" csvs
+  taxes <-
+    mapMaybe (L.preview _WithholdingTaxRecord)
+      <$> parseCsv' "Withholding Tax" csvs
   return $
     ActivityStatement
       date
@@ -498,33 +425,5 @@ parseActivityStatement csvs = do
       stockPositions
       cashTransfers
       trades
-      dividends
-      taxes
-
--- | Useful information gleaned directly from IB's MtM CSV statement.
-data MtmStatement = MtmStatement
-  { mtmsLastStatementDay :: Day,
-    mtmsPositions :: [Position],
-    mtmsCashMovements :: [CashMovement],
-    mtmsDividends :: [Dividend],
-    mtmsWithholdingTaxes :: [WithholdingTax]
-  }
-  deriving (Eq, Show)
-
--- | Parses an M-to-M IB CSVs into individual data points and records.
-parseMtmStatement :: IbCsvs -> Either String MtmStatement
-parseMtmStatement csvs = do
-  date <- do
-    stmtCsv <- fetchCsv "Statement" csvs
-    first errorBundlePretty $ MP.parse statementDateParser "" stmtCsv
-  positions <- parseCsv' mtmPositionsParser csvs
-  cashMovements <- parseCsv' depositsAndWithdrawalsParser csvs
-  dividends <- parseCsv' dividendsParser csvs
-  taxes <- parseCsv' withholdingTaxParser csvs
-  return $
-    MtmStatement
-      date
-      positions
-      cashMovements
       dividends
       taxes

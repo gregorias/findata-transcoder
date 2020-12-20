@@ -1,44 +1,44 @@
-{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Test.Hledupt.Ib.Csv.RawParse (tests) where
 
 import Data.List (isInfixOf)
-import qualified Data.Map.Strict as Map
+import qualified Data.Map.Lazy as Map
 import Hledupt.Ib.Csv.RawParse
+  ( Section (..),
+    Statement (..),
+    parse,
+  )
 import Relude
-import Test.Hspec
+import Test.Hspec (SpecWith, describe, it)
+import Test.Hspec.Expectations.Pretty (shouldBe, shouldSatisfy)
 
 tests :: SpecWith ()
 tests = do
   describe "Hledupt.Ib.Csv.RawParse" $ do
-    it "Finds and groups sections." $ do
-      let statement =
-            "Dividends,Header,Date\n\
-            \Dividends,Data,2019-12-08\n\
-            \Withholding Tax,Header,Currency\n\
-            \Withholding Tax,Data,CHF"
-      case parse statement of
-        Left _ -> expectationFailure "Could not parse the CSV"
-        Right ibCsvs ->
-          ibCsvs
-            `shouldBe` Map.fromList
-              [ ("Dividends", "Header,Date\nData,2019-12-08\n"),
-                ("Withholding Tax", "Header,Currency\nData,CHF")
-              ]
-
-    it "Parses the BOM character" $ do
-      let csv =
-            "\65279Statement,Header,Field Name,Field Value\n\
-            \Statement,Data,Period,\"November 26, 2020\"\n\
-            \Positions and Mark-to-Market Profit and Loss,Header\n"
-      parse csv `shouldSatisfy` isRight
-
-    it "Gives a readable error message" $
-      case parse "mangledtext" of
-        Left errorMsg ->
-          errorMsg
-            `shouldSatisfy` isInfixOf
-              "Could not parse the IB CSV statement."
-        Right _ ->
-          expectationFailure
-            "`parse` should not have parsed the mangled text"
+    it "Prints a readable message when lines can't be parsed." $ do
+      parse ("mangled Line" :: String) `shouldSatisfy` \case
+        Left errorMsg -> ("Could not parse IB CSV statement into individual structured lines.\n" `isInfixOf` errorMsg)
+        Right _ -> False
+    it "When a section doesn't start with a header, fails and gives an error message" $ do
+      parse ("Sec,Data,1" :: String) `shouldSatisfy` \case
+        Left errorMsg -> ("Could not parse the IB CSV statement.\n" `isInfixOf` errorMsg)
+        Right _ -> False
+    it "Parses a statement" $ do
+      let stmt =
+            "SecA,Header,Val\n\
+            \SecA,Data,1\n\
+            \SecA,Total,2\n\
+            \SecA,Header,Val,Amt\n\
+            \SecA,Total,2,3\n\
+            \SecA,Notes,YOLO\n\
+            \SecB,Header,Amt\n\
+            \SecB,Data,42"
+      parse stmt
+        `shouldBe` Right
+          ( Statement $
+              Map.fromList
+                [ ("SecA", Section $ "Val\n1\n" :| ["Val,Amt\n"]),
+                  ("SecB", Section $ "Amt\n42\n" :| [])
+                ]
+          )
