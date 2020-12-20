@@ -65,7 +65,8 @@ tests = do
                   ( "Open Positions",
                     "Header,DataDiscriminator,Asset Category,Currency,Symbol,Quantity,Mult,Cost Price,Cost Basis,Close Price,Value,Unrealized P/L,Unrealized P/L %,Code\n\
                     \Data,Summary,Stocks,USD,VOO,7,1,1.0,1.0,336.55,2000.1,1.0,0.09,\n\
-                    \Total,,Stocks,USD,,,,,1.39573,,1.9,1.50427,,\n"
+                    \Total,,Stocks,USD,,,,,1.39573,,1.9,1.50427,,\n\
+                    \Notes,Code SY: Positions that may be eligible for Stock Yield. Potential for additional annualized income of 689.11 CHF"
                   ),
                   ( "Trades",
                     "Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Realized P/L %,MTM P/L,Code\n\
@@ -82,6 +83,10 @@ tests = do
                     "Header,Currency,Date,Description,Amount,Code\n\
                     \Data,USD,2019-09-06,BND(US9219378356) Cash Dividend USD 0.188198 per Share - US Tax,-2.72\n\
                     \Data,Total,,,-1585.38,"
+                  ),
+                  ( "Deposits & Withdrawals",
+                    "Header,Currency,Settle Date,Description,Amount\n\
+                    \Data,CHF,2020-01-20,title,100.32"
                   )
                 ]
         parseActivityStatement csv
@@ -96,7 +101,11 @@ tests = do
                     [ StockPosition "VOO" 7 (fromRational $ 33655 % 100)
                     ],
                   asCashMovements =
-                    [],
+                    [ CashMovement
+                        (fromGregorian 2020 1 20)
+                        CHF
+                        (fromRational (10032 % 100))
+                    ],
                   asTrades =
                     [ Trade (fromGregorian 2020 10 5) "VOO" 2 (fromRational $ -6187 % 10) (fromRational $ -6187 % 10000)
                     ],

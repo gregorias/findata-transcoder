@@ -12,7 +12,9 @@
 -- * Activity Statement
 -- * Mark-to-Market Statement
 module Hledupt.Ib.Csv.CsvParse
-  ( ActivityStatement (..),
+  ( -- * Types
+    ActivityStatement (..),
+    nullActivityStatement,
     CashMovement (..),
     Currency (..),
     Dividend (..),
@@ -23,6 +25,8 @@ module Hledupt.Ib.Csv.CsvParse
     StockPosition (..),
     Trade (..),
     WithholdingTax (..),
+
+    -- * Parsing
     parseActivityStatement,
     parseMtmStatement,
   )
@@ -131,21 +135,23 @@ data StockPosition = StockPosition
   }
   deriving (Eq, Show)
 
+data OpenPositionsRecord
+  = StockPositionRecord StockPosition
+  | TotalOpenPositionsRecord
+  | NotesOpenPositionsRecord
+
 instance Csv.FromNamedRecord OpenPositionsRecord where
   parseNamedRecord = do
     header <- Csv.lookup "Header"
-    if header == "Total"
-      then return TotalOpenPositionsRecord
-      else StockPositionRecord <$> stockPosition
+    case header of
+      "Total" -> return TotalOpenPositionsRecord
+      "Notes" -> return NotesOpenPositionsRecord
+      _ -> StockPositionRecord <$> stockPosition
     where
       stockPosition =
         StockPosition <$> Csv.lookup "Symbol"
           <*> Csv.lookup "Quantity"
           <*> (L.view myDecDec <$> Csv.lookup "Close Price")
-
-data OpenPositionsRecord
-  = StockPositionRecord StockPosition
-  | TotalOpenPositionsRecord
 
 stockPositionParser :: CsvParser OpenPositionsRecord StockPosition
 stockPositionParser =
@@ -153,6 +159,7 @@ stockPositionParser =
     { _cpCsvName = "Open Positions",
       _cpPrism = \case
         TotalOpenPositionsRecord -> Nothing
+        NotesOpenPositionsRecord -> Nothing
         StockPositionRecord sp -> Just sp
     }
 
@@ -214,7 +221,13 @@ instance Csv.FromNamedRecord TradeRecord where
                   <$> ( do
                           dtString <- Csv.lookup "Date/Time"
                           let eitherDate = MP.parse dateTimeParser "" dtString
-                          either (const mzero) return eitherDate
+                          either
+                            ( const $
+                                fail $
+                                  "Could not parse Date/Time: " ++ dtString ++ "."
+                            )
+                            return
+                            eitherDate
                       )
                   <*> Csv.lookup "Symbol"
                   <*> Csv.lookup "Quantity"
@@ -464,6 +477,9 @@ data ActivityStatement = ActivityStatement
   }
   deriving (Eq, Show)
 
+nullActivityStatement :: Day -> ActivityStatement
+nullActivityStatement date = ActivityStatement date [] [] [] [] [] []
+
 parseActivityStatement :: IbCsvs -> Either String ActivityStatement
 parseActivityStatement csvs = do
   date <- do
@@ -472,6 +488,7 @@ parseActivityStatement csvs = do
   cashPositions <- parseCsv' cashReportParser csvs
   stockPositions <- parseCsv' stockPositionParser csvs
   trades <- parseCsv' tradeParser csvs
+  cashTransfers <- parseCsv' depositsAndWithdrawalsParser csvs
   dividends <- parseCsv' dividendsParser csvs
   taxes <- parseCsv' withholdingTaxParser csvs
   return $
@@ -479,7 +496,7 @@ parseActivityStatement csvs = do
       date
       cashPositions
       stockPositions
-      []
+      cashTransfers
       trades
       dividends
       taxes

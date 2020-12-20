@@ -5,12 +5,16 @@
 
 module Hledupt.Ib
   ( IbData (..),
-    ibActivityCsvToLedger,
-    ibMtmCsvToLedger,
-    parseActivityCsv,
-    parseMtmCsv,
     showIbData,
+
+    -- * Parsing an activity statement
+    ibActivityCsvToLedger,
+    parseActivityCsv,
     statementActivityToIbData,
+
+    -- * Parsing an MTM statement
+    ibMtmCsvToLedger,
+    parseMtmCsv,
     statementMtmToIbData,
   )
 where
@@ -18,6 +22,7 @@ where
 import qualified Control.Lens as L
 import Data.Decimal (Decimal)
 import qualified Data.Map as Map
+import Data.Ratio ((%))
 import qualified Data.Text as T
 import Data.Time (Day)
 import Hledger
@@ -43,7 +48,9 @@ import Hledger.Data.Types
   ( Transaction (..),
   )
 import Hledupt.Data (MonetaryValue)
+import Hledupt.Ib.Csv (ActivityStatement (..), StockPosition (StockPosition), Trade (Trade))
 import qualified Hledupt.Ib.Csv as IbCsv
+import Hledupt.Ib.Csv.CsvParse (EndingCash (EndingCash))
 import Relude
 import Text.Printf (printf)
 
@@ -78,6 +85,24 @@ positionRecordToStatusPosting record =
             pBalanceAssertion
             (balassert . makeAmount assetClass symbol $ IbCsv.prQuantity record)
 
+endingCashToPosting :: EndingCash -> Posting
+endingCashToPosting (EndingCash currency amount) =
+  nullposting
+    & L.set pAccount (accountName Forex currency)
+      . L.set pMaybeAmount (Just $ makeAmount Forex currency 0)
+      . L.set
+        pBalanceAssertion
+        (balassert . makeAmount Forex currency $ amount)
+
+stockPositionToPosting :: StockPosition -> Posting
+stockPositionToPosting (StockPosition symbol quantity _price) =
+  nullposting
+    & L.set pAccount (accountName Stocks symbol)
+      . L.set pMaybeAmount (Just $ makeAmount Stocks symbol 0)
+      . L.set
+        pBalanceAssertion
+        (balassert . makeAmount Stocks symbol $ fromRational $ quantity % 1)
+
 positionRecordToStockPrice :: Day -> IbCsv.Position -> Maybe MarketPrice
 positionRecordToStockPrice day rec = do
   guard $ IbCsv.prAssetClass rec == IbCsv.Stocks
@@ -89,6 +114,10 @@ positionRecordToStockPrice day rec = do
       (T.pack $ IbCsv.prSymbol rec)
       (T.pack . show . IbCsv.prCurrency $ rec)
       (IbCsv.prPrice rec)
+
+stockPositionToStockPrice :: Day -> StockPosition -> MarketPrice
+stockPositionToStockPrice day (StockPosition sym _q price) =
+  MarketPrice day (T.pack sym) (T.pack "USD") price
 
 -- | Ledger representation of Interactive Brokers data found in a Mark-to-Market
 -- statement.
@@ -220,6 +249,29 @@ dividendToTransaction
     where
       title = sym ++ " dividend @ " ++ show dps ++ " per share"
 
+tradeToTransaction :: Trade -> Transaction
+tradeToTransaction (Trade date sym q amount fee) =
+  transaction
+    date
+    [ nullposting
+        & L.set pAccount (accountName Stocks sym)
+          . L.set
+            pMaybeAmount
+            (Just $ makeAmount Stocks sym (fromRational $ q % 1)),
+      nullposting
+        & L.set pAccount (accountName Forex "USD")
+          . L.set
+            pMaybeAmount
+            (Just $ makeAmount Forex "USD" amount),
+      nullposting
+        & L.set pAccount "Expenses:Financial Services"
+          . L.set
+            pMaybeAmount
+            (Just $ makeAmount Forex "USD" (- fee))
+    ]
+    & L.set tDescription (sym ++ " trade")
+      . L.set tStatus Cleared
+
 -- | Shows IbData in Ledger format
 showIbData :: IbData -> String
 showIbData (IbData stockPrices cashMovements maybeStatus) =
@@ -261,7 +313,38 @@ statementMtmToIbData
         )
 
 statementActivityToIbData :: IbCsv.ActivityStatement -> Either String IbData
-statementActivityToIbData = const $ Left "unimplemented"
+statementActivityToIbData
+  ActivityStatement
+    { asLastStatementDay = stmtDate,
+      asCashPositions = cashes,
+      asStockPositions = stocks,
+      asCashMovements = cashTransfers,
+      asTrades = trades,
+      asDividends = dividends,
+      asTaxes = taxes
+    } = do
+    dividendsWithTaxes <-
+      first unmatchedWithholdingTaxToErrorMessage $
+        joinDividendAndTaxRecords dividends taxes
+    let cashStatusPostings = map endingCashToPosting cashes
+        stockStatusPostings = map stockPositionToPosting stocks
+    return $
+      IbData
+        (stockPositionToStockPrice stmtDate <$> stocks)
+        ( sortOn tdate $
+            (cashMovementToTransaction <$> cashTransfers)
+              ++ (dividendToTransaction <$> dividendsWithTaxes)
+              ++ (tradeToTransaction <$> trades)
+        )
+        ( do
+            guard $ not (null cashStatusPostings && null stockStatusPostings)
+            return $
+              transaction
+                stmtDate
+                (cashStatusPostings ++ stockStatusPostings)
+                & L.set tDescription "IB Status"
+                  . L.set tStatus Cleared
+        )
 
 -- | Parses IB MtoM CSV statement into a Ledger status transaction
 parseMtmCsv :: String -> Either String IbData
@@ -275,6 +358,6 @@ parseActivityCsv csv = IbCsv.parseActivity csv >>= statementActivityToIbData
 ibMtmCsvToLedger :: String -> Either String String
 ibMtmCsvToLedger = fmap showIbData . parseMtmCsv
 
--- | Parses IB MtoM CSV statement into a Ledger text file.
+-- | Parses IB Activity CSV statement into a Ledger text file.
 ibActivityCsvToLedger :: String -> Either String String
 ibActivityCsvToLedger = fmap showIbData . parseActivityCsv

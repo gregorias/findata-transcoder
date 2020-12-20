@@ -4,7 +4,9 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Hledupt.Ib.Csv
-  ( ActivityStatement (..),
+  ( -- * Types
+    ActivityStatement (..),
+    nullActivityStatement,
     CashMovement (..),
     Currency (..),
     Dividend (..),
@@ -15,13 +17,15 @@ module Hledupt.Ib.Csv
     StockPosition (..),
     Trade (..),
     WithholdingTax (..),
+
+    -- * Parsers
     parseActivity,
     parseMtm,
   )
 where
 
 import Hledupt.Ib.Csv.CsvParse
-  ( ActivityStatement,
+  ( ActivityStatement (..),
     CashMovement,
     Currency,
     Dividend,
@@ -32,6 +36,7 @@ import Hledupt.Ib.Csv.CsvParse
     StockPosition (..),
     Trade (..),
     WithholdingTax,
+    nullActivityStatement,
   )
 import qualified Hledupt.Ib.Csv.CsvParse as CsvParse
 import qualified Hledupt.Ib.Csv.RawParse as RawParse

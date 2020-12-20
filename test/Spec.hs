@@ -10,6 +10,7 @@ import qualified Test.Hledupt.Data
 import qualified Test.Hledupt.Ib
 import qualified Test.Hledupt.Ib.Csv.CsvParse
 import qualified Test.Hledupt.Ib.Csv.RawParse
+import qualified Test.Hledupt.Ib.Csv.RawParseNew
 import Test.Hledupt.Mbank (mbankTests)
 import Test.Hspec (SpecWith, hspec)
 import qualified Test.Text.Megaparsec.Char.Extra
@@ -31,6 +32,7 @@ tests = do
   Test.Hledupt.Data.dataTests
   Test.Hledupt.Ib.Csv.CsvParse.tests
   Test.Hledupt.Ib.Csv.RawParse.tests
+  Test.Hledupt.Ib.Csv.RawParseNew.tests
   Test.Hledupt.Ib.tests
   Test.Text.Megaparsec.Char.Extra.tests
   Test.Text.Megaparsec.Match.tests
