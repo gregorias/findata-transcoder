@@ -319,7 +319,7 @@ data Dividend = Dividend
   deriving stock (Eq, Show)
 
 symbolParser ::
-  (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>
+  (MonadParsec e s m, Token s ~ Char) =>
   m String
 symbolParser = some letterChar
 
