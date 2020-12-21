@@ -69,7 +69,7 @@ import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (alphaNumChar, char, digitChar, letterChar, numberChar, space, string)
 
 data Currency = USD | CHF
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 instance Csv.FromField Currency where
   parseField "USD" = pure USD
@@ -128,7 +128,7 @@ data StockPosition = StockPosition
     spQuantity :: Integer,
     spPrice :: MonetaryValue
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 instance Csv.FromNamedRecord StockPosition where
   parseNamedRecord = do
@@ -166,7 +166,7 @@ data StockTrade = StockTrade
     stockTradeAmount :: MonetaryValue,
     stockTradeFee :: MonetaryValue
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data ForexTrade = ForexTrade
   { forexTradeDate :: Day,
@@ -176,7 +176,7 @@ data ForexTrade = ForexTrade
     forexTradeTotalCost :: MonetaryValue,
     forexTradeFee :: MonetaryValue
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data AssetCategory = Forex | Stocks
   deriving stock (Eq, Show)
@@ -292,12 +292,12 @@ data CashMovement = CashMovement
     cmCurrency :: Currency,
     cmAmount :: MonetaryValue
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 newtype CashMovementRecord = CashMovementRecord
   { unCashMovementRecord :: Maybe CashMovement
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 instance Csv.FromNamedRecord CashMovementRecord where
   parseNamedRecord =
@@ -316,7 +316,7 @@ data Dividend = Dividend
     dDividendPerShare :: MonetaryValue,
     dTotalAmount :: MonetaryValue
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 symbolParser ::
   (MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>
@@ -337,7 +337,7 @@ symbolDpsParser = do
 data DividendRecord
   = DividendRecord Dividend
   | TotalDividendsRecord
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 _DividendRecord :: L.Prism' DividendRecord Dividend
 _DividendRecord =
@@ -377,13 +377,13 @@ data WithholdingTax = WithholdingTax
     wtSymbol :: String,
     wtTotalAmount :: MonetaryValue
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 -- | A record that appears in "Withholding Tax" CSV
 data WithholdingTaxRecord
   = WithholdingTaxRecord WithholdingTax
   | TotalWithholdingTaxRecord
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 instance Csv.FromNamedRecord WithholdingTaxRecord where
   parseNamedRecord = do
@@ -422,12 +422,12 @@ data EndingCash = EndingCash
   { ecCurrency :: String,
     ecAmount :: MonetaryValue
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data CashReportRecord
   = EndingCashRecord EndingCash
   | OtherCashReportRecord
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 unCashReportRecord :: CashReportRecord -> Maybe EndingCash
 unCashReportRecord OtherCashReportRecord = Nothing
@@ -505,7 +505,7 @@ data ActivityStatement = ActivityStatement
     asDividends :: [Dividend],
     asTaxes :: [WithholdingTax]
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 nullActivityStatement :: Day -> ActivityStatement
 nullActivityStatement date = ActivityStatement date [] [] [] [] [] [] []

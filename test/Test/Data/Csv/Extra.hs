@@ -20,7 +20,7 @@ import Test.Hspec.Expectations.Pretty (shouldBe)
 data TestRecord
   = RecordA
   | RecordB
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 instance FromNamedRecord TestRecord where
   parseNamedRecord = do

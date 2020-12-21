@@ -1,5 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-
 -- | Bcge.Hint is a mechanism that generates from BCGE transaction titles
 -- - additional data that you can use to generate more informational Ledger
 -- - transactions.
@@ -31,13 +29,13 @@ data TransactionHint = TransactionHint
   { title :: String,
     counterAccount :: String
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data ConfigEntry = ConfigEntry
   { keyword :: String,
     hint :: TransactionHint
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 type Config = [ConfigEntry]
 

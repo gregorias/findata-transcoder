@@ -55,17 +55,17 @@ data IbCsvLine = IbCsvLine
     iclHeader :: String,
     iclRest :: String
   }
-  deriving (Eq, Ord)
+  deriving stock (Eq, Ord)
 
 data Hord = Header | Data
-  deriving (Eq, Ord, Show)
+  deriving stock (Eq, Ord, Show)
 
 data IbCsvHordLine = IbCsvHordLine
   { ichlSection :: String,
     ichlHeader :: Hord,
     ichlRest :: String
   }
-  deriving (Eq, Ord)
+  deriving stock (Eq, Ord)
 
 toMaybeHordLine :: IbCsvLine -> Maybe IbCsvHordLine
 toMaybeHordLine

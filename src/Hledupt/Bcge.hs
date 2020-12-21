@@ -101,14 +101,14 @@ data BcgeTransaction = BcgeTransaction
     bTrTitle :: String,
     bTrAmount :: MonetaryValue
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data BcgeStatement = BcgeStatement
   { bStatementDate :: Day,
     bStatementBalance :: MonetaryValue,
     bStatementTransactions :: [BcgeTransaction]
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 headerLine :: CsvLine
 headerLine = ("Datum", "Buchungstext", "Betrag")

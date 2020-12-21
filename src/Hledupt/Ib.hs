@@ -103,7 +103,7 @@ data IbData = IbData
     idTransactions :: [Transaction],
     idStatus :: Maybe Transaction
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 cashMovementToTransaction :: IbCsv.CashMovement -> Transaction
 cashMovementToTransaction

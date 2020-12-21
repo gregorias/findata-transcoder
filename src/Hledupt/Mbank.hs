@@ -45,7 +45,7 @@ data MbankTransaction = MbankTransaction
     mTrAmount :: MonetaryValue,
     mTrEndBalance :: MonetaryValue
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 -- Parser functionality (CSV String → [MbankTransaction])
 

@@ -48,7 +48,7 @@ fromUnitsAndCents units cents = unitsDec `op` centsDec
     op = if units >= 0 then (+) else (-)
 
 newtype MyDecimal = MyDecimal Decimal
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 myDecDec :: Lens.Iso' MyDecimal Decimal
 myDecDec = Lens.iso (\(MyDecimal d) -> d) MyDecimal
