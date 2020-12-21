@@ -28,9 +28,10 @@ default-extensions:
   DerivingStrategies
   GeneralisedNewtypeDeriving
   LambdaCase
+  NoImplicitPrelude
   ScopedTypeVariables
   TupleSections
-  NoImplicitPrelude
+  TypeApplications
 
 library:
   source-dirs: src

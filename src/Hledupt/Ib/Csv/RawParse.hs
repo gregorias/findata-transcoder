@@ -43,8 +43,6 @@ newtype Section = Section
   }
   deriving newtype (Eq, Show)
 
--- TODO IsList also doesn't work
-
 newtype Csv = Csv
   { unCsv :: String
   }
@@ -90,8 +88,6 @@ showIbCsvHordLine
 newtype IbCsvLines = IbCsvLines
   { unIbCsvLines :: [IbCsvHordLine]
   }
-
--- TODO Why doesn't deriving newtype Stream work?
 
 instance Stream IbCsvLines where
   type Token IbCsvLines = IbCsvHordLine
