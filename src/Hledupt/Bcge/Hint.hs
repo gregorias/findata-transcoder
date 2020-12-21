@@ -54,7 +54,6 @@ transactionTitleToHint config titleArg =
 
 type StringParser = Parsec Void String
 
--- TODO generalize
 eolOrEof :: StringParser ()
 eolOrEof = void eol <|> eof
 

@@ -62,7 +62,6 @@ commoditySymbol = liftM2 (:) Char.letterChar (many alphaNumChar)
 isCurrency :: String -> Bool
 isCurrency = flip elem ["CHF", "USD", "PLN", "EUR"]
 
--- todo parse until combinator
 commodity :: MP.Parsec Void String Amount
 commodity = do
   (maybeSymbol, amount) <-

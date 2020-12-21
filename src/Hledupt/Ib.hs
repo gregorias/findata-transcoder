@@ -47,9 +47,14 @@ import Hledupt.Ib.Csv
   ( ActivityStatement (..),
     EndingCash (..),
     StockPosition (StockPosition),
-    Trade (Trade),
+    StockTrade (..),
   )
 import qualified Hledupt.Ib.Csv as IbCsv
+import Hledupt.Ib.Csv.ActivityStatementParse
+  ( BaseCurrency (..),
+    QuoteCurrency (..),
+    QuotePair (QuotePair),
+  )
 import Relude
 import Text.Printf (printf)
 
@@ -221,8 +226,8 @@ dividendToTransaction
     where
       title = sym ++ " dividend @ " ++ show dps ++ " per share"
 
-tradeToTransaction :: Trade -> Transaction
-tradeToTransaction (Trade date sym q amount fee) =
+stockTradeToTransaction :: StockTrade -> Transaction
+stockTradeToTransaction (StockTrade date sym q amount fee) =
   transaction
     date
     [ nullposting
@@ -244,6 +249,45 @@ tradeToTransaction (Trade date sym q amount fee) =
     & L.set tDescription (sym ++ " trade")
       . L.set tStatus Cleared
 
+forexTradeToTransaction :: IbCsv.ForexTrade -> Transaction
+forexTradeToTransaction
+  ( IbCsv.ForexTrade
+      date
+      ( QuotePair
+          (BaseCurrency base)
+          (QuoteCurrency quote)
+        )
+      q
+      _price
+      totalCost
+      fee
+    ) =
+    transaction
+      date
+      [ nullposting
+          & L.set pAccount (accountName Forex base)
+            . L.set
+              pMaybeAmount
+              (Just $ makeAmount Forex base (fromRational $ q % 1)),
+        nullposting
+          & L.set pAccount (accountName Forex quote)
+            . L.set
+              pMaybeAmount
+              (Just $ makeAmount Forex quote totalCost),
+        nullposting
+          & L.set pAccount (accountName Forex "CHF")
+            . L.set
+              pMaybeAmount
+              (Just $ makeAmount Forex "CHF" fee),
+        nullposting
+          & L.set pAccount "Expenses:Financial Services"
+            . L.set
+              pMaybeAmount
+              (Just $ makeAmount Forex "CHF" (- fee))
+      ]
+      & L.set tDescription (base ++ "." ++ quote)
+        . L.set tStatus Cleared
+
 -- | Shows IbData in Ledger format
 showIbData :: IbData -> String
 showIbData (IbData stockPrices cashMovements maybeStatus) =
@@ -259,7 +303,8 @@ statementActivityToIbData
       asCashPositions = cashes,
       asStockPositions = stocks,
       asCashMovements = cashTransfers,
-      asTrades = trades,
+      asStockTrades = stockTrades,
+      asForexTrades = forexTrades,
       asDividends = dividends,
       asTaxes = taxes
     } = do
@@ -274,7 +319,8 @@ statementActivityToIbData
         ( sortOn tdate $
             (cashMovementToTransaction <$> cashTransfers)
               ++ (dividendToTransaction <$> dividendsWithTaxes)
-              ++ (tradeToTransaction <$> trades)
+              ++ (stockTradeToTransaction <$> stockTrades)
+              ++ (forexTradeToTransaction <$> forexTrades)
         )
         ( do
             guard $ not (null cashStatusPostings && null stockStatusPostings)

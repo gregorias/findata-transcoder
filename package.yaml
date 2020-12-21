@@ -25,6 +25,7 @@ dependencies:
 # Defaults recommended by https://kowainik.github.io/posts/2019-02-06-style-guide#default-extensions
 # Also use Relude
 default-extensions:
+  DerivingStrategies
   GeneralisedNewtypeDeriving
   LambdaCase
   ScopedTypeVariables
@@ -38,6 +39,7 @@ library:
   - bytestring
   - cassava
   - containers
+  - extra
   - hledger-lib >= 1.19
   - lens
   - megaparsec

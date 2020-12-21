@@ -81,7 +81,9 @@ tests = do
                   ( "Trades",
                     Section
                       [ "DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Realized P/L %,MTM P/L,Code\n\
-                        \Order,Stocks,USD,VOO,\"2020-10-05, 09:52:53\",2,309.35,312.08,-618.7,-0.6187,619.3187,0,0,5.46,O;R"
+                        \Order,Stocks,USD,VOO,\"2020-10-05, 09:52:53\",2,309.35,312.08,-618.7,-0.6187,619.3187,0,0,5.46,O;R",
+                        "DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,,Proceeds,Comm in CHF,,,,MTM in CHF,Code\n\
+                        \Order,Forex,CHF,USD.CHF,\"2020-01-15, 14:33:56\",\"-2,000,000\",0.96358,,2000000.76,-1.93502,,,,-11,"
                       ]
                   ),
                   ( "Dividends",
@@ -122,8 +124,17 @@ tests = do
                         CHF
                         (fromRational (10032 % 100))
                     ],
-                  asTrades =
-                    [ Trade (fromGregorian 2020 10 5) "VOO" 2 (fromRational $ -6187 % 10) (fromRational $ -6187 % 10000)
+                  asStockTrades =
+                    [ StockTrade (fromGregorian 2020 10 5) "VOO" 2 (fromRational $ -6187 % 10) (fromRational $ -6187 % 10000)
+                    ],
+                  asForexTrades =
+                    [ ForexTrade
+                        (fromGregorian 2020 1 15)
+                        (QuotePair (BaseCurrency "USD") (QuoteCurrency "CHF"))
+                        (-2000000)
+                        (fromRational $ 96358 % 100000)
+                        (fromRational $ 200000076 % 100)
+                        (fromRational $ - (193502 % 100000))
                     ],
                   asDividends =
                     [ Dividend

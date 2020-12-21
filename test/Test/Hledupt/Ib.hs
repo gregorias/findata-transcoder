@@ -170,6 +170,10 @@ parseTests = do
             \Trades,SubTotal,,Stocks,USD,VOO,,2,,,-1.0,-0.5,1.0,0,1.0,1.0,\n\
             \Trades,Total,,Stocks,USD,,,,,,-1.0,-1.0,1.0,0,,1.0,\n\
             \Trades,Total,,Stocks,CHF,,,,,,-1.0,-1.0,1.0,0,,1.0,\n\
+            \Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,,Proceeds,Comm in CHF,,,,MTM in CHF,Code\n\
+            \Trades,Data,Order,Forex,CHF,USD.CHF,\"2020-01-15, 14:33:56\",\"-2,200,000\",0.96358,,2119800.76,-1.93502,,,,-11,\n\
+            \Trades,SubTotal,,Forex,CHF,USD.CHF,,-2200000,,,2000000.76,-1.93502,,,,-11,\n\
+            \Trades,Total,,Forex,CHF,,,,,,1.0,-1,,,,-1,\n\
             \Deposits & Withdrawals,Header,Currency,Settle Date,Description,Amount\n\
             \Deposits & Withdrawals,Data,CHF,2020-01-20,title,100.32\n\
             \Dividends,Header,Currency,Date,Description,Amount\n\
@@ -188,6 +192,12 @@ parseTests = do
                   (fromRational $ 12345 % 100)
               ]
               [ parseTransactionUnsafe
+                  "2020/01/15 * USD.CHF\n\
+                  \ Assets:Liquid:IB:USD  USD -2200000.00\n\
+                  \ Assets:Liquid:IB:CHF  CHF 2119800.76\n\
+                  \ Assets:Liquid:IB:CHF  CHF -1.93502\n\
+                  \ Expenses:Financial Services  CHF 1.93502",
+                parseTransactionUnsafe
                   "2020/01/20 IB Deposit/Withdrawal\n\
                   \*  Assets:Liquid:IB:CHF  CHF 100.32\n\
                   \!  Todo",

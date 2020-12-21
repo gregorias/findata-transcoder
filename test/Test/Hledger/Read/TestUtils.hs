@@ -76,8 +76,6 @@ tests = do
                 [ post
                     "Assets:Bank With Spaces"
                     (makeCommodityAmount "SPY" (-15)),
-                  -- TODO
-                  --(balassert $ pln 100949),
                   nullposting {paccount = "Expenses:Other"}
                 ]
             expectedTr =

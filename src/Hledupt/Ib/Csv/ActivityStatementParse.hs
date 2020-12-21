@@ -1,3 +1,4 @@
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -17,11 +18,15 @@ module Hledupt.Ib.Csv.ActivityStatementParse
     Currency (..),
     Dividend (..),
     EndingCash (..),
-    Position (..),
-    PositionAssetClass (..),
     StockPosition (..),
-    Trade (..),
     WithholdingTax (..),
+
+    -- ** Trade types
+    ForexTrade (..),
+    StockTrade (..),
+    BaseCurrency (..),
+    QuoteCurrency (..),
+    QuotePair (..),
 
     -- * Parsing
     parseActivityStatement,
@@ -29,11 +34,13 @@ module Hledupt.Ib.Csv.ActivityStatementParse
 where
 
 import qualified Control.Lens as L
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Csv as Csv hiding (FromNamedRecord, decodeByName, lookup)
+import qualified Data.Csv as CsvLookup (lookup)
 import qualified Data.Csv.Extra as Csv
-import Data.Decimal (Decimal)
 import Data.List (isInfixOf)
+import Data.List.Extra (allSame)
 import qualified Data.Map.Strict as Map
 import Data.Time (Day, defaultTimeLocale, fromGregorian, parseTimeM)
 import qualified Data.Vector as V
@@ -50,6 +57,7 @@ import Text.Megaparsec
     Token,
     Tokens,
     anySingle,
+    between,
     count,
     errorBundlePretty,
     label,
@@ -58,7 +66,7 @@ import Text.Megaparsec
     try,
   )
 import qualified Text.Megaparsec as MP
-import Text.Megaparsec.Char (alphaNumChar, char, digitChar, letterChar, space, string)
+import Text.Megaparsec.Char (alphaNumChar, char, digitChar, letterChar, numberChar, space, string)
 
 data Currency = USD | CHF
   deriving (Eq, Show)
@@ -115,14 +123,6 @@ statementDateParser = snd <$> someTill_ anySingle (try periodPhraseParser)
 
 -- Positions AKA Status parsers
 
-data PositionAssetClass = Stocks | Forex
-  deriving (Show, Eq)
-
-instance Csv.FromField PositionAssetClass where
-  parseField "Stocks" = pure Stocks
-  parseField "Forex" = pure Forex
-  parseField _ = fail "Expected Stocks or Forex"
-
 data StockPosition = StockPosition
   { spSymbol :: String,
     spQuantity :: Integer,
@@ -136,66 +136,156 @@ instance Csv.FromNamedRecord StockPosition where
       <*> Csv.lookup "Quantity"
       <*> (L.view myDecDec <$> Csv.lookup "Close Price")
 
-data Position = Position
-  { prAssetClass :: PositionAssetClass,
-    prCurrency :: Currency,
-    prSymbol :: String,
-    prQuantity :: Decimal,
-    prPrice :: MonetaryValue
+newtype BaseCurrency = BaseCurrency String
+  deriving newtype (Eq, Show)
+
+newtype QuoteCurrency = QuoteCurrency String
+  deriving newtype (Eq, Show)
+
+data QuotePair = QuotePair BaseCurrency QuoteCurrency
+  deriving stock (Eq, Show)
+
+quotePairParser :: Parsec Void String QuotePair
+quotePairParser = do
+  base <- some alphaNumChar
+  void $ single '.'
+  quote <- some alphaNumChar
+  MP.eof
+  return $ QuotePair (BaseCurrency base) (QuoteCurrency quote)
+
+instance Csv.FromField QuotePair where
+  parseField =
+    maybe (fail "Could not parse the quote pair") return
+      . MP.parseMaybe quotePairParser
+      . (fmap (chr . fromEnum) . BS.unpack)
+
+data StockTrade = StockTrade
+  { stockTradeDate :: Day,
+    stockTradeSymbol :: String,
+    stockTradeQuantity :: Integer,
+    stockTradeAmount :: MonetaryValue,
+    stockTradeFee :: MonetaryValue
   }
   deriving (Eq, Show)
 
-newtype PositionOrTotalRecord = PositionOrTotalRecord
-  { potrPosition :: Maybe Position
+data ForexTrade = ForexTrade
+  { forexTradeDate :: Day,
+    forexTradeQuotePair :: QuotePair,
+    forexTradeQuantity :: Integer,
+    forexTradePrice :: MonetaryValue,
+    forexTradeTotalCost :: MonetaryValue,
+    forexTradeFee :: MonetaryValue
   }
   deriving (Eq, Show)
 
-instance Csv.FromNamedRecord PositionOrTotalRecord where
+data AssetCategory = Forex | Stocks
+  deriving stock (Eq, Show)
+
+instance Csv.FromField AssetCategory where
+  parseField "Forex" = pure Forex
+  parseField "Stocks" = pure Stocks
+  parseField field =
+    fail $
+      "Could not parse asset category: " ++ (chr . fromEnum <$> BS.unpack field)
+
+tradesDateTimeParser :: Parsec Void String Day
+tradesDateTimeParser =
+  MP.manyTill anySingle (single ',')
+    >>= parseTimeM True defaultTimeLocale "%Y-%m-%d"
+
+instance Csv.FromNamedRecord StockTrade where
   parseNamedRecord =
-    (PositionOrTotalRecord . Just <$> position)
-      <|> pure (PositionOrTotalRecord Nothing)
-    where
-      position =
-        Position
-          <$> Csv.lookup "Asset Class"
-          <*> Csv.lookup "Currency"
-          <*> Csv.lookup "Symbol"
-          <*> (L.view myDecDec <$> Csv.lookup "Quantity")
-          <*> (L.view myDecDec <$> Csv.lookup "Price")
+    StockTrade
+      <$> ( do
+              dtString <- Csv.lookup "Date/Time"
+              let eitherDate = MP.parse tradesDateTimeParser "" dtString
+              either
+                ( const $
+                    fail $
+                      "Could not parse Date/Time: " ++ dtString ++ "."
+                )
+                return
+                eitherDate
+          )
+      <*> Csv.lookup "Symbol"
+      <*> Csv.lookup "Quantity"
+      <*> (L.view myDecDec <$> Csv.lookup "Proceeds")
+      <*> (L.view myDecDec <$> Csv.lookup "Comm/Fee")
 
-data Trade = Trade
-  { tradeDate :: Day,
-    tradeSymbol :: String,
-    tradeQuantity :: Integer,
-    tradeAmount :: MonetaryValue,
-    tradeFee :: MonetaryValue
+optionalQuotes :: (Ord e) => Parsec e String a -> Parsec e String a
+optionalQuotes = between optionalQuote optionalQuote
+  where
+    optionalQuote = optional $ single '"'
+
+newtype Quantity = Quantity
+  { unQuantity :: Integer
   }
-  deriving (Eq, Show)
 
-instance Csv.FromNamedRecord Trade where
-  parseNamedRecord =
-    ( Trade
-        <$> ( do
-                dtString <- Csv.lookup "Date/Time"
-                let eitherDate = MP.parse dateTimeParser "" dtString
-                either
-                  ( const $
-                      fail $
-                        "Could not parse Date/Time: " ++ dtString ++ "."
-                  )
-                  return
-                  eitherDate
-            )
-        <*> Csv.lookup "Symbol"
-        <*> Csv.lookup "Quantity"
-        <*> (L.view myDecDec <$> Csv.lookup "Proceeds")
-        <*> (L.view myDecDec <$> Csv.lookup "Comm/Fee")
-    )
+quantityParser :: Parsec Void String Quantity
+quantityParser = optionalQuotes $ do
+  negMod <- MP.try (char '-' >> pure negate) MP.<|> pure id
+  quantityString <- catMaybes <$> some numberCharOrComma
+  case readMaybe quantityString of
+    Just quantity -> return $ Quantity $ negMod quantity
+    Nothing -> fail $ "Could not parse the quantity: " ++ quantityString
+  where
+    numberCharOrComma :: (Ord e) => Parsec e String (Maybe Char)
+    numberCharOrComma = (Just <$> numberChar) <|> (single ',' $> Nothing)
+
+instance Csv.FromField Quantity where
+  parseField field =
+    maybe (fail $ "Could not parse the quantity: " ++ fieldStr) return
+      . MP.parseMaybe quantityParser
+      $ fieldStr
     where
-      dateTimeParser :: Parsec Void String Day
-      dateTimeParser =
-        MP.manyTill anySingle (single ',')
-          >>= parseTimeM True defaultTimeLocale "%Y-%m-%d"
+      fieldStr = fmap (chr . fromEnum) . BS.unpack $ field
+
+instance Csv.FromNamedRecord ForexTrade where
+  parseNamedRecord =
+    ForexTrade
+      <$> ( do
+              dtString <- Csv.lookup "Date/Time"
+              let eitherDate = MP.parse tradesDateTimeParser "" dtString
+              either
+                ( const $
+                    fail $
+                      "Could not parse Date/Time: " ++ dtString ++ "."
+                )
+                return
+                eitherDate
+          )
+      <*> Csv.lookup "Symbol"
+      <*> (unQuantity <$> Csv.lookup "Quantity")
+      <*> (L.view myDecDec <$> Csv.lookup "T. Price")
+      <*> (L.view myDecDec <$> Csv.lookup "Proceeds")
+      <*> (L.view myDecDec <$> Csv.lookup "Comm in CHF")
+
+detectTradesCsvCategory :: Csv -> Either String AssetCategory
+detectTradesCsvCategory (Csv csv)
+  | null csv = return Stocks
+  | otherwise = do
+    (_header, cats) <-
+      Csv.decodeByNameWithP
+        catParser
+        Csv.defaultDecodeOptions
+        (C.pack csv)
+    extractCat $ toList cats
+  where
+    catParser nr = CsvLookup.lookup nr "Asset Category"
+    extractCat :: [AssetCategory] -> Either String AssetCategory
+    extractCat cats = do
+      unless (allSame cats) $ Left "A Trades CSV has different categories"
+      case cats of
+        [] -> return Stocks
+        (x : _) -> return x
+
+data Trades = Trades [StockTrade] [ForexTrade]
+
+instance Semigroup Trades where
+  (<>) (Trades lss lfs) (Trades rss rfs) = Trades (lss <> rss) (lfs <> rfs)
+
+instance Monoid Trades where
+  mempty = Trades [] []
 
 data CashMovement = CashMovement
   { cmDate :: Day,
@@ -353,36 +443,56 @@ instance Csv.FromNamedRecord CashReportRecord where
         EndingCashRecord . EndingCash currencyField
           <$> (L.view myDecDec <$> Csv.lookup "Total")
 
-fetchCsv :: String -> Statement -> Either String Csv
-fetchCsv name =
-  fmap (head . unSection)
-    . maybeToRight ("Could not find " ++ name ++ " among the CSVs.")
+fetchSection :: String -> Statement -> Either String Section
+fetchSection name =
+  maybeToRight ("Could not find " ++ name ++ " among the CSVs.")
     . Map.lookup name
     . unStatement
 
-fetchCsvOrEmpty :: String -> Statement -> Csv
-fetchCsvOrEmpty name (Statement stmt) = csv
+fetchSectionOrEmpty :: String -> Statement -> Section
+fetchSectionOrEmpty name (Statement stmt) = Map.findWithDefault emptySection name stmt
   where
     emptySection = Section [""]
-    csv :| _ = unSection $ Map.findWithDefault emptySection name stmt
-
-parseCsv :: (Csv.FromNamedRecord a) => String -> Either String [a]
-parseCsv csv =
-  if null csv
-    then return []
-    else V.toList . snd <$> Csv.decodeByName (C.pack csv)
 
 prependErrorMessage :: String -> Either String a -> Either String a
 prependErrorMessage err = L._Left L.%~ (errln ++)
   where
     errln = err ++ "\n"
 
-parseCsv' :: (Csv.FromNamedRecord a) => String -> Statement -> Either String [a]
-parseCsv' name stmt = do
-  let csv = fetchCsvOrEmpty name stmt
+parseCsv :: (Csv.FromNamedRecord a) => Csv -> Either String [a]
+parseCsv (Csv csv) =
+  if null csv
+    then return []
+    else V.toList . snd <$> Csv.decodeByName (C.pack csv)
+
+parseNamedSection :: (Csv.FromNamedRecord a) => String -> Statement -> Either String [a]
+parseNamedSection name stmt = do
+  let csvs = unSection $ fetchSectionOrEmpty name stmt
   prependErrorMessage
     ("Could not parse " ++ name ++ " records.")
-    $ parseCsv (unCsv csv)
+    $ fmap concat . mapM parseCsv $
+      csvs
+
+parseTradesCsv :: Csv -> Either String Trades
+parseTradesCsv csv = do
+  cat <- detectTradesCsvCategory csv
+  case cat of
+    Stocks ->
+      prependErrorMessage "Could not parse stock trades." $
+        Trades <$> parseCsv csv <*> pure []
+    Forex ->
+      prependErrorMessage "Could not parse forex trades." $
+        Trades [] <$> parseCsv csv
+
+parseTradesSection :: Statement -> Either String Trades
+parseTradesSection stmt = do
+  let tradesName = "Trades"
+      csvs = unSection $ fetchSectionOrEmpty tradesName stmt
+  prependErrorMessage
+    ("Could not parse " ++ tradesName ++ " records.")
+    $ fold
+      <$> (mapM parseTradesCsv :: NonEmpty Csv -> Either String (NonEmpty Trades))
+        (csvs :: NonEmpty Csv)
 
 -- | Useful information gleaned directly from IB's CSV activity statement.
 data ActivityStatement = ActivityStatement
@@ -390,40 +500,42 @@ data ActivityStatement = ActivityStatement
     asCashPositions :: [EndingCash],
     asStockPositions :: [StockPosition],
     asCashMovements :: [CashMovement],
-    asTrades :: [Trade],
+    asStockTrades :: [StockTrade],
+    asForexTrades :: [ForexTrade],
     asDividends :: [Dividend],
     asTaxes :: [WithholdingTax]
   }
   deriving (Eq, Show)
 
 nullActivityStatement :: Day -> ActivityStatement
-nullActivityStatement date = ActivityStatement date [] [] [] [] [] []
+nullActivityStatement date = ActivityStatement date [] [] [] [] [] [] []
 
 parseActivityStatement :: Statement -> Either String ActivityStatement
 parseActivityStatement csvs = do
   date <- do
-    stmtCsv <- fetchCsv "Statement" csvs
+    stmtCsv <- head . unSection <$> fetchSection "Statement" csvs
     first errorBundlePretty $ MP.parse statementDateParser "" (unCsv stmtCsv)
   cashPositions <-
     mapMaybe unCashReportRecord
-      <$> parseCsv' "Cash Report" csvs
-  stockPositions <- parseCsv' "Open Positions" csvs
-  trades <- parseCsv' "Trades" csvs
+      <$> parseNamedSection "Cash Report" csvs
+  stockPositions <- parseNamedSection "Open Positions" csvs
+  Trades stockTrades forexTrades <- parseTradesSection csvs
   cashTransfers <-
     mapMaybe unCashMovementRecord
-      <$> parseCsv' "Deposits & Withdrawals" csvs
+      <$> parseNamedSection "Deposits & Withdrawals" csvs
   dividends <-
     mapMaybe (L.preview _DividendRecord)
-      <$> parseCsv' "Dividends" csvs
+      <$> parseNamedSection "Dividends" csvs
   taxes <-
     mapMaybe (L.preview _WithholdingTaxRecord)
-      <$> parseCsv' "Withholding Tax" csvs
+      <$> parseNamedSection "Withholding Tax" csvs
   return $
     ActivityStatement
       date
       cashPositions
       stockPositions
       cashTransfers
-      trades
+      stockTrades
+      forexTrades
       dividends
       taxes
