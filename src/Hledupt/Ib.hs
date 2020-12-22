@@ -23,6 +23,7 @@ import qualified Data.Text as Text
 import Data.Time (Day)
 import Hledger
   ( Amount,
+    AmountPrice (UnitPrice),
     MarketPrice (MarketPrice),
     Posting,
     Status (Cleared, Pending),
@@ -32,7 +33,8 @@ import Hledger
   )
 import Hledger.Data.Extra (makeCommodityAmount, makeCurrencyAmount)
 import Hledger.Data.Lens
-  ( pBalanceAssertion,
+  ( aAmountPrice,
+    pBalanceAssertion,
     pMaybeAmount,
     pStatus,
     tDescription,
@@ -249,28 +251,24 @@ forexTradeToTransaction
           (QuoteCurrency quote)
         )
       q
-      _price
+      price
       totalCost
       fee
     ) =
     transaction
       date
-      [ post (accountName Forex base) missingamt
-          & L.set
-            pMaybeAmount
-            (Just $ makeAmount Forex base (fromRational $ q % 1)),
-        post (accountName Forex quote) missingamt
-          & L.set
-            pMaybeAmount
-            (Just $ makeAmount Forex quote totalCost),
-        post (accountName Forex "CHF") missingamt
-          & L.set
-            pMaybeAmount
-            (Just $ makeAmount Forex "CHF" fee),
-        post "Expenses:Financial Services" missingamt
-          & L.set
-            pMaybeAmount
-            (Just $ makeAmount Forex "CHF" (- fee))
+      [ post
+          (accountName Forex base)
+          ( makeAmount Forex base (fromRational $ q % 1)
+              & L.set
+                aAmountPrice
+                ( Just . UnitPrice $
+                    makeAmount Forex quote price
+                )
+          ),
+        post (accountName Forex quote) (makeAmount Forex quote totalCost),
+        post (accountName Forex "CHF") (makeAmount Forex "CHF" fee),
+        post "Expenses:Financial Services" (makeAmount Forex "CHF" (- fee))
       ]
       & L.set tDescription (base ++ "." ++ quote)
         . L.set tStatus Cleared

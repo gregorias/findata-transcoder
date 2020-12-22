@@ -1,5 +1,6 @@
 module Hledger.Data.Lens
   ( aCommodity,
+    aAmountPrice,
     aStyle,
     asCommoditySide,
     asCommoditySpaced,
@@ -25,6 +26,7 @@ import Control.Lens
     prism',
   )
 import Data.Text (pack, unpack)
+import Hledger (AmountPrice)
 import Hledger.Data.Types
   ( Amount (..),
     AmountPrecision,
@@ -38,6 +40,11 @@ import Hledger.Data.Types
     Transaction (..),
   )
 import Relude
+
+aAmountPrice :: Lens' Amount (Maybe AmountPrice)
+aAmountPrice = lens aprice setter
+  where
+    setter a ap = a {aprice = ap}
 
 aCommodity :: Lens' Amount CommoditySymbol
 aCommodity = lens acommodity setter

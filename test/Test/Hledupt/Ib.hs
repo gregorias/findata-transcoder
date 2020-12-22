@@ -193,7 +193,7 @@ parseTests = do
               ]
               [ parseTransactionUnsafe
                   "2020/01/15 * USD.CHF\n\
-                  \ Assets:Liquid:IB:USD  USD -2200000.00\n\
+                  \ Assets:Liquid:IB:USD  USD -2200000.00 @ 0.96358 CHF\n\
                   \ Assets:Liquid:IB:CHF  CHF 2119800.76\n\
                   \ Assets:Liquid:IB:CHF  CHF -1.93502\n\
                   \ Expenses:Financial Services  CHF 1.93502",
