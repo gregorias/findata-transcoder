@@ -30,6 +30,7 @@ import Hledger
     balassert,
     missingamt,
     post,
+    setFullPrecision,
   )
 import Hledger.Data.Extra (makeCommodityAmount, makeCurrencyAmount)
 import Hledger.Data.Lens
@@ -263,7 +264,8 @@ forexTradeToTransaction
               & L.set
                 aAmountPrice
                 ( Just . UnitPrice $
-                    makeAmount Forex quote price
+                    makeCommodityAmount quote price
+                      & setFullPrecision
                 )
           ),
         post (accountName Forex quote) (makeAmount Forex quote totalCost),

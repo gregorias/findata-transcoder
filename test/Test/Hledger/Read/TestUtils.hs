@@ -10,6 +10,7 @@ import Hledger
   ( Amount (aprice),
     AmountPrice (UnitPrice),
     missingamt,
+    setFullPrecision,
   )
 import Hledger.Data.Extra
   ( makeCommodityAmount,
@@ -132,12 +133,15 @@ tests = do
                 & L.set tStatus Cleared
         parseTransactionUnsafe tr `shouldBe` expectedTr
       it "Parses a Forex posting with price information." $ do
-        let posting = "  Assets:Bank  USD 100 @ CHF 0.9\n"
+        let posting = "  Assets:Bank  USD 100 @ CHF 0.9513\n"
             expectedPosting =
               post
                 "Assets:Bank"
                 ( (makeCurrencyAmount "USD" 100)
-                    { aprice = Just . UnitPrice $ makeCurrencyAmount "CHF" 0.9
+                    { aprice =
+                        Just . UnitPrice $
+                          makeCommodityAmount "CHF" 0.9513
+                            & setFullPrecision
                     }
                 )
         MP.parseMaybe postingParser posting `shouldBe` Just expectedPosting

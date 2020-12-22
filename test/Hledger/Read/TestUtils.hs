@@ -15,13 +15,13 @@ import Control.Monad.Combinators
     someTill,
   )
 import Data.Maybe (fromJust)
-import Data.Text (pack)
+import Data.Text (pack, unpack)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
-import Hledger (AmountPrice (TotalPrice, UnitPrice), missingamt, post)
+import Hledger (AmountPrice (TotalPrice, UnitPrice), missingamt, post, setFullPrecision)
 import Hledger.Data.Amount (num)
 import Hledger.Data.Extra
   ( makeCommodityAmount,
-    makeCurrencyAmount,
+    setCurrencyPrecision,
   )
 import Hledger.Data.Lens
   ( pBalanceAssertion,
@@ -81,11 +81,13 @@ commodity = do
   void $ many space
   return $
     case maybeSymbol of
-      Just symbol ->
-        if isCurrency symbol
-          then makeCurrencyAmount symbol amount
-          else makeCommodityAmount symbol amount
+      Just symbol -> makeCommodityAmount symbol amount
       Nothing -> num amount
+
+whenCurrencyAdjustStyle :: Amount -> Amount
+whenCurrencyAdjustStyle amt
+  | isCurrency (unpack $ acommodity amt) = setCurrencyPrecision amt
+  | otherwise = amt
 
 accountParser :: MP.Parsec Void String String
 accountParser =
@@ -98,7 +100,7 @@ accountParser =
 balanceAssertion :: MP.Parsec Void String BalanceAssertion
 balanceAssertion = do
   void $ MP.single '=' >> some space
-  fmap (fromJust . balassert) commodity <* many space
+  fmap (fromJust . balassert . whenCurrencyAdjustStyle) commodity <* many space
 
 statusParser :: (MonadParsec e s m, Token s ~ Char) => m Status
 statusParser =
@@ -116,14 +118,14 @@ amountPriceParser = do
         single '@' $> UnitPrice
       ]
   void $ some spaceChar
-  constructor <$> commodity
+  constructor . setFullPrecision <$> commodity
 
 -- | A partial Posting parser
 postingParser :: MP.Parsec Void String Posting
 postingParser = do
   status <- many space *> statusParser <* many space
   account <- accountParser
-  amount <- try commodity <|> pure missingamt
+  amount <- whenCurrencyAdjustStyle <$> (try commodity <|> pure missingamt)
   balAssert <- optional (try balanceAssertion)
   void $ many $ single ' '
   amountPrice <- optional amountPriceParser
