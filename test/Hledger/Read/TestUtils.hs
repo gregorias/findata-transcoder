@@ -17,6 +17,7 @@ import Control.Monad.Combinators
 import Data.Maybe (fromJust)
 import Data.Text (pack)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
+import Hledger (missingamt)
 import Hledger.Data.Amount (num)
 import Hledger.Data.Extra
   ( makeCommodityAmount,
@@ -112,8 +113,8 @@ postingParser :: MP.Parsec Void String Posting
 postingParser = do
   status <- many space *> statusParser <* many space
   account <- accountParser
-  amount <- optional (try commodity)
-  let amountSetter = maybe id (L.set pMaybeAmount . Just) amount
+  amount <- try commodity <|> pure missingamt
+  let amountSetter = L.set pMaybeAmount . Just $ amount
   balAssert <- optional (try balanceAssertion)
   void eolOrEof
   return $

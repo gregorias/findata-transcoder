@@ -6,6 +6,7 @@ module Test.Hledger.Read.TestUtils (tests) where
 
 import qualified Control.Lens as L
 import Data.Time (fromGregorian)
+import Hledger (missingamt)
 import Hledger.Data.Extra
   ( makeCommodityAmount,
   )
@@ -33,18 +34,17 @@ tests = do
     describe "postingParser" $ do
       it "parses a posting transaction" $ do
         let p :: String = "  Expenses:Other"
-            expectedP = nullposting {paccount = "Expenses:Other"}
+            expectedP = post "Expenses:Other" missingamt
         parseMaybe postingParser p `shouldBe` Just expectedP
       it "parses a posting transaction with spaces" $ do
         let p :: String = "  Assets:Bank With Spaces\n"
-            expectedP = nullposting {paccount = "Assets:Bank With Spaces"}
+            expectedP = post "Assets:Bank With Spaces" missingamt
         parseMaybe postingParser p `shouldBe` Just expectedP
       it "parses a cleared posting" $ do
         let p :: String = "*  Expenses:Other"
             expectedP =
-              nullposting
-                { paccount = "Expenses:Other",
-                  pstatus = Cleared
+              (post "Expenses:Other" missingamt)
+                { pstatus = Cleared
                 }
         parseMaybe postingParser p `shouldBe` Just expectedP
 
@@ -57,8 +57,8 @@ tests = do
             expectedTrBase =
               transaction
                 (fromGregorian 2019 10 28)
-                [ nullposting {paccount = "Assets:Bank With Spaces"},
-                  nullposting {paccount = "Expenses:Other"}
+                [ post "Assets:Bank With Spaces" missingamt,
+                  post "Expenses:Other" missingamt
                 ]
             expectedTr =
               expectedTrBase
@@ -76,7 +76,7 @@ tests = do
                 [ post
                     "Assets:Bank With Spaces"
                     (makeCommodityAmount "SPY" (-15)),
-                  nullposting {paccount = "Expenses:Other"}
+                  post "Expenses:Other" missingamt
                 ]
             expectedTr =
               expectedTrBase
@@ -91,12 +91,11 @@ tests = do
             expectedTrBase =
               transaction
                 (fromGregorian 2019 10 28)
-                [ nullposting
-                    { paccount = "Assets:Bank",
-                      pbalanceassertion =
+                [ (post "Assets:Bank" missingamt)
+                    { pbalanceassertion =
                         balassert $ makeCommodityAmount "SPY" 123
                     },
-                  nullposting {paccount = "Expenses:Other"}
+                  post "Expenses:Other" missingamt
                 ]
             expectedTr =
               expectedTrBase
@@ -118,7 +117,7 @@ tests = do
                           makeCommodityAmount "SPY" 123,
                       pamount = Mixed [makeCommodityAmount "SPY" 100]
                     },
-                  nullposting {paccount = "Expenses:Other"}
+                  post "Expenses:Other" missingamt
                 ]
             expectedTr =
               expectedTrBase

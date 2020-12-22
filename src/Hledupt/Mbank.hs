@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Hledupt.Mbank
@@ -14,12 +15,15 @@ import Data.Decimal (Decimal)
 import Data.Text (pack)
 import Data.Time.Calendar (Day)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
+import Hledger (missingamt, post)
 import Hledger.Data.Extra (makeCurrencyAmount)
-import Hledger.Data.Posting (balassert, nullposting, post')
+import Hledger.Data.Posting
+  ( balassert,
+    post',
+  )
 import Hledger.Data.Transaction (showTransaction, transaction)
 import Hledger.Data.Types
   ( Amount (..),
-    Posting (..),
     Quantity,
     Transaction (..),
   )
@@ -56,7 +60,7 @@ headerParser = void (string "#Data operacji;#Opis operacji;#Rachunek;#Kategoria;
 
 dateParser :: MbankParser Day
 dateParser = do
-  dateString <- many (oneOf "-0123456789")
+  dateString <- many $ oneOf ("-0123456789" :: [Char])
   parseTimeM True defaultTimeLocale "%Y-%m-%d" dateString
 
 valueParser :: MbankParser Decimal
@@ -107,7 +111,7 @@ mTrToLedger mTr = tr {tdescription = pack $ sanitizeTitle $ mTrTitle mTr}
       transaction
         (mTrDate mTr)
         [ post' (pack "Assets:Liquid:mBank") (pln $ mTrAmount mTr) (balassert $ pln $ mTrEndBalance mTr),
-          nullposting {paccount = pack "Expenses:Other"}
+          post "Expenses:Other" missingamt
         ]
 
 mbankCsvToLedger :: String -> Either String String

@@ -19,6 +19,7 @@ import Data.Decimal (Decimal)
 import qualified Data.Map as Map
 import Data.Ratio ((%))
 import qualified Data.Text as T
+import qualified Data.Text as Text
 import Data.Time (Day)
 import Hledger
   ( Amount,
@@ -26,12 +27,12 @@ import Hledger
     Posting,
     Status (Cleared, Pending),
     balassert,
-    nullposting,
+    missingamt,
+    post,
   )
 import Hledger.Data.Extra (makeCommodityAmount, makeCurrencyAmount)
 import Hledger.Data.Lens
-  ( pAccount,
-    pBalanceAssertion,
+  ( pBalanceAssertion,
     pMaybeAmount,
     pStatus,
     tDescription,
@@ -71,23 +72,21 @@ accountPrefix :: AssetClass -> String
 accountPrefix Stocks = "Assets:Investments:IB"
 accountPrefix Forex = "Assets:Liquid:IB"
 
-accountName :: AssetClass -> String -> String
-accountName assetClass symbol = accountPrefix assetClass ++ ":" ++ symbol
+accountName :: AssetClass -> String -> Text.Text
+accountName assetClass symbol = Text.pack $ accountPrefix assetClass ++ ":" ++ symbol
 
 endingCashToPosting :: EndingCash -> Posting
 endingCashToPosting (EndingCash currency amount) =
-  nullposting
-    & L.set pAccount (accountName Forex currency)
-      . L.set pMaybeAmount (Just $ makeAmount Forex currency 0)
+  post (accountName Forex currency) missingamt
+    & L.set pMaybeAmount (Just $ makeAmount Forex currency 0)
       . L.set
         pBalanceAssertion
         (balassert . makeAmount Forex currency $ amount)
 
 stockPositionToPosting :: StockPosition -> Posting
 stockPositionToPosting (StockPosition symbol quantity _price) =
-  nullposting
-    & L.set pAccount (accountName Stocks symbol)
-      . L.set pMaybeAmount (Just $ makeAmount Stocks symbol 0)
+  post (accountName Stocks symbol) missingamt
+    & L.set pMaybeAmount (Just $ makeAmount Stocks symbol 0)
       . L.set
         pBalanceAssertion
         (balassert . makeAmount Stocks symbol $ fromRational $ quantity % 1)
@@ -110,13 +109,11 @@ cashMovementToTransaction
   (IbCsv.CashMovement date currency amount) =
     transaction
       date
-      [ nullposting
-          & L.set pAccount (accountName Forex (show currency))
-            . L.set pMaybeAmount (Just $ makeAmount Forex (show currency) amount)
+      [ post (accountName Forex (show currency)) missingamt
+          & L.set pMaybeAmount (Just $ makeAmount Forex (show currency) amount)
             . L.set pStatus Cleared,
-        nullposting
-          & L.set pAccount "Todo"
-            . L.set pStatus Pending
+        post "Todo" missingamt
+          & L.set pStatus Pending
       ]
       & L.set tDescription "IB Deposit/Withdrawal"
 
@@ -208,18 +205,15 @@ dividendToTransaction
     } =
     transaction
       d
-      [ nullposting
-          & L.set pAccount "Assets:Liquid:IB:USD",
-        nullposting
-          & L.set pAccount "Assets:Illiquid:IB Withholding Tax"
-            . L.set
-              pMaybeAmount
-              (Just $ makeAmount Forex "USD" (- taxAmt)),
-        nullposting
-          & L.set pAccount "Income:Capital Gains"
-            . L.set
-              pMaybeAmount
-              (Just $ makeAmount Forex "USD" (- divAmt))
+      [ post "Assets:Liquid:IB:USD" missingamt,
+        post "Assets:Illiquid:IB Withholding Tax" missingamt
+          & L.set
+            pMaybeAmount
+            (Just $ makeAmount Forex "USD" (- taxAmt)),
+        post "Income:Capital Gains" missingamt
+          & L.set
+            pMaybeAmount
+            (Just $ makeAmount Forex "USD" (- divAmt))
       ]
       & L.set tDescription title
         . L.set tStatus Cleared
@@ -230,21 +224,18 @@ stockTradeToTransaction :: StockTrade -> Transaction
 stockTradeToTransaction (StockTrade date sym q amount fee) =
   transaction
     date
-    [ nullposting
-        & L.set pAccount (accountName Stocks sym)
-          . L.set
-            pMaybeAmount
-            (Just $ makeAmount Stocks sym (fromRational $ q % 1)),
-      nullposting
-        & L.set pAccount (accountName Forex "USD")
-          . L.set
-            pMaybeAmount
-            (Just $ makeAmount Forex "USD" amount),
-      nullposting
-        & L.set pAccount "Expenses:Financial Services"
-          . L.set
-            pMaybeAmount
-            (Just $ makeAmount Forex "USD" (- fee))
+    [ post (accountName Stocks sym) missingamt
+        & L.set
+          pMaybeAmount
+          (Just $ makeAmount Stocks sym (fromRational $ q % 1)),
+      post (accountName Forex "USD") missingamt
+        & L.set
+          pMaybeAmount
+          (Just $ makeAmount Forex "USD" amount),
+      post "Expenses:Financial Services" missingamt
+        & L.set
+          pMaybeAmount
+          (Just $ makeAmount Forex "USD" (- fee))
     ]
     & L.set tDescription (sym ++ " trade")
       . L.set tStatus Cleared
@@ -264,26 +255,22 @@ forexTradeToTransaction
     ) =
     transaction
       date
-      [ nullposting
-          & L.set pAccount (accountName Forex base)
-            . L.set
-              pMaybeAmount
-              (Just $ makeAmount Forex base (fromRational $ q % 1)),
-        nullposting
-          & L.set pAccount (accountName Forex quote)
-            . L.set
-              pMaybeAmount
-              (Just $ makeAmount Forex quote totalCost),
-        nullposting
-          & L.set pAccount (accountName Forex "CHF")
-            . L.set
-              pMaybeAmount
-              (Just $ makeAmount Forex "CHF" fee),
-        nullposting
-          & L.set pAccount "Expenses:Financial Services"
-            . L.set
-              pMaybeAmount
-              (Just $ makeAmount Forex "CHF" (- fee))
+      [ post (accountName Forex base) missingamt
+          & L.set
+            pMaybeAmount
+            (Just $ makeAmount Forex base (fromRational $ q % 1)),
+        post (accountName Forex quote) missingamt
+          & L.set
+            pMaybeAmount
+            (Just $ makeAmount Forex quote totalCost),
+        post (accountName Forex "CHF") missingamt
+          & L.set
+            pMaybeAmount
+            (Just $ makeAmount Forex "CHF" fee),
+        post "Expenses:Financial Services" missingamt
+          & L.set
+            pMaybeAmount
+            (Just $ makeAmount Forex "CHF" (- fee))
       ]
       & L.set tDescription (base ++ "." ++ quote)
         . L.set tStatus Cleared
