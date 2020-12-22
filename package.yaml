@@ -32,6 +32,7 @@ default-extensions:
   ScopedTypeVariables
   TupleSections
   TypeApplications
+  UnicodeSyntax
 
 library:
   source-dirs: src
