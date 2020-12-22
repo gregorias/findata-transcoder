@@ -235,6 +235,7 @@ stockTradeToTransaction (StockTrade date sym q amount fee) =
         & L.set
           pMaybeAmount
           (Just $ makeAmount Forex "USD" amount),
+      post (accountName Forex "USD") (makeAmount Forex "USD" fee),
       post "Expenses:Financial Services" missingamt
         & L.set
           pMaybeAmount

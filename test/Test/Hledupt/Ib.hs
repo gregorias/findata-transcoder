@@ -210,6 +210,7 @@ parseTests = do
                   "2020/10/05 * VOO trade\n\
                   \  Assets:Investments:IB:VOO  2 VOO\n\
                   \  Assets:Liquid:IB:USD  -1 USD\n\
+                  \  Assets:Liquid:IB:USD  -0.5 USD\n\
                   \  Expenses:Financial Services  0.5 USD"
               ]
               ( Just $
