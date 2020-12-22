@@ -17,7 +17,7 @@ import Control.Monad.Combinators
 import Data.Maybe (fromJust)
 import Data.Text (pack)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
-import Hledger (missingamt)
+import Hledger (AmountPrice (TotalPrice, UnitPrice), missingamt, post)
 import Hledger.Data.Amount (num)
 import Hledger.Data.Extra
   ( makeCommodityAmount,
@@ -25,11 +25,11 @@ import Hledger.Data.Extra
   )
 import Hledger.Data.Lens
   ( pBalanceAssertion,
-    pMaybeAmount,
+    pStatus,
     tDescription,
     tStatus,
   )
-import Hledger.Data.Posting (balassert, nullposting)
+import Hledger.Data.Posting (balassert)
 import qualified Hledger.Data.Transaction as Tr
 import Hledger.Data.Types
   ( Amount (..),
@@ -49,7 +49,7 @@ import Text.Megaparsec
     try,
   )
 import qualified Text.Megaparsec as MP
-import Text.Megaparsec.Char (alphaNumChar, char, newline, printChar)
+import Text.Megaparsec.Char (alphaNumChar, char, newline, printChar, spaceChar, string)
 import qualified Text.Megaparsec.Char as Char
 import Text.Megaparsec.Char.Extra (eolOrEof, space)
 import Text.Megaparsec.Extra (noConsume)
@@ -108,19 +108,34 @@ statusParser =
       pure Unmarked
     ]
 
+amountPriceParser :: MP.Parsec Void String AmountPrice
+amountPriceParser = do
+  constructor <-
+    choice
+      [ try (string "@@") $> TotalPrice,
+        single '@' $> UnitPrice
+      ]
+  void $ some spaceChar
+  constructor <$> commodity
+
 -- | A partial Posting parser
 postingParser :: MP.Parsec Void String Posting
 postingParser = do
   status <- many space *> statusParser <* many space
   account <- accountParser
   amount <- try commodity <|> pure missingamt
-  let amountSetter = L.set pMaybeAmount . Just $ amount
   balAssert <- optional (try balanceAssertion)
+  void $ many $ single ' '
+  amountPrice <- optional amountPriceParser
+  let amount' =
+        amount
+          { aprice = amountPrice
+          }
   void eolOrEof
   return $
-    nullposting {paccount = pack account, pstatus = status}
-      & amountSetter
-        . L.set pBalanceAssertion balAssert
+    post (pack account) amount'
+      & L.set pBalanceAssertion balAssert
+        . L.set pStatus status
 
 -- | A partial Transaction parser
 --

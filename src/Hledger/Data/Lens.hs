@@ -74,6 +74,11 @@ pMamount = lens pamount setter
   where
     setter p ma = p {pamount = ma}
 
+pStatus :: Lens' Posting Status
+pStatus = lens pstatus setter
+  where
+    setter p s = p {pstatus = s}
+
 maAmount :: Prism' MixedAmount Amount
 maAmount = prism' setter getter
   where
@@ -101,11 +106,6 @@ pBalanceAssertion :: Lens' Posting (Maybe BalanceAssertion)
 pBalanceAssertion = lens pbalanceassertion setter
   where
     setter p ba = p {pbalanceassertion = ba}
-
-pStatus :: Lens' Posting Status
-pStatus = lens pstatus setter
-  where
-    setter p ba = p {pstatus = ba}
 
 tDescription :: Lens' Transaction String
 tDescription = lens (unpack . tdescription) setter
