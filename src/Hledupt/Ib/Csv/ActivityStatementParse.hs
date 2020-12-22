@@ -208,7 +208,7 @@ instance Csv.FromNamedRecord StockTrade where
                 eitherDate
           )
       <*> Csv.lookup "Symbol"
-      <*> Csv.lookup "Quantity"
+      <*> (unQuantity <$> Csv.lookup "Quantity")
       <*> (L.view myDecDec <$> Csv.lookup "Proceeds")
       <*> (L.view myDecDec <$> Csv.lookup "Comm/Fee")
 
