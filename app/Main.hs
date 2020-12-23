@@ -1,5 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE UnicodeSyntax #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 
 module Main (main) where
 
@@ -23,11 +22,12 @@ import Control.Monad.Except
 import Data.Version (makeVersion)
 import Hledupt.Bcge (bcgeCsvToLedger)
 import qualified Hledupt.Bcge.Hint as BcgeHint
+import qualified Hledupt.Degiro as Degiro (csvStatementToLedger)
 import Hledupt.Ib (ibActivityCsvToLedger)
 import Hledupt.Mbank (mbankCsvToLedger)
 import Main.Utf8 (withUtf8)
 import Relude
-import System.IO (hPutStr)
+import System.IO (getContents, hPutStr)
 import qualified Text.Megaparsec as MP
 
 filenameParser :: String -> Either String String
@@ -112,6 +112,13 @@ parseBcgeAction bcgeFlags = action $
       return $ join (toParam $ bcgeFlagsHintsFile bcgeFlags :: Maybe (Maybe FilePath))
     liftIO $ parseBcgeIO (BcgeOptions inputFilePath hintsFilePath)
 
+parseDegiro :: OptionDesc (IO ()) ()
+parseDegiro = action $ \_ -> do
+  inputCsv <- getContents
+  case Degiro.csvStatementToLedger inputCsv of
+    Left err -> hPutStr stderr err
+    Right output -> putStr output
+
 main :: IO ()
 main = defaultMain $ do
   programName "hledupt"
@@ -122,6 +129,9 @@ main = defaultMain $ do
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
     hintsFileFlag <- flagParam (FlagLong hintsFileFlagName) (FlagOptional Nothing (fmap Just . filenameParser))
     parseBcgeAction $ BcgeFlags inputFileFlag hintsFileFlag
+  command "parse-degiro" $ do
+    description "Parses Degiro's CSV file and outputs Ledger data"
+    parseDegiro
   command "parse-ib-activity" $ do
     description "Parses IB's Activity Statement file and outputs ledupt data"
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)

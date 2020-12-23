@@ -32,6 +32,8 @@ library
       Hledupt.Bcge
       Hledupt.Bcge.Hint
       Hledupt.Data
+      Hledupt.Degiro
+      Hledupt.Degiro.Csv
       Hledupt.Ib
       Hledupt.Ib.Csv
       Hledupt.Ib.Csv.ActivityStatementParse
@@ -95,6 +97,8 @@ test-suite hledupt-test
       Test.Hledupt.Bcge
       Test.Hledupt.Bcge.Hint
       Test.Hledupt.Data
+      Test.Hledupt.Degiro
+      Test.Hledupt.Degiro.Csv
       Test.Hledupt.Ib
       Test.Hledupt.Ib.Csv.ActivityStatementParse
       Test.Hledupt.Ib.Csv.RawParse
