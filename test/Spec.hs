@@ -7,6 +7,7 @@ import qualified Test.Hledger.Read.TestUtils
 import qualified Test.Hledupt.Bcge
 import qualified Test.Hledupt.Bcge.Hint as BcgeHint
 import qualified Test.Hledupt.Data
+import qualified Test.Hledupt.Data.LedgerReport
 import qualified Test.Hledupt.Degiro
 import qualified Test.Hledupt.Degiro.Csv
 import qualified Test.Hledupt.Ib
@@ -31,6 +32,7 @@ tests = do
   Test.Hledger.Read.TestUtils.tests
   Test.Hledupt.Bcge.tests
   Test.Hledupt.Data.dataTests
+  Test.Hledupt.Data.LedgerReport.tests
   Test.Hledupt.Degiro.tests
   Test.Hledupt.Degiro.Csv.tests
   Test.Hledupt.Ib.Csv.ActivityStatementParse.tests

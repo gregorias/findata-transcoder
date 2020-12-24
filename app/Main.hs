@@ -24,8 +24,9 @@ import qualified Data.Text.IO as Text
 import Data.Version (makeVersion)
 import Hledupt.Bcge (bcgeCsvToLedger)
 import qualified Hledupt.Bcge.Hint as BcgeHint
+import Hledupt.Data.LedgerReport (showLedgerReport)
 import qualified Hledupt.Degiro as Degiro (csvStatementToLedger)
-import Hledupt.Ib (ibActivityCsvToLedger)
+import Hledupt.Ib as Ib (parseActivityCsv)
 import Hledupt.Mbank (mbankCsvToLedger)
 import Main.Utf8 (withUtf8)
 import Relude
@@ -61,7 +62,7 @@ inputFileFlagName = "input_file"
 hintsFileFlagName :: String
 hintsFileFlagName = "hints_file"
 
-type LedgerParser = String -> Either String String
+type LedgerParser = String -> Either String Text
 
 type IOParser = FilePath -> IO ()
 
@@ -70,7 +71,7 @@ parseBankIO ledgerParser inputFilePath = withUtf8 $ do
   inputFile <- readFile inputFilePath
   case ledgerParser inputFile of
     Left err -> hPutStr stderr err
-    Right output -> putStr output
+    Right output -> Text.putStr output
 
 parseBankAction :: LedgerParser -> FlagParam FilePath -> OptionDesc (IO ()) ()
 parseBankAction ledgerParser inputFileFlag = action $
@@ -104,7 +105,9 @@ parseBcgeIO bcgeOptions = withUtf8 $ do
   hints :: Maybe BcgeHint.Config <-
     join
       <$> mapM parseBcgeHints maybeHintsFilePath
-  putStr $ bcgeCsvToLedger hints inputFile
+  case bcgeCsvToLedger hints inputFile of
+    Left err -> hPutStr stderr err
+    Right output -> Text.putStr $ showLedgerReport output
 
 parseBcgeAction :: BcgeFlags -> OptionDesc (IO ()) ()
 parseBcgeAction bcgeFlags = action $
@@ -137,8 +140,8 @@ main = defaultMain $ do
   command "parse-ib-activity" $ do
     description "Parses IB's Activity Statement file and outputs ledupt data"
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
-    parseBankAction ibActivityCsvToLedger inputFileFlag
+    parseBankAction (fmap showLedgerReport . Ib.parseActivityCsv) inputFileFlag
   command "parse-mbank" $ do
     description "Parses mBank's CSV file and outputs ledupt data"
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
-    parseBankAction mbankCsvToLedger inputFileFlag
+    parseBankAction (fmap showLedgerReport . mbankCsvToLedger) inputFileFlag

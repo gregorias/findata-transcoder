@@ -4,13 +4,9 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Hledupt.Ib
-  ( IbData (..),
-    showIbData,
-
-    -- * Parsing an activity statement
-    ibActivityCsvToLedger,
+  ( -- * Parsing an activity statement
     parseActivityCsv,
-    statementActivityToIbData,
+    statementActivityToLedgerReport,
   )
 where
 
@@ -41,13 +37,13 @@ import Hledger.Data.Lens
     tDescription,
     tStatus,
   )
-import Hledger.Data.MarketPrice.Extra (showMarketPrice)
-import Hledger.Data.Transaction (showTransaction, transaction)
+import Hledger.Data.Transaction (transaction)
 import Hledger.Data.Types
   ( Transaction (..),
   )
 import Hledupt.Data (MonetaryValue)
 import Hledupt.Data.Currency (Currency (CHF, USD))
+import Hledupt.Data.LedgerReport (LedgerReport (..))
 import Hledupt.Ib.Csv
   ( ActivityStatement (..),
     EndingCash (..),
@@ -97,15 +93,6 @@ stockPositionToPosting (StockPosition symbol quantity _price) =
 stockPositionToStockPrice :: Day -> StockPosition -> MarketPrice
 stockPositionToStockPrice day (StockPosition sym _q price) =
   MarketPrice day (T.pack sym) (T.pack "USD") price
-
--- | Ledger representation of Interactive Brokers data found in a Mark-to-Market
--- statement.
-data IbData = IbData
-  { idStockPrices :: [MarketPrice],
-    idTransactions :: [Transaction],
-    idStatus :: Maybe Transaction
-  }
-  deriving stock (Eq, Show)
 
 cashMovementToTransaction :: IbCsv.CashMovement -> Transaction
 cashMovementToTransaction
@@ -276,16 +263,10 @@ forexTradeToTransaction
       & L.set tDescription (show base ++ "." ++ show quote)
         . L.set tStatus Cleared
 
--- | Shows IbData in Ledger format
-showIbData :: IbData -> String
-showIbData (IbData stockPrices cashMovements maybeStatus) =
-  concatMap showTransaction cashMovements
-    ++ concatMap showMarketPrice stockPrices
-    ++ "\n"
-    ++ maybe "" showTransaction maybeStatus
-
-statementActivityToIbData :: IbCsv.ActivityStatement -> Either String IbData
-statementActivityToIbData
+statementActivityToLedgerReport ::
+  IbCsv.ActivityStatement ->
+  Either String LedgerReport
+statementActivityToLedgerReport
   ActivityStatement
     { asLastStatementDay = stmtDate,
       asCashPositions = cashes,
@@ -301,29 +282,27 @@ statementActivityToIbData
         joinDividendAndTaxRecords dividends taxes
     let cashStatusPostings = map endingCashToPosting cashes
         stockStatusPostings = map stockPositionToPosting stocks
+        maybeStatus =
+          ( do
+              guard $ not (null cashStatusPostings && null stockStatusPostings)
+              return $
+                transaction
+                  stmtDate
+                  (cashStatusPostings ++ stockStatusPostings)
+                  & L.set tDescription "IB Status"
+                    . L.set tStatus Cleared
+          )
     return $
-      IbData
-        (stockPositionToStockPrice stmtDate <$> stocks)
+      LedgerReport
         ( sortOn tdate $
             (cashMovementToTransaction <$> cashTransfers)
               ++ (dividendToTransaction <$> dividendsWithTaxes)
               ++ (stockTradeToTransaction <$> stockTrades)
               ++ (forexTradeToTransaction <$> forexTrades)
+              ++ maybeStatus
         )
-        ( do
-            guard $ not (null cashStatusPostings && null stockStatusPostings)
-            return $
-              transaction
-                stmtDate
-                (cashStatusPostings ++ stockStatusPostings)
-                & L.set tDescription "IB Status"
-                  . L.set tStatus Cleared
-        )
+        (stockPositionToStockPrice stmtDate <$> stocks)
 
 -- | Parses an IB Activity CSV statement into a Ledger status transaction
-parseActivityCsv :: String -> Either String IbData
-parseActivityCsv csv = IbCsv.parseActivity csv >>= statementActivityToIbData
-
--- | Parses an IB Activity CSV statement into a Ledger text file.
-ibActivityCsvToLedger :: String -> Either String String
-ibActivityCsvToLedger = fmap showIbData . parseActivityCsv
+parseActivityCsv :: String -> Either String LedgerReport
+parseActivityCsv csv = IbCsv.parseActivity csv >>= statementActivityToLedgerReport

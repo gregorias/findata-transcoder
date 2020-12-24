@@ -13,6 +13,7 @@ import Data.Ratio ((%))
 import Data.Time (fromGregorian)
 import Hledger (MarketPrice (MarketPrice))
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
+import Hledupt.Data.LedgerReport (LedgerReport (..))
 import Hledupt.Ib
 import Hledupt.Ib.Csv (ActivityStatement (asDividends), nullActivityStatement)
 import qualified Hledupt.Ib.Csv as IbCsv
@@ -28,39 +29,7 @@ tests = do
 
 parseTests :: Hspec.SpecWith ()
 parseTests = do
-  describe "showIbData" $ do
-    it "Formats IbData" $ do
-      showIbData
-        ( IbData
-            [ MarketPrice
-                (fromGregorian 2020 11 26)
-                "ACWF"
-                "USD"
-                (fromRational $ 3224 % 100)
-            ]
-            [ parseTransactionUnsafe
-                "2020/01/20 IB Deposit/Withdrawal\n\
-                \*  Assets:Liquid:IB:CHF  CHF 100.32\n\
-                \!  Todo"
-            ]
-            ( Just $
-                parseTransactionUnsafe
-                  "2020/11/26 IB Status\n\
-                  \  Assets:Investments:IB:ACWF  0 ACWF = ACWF 123\n\
-                  \  Assets:Liquid:IB:CHF  CHF 0 = CHF 100.0011305"
-            )
-        )
-        `shouldBe` "2020-01-20 IB Deposit/Withdrawal\n\
-                   \    * Assets:Liquid:IB:CHF    CHF 100.32\n\
-                   \    ! Todo\n\
-                   \\n\
-                   \P 2020-11-26 ACWF 32.24 USD\n\
-                   \\n\
-                   \2020-11-26 IB Status\n\
-                   \    Assets:Investments:IB:ACWF               0 = ACWF 123\n\
-                   \    Assets:Liquid:IB:CHF                     0 = CHF 100.00\n\n"
-
-  describe "statementActivityToIbData" $ do
+  describe "statementActivityToLedgerReport" $ do
     it "Translates dividends into transactions" $ do
       let stmt =
             (nullActivityStatement (fromGregorian 2020 12 8))
@@ -72,18 +41,17 @@ parseTests = do
                       (fromRational 450)
                   ]
               }
-      statementActivityToIbData stmt
+      statementActivityToLedgerReport stmt
         `shouldBe` Right
-          ( IbData
-              { idStockPrices = [],
-                idTransactions =
+          ( LedgerReport
+              { ledgerReportMarketPrices = [],
+                ledgerReportTransactions =
                   [ parseTransactionUnsafe
                       "2020/01/01 * VOO dividend @ 0.45 per share\n\
                       \  Assets:Liquid:IB:USD\n\
                       \  Assets:Illiquid:IB Withholding Tax  USD 0\n\
                       \  Income:Capital Gains  USD -450"
-                  ],
-                idStatus = Nothing
+                  ]
               }
           )
 
@@ -98,7 +66,7 @@ parseTests = do
                       }
                   ]
               }
-      statementActivityToIbData stmt
+      statementActivityToLedgerReport stmt
         `shouldSatisfy` \case
           Left errorMsg ->
             ( "Could not find a dividend match for VOO withholding tax \
@@ -184,13 +152,7 @@ parseTests = do
             \Withholding Tax,Data,Total,,,-0.25,\n"
       parseActivityCsv csv
         `shouldBe` Right
-          ( IbData
-              [ MarketPrice
-                  (fromGregorian 2020 11 26)
-                  "VOO"
-                  "USD"
-                  (fromRational $ 12345 % 100)
-              ]
+          ( LedgerReport
               [ parseTransactionUnsafe
                   "2020/01/15 * USD.CHF\n\
                   \ Assets:Liquid:IB:USD  USD -2200000.00 @ 0.96358 CHF\n\
@@ -211,15 +173,19 @@ parseTests = do
                   \  Assets:Investments:IB:VOO  2 VOO\n\
                   \  Assets:Liquid:IB:USD  -1 USD\n\
                   \  Assets:Liquid:IB:USD  -0.5 USD\n\
-                  \  Expenses:Financial Services  0.5 USD"
+                  \  Expenses:Financial Services  0.5 USD",
+                parseTransactionUnsafe
+                  "2020/11/26 * IB Status\n\
+                  \  Assets:Liquid:IB:CHF  CHF 0 = CHF 123.40\n\
+                  \  Assets:Liquid:IB:USD  USD 0 = USD 567.80\n\
+                  \  Assets:Investments:IB:VOO  0 VOO = VOO 2"
               ]
-              ( Just $
-                  parseTransactionUnsafe
-                    "2020/11/26 * IB Status\n\
-                    \  Assets:Liquid:IB:CHF  CHF 0 = CHF 123.40\n\
-                    \  Assets:Liquid:IB:USD  USD 0 = USD 567.80\n\
-                    \  Assets:Investments:IB:VOO  0 VOO = VOO 2"
-              )
+              [ MarketPrice
+                  (fromGregorian 2020 11 26)
+                  "VOO"
+                  "USD"
+                  (fromRational $ 12345 % 100)
+              ]
           )
 
     it "Doesn't return much when there's no data" $ do
@@ -229,4 +195,4 @@ parseTests = do
             \Positions and Mark-to-Market Profit and Loss,Header,Asset Class,Currency,Symbol,Description,Prior Quantity,Quantity,Prior Price,Price,Prior Market Value,Market Value,Position,Trading,Comm.,Other,Total\n"
       parseActivityCsv csv
         `shouldBe` Right
-          (IbData [] [] Nothing)
+          (LedgerReport [] [])

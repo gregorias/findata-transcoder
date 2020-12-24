@@ -33,6 +33,7 @@ library
       Hledupt.Bcge.Hint
       Hledupt.Data
       Hledupt.Data.Currency
+      Hledupt.Data.LedgerReport
       Hledupt.Degiro
       Hledupt.Degiro.Csv
       Hledupt.Ib
@@ -101,6 +102,7 @@ test-suite hledupt-test
       Test.Hledupt.Bcge
       Test.Hledupt.Bcge.Hint
       Test.Hledupt.Data
+      Test.Hledupt.Data.LedgerReport
       Test.Hledupt.Degiro
       Test.Hledupt.Degiro.Csv
       Test.Hledupt.Ib

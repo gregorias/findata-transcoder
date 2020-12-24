@@ -21,7 +21,7 @@ import Hledger.Data.Posting
   ( balassert,
     post',
   )
-import Hledger.Data.Transaction (showTransaction, transaction)
+import Hledger.Data.Transaction (transaction)
 import Hledger.Data.Types
   ( Amount (..),
     Quantity,
@@ -29,6 +29,7 @@ import Hledger.Data.Types
   )
 import Hledupt.Data (MonetaryValue, fromUnitsAndCents)
 import Hledupt.Data.Currency (Currency (PLN))
+import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Relude
 import Text.Megaparsec
   ( Parsec,
@@ -115,10 +116,10 @@ mTrToLedger mTr = tr {tdescription = pack $ sanitizeTitle $ mTrTitle mTr}
           post "Expenses:Other" missingamt
         ]
 
-mbankCsvToLedger :: String -> Either String String
+mbankCsvToLedger :: String -> Either String LedgerReport
 mbankCsvToLedger inputCsv = do
   let parserErrorToString err = "Could not parse mBank's CSV.\n" ++ show err
   mtransactions <- first parserErrorToString $ parse mbankCsvParser "" inputCsv
   let sortedMTransactions = sortOn mTrDate mtransactions
       ltransactions = fmap mTrToLedger sortedMTransactions
-  return $ concatMap showTransaction ltransactions
+  return $ LedgerReport ltransactions []

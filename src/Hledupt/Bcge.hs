@@ -31,7 +31,7 @@ import Hledger.Data.Lens
   )
 import Hledger.Data.Posting (balassert, nullposting)
 import qualified Hledger.Data.Posting as Hledger
-import Hledger.Data.Transaction (showTransaction, transaction)
+import Hledger.Data.Transaction (transaction)
 import Hledger.Data.Types
   ( Status (..),
     Transaction (..),
@@ -39,6 +39,7 @@ import Hledger.Data.Types
 import qualified Hledupt.Bcge.Hint as Hint
 import Hledupt.Data (MonetaryValue, decimalParser)
 import Hledupt.Data.Currency (Currency (CHF))
+import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Relude
 import Safe (headMay)
 import Text.Megaparsec
@@ -184,15 +185,14 @@ bStToLedger config (BcgeStatement date balance trs) = execWriter collectTrs
       tell $ fmap (bcgeTransactionToLedger config) (reverse trs)
       tell [saldoToLedger date balance]
 
-bcgeCsvToLedger :: Maybe Hint.Config -> String -> String
+bcgeCsvToLedger :: Maybe Hint.Config -> String -> Either String LedgerReport
 bcgeCsvToLedger config input =
-  case result of
-    Left err -> show err
-    Right Nothing -> "Something went wrong in the transformation process."
-    Right (Just res) -> res
+  case ledgerTrs of
+    Left err -> Left $ show err
+    Right Nothing -> Left "Something went wrong in the transformation process."
+    Right (Just res) -> Right $ LedgerReport res []
   where
     csvLines = parse bcgeCsvParser "" input
     bcgeStatement :: Either _ (Maybe BcgeStatement) =
       fmap csvLinesToBcgeStatement csvLines
-    ledgerTransactions = fmap (fmap (bStToLedger config)) bcgeStatement
-    result = fmap (fmap (concatMap showTransaction)) ledgerTransactions
+    ledgerTrs = fmap (fmap (bStToLedger config)) bcgeStatement
