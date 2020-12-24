@@ -8,7 +8,6 @@ module Hledupt.Degiro.Csv
 
     -- * Types
     DegiroCsvRecord (..),
-    Money (..),
     Isin,
     mkIsin,
   )
@@ -28,7 +27,7 @@ import Data.Time
   )
 import Data.Vector (Vector)
 import Hledupt.Data (decimalParser)
-import Hledupt.Data.Currency (Currency)
+import Hledupt.Data.Cash (Cash (Cash))
 import Relude
 import Text.Megaparsec (single)
 import qualified Text.Megaparsec as MP
@@ -68,12 +67,6 @@ timeP = do
   Just minutes <- readMaybe <$> count 2 numberChar
   return $ TimeOfDay hours minutes 0
 
-data Money = Money
-  { moneyCurrency :: Currency,
-    moneyAmount :: Decimal
-  }
-  deriving stock (Eq, Show)
-
 data DegiroCsvRecord = DegiroCsvRecord
   { dcrDate :: Day,
     dcrTime :: TimeOfDay,
@@ -82,20 +75,20 @@ data DegiroCsvRecord = DegiroCsvRecord
     dcrIsin :: Maybe Isin,
     dcrDescription :: Text,
     dcrFx :: Maybe Decimal,
-    dcrChange :: Maybe Money,
-    dcrBalance :: Money,
+    dcrChange :: Maybe Cash,
+    dcrBalance :: Cash,
     dcrOrderId :: Text
   }
   deriving stock (Eq, Show)
 
-parseMoney :: Csv.Field -> Csv.Field -> Csv.Parser (Maybe Money)
-parseMoney "" "" = pure Nothing
-parseMoney changeCurrencyField changeAmountField = do
+parseCash :: Csv.Field -> Csv.Field -> Csv.Parser (Maybe Cash)
+parseCash "" "" = pure Nothing
+parseCash changeCurrencyField changeAmountField = do
   changeCurrency <- Csv.parseField changeCurrencyField
   Just changeAmount <-
     MP.parseMaybe @Void decimalParser
       <$> (Csv.parseField changeAmountField :: Csv.Parser String)
-  return . Just $ Money changeCurrency changeAmount
+  return . Just $ Cash changeCurrency changeAmount
 
 instance Csv.FromRecord DegiroCsvRecord where
   parseRecord rec = do
@@ -118,8 +111,8 @@ instance Csv.FromRecord DegiroCsvRecord where
         else do
           Just fx <- return $ MP.parseMaybe @Void decimalParser fxStr
           return $ Just fx
-    maybeChange <- join $ parseMoney <$> rec .! 7 <*> rec .! 8
-    Just balance <- join $ parseMoney <$> rec .! 9 <*> rec .! 10
+    maybeChange <- join $ parseCash <$> rec .! 7 <*> rec .! 8
+    Just balance <- join $ parseCash <$> rec .! 9 <*> rec .! 10
     orderId <- rec .! 11
     return $
       DegiroCsvRecord

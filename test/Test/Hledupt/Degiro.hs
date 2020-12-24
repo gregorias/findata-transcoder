@@ -9,12 +9,12 @@ where
 import Data.List (isInfixOf)
 import Data.Time (fromGregorian)
 import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
+import Hledupt.Data.Cash (Cash (Cash))
 import Hledupt.Data.Currency (Currency (..))
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Hledupt.Degiro (csvRecordsToLedger)
 import Hledupt.Degiro.Csv
   ( DegiroCsvRecord (..),
-    Money (Money),
     mkIsin,
   )
 import Relude
@@ -40,7 +40,7 @@ tests = do
               "Money Market fund conversion: Sell 123.5678 at 0.981 CHF"
               Nothing
               Nothing
-              (Money CHF 131.72)
+              (Cash CHF 131.72)
               ""
           ]
           `shouldBe` Right (LedgerReport [] [])
@@ -56,7 +56,7 @@ tests = do
               "Bogus description"
               Nothing
               Nothing
-              (Money CHF 0)
+              (Cash CHF 0)
               ""
           ]
           `shouldSatisfy` \case

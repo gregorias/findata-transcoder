@@ -38,12 +38,13 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Csv as Csv hiding (FromNamedRecord, decodeByName, lookup)
 import qualified Data.Csv as CsvLookup (lookup)
 import qualified Data.Csv.Extra as Csv
+import Data.Decimal (Decimal)
 import Data.List (isInfixOf)
 import Data.List.Extra (allSame)
 import qualified Data.Map.Strict as Map
 import Data.Time (Day, defaultTimeLocale, fromGregorian, parseTimeM)
 import qualified Data.Vector as V
-import Hledupt.Data (MonetaryValue, decimalParser, myDecDec)
+import Hledupt.Data (decimalParser, myDecDec)
 import Hledupt.Data.Currency (Currency, currencyP)
 import Hledupt.Ib.Csv.RawParse
   ( Csv (..),
@@ -118,7 +119,7 @@ statementDateParser = snd <$> someTill_ anySingle (try periodPhraseParser)
 data StockPosition = StockPosition
   { spSymbol :: String,
     spQuantity :: Integer,
-    spPrice :: MonetaryValue
+    spPrice :: Decimal
   }
   deriving stock (Eq, Show)
 
@@ -155,8 +156,8 @@ data StockTrade = StockTrade
   { stockTradeDate :: Day,
     stockTradeSymbol :: String,
     stockTradeQuantity :: Integer,
-    stockTradeAmount :: MonetaryValue,
-    stockTradeFee :: MonetaryValue
+    stockTradeAmount :: Decimal,
+    stockTradeFee :: Decimal
   }
   deriving stock (Eq, Show)
 
@@ -164,9 +165,9 @@ data ForexTrade = ForexTrade
   { forexTradeDate :: Day,
     forexTradeQuotePair :: QuotePair,
     forexTradeQuantity :: Integer,
-    forexTradePrice :: MonetaryValue,
-    forexTradeTotalCost :: MonetaryValue,
-    forexTradeFee :: MonetaryValue
+    forexTradePrice :: Decimal,
+    forexTradeTotalCost :: Decimal,
+    forexTradeFee :: Decimal
   }
   deriving stock (Eq, Show)
 
@@ -282,7 +283,7 @@ instance Monoid Trades where
 data CashMovement = CashMovement
   { cmDate :: Day,
     cmCurrency :: Currency,
-    cmAmount :: MonetaryValue
+    cmAmount :: Decimal
   }
   deriving stock (Eq, Show)
 
@@ -305,8 +306,8 @@ instance Csv.FromNamedRecord CashMovementRecord where
 data Dividend = Dividend
   { dDate :: Day,
     dSymbol :: String,
-    dDividendPerShare :: MonetaryValue,
-    dTotalAmount :: MonetaryValue
+    dDividendPerShare :: Decimal,
+    dTotalAmount :: Decimal
   }
   deriving stock (Eq, Show)
 
@@ -317,7 +318,7 @@ symbolParser = some letterChar
 
 symbolDpsParser ::
   (MonadFail m, MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>
-  m (String, MonetaryValue)
+  m (String, Decimal)
 symbolDpsParser = do
   symbol <- symbolParser
   void $ label "ISIN" $ char '(' >> some alphaNumChar >> char ')'
@@ -367,7 +368,7 @@ instance Csv.FromNamedRecord DividendRecord where
 data WithholdingTax = WithholdingTax
   { wtDate :: Day,
     wtSymbol :: String,
-    wtTotalAmount :: MonetaryValue
+    wtTotalAmount :: Decimal
   }
   deriving stock (Eq, Show)
 
@@ -412,7 +413,7 @@ _WithholdingTaxRecord =
 
 data EndingCash = EndingCash
   { ecCurrency :: Currency,
-    ecAmount :: MonetaryValue
+    ecAmount :: Decimal
   }
   deriving stock (Eq, Show)
 

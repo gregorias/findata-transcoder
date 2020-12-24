@@ -32,6 +32,7 @@ library
       Hledupt.Bcge
       Hledupt.Bcge.Hint
       Hledupt.Data
+      Hledupt.Data.Cash
       Hledupt.Data.Currency
       Hledupt.Data.LedgerReport
       Hledupt.Degiro

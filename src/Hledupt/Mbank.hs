@@ -27,7 +27,7 @@ import Hledger.Data.Types
     Quantity,
     Transaction (..),
   )
-import Hledupt.Data (MonetaryValue, fromUnitsAndCents)
+import Hledupt.Data (fromUnitsAndCents)
 import Hledupt.Data.Currency (Currency (PLN))
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Relude
@@ -48,8 +48,8 @@ pln = makeCurrencyAmount PLN
 data MbankTransaction = MbankTransaction
   { mTrDate :: Day,
     mTrTitle :: String,
-    mTrAmount :: MonetaryValue,
-    mTrEndBalance :: MonetaryValue
+    mTrAmount :: Decimal,
+    mTrEndBalance :: Decimal
   }
   deriving stock (Eq, Show)
 

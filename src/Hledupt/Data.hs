@@ -3,8 +3,7 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Hledupt.Data
-  ( MonetaryValue,
-    fromUnitsAndCents,
+  ( fromUnitsAndCents,
     MyDecimal (..),
     myDecDec,
     decimalParser,
@@ -43,11 +42,7 @@ decimalParser = do
   fract <- (char '.' >> decimalFractionParser) MP.<|> pure 0
   return $ negMod $ fromRational (units % 1 + fract)
 
--- | A type representing a monetary value, i.e., a decimal with 2 decimal
--- places
-type MonetaryValue = Decimal
-
-fromUnitsAndCents :: Integer -> Integer -> MonetaryValue
+fromUnitsAndCents :: Integer -> Integer -> Decimal
 fromUnitsAndCents units cents = unitsDec `op` centsDec
   where
     unitsDec = realFracToDecimal 0 (units % 1)

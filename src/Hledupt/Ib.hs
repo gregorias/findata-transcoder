@@ -18,8 +18,7 @@ import qualified Data.Text as T
 import qualified Data.Text as Text
 import Data.Time (Day)
 import Hledger
-  ( Amount,
-    AmountPrice (UnitPrice),
+  ( AmountPrice (UnitPrice),
     MarketPrice (MarketPrice),
     Posting,
     Status (Cleared, Pending),
@@ -41,7 +40,6 @@ import Hledger.Data.Transaction (transaction)
 import Hledger.Data.Types
   ( Transaction (..),
   )
-import Hledupt.Data (MonetaryValue)
 import Hledupt.Data.Currency (Currency (CHF, USD))
 import Hledupt.Data.LedgerReport (LedgerReport (..))
 import Hledupt.Ib.Csv
@@ -61,9 +59,6 @@ import Text.Printf (printf)
 
 data AssetClass = Stocks | Forex
 
-mkCashAmount :: Currency -> Decimal -> Amount
-mkCashAmount cur = makeCurrencyAmount cur
-
 accountPrefix :: AssetClass -> String
 accountPrefix Stocks = "Assets:Investments:IB"
 accountPrefix Forex = "Assets:Liquid:IB"
@@ -77,10 +72,10 @@ stockAccountName symbol = Text.pack $ accountPrefix Stocks ++ ":" ++ symbol
 endingCashToPosting :: EndingCash -> Posting
 endingCashToPosting (EndingCash currency amount) =
   post (cashAccountName currency) missingamt
-    & L.set pMaybeAmount (Just $ mkCashAmount currency 0)
+    & L.set pMaybeAmount (Just $ makeCurrencyAmount currency 0)
       . L.set
         pBalanceAssertion
-        (balassert . mkCashAmount currency $ amount)
+        (balassert . makeCurrencyAmount currency $ amount)
 
 stockPositionToPosting :: StockPosition -> Posting
 stockPositionToPosting (StockPosition symbol quantity _price) =
@@ -100,7 +95,7 @@ cashMovementToTransaction
     transaction
       date
       [ post (cashAccountName currency) missingamt
-          & L.set pMaybeAmount (Just $ mkCashAmount currency amount)
+          & L.set pMaybeAmount (Just $ makeCurrencyAmount currency amount)
             . L.set pStatus Cleared,
         post "Todo" missingamt
           & L.set pStatus Pending
@@ -110,9 +105,9 @@ cashMovementToTransaction
 data DividendWithTax = DividendWithTax
   { dDate :: Day,
     dSymbol :: String,
-    dDividendPerShare :: MonetaryValue,
-    dTotalDividendAmount :: MonetaryValue,
-    dTotalTaxAmount :: MonetaryValue
+    dDividendPerShare :: Decimal,
+    dTotalDividendAmount :: Decimal,
+    dTotalTaxAmount :: Decimal
   }
 
 dividentToDividendWithTax :: IbCsv.Dividend -> DividendWithTax
@@ -199,11 +194,11 @@ dividendToTransaction
         post "Assets:Illiquid:IB Withholding Tax" missingamt
           & L.set
             pMaybeAmount
-            (Just $ mkCashAmount USD (- taxAmt)),
+            (Just $ makeCurrencyAmount USD (- taxAmt)),
         post "Income:Capital Gains" missingamt
           & L.set
             pMaybeAmount
-            (Just $ mkCashAmount USD (- divAmt))
+            (Just $ makeCurrencyAmount USD (- divAmt))
       ]
       & L.set tDescription title
         . L.set tStatus Cleared
@@ -221,12 +216,12 @@ stockTradeToTransaction (StockTrade date sym q amount fee) =
       post (cashAccountName USD) missingamt
         & L.set
           pMaybeAmount
-          (Just $ mkCashAmount USD amount),
-      post (cashAccountName USD) (mkCashAmount USD fee),
+          (Just $ makeCurrencyAmount USD amount),
+      post (cashAccountName USD) (makeCurrencyAmount USD fee),
       post "Expenses:Financial Services" missingamt
         & L.set
           pMaybeAmount
-          (Just $ mkCashAmount USD (- fee))
+          (Just $ makeCurrencyAmount USD (- fee))
     ]
     & L.set tDescription (sym ++ " trade")
       . L.set tStatus Cleared
@@ -248,7 +243,7 @@ forexTradeToTransaction
       date
       [ post
           (cashAccountName base)
-          ( mkCashAmount base (fromRational $ q % 1)
+          ( makeCurrencyAmount base (fromRational $ q % 1)
               & L.set
                 aAmountPrice
                 ( Just . UnitPrice $
@@ -256,9 +251,9 @@ forexTradeToTransaction
                       & setFullPrecision
                 )
           ),
-        post (cashAccountName quote) (mkCashAmount quote totalCost),
-        post (cashAccountName CHF) (mkCashAmount CHF fee),
-        post "Expenses:Financial Services" (mkCashAmount CHF (- fee))
+        post (cashAccountName quote) (makeCurrencyAmount quote totalCost),
+        post (cashAccountName CHF) (makeCurrencyAmount CHF fee),
+        post "Expenses:Financial Services" (makeCurrencyAmount CHF (- fee))
       ]
       & L.set tDescription (show base ++ "." ++ show quote)
         . L.set tStatus Cleared

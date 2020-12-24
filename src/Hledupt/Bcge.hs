@@ -17,7 +17,9 @@ where
 import Control.Lens
   ( set,
   )
+import qualified Control.Lens as L
 import Control.Monad.Writer.Lazy (execWriter, tell)
+import Data.Decimal (Decimal)
 import Data.List (elemIndex)
 import Data.Text (pack)
 import Data.Time.Calendar (Day)
@@ -37,7 +39,8 @@ import Hledger.Data.Types
     Transaction (..),
   )
 import qualified Hledupt.Bcge.Hint as Hint
-import Hledupt.Data (MonetaryValue, decimalParser)
+import Hledupt.Data (decimalParser)
+import Hledupt.Data.Cash (Cash (Cash), cashAmount)
 import Hledupt.Data.Currency (Currency (CHF))
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Relude
@@ -75,10 +78,10 @@ bcgeCsvLineParser = do
 bcgeCsvParser :: BcgeParser [CsvLine]
 bcgeCsvParser = many bcgeCsvLineParser
 
-saldoParser :: BcgeParser MonetaryValue
+saldoParser :: BcgeParser Cash
 saldoParser = do
   void $ string "Saldo: CHF "
-  decimalParser
+  Cash CHF <$> decimalParser
 
 parseStatementDate :: String -> Maybe Day
 parseStatementDate = parseTimeM True defaultTimeLocale "%d.%m.%Y"
@@ -101,13 +104,13 @@ statementDateParser = do
 data BcgeTransaction = BcgeTransaction
   { bTrDate :: Day,
     bTrTitle :: String,
-    bTrAmount :: MonetaryValue
+    bTrAmount :: Decimal
   }
   deriving stock (Eq, Show)
 
 data BcgeStatement = BcgeStatement
   { bStatementDate :: Day,
-    bStatementBalance :: MonetaryValue,
+    bStatementBalance :: Decimal,
     bStatementTransactions :: [BcgeTransaction]
   }
   deriving stock (Eq, Show)
@@ -125,7 +128,7 @@ getDate header = do
   dateString <- headMay [f0 | (f0, _, _) <- header, take 11 f0 == "Kontoauszug"]
   parseMaybe statementDateParser dateString
 
-getSaldo :: Header -> Maybe MonetaryValue
+getSaldo :: Header -> Maybe Cash
 getSaldo header = do
   saldoString <- headMay [f0 | (f0, _, _) <- header, take 5 f0 == "Saldo"]
   parseMaybe saldoParser saldoString
@@ -142,7 +145,7 @@ csvLinesToBcgeStatement csvLines = do
   date <- getDate header
   saldo <- getSaldo header
   bcgeStatements <- traverse csvLineToBcgeTransaction content
-  return $ BcgeStatement date saldo bcgeStatements
+  return $ BcgeStatement date (L.view cashAmount saldo) bcgeStatements
 
 -- Functions operating on safe data (BcgeStatement, etc.) and transforming it
 -- to Ledger.
@@ -167,7 +170,7 @@ bcgeTransactionToLedger maybeConfig (BcgeTransaction date title amount) =
         (pack counterAccount)
         (HDE.makeCurrencyAmount CHF $ negate amount)
 
-saldoToLedger :: Day -> MonetaryValue -> Transaction
+saldoToLedger :: Day -> Decimal -> Transaction
 saldoToLedger date balance =
   transaction date [balancePosting]
     & set tDescription "BCGE Status"
