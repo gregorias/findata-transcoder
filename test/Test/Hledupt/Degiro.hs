@@ -9,6 +9,7 @@ where
 import Data.List (isInfixOf)
 import Data.Time (fromGregorian)
 import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
+import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.Data.Cash (Cash (Cash))
 import Hledupt.Data.Currency (Currency (..))
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
@@ -44,6 +45,30 @@ tests = do
               ""
           ]
           `shouldBe` Right (LedgerReport [] [])
+
+      it "Parses deposits" $ do
+        csvRecordsToLedger
+          [ DegiroCsvRecord
+              (fromGregorian 2020 9 2)
+              (TimeOfDay 12 02 0)
+              (fromGregorian 2020 9 1)
+              ""
+              Nothing
+              "Deposit"
+              Nothing
+              (Just $ Cash CHF 5)
+              (Cash CHF 5.05)
+              ""
+          ]
+          `shouldBe` Right
+            ( LedgerReport
+                [ parseTransactionUnsafe
+                    "2020/09/02 Deposit\n\
+                    \  ! Assets:Liquid:BCGE  -5 CHF\n\
+                    \  * Assets:Liquid:Degiro  5 CHF = 5.05 CHF"
+                ]
+                []
+            )
 
       it "Returns a readable error when a record can't be processed." $ do
         csvRecordsToLedger

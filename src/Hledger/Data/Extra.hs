@@ -2,7 +2,8 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Hledger.Data.Extra
-  ( makeCurrencyAmount,
+  ( makeCashAmount,
+    makeCurrencyAmount,
     makeCommodityAmount,
     setCurrencyPrecision,
   )
@@ -22,6 +23,7 @@ import Hledger.Data.Types
     AmountPrecision (..),
     Quantity,
   )
+import Hledupt.Data.Cash (Cash (Cash))
 import Hledupt.Data.Currency (Currency)
 import Relude
 
@@ -43,3 +45,6 @@ makeCurrencyAmount :: Currency -> Quantity -> Amount
 makeCurrencyAmount currency quantity =
   makeCommodityAmount (show currency) quantity
     & setCurrencyPrecision
+
+makeCashAmount :: Cash -> Amount
+makeCashAmount (Cash currency quantity) = makeCurrencyAmount currency quantity
