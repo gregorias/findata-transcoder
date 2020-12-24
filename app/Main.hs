@@ -1,5 +1,3 @@
-{-# LANGUAGE ExtendedDefaultRules #-}
-
 module Main (main) where
 
 import Console.Options
@@ -122,7 +120,7 @@ parseDegiro = action $ \_ -> do
   inputCsv <- LBS.getContents
   case Degiro.csvStatementToLedger inputCsv of
     Left err -> hPutStr stderr err
-    Right output -> Text.putStr output
+    Right output -> Text.putStr . showLedgerReport $ output
 
 main :: IO ()
 main = defaultMain $ do
