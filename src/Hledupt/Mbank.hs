@@ -28,6 +28,7 @@ import Hledger.Data.Types
     Transaction (..),
   )
 import Hledupt.Data (MonetaryValue, fromUnitsAndCents)
+import Hledupt.Data.Currency (Currency (PLN))
 import Relude
 import Text.Megaparsec
   ( Parsec,
@@ -40,7 +41,7 @@ import Text.Megaparsec.Char (char, string)
 import Text.Megaparsec.Char.Extra (eolOrEof)
 
 pln :: Quantity -> Amount
-pln = makeCurrencyAmount "PLN"
+pln = makeCurrencyAmount PLN
 
 -- | mBank's transaction data fetched from their website.
 data MbankTransaction = MbankTransaction

@@ -52,6 +52,7 @@ library:
   - text
   - time
   - transformers
+  - utf8-string
   - vector
 
 executables:

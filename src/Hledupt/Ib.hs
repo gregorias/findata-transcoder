@@ -47,6 +47,7 @@ import Hledger.Data.Types
   ( Transaction (..),
   )
 import Hledupt.Data (MonetaryValue)
+import Hledupt.Data.Currency (Currency (CHF, USD))
 import Hledupt.Ib.Csv
   ( ActivityStatement (..),
     EndingCash (..),
@@ -64,35 +65,34 @@ import Text.Printf (printf)
 
 data AssetClass = Stocks | Forex
 
-makeAmount :: AssetClass -> String -> Decimal -> Amount
-makeAmount aClass = maker
-  where
-    maker = case aClass of
-      Stocks -> makeCommodityAmount
-      Forex -> makeCurrencyAmount
+mkCashAmount :: Currency -> Decimal -> Amount
+mkCashAmount cur = makeCurrencyAmount cur
 
 accountPrefix :: AssetClass -> String
 accountPrefix Stocks = "Assets:Investments:IB"
 accountPrefix Forex = "Assets:Liquid:IB"
 
-accountName :: AssetClass -> String -> Text.Text
-accountName assetClass symbol = Text.pack $ accountPrefix assetClass ++ ":" ++ symbol
+cashAccountName :: Currency -> Text.Text
+cashAccountName cur = Text.pack $ accountPrefix Forex ++ ":" ++ show cur
+
+stockAccountName :: String -> Text.Text
+stockAccountName symbol = Text.pack $ accountPrefix Stocks ++ ":" ++ symbol
 
 endingCashToPosting :: EndingCash -> Posting
 endingCashToPosting (EndingCash currency amount) =
-  post (accountName Forex currency) missingamt
-    & L.set pMaybeAmount (Just $ makeAmount Forex currency 0)
+  post (cashAccountName currency) missingamt
+    & L.set pMaybeAmount (Just $ mkCashAmount currency 0)
       . L.set
         pBalanceAssertion
-        (balassert . makeAmount Forex currency $ amount)
+        (balassert . mkCashAmount currency $ amount)
 
 stockPositionToPosting :: StockPosition -> Posting
 stockPositionToPosting (StockPosition symbol quantity _price) =
-  post (accountName Stocks symbol) missingamt
-    & L.set pMaybeAmount (Just $ makeAmount Stocks symbol 0)
+  post (stockAccountName symbol) missingamt
+    & L.set pMaybeAmount (Just $ makeCommodityAmount symbol 0)
       . L.set
         pBalanceAssertion
-        (balassert . makeAmount Stocks symbol $ fromRational $ quantity % 1)
+        (balassert . makeCommodityAmount symbol $ fromRational $ quantity % 1)
 
 stockPositionToStockPrice :: Day -> StockPosition -> MarketPrice
 stockPositionToStockPrice day (StockPosition sym _q price) =
@@ -112,8 +112,8 @@ cashMovementToTransaction
   (IbCsv.CashMovement date currency amount) =
     transaction
       date
-      [ post (accountName Forex (show currency)) missingamt
-          & L.set pMaybeAmount (Just $ makeAmount Forex (show currency) amount)
+      [ post (cashAccountName currency) missingamt
+          & L.set pMaybeAmount (Just $ mkCashAmount currency amount)
             . L.set pStatus Cleared,
         post "Todo" missingamt
           & L.set pStatus Pending
@@ -212,11 +212,11 @@ dividendToTransaction
         post "Assets:Illiquid:IB Withholding Tax" missingamt
           & L.set
             pMaybeAmount
-            (Just $ makeAmount Forex "USD" (- taxAmt)),
+            (Just $ mkCashAmount USD (- taxAmt)),
         post "Income:Capital Gains" missingamt
           & L.set
             pMaybeAmount
-            (Just $ makeAmount Forex "USD" (- divAmt))
+            (Just $ mkCashAmount USD (- divAmt))
       ]
       & L.set tDescription title
         . L.set tStatus Cleared
@@ -227,19 +227,19 @@ stockTradeToTransaction :: StockTrade -> Transaction
 stockTradeToTransaction (StockTrade date sym q amount fee) =
   transaction
     date
-    [ post (accountName Stocks sym) missingamt
+    [ post (stockAccountName sym) missingamt
         & L.set
           pMaybeAmount
-          (Just $ makeAmount Stocks sym (fromRational $ q % 1)),
-      post (accountName Forex "USD") missingamt
+          (Just $ makeCommodityAmount sym (fromRational $ q % 1)),
+      post (cashAccountName USD) missingamt
         & L.set
           pMaybeAmount
-          (Just $ makeAmount Forex "USD" amount),
-      post (accountName Forex "USD") (makeAmount Forex "USD" fee),
+          (Just $ mkCashAmount USD amount),
+      post (cashAccountName USD) (mkCashAmount USD fee),
       post "Expenses:Financial Services" missingamt
         & L.set
           pMaybeAmount
-          (Just $ makeAmount Forex "USD" (- fee))
+          (Just $ mkCashAmount USD (- fee))
     ]
     & L.set tDescription (sym ++ " trade")
       . L.set tStatus Cleared
@@ -260,20 +260,20 @@ forexTradeToTransaction
     transaction
       date
       [ post
-          (accountName Forex base)
-          ( makeAmount Forex base (fromRational $ q % 1)
+          (cashAccountName base)
+          ( mkCashAmount base (fromRational $ q % 1)
               & L.set
                 aAmountPrice
                 ( Just . UnitPrice $
-                    makeCommodityAmount quote price
+                    makeCommodityAmount (show quote) price
                       & setFullPrecision
                 )
           ),
-        post (accountName Forex quote) (makeAmount Forex quote totalCost),
-        post (accountName Forex "CHF") (makeAmount Forex "CHF" fee),
-        post "Expenses:Financial Services" (makeAmount Forex "CHF" (- fee))
+        post (cashAccountName quote) (mkCashAmount quote totalCost),
+        post (cashAccountName CHF) (mkCashAmount CHF fee),
+        post "Expenses:Financial Services" (mkCashAmount CHF (- fee))
       ]
-      & L.set tDescription (base ++ "." ++ quote)
+      & L.set tDescription (show base ++ "." ++ show quote)
         . L.set tStatus Cleared
 
 -- | Shows IbData in Ledger format

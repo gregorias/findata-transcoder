@@ -8,9 +8,9 @@ where
 
 import Data.Time (fromGregorian)
 import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
+import Hledupt.Data.Currency (Currency (..))
 import Hledupt.Degiro.Csv
-  ( Currency (CHF, EUR),
-    DegiroCsvRecord (..),
+  ( DegiroCsvRecord (..),
     Money (Money),
     mkIsin,
     parseCsvStatement,

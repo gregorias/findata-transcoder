@@ -3,6 +3,7 @@ module Test.Hledger.Data.Extra (tests) where
 import Hledger.Data.Amount (num, showAmount)
 import qualified Hledger.Data.Extra as HDE
 import Hledupt.Data (fromUnitsAndCents)
+import Hledupt.Data.Currency (Currency (..))
 import Relude
 import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
@@ -13,7 +14,7 @@ tests = do
     describe "makeCurrencyAmount" $ do
       it "Creates an amount with correct currency style" $
         do
-          showAmount (HDE.makeCurrencyAmount "CHF" (fromUnitsAndCents 3 50))
+          showAmount (HDE.makeCurrencyAmount CHF (fromUnitsAndCents 3 50))
           `Hspec.shouldBe` "CHF 3.50"
     describe "setCurrencyPrecision" $ do
       it "Sets a 2 digit precision" $

@@ -15,7 +15,6 @@ module Hledupt.Ib.Csv.ActivityStatementParse
     ActivityStatement (..),
     nullActivityStatement,
     CashMovement (..),
-    Currency (..),
     Dividend (..),
     EndingCash (..),
     StockPosition (..),
@@ -45,6 +44,7 @@ import qualified Data.Map.Strict as Map
 import Data.Time (Day, defaultTimeLocale, fromGregorian, parseTimeM)
 import qualified Data.Vector as V
 import Hledupt.Data (MonetaryValue, decimalParser, myDecDec)
+import Hledupt.Data.Currency (Currency, currencyP)
 import Hledupt.Ib.Csv.RawParse
   ( Csv (..),
     Section (..),
@@ -67,14 +67,6 @@ import Text.Megaparsec
   )
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (alphaNumChar, char, digitChar, letterChar, numberChar, space, string)
-
-data Currency = USD | CHF
-  deriving stock (Eq, Show)
-
-instance Csv.FromField Currency where
-  parseField "USD" = pure USD
-  parseField "CHF" = pure CHF
-  parseField _ = fail "Expected CHF/USD as currency"
 
 -- Statement info parsers
 
@@ -136,10 +128,10 @@ instance Csv.FromNamedRecord StockPosition where
       <*> Csv.lookup "Quantity"
       <*> (L.view myDecDec <$> Csv.lookup "Close Price")
 
-newtype BaseCurrency = BaseCurrency String
+newtype BaseCurrency = BaseCurrency Currency
   deriving newtype (Eq, Show)
 
-newtype QuoteCurrency = QuoteCurrency String
+newtype QuoteCurrency = QuoteCurrency Currency
   deriving newtype (Eq, Show)
 
 data QuotePair = QuotePair BaseCurrency QuoteCurrency
@@ -147,9 +139,9 @@ data QuotePair = QuotePair BaseCurrency QuoteCurrency
 
 quotePairParser :: Parsec Void String QuotePair
 quotePairParser = do
-  base <- some alphaNumChar
+  base <- currencyP
   void $ single '.'
-  quote <- some alphaNumChar
+  quote <- currencyP
   MP.eof
   return $ QuotePair (BaseCurrency base) (QuoteCurrency quote)
 
@@ -419,7 +411,7 @@ _WithholdingTaxRecord =
     )
 
 data EndingCash = EndingCash
-  { ecCurrency :: String,
+  { ecCurrency :: Currency,
     ecAmount :: MonetaryValue
   }
   deriving stock (Eq, Show)
@@ -439,8 +431,9 @@ instance Csv.FromNamedRecord CashReportRecord where
     currencyField <- Csv.lookup "Currency"
     if currencySummaryField /= "Ending Cash" || currencyField == "Base Currency Summary"
       then return OtherCashReportRecord
-      else
-        EndingCashRecord . EndingCash currencyField
+      else do
+        Just currency <- return $ readMaybe currencyField
+        EndingCashRecord . EndingCash currency
           <$> (L.view myDecDec <$> Csv.lookup "Total")
 
 fetchSection :: String -> Statement -> Either String Section

@@ -1,5 +1,5 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Hledupt.Data

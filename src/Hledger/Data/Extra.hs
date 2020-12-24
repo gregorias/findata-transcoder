@@ -22,6 +22,7 @@ import Hledger.Data.Types
     AmountPrecision (..),
     Quantity,
   )
+import Hledupt.Data.Currency (Currency)
 import Relude
 
 makeCommodityAmount :: String -> Quantity -> Amount
@@ -38,7 +39,7 @@ setCurrencyPrecision =
         . set asCommoditySpaced True
     )
 
-makeCurrencyAmount :: String -> Quantity -> Amount
+makeCurrencyAmount :: Currency -> Quantity -> Amount
 makeCurrencyAmount currency quantity =
-  makeCommodityAmount currency quantity
+  makeCommodityAmount (show currency) quantity
     & setCurrencyPrecision

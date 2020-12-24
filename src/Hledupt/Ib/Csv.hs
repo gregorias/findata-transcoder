@@ -8,7 +8,6 @@ module Hledupt.Ib.Csv
     ActivityStatement (..),
     nullActivityStatement,
     CashMovement (..),
-    Currency (..),
     Dividend (..),
     EndingCash (..),
     StockPosition (..),
@@ -24,7 +23,6 @@ where
 import Hledupt.Ib.Csv.ActivityStatementParse
   ( ActivityStatement (..),
     CashMovement (..),
-    Currency (..),
     Dividend (..),
     EndingCash (..),
     ForexTrade (..),

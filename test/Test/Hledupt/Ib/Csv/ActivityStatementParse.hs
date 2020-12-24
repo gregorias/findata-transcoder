@@ -7,6 +7,7 @@ module Test.Hledupt.Ib.Csv.ActivityStatementParse (tests) where
 
 import Data.Ratio ((%))
 import Data.Time (fromGregorian)
+import Hledupt.Data.Currency (Currency (..))
 import Hledupt.Ib.Csv.ActivityStatementParse
 import Hledupt.Ib.Csv.RawParse
 import Relude
@@ -112,8 +113,8 @@ tests = do
             ( ActivityStatement
                 { asLastStatementDay = fromGregorian 2020 12 4,
                   asCashPositions =
-                    [ EndingCash "CHF" (fromRational $ 1000011 % 10000),
-                      EndingCash "USD" (fromRational $ 606 % 100)
+                    [ EndingCash CHF (fromRational $ 1000011 % 10000),
+                      EndingCash USD (fromRational $ 606 % 100)
                     ],
                   asStockPositions =
                     [ StockPosition "VOO" 7 (fromRational $ 33655 % 100)
@@ -130,7 +131,7 @@ tests = do
                   asForexTrades =
                     [ ForexTrade
                         (fromGregorian 2020 1 15)
-                        (QuotePair (BaseCurrency "USD") (QuoteCurrency "CHF"))
+                        (QuotePair (BaseCurrency USD) (QuoteCurrency CHF))
                         (-2000000)
                         (fromRational $ 96358 % 100000)
                         (fromRational $ 200000076 % 100)

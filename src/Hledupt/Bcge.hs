@@ -38,6 +38,7 @@ import Hledger.Data.Types
   )
 import qualified Hledupt.Bcge.Hint as Hint
 import Hledupt.Data (MonetaryValue, decimalParser)
+import Hledupt.Data.Currency (Currency (CHF))
 import Relude
 import Safe (headMay)
 import Text.Megaparsec
@@ -158,12 +159,12 @@ bcgeTransactionToLedger maybeConfig (BcgeTransaction date title amount) =
     bcgePosting =
       Hledger.post
         (pack "Assets:Liquid:BCGE")
-        (HDE.makeCurrencyAmount "CHF" amount)
+        (HDE.makeCurrencyAmount CHF amount)
     counterAccount = maybe "Expenses:Other" Hint.counterAccount maybeHint
     counterPosting =
       Hledger.post
         (pack counterAccount)
-        (HDE.makeCurrencyAmount "CHF" $ negate amount)
+        (HDE.makeCurrencyAmount CHF $ negate amount)
 
 saldoToLedger :: Day -> MonetaryValue -> Transaction
 saldoToLedger date balance =
@@ -174,7 +175,7 @@ saldoToLedger date balance =
     balancePosting =
       nullposting
         & set pAccount bcgeAccount
-          . set pBalanceAssertion (balassert . HDE.makeCurrencyAmount "CHF" $ balance)
+          . set pBalanceAssertion (balassert . HDE.makeCurrencyAmount CHF $ balance)
 
 bStToLedger :: Maybe Hint.Config -> BcgeStatement -> [Transaction]
 bStToLedger config (BcgeStatement date balance trs) = execWriter collectTrs

@@ -9,7 +9,6 @@ module Hledupt.Degiro.Csv
     -- * Types
     DegiroCsvRecord (..),
     Money (..),
-    Currency (..),
     Isin,
     mkIsin,
   )
@@ -29,10 +28,11 @@ import Data.Time
   )
 import Data.Vector (Vector)
 import Hledupt.Data (decimalParser)
+import Hledupt.Data.Currency (Currency)
 import Relude
 import Text.Megaparsec (single)
 import qualified Text.Megaparsec as MP
-import Text.Megaparsec.Char (letterChar, numberChar)
+import Text.Megaparsec.Char (alphaNumChar, letterChar, numberChar)
 
 newtype DegiroDay = DegiroDay
   { unDegiroDay :: Day
@@ -43,15 +43,21 @@ instance Csv.FromField DegiroDay where
     DegiroDay
       <$> parseTimeM True defaultTimeLocale "%d-%m-%Y" (unpackStrict8 field)
 
+-- | A type representing an ISIN
 newtype Isin = Isin String
   deriving newtype (Eq, Show)
 
 isinP :: MP.Parsec Void String Isin
 isinP = do
   landCode <- count 2 letterChar
-  nsin <- count 10 numberChar
-  return $ Isin (landCode ++ nsin)
+  nsin <- count 9 alphaNumChar
+  checksum <- count 1 numberChar
+  return $ Isin (landCode ++ nsin ++ checksum)
 
+-- | The smart constructor for ISIN
+--
+-- >>> mkIsin "IE00B4L5Y983"
+-- "IE00B4L5Y983"
 mkIsin :: String -> Maybe Isin
 mkIsin = MP.parseMaybe (isinP <* MP.eof)
 
@@ -61,14 +67,6 @@ timeP = do
   void $ single ':'
   Just minutes <- readMaybe <$> count 2 numberChar
   return $ TimeOfDay hours minutes 0
-
-data Currency = EUR | CHF
-  deriving stock (Eq, Show)
-
-instance Csv.FromField Currency where
-  parseField "CHF" = return CHF
-  parseField "EUR" = return EUR
-  parseField field = fail $ "Could not parse the currency: " ++ unpackStrict8 field ++ "."
 
 data Money = Money
   { moneyCurrency :: Currency,
@@ -133,5 +131,7 @@ instance Csv.FromRecord DegiroCsvRecord where
         (Money balanceCurrency balanceAmount)
         orderId
 
+-- | Parses a Degiro CSV statement.
+-- The left return value contains an error message.
 parseCsvStatement :: LBS.ByteString -> Either String (Vector DegiroCsvRecord)
 parseCsvStatement = Csv.decode Csv.HasHeader

@@ -27,6 +27,7 @@ import Hledupt.Bcge
   )
 import qualified Hledupt.Bcge.Hint as Hint
 import Hledupt.Data (fromUnitsAndCents)
+import Hledupt.Data.Currency (Currency (..))
 import Relude
 import Test.Hspec (describe, it, shouldBe)
 import qualified Test.Hspec as Hspec
@@ -54,7 +55,7 @@ tests = do
       it "transforms end balance to Ledger's transaction" $ do
         let balancePosting =
               set pAccount "Assets:Liquid:BCGE"
-                . set pBalanceAssertion (balassert . HDE.makeCurrencyAmount "CHF" $ fromUnitsAndCents 1234 56)
+                . set pBalanceAssertion (balassert . HDE.makeCurrencyAmount CHF $ fromUnitsAndCents 1234 56)
                 $ nullposting
             saldoTransaction =
               set tStatus Cleared
@@ -77,11 +78,11 @@ tests = do
             bcgePosting =
               Hledger.post
                 "Assets:Liquid:BCGE"
-                (HDE.makeCurrencyAmount "CHF" $ fromUnitsAndCents 3 50)
+                (HDE.makeCurrencyAmount CHF $ fromUnitsAndCents 3 50)
             counterPosting =
               Hledger.post
                 "Assets:Special"
-                (HDE.makeCurrencyAmount "CHF" $ fromUnitsAndCents (-3) 50)
+                (HDE.makeCurrencyAmount CHF $ fromUnitsAndCents (-3) 50)
             expectedTransaction =
               transaction (fromGregorian 2020 11 21) [bcgePosting, counterPosting]
                 & set tDescription "NewTitle"
