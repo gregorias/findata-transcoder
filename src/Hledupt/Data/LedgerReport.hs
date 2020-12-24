@@ -18,6 +18,13 @@ data LedgerReport = LedgerReport
   }
   deriving stock (Eq, Show)
 
+instance Semigroup LedgerReport where
+  (<>) (LedgerReport lts lmps) (LedgerReport rts rmps) =
+    LedgerReport (lts <> rts) (lmps <> rmps)
+
+instance Monoid LedgerReport where
+  mempty = LedgerReport [] []
+
 -- | Shows 'LedgerReport' in Ledger format
 showLedgerReport :: LedgerReport -> Text
 showLedgerReport (LedgerReport trs mps) =
