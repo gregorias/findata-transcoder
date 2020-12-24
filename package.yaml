@@ -64,11 +64,13 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - hledupt
+    - bytestring
     - cli
+    - hledupt
     - megaparsec
     - mtl
     - relude
+    - text
     - with-utf8
 
 tests:

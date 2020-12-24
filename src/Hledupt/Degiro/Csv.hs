@@ -82,11 +82,20 @@ data DegiroCsvRecord = DegiroCsvRecord
     dcrIsin :: Maybe Isin,
     dcrDescription :: Text,
     dcrFx :: Maybe Decimal,
-    dcrChange :: Money,
+    dcrChange :: Maybe Money,
     dcrBalance :: Money,
     dcrOrderId :: Text
   }
   deriving stock (Eq, Show)
+
+parseMoney :: Csv.Field -> Csv.Field -> Csv.Parser (Maybe Money)
+parseMoney "" "" = pure Nothing
+parseMoney changeCurrencyField changeAmountField = do
+  changeCurrency <- Csv.parseField changeCurrencyField
+  Just changeAmount <-
+    MP.parseMaybe @Void decimalParser
+      <$> (Csv.parseField changeAmountField :: Csv.Parser String)
+  return . Just $ Money changeCurrency changeAmount
 
 instance Csv.FromRecord DegiroCsvRecord where
   parseRecord rec = do
@@ -109,14 +118,8 @@ instance Csv.FromRecord DegiroCsvRecord where
         else do
           Just fx <- return $ MP.parseMaybe @Void decimalParser fxStr
           return $ Just fx
-    changeCurrency <- rec .! 7
-    Just changeAmount <-
-      MP.parseMaybe @Void decimalParser
-        <$> (rec .! 8 :: Csv.Parser String)
-    balanceCurrency <- rec .! 9
-    Just balanceAmount <-
-      MP.parseMaybe @Void decimalParser
-        <$> (rec .! 10 :: Csv.Parser String)
+    maybeChange <- join $ parseMoney <$> rec .! 7 <*> rec .! 8
+    Just balance <- join $ parseMoney <$> rec .! 9 <*> rec .! 10
     orderId <- rec .! 11
     return $
       DegiroCsvRecord
@@ -127,8 +130,8 @@ instance Csv.FromRecord DegiroCsvRecord where
         maybeIsin
         desc
         maybeFx
-        (Money changeCurrency changeAmount)
-        (Money balanceCurrency balanceAmount)
+        maybeChange
+        balance
         orderId
 
 -- | Parses a Degiro CSV statement.

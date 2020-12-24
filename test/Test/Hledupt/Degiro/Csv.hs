@@ -26,6 +26,7 @@ tests = do
       let csv =
             "Date,Time,Value date,Product,ISIN,Description,FX,Change,,Balance,,Order ID\n\
             \18-12-2020,00:00,17-12-2020,FUNDSHARE UCITS CHF CASH FUND,NL0011280581,Money Market fund price change (CHF),,CHF,-0.01,CHF,131.23,\n\
+            \02-09-2020,12:02,01-09-2020,FUNDSHARE UCITS CHF CASH FUND,NL0011280581,\"Money Market fund conversion: Sell 123.5678 at 0.981 CHF\",,,,CHF,131.72,\n\
             \02-09-2020,08:24,01-09-2020,,,FX Debit,,CHF,0.01,CHF,131.72,\n\
             \02-09-2020,08:24,01-09-2020,,,FX Debit,0.9241,EUR,-0.01,EUR,-0.00,\n\
             \28-01-2020,14:05,27-01-2020,,,Deposit,,CHF,2500.00,CHF,2520.92,"
@@ -40,8 +41,19 @@ tests = do
               (Just nlIsin)
               "Money Market fund price change (CHF)"
               Nothing
-              (Money CHF (-0.01))
+              (Just $ Money CHF (-0.01))
               (Money CHF 131.23)
+              "",
+            DegiroCsvRecord
+              (fromGregorian 2020 9 2)
+              (TimeOfDay 12 02 0)
+              (fromGregorian 2020 9 1)
+              "FUNDSHARE UCITS CHF CASH FUND"
+              (Just nlIsin)
+              "Money Market fund conversion: Sell 123.5678 at 0.981 CHF"
+              Nothing
+              Nothing
+              (Money CHF 131.72)
               "",
             DegiroCsvRecord
               (fromGregorian 2020 9 2)
@@ -51,7 +63,7 @@ tests = do
               Nothing
               "FX Debit"
               Nothing
-              (Money CHF 0.01)
+              (Just $ Money CHF 0.01)
               (Money CHF 131.72)
               "",
             DegiroCsvRecord
@@ -62,7 +74,7 @@ tests = do
               Nothing
               "FX Debit"
               (Just 0.9241)
-              (Money EUR (-0.01))
+              (Just $ Money EUR (-0.01))
               (Money EUR 0)
               "",
             DegiroCsvRecord
@@ -73,7 +85,7 @@ tests = do
               Nothing
               "Deposit"
               Nothing
-              (Money CHF 2500)
+              (Just $ Money CHF 2500)
               (Money CHF 2520.92)
               ""
           ]

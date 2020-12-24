@@ -19,6 +19,8 @@ import Console.Options
 import Control.Monad.Except
   ( throwError,
   )
+import qualified Data.ByteString.Lazy as LBS
+import qualified Data.Text.IO as Text
 import Data.Version (makeVersion)
 import Hledupt.Bcge (bcgeCsvToLedger)
 import qualified Hledupt.Bcge.Hint as BcgeHint
@@ -27,7 +29,7 @@ import Hledupt.Ib (ibActivityCsvToLedger)
 import Hledupt.Mbank (mbankCsvToLedger)
 import Main.Utf8 (withUtf8)
 import Relude
-import System.IO (getContents, hPutStr)
+import System.IO (hPutStr)
 import qualified Text.Megaparsec as MP
 
 filenameParser :: String -> Either String String
@@ -114,10 +116,10 @@ parseBcgeAction bcgeFlags = action $
 
 parseDegiro :: OptionDesc (IO ()) ()
 parseDegiro = action $ \_ -> do
-  inputCsv <- getContents
+  inputCsv <- LBS.getContents
   case Degiro.csvStatementToLedger inputCsv of
     Left err -> hPutStr stderr err
-    Right output -> putStr output
+    Right output -> Text.putStr output
 
 main :: IO ()
 main = defaultMain $ do
