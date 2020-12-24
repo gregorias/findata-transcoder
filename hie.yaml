@@ -1,2 +1,13 @@
 cradle:
   stack:
+    - path: "./src"
+      component: "hledupt:lib"
+
+    - path: "./app/Main.hs"
+      component: "hledupt:exe:hledupt"
+
+    - path: "./app/Paths_hledupt.hs"
+      component: "hledupt:exe:hledupt"
+
+    - path: "./test"
+      component: "hledupt:test:hledupt-test"
