@@ -1,11 +1,6 @@
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
 -- |
@@ -354,7 +349,7 @@ instance Csv.FromNamedRecord DividendRecord where
           <$> (Csv.lookup "Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
           <*> ( do
                   desc :: String <- Csv.lookup "Description"
-                  let parsed = MP.parse symbolDpsParser "" desc
+                  let parsed = MP.parse @Void symbolDpsParser "" desc
                   either
                     ( \err ->
                         fail $
@@ -391,7 +386,7 @@ instance Csv.FromNamedRecord WithholdingTaxRecord where
           <$> (Csv.lookup "Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
             <*> ( do
                     desc :: String <- Csv.lookup "Description"
-                    let parsed = MP.parse symbolParser "" desc
+                    let parsed = MP.parse @Void symbolParser "" desc
                     either
                       ( \err ->
                           fail $
@@ -428,7 +423,7 @@ unCashReportRecord (EndingCashRecord ec) = Just ec
 
 instance Csv.FromNamedRecord CashReportRecord where
   parseNamedRecord = do
-    currencySummaryField <- Csv.lookup "Currency Summary"
+    currencySummaryField :: String <- Csv.lookup "Currency Summary"
     currencyField <- Csv.lookup "Currency"
     if currencySummaryField /= "Ending Cash" || currencyField == "Base Currency Summary"
       then return OtherCashReportRecord
