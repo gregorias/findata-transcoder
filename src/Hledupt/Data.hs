@@ -2,7 +2,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Hledupt.Data (MonetaryValue, fromUnitsAndCents, MyDecimal (..), myDecDec, decimalParser) where
+module Hledupt.Data
+  ( MonetaryValue,
+    fromUnitsAndCents,
+    MyDecimal (..),
+    myDecDec,
+    decimalParser,
+  )
+where
 
 import qualified Control.Lens.Iso as Lens
 import Data.ByteString.Char8 (unpack)
