@@ -27,6 +27,7 @@ dependencies:
 default-extensions:
   DerivingStrategies
   GeneralisedNewtypeDeriving
+  InstanceSigs
   LambdaCase
   NoImplicitPrelude
   ScopedTypeVariables
