@@ -12,11 +12,11 @@ import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.Data.Cash (Cash (Cash))
 import Hledupt.Data.Currency (Currency (..))
+import Hledupt.Data.Isin (mkIsin)
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Hledupt.Degiro (csvRecordsToLedger)
 import Hledupt.Degiro.Csv
   ( DegiroCsvRecord (..),
-    mkIsin,
     parseCsvStatement,
   )
 import Relude

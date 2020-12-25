@@ -31,11 +31,10 @@ import Hledger.Data.Lens (aAmountPrice, pAmount, pBalanceAssertion, pStatus, tDe
 import Hledupt.Data.Cash (Cash (Cash), cashAmount, cashCurrency)
 import qualified Hledupt.Data.Cash as Cash
 import Hledupt.Data.Currency (Currency)
+import Hledupt.Data.Isin (Isin, mkIsin)
 import Hledupt.Data.LedgerReport (LedgerReport (..))
 import Hledupt.Degiro.Csv
   ( DegiroCsvRecord (..),
-    Isin,
-    mkIsin,
     parseCsvStatement,
   )
 import Relude

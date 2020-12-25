@@ -8,8 +8,6 @@ module Hledupt.Degiro.Csv
 
     -- * Types
     DegiroCsvRecord (..),
-    Isin,
-    mkIsin,
   )
 where
 
@@ -19,6 +17,7 @@ import qualified Data.ByteString.Lazy as LBS
 import Data.Csv ((.!))
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
+import qualified Data.Text as Text
 import Data.Time
   ( Day,
     TimeOfDay (TimeOfDay),
@@ -28,10 +27,11 @@ import Data.Time
 import Data.Vector (Vector)
 import Hledupt.Data (decimalParser)
 import Hledupt.Data.Cash (Cash (Cash))
+import Hledupt.Data.Isin (Isin, mkIsin)
 import Relude
 import Text.Megaparsec (single)
 import qualified Text.Megaparsec as MP
-import Text.Megaparsec.Char (alphaNumChar, letterChar, numberChar)
+import Text.Megaparsec.Char (numberChar)
 
 newtype DegiroDay = DegiroDay
   { unDegiroDay :: Day
@@ -41,24 +41,6 @@ instance Csv.FromField DegiroDay where
   parseField field =
     DegiroDay
       <$> parseTimeM True defaultTimeLocale "%d-%m-%Y" (unpackStrict8 field)
-
--- | A type representing an ISIN
-newtype Isin = Isin String
-  deriving newtype (Eq, Show)
-
-isinP :: MP.Parsec Void String Isin
-isinP = do
-  landCode <- count 2 letterChar
-  nsin <- count 9 alphaNumChar
-  checksum <- count 1 numberChar
-  return $ Isin (landCode ++ nsin ++ checksum)
-
--- | The smart constructor for ISIN
---
--- >>> mkIsin "IE00B4L5Y983"
--- "IE00B4L5Y983"
-mkIsin :: String -> Maybe Isin
-mkIsin = MP.parseMaybe (isinP <* MP.eof)
 
 timeP :: MP.Parsec Void String TimeOfDay
 timeP = do
@@ -98,7 +80,7 @@ instance Csv.FromRecord DegiroCsvRecord where
     productStr <- rec .! 3
     isinStr <- rec .! 4
     maybeIsin <-
-      if null isinStr
+      if Text.null isinStr
         then return Nothing
         else do
           Just isin <- return $ mkIsin isinStr

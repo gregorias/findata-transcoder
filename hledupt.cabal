@@ -34,6 +34,7 @@ library
       Hledupt.Data
       Hledupt.Data.Cash
       Hledupt.Data.Currency
+      Hledupt.Data.Isin
       Hledupt.Data.LedgerReport
       Hledupt.Degiro
       Hledupt.Degiro.Csv
