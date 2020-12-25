@@ -30,6 +30,7 @@ default-extensions:
   InstanceSigs
   LambdaCase
   NoImplicitPrelude
+  NumericUnderscores
   ScopedTypeVariables
   TupleSections
   TypeApplications

@@ -48,7 +48,7 @@ library
       Paths_hledupt
   hs-source-dirs:
       src
-  default-extensions: DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase NoImplicitPrelude ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax
+  default-extensions: DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax
   build-depends:
       Decimal
     , base >=4.7 && <5
@@ -77,7 +77,7 @@ executable hledupt
       Paths_hledupt
   hs-source-dirs:
       app
-  default-extensions: DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase NoImplicitPrelude ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax
+  default-extensions: DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
@@ -117,7 +117,7 @@ test-suite hledupt-test
       Paths_hledupt
   hs-source-dirs:
       test
-  default-extensions: DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase NoImplicitPrelude ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax
+  default-extensions: DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       Decimal
