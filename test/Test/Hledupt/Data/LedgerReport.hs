@@ -25,13 +25,13 @@ tests = do
         showLedgerReport
           ( LedgerReport
               [ parseTransactionUnsafe
-                  "2020/01/20 IB Deposit/Withdrawal\n\
-                  \*  Assets:Liquid:IB:CHF  CHF 100.32\n\
-                  \!  Todo",
-                parseTransactionUnsafe
                   "2020/11/26 IB Status\n\
                   \  Assets:Investments:IB:ACWF  0 ACWF = ACWF 123\n\
-                  \  Assets:Liquid:IB:CHF  CHF 0 = CHF 100.0011305"
+                  \  Assets:Liquid:IB:CHF  CHF 0 = CHF 100.0011305",
+                parseTransactionUnsafe
+                  "2020/01/20 IB Deposit/Withdrawal\n\
+                  \*  Assets:Liquid:IB:CHF  CHF 100.32\n\
+                  \!  Todo"
               ]
               [ MarketPrice
                   (fromGregorian 2020 11 26)

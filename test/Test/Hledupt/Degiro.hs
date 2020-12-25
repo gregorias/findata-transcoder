@@ -70,6 +70,30 @@ tests = do
                 []
             )
 
+      it "Parses connection fees" $ do
+        csvRecordsToLedger
+          [ DegiroCsvRecord
+              (fromGregorian 2020 9 2)
+              (TimeOfDay 12 02 0)
+              (fromGregorian 2020 9 1)
+              ""
+              Nothing
+              "DEGIRO Exchange Connection Fee 2020 (Euronext Amsterdam - EAM)"
+              Nothing
+              (Just $ Cash EUR $ -2.50)
+              (Cash EUR $ -2.50)
+              ""
+          ]
+          `shouldBe` Right
+            ( LedgerReport
+                [ parseTransactionUnsafe
+                    "2020/09/02 * Exchange Connection Fee\n\
+                    \  Assets:Liquid:Degiro  -2.50 EUR = -2.50 EUR\n\
+                    \  Expenses:Financial Services  2.50 EUR"
+                ]
+                []
+            )
+
       it "Returns a readable error when a record can't be processed." $ do
         csvRecordsToLedger
           [ DegiroCsvRecord

@@ -22,7 +22,7 @@ import Hledger
     transaction,
   )
 import Hledger.Data.Extra (makeCashAmount)
-import Hledger.Data.Lens (pBalanceAssertion, pStatus, tDescription)
+import Hledger.Data.Lens (pBalanceAssertion, pStatus, tDescription, tStatus)
 import Hledupt.Data.Cash (Cash)
 import qualified Hledupt.Data.Cash as Cash
 import Hledupt.Data.LedgerReport (LedgerReport (..))
@@ -65,6 +65,38 @@ depositToTransaction (Deposit date _time amount balance) =
     ]
     & L.set tDescription "Deposit"
 
+data ConnectionFee = ConnectionFee
+  { _cfDate :: Day,
+    _cfAmount :: Cash,
+    _cfBalance :: Cash
+  }
+
+connectionFeeP :: DegiroCsvRecord -> Maybe ConnectionFee
+connectionFeeP rec
+  | "DEGIRO Exchange Connection Fee" `Text.isInfixOf` dcrDescription rec = do
+    change <- dcrChange rec
+    return $ ConnectionFee (dcrDate rec) change (dcrBalance rec)
+  | otherwise = Nothing
+
+connectionFeeToTransaction :: ConnectionFee -> Transaction
+connectionFeeToTransaction (ConnectionFee date amount balance) =
+  transaction
+    date
+    [ post "Assets:Liquid:Degiro" (makeCashAmount amount)
+        & L.set
+          pBalanceAssertion
+          (balassert $ makeCashAmount balance),
+      post "Expenses:Financial Services" (makeCashAmount $ Cash.negate amount)
+    ]
+    & L.set tDescription "Exchange Connection Fee"
+      . L.set tStatus Cleared
+
+data Activity = ActivityDeposit Deposit | ActivityConnectionFee ConnectionFee
+
+activityToTransaction :: Activity -> Transaction
+activityToTransaction (ActivityDeposit dep) = depositToTransaction dep
+activityToTransaction (ActivityConnectionFee cf) = connectionFeeToTransaction cf
+
 -- | Filters out money market records
 --
 -- Degiro statements provide information on how the cash fares in their money market fund.
@@ -73,13 +105,13 @@ filterOutMoneyMarketRecords :: Isin -> [DegiroCsvRecord] -> [DegiroCsvRecord]
 filterOutMoneyMarketRecords mmIsin = filter ((/= pure mmIsin) . dcrIsin)
 
 -- | Parses a parsed Degiro CSV statement into stronger types
-csvRecordsToDeposits :: [DegiroCsvRecord] -> Either String [Deposit]
-csvRecordsToDeposits recs = do
+csvRecordsToActivities :: [DegiroCsvRecord] -> Either String [Activity]
+csvRecordsToActivities recs = do
   Just mmIsin <- return moneyMarketIsin
-  (deposits, remainingRecs) <-
+  (acts, remainingRecs) <-
     return $ runState (transform mmIsin) recs
   case listToMaybe remainingRecs of
-    Nothing -> Right deposits
+    Nothing -> Right acts
     Just row ->
       Left $
         "Hledupt.Degiro.csvRecordsToLedger could not process all elements.\n"
@@ -87,18 +119,20 @@ csvRecordsToDeposits recs = do
           ++ Text.unpack (dcrDescription row)
           ++ "\n"
   where
-    transform :: Isin -> State [DegiroCsvRecord] [Deposit]
+    transform :: Isin -> State [DegiroCsvRecord] [Activity]
     transform mmIsin = do
       modify (filterOutMoneyMarketRecords mmIsin)
-      (deposits, newRecs) <- partitionMaybe depositP <$> get
-      put newRecs
-      return deposits
+      (deposits, newRecs0) <- partitionMaybe depositP <$> get
+      put newRecs0
+      (cfs, newRecs1) <- partitionMaybe connectionFeeP <$> get
+      put newRecs1
+      return $ (ActivityDeposit <$> deposits) ++ (ActivityConnectionFee <$> cfs)
 
 -- | Transforms a parsed Degiro CSV statement into a Ledger report
 csvRecordsToLedger :: Vector DegiroCsvRecord -> Either String LedgerReport
 csvRecordsToLedger recs = do
-  deposits <- csvRecordsToDeposits (V.toList recs)
-  return $ LedgerReport (depositToTransaction <$> deposits) []
+  activities <- csvRecordsToActivities (V.toList recs)
+  return $ LedgerReport (activityToTransaction <$> activities) []
 
 -- | Transforms a Degiro CSV statement into a Ledger report
 csvStatementToLedger :: LBS.ByteString -> Either String LedgerReport
