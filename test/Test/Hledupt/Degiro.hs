@@ -6,7 +6,7 @@ module Test.Hledupt.Degiro
   )
 where
 
-import Data.List (isInfixOf)
+import qualified Data.Text as Text
 import Data.Time (fromGregorian)
 import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
@@ -17,6 +17,7 @@ import Hledupt.Degiro (csvRecordsToLedger)
 import Hledupt.Degiro.Csv
   ( DegiroCsvRecord (..),
     mkIsin,
+    parseCsvStatement,
   )
 import Relude
 import Test.Hspec (SpecWith, describe, it)
@@ -94,6 +95,72 @@ tests = do
                 []
             )
 
+      it "Parses an Fx transaction" $ do
+        Right csvRecords <-
+          return $
+            parseCsvStatement
+              "Date,Time,Value date,Product,ISIN,Description,FX,Change,,Balance,,Order ID\n\
+              \04-02-2020,07:20,03-02-2020,,,FX Debit,,CHF,-2.67,CHF,2382.59,\n\
+              \04-02-2020,07:20,03-02-2020,,,FX Credit,0.9351,EUR,2.50,EUR,0.00,\n"
+        csvRecordsToLedger csvRecords
+          `shouldBe` Right
+            ( LedgerReport
+                [ parseTransactionUnsafe
+                    "2020/02/04 * Degiro Forex\n\
+                    \  Assets:Liquid:Degiro  -2.67 CHF = 2382.59 CHF @ 0.9351 EUR\n\
+                    \  Assets:Liquid:Degiro  2.50 EUR = 0 EUR"
+                ]
+                []
+            )
+
+      it "Parses an unflipped Fx transaction" $ do
+        Right csvRecords <-
+          return $
+            parseCsvStatement
+              "Date,Time,Value date,Product,ISIN,Description,FX,Change,,Balance,,Order ID\n\
+              \02-09-2020,08:24,01-09-2020,,,FX Debit,,CHF,0.01,CHF,131.72,\n\
+              \02-09-2020,08:24,01-09-2020,,,FX Debit,0.9241,EUR,-0.01,EUR,-0.00,"
+        csvRecordsToLedger csvRecords
+          `shouldBe` Right
+            ( LedgerReport
+                [ parseTransactionUnsafe
+                    "2020/09/02 * Degiro Forex\n\
+                    \  Assets:Liquid:Degiro  0.01 CHF = 131.72 CHF @ 0.9241 EUR\n\
+                    \  Assets:Liquid:Degiro  -0.01 EUR = 0 EUR"
+                ]
+                []
+            )
+
+      it "Parses Fx transactions" $ do
+        Right csvRecords <-
+          return $
+            parseCsvStatement
+              "Date,Time,Value date,Product,ISIN,Description,FX,Change,,Balance,,Order ID\n\
+              \04-02-2020,07:20,03-02-2020,,,FX Debit,,CHF,-2.67,CHF,2382.59,\n\
+              \04-02-2020,07:20,03-02-2020,,,FX Credit,0.9351,EUR,2.50,EUR,0.00,\n\
+              \03-02-2020,09:05,03-02-2020,ISHARES MSCI WOR A,IE00B4L5Y983,FX Credit,0.9353,EUR,9733.32,EUR,0.00,a4457f95-c6b7-43b9-9afa-4410e5109954\n\
+              \03-02-2020,09:05,03-02-2020,ISHARES MSCI WOR A,IE00B4L5Y983,FX Debit,,CHF,-10406.57,CHF,2385.26,a4457f95-c6b7-43b9-9afa-4410e5109954\n\
+              \03-02-2020,09:05,03-02-2020,ISHARES MSCI WOR A,IE00B4L5Y983,FX Credit,0.9353,EUR,11611.68,EUR,-9733.32,a4457f95-c6b7-43b9-9afa-4410e5109954\n\
+              \03-02-2020,09:05,03-02-2020,ISHARES MSCI WOR A,IE00B4L5Y983,FX Debit,,CHF,-12414.85,CHF,12791.83,a4457f95-c6b7-43b9-9afa-4410e5109954"
+        csvRecordsToLedger csvRecords
+          `shouldBe` Right
+            ( LedgerReport
+                [ parseTransactionUnsafe
+                    "2020/02/04 * Degiro Forex\n\
+                    \  Assets:Liquid:Degiro  -2.67 CHF = 2382.59 CHF @ 0.9351 EUR\n\
+                    \  Assets:Liquid:Degiro  2.50 EUR = 0 EUR",
+                  parseTransactionUnsafe
+                    "2020/02/03 * Degiro Forex\n\
+                    \  Assets:Liquid:Degiro    9733.32 EUR = 0 EUR\n\
+                    \  Assets:Liquid:Degiro  -10406.57 CHF = 2385.26 CHF @ 0.9353 EUR\n",
+                  parseTransactionUnsafe
+                    "2020/02/03 * Degiro Forex\n\
+                    \  Assets:Liquid:Degiro  11611.68 EUR = -9733.32 EUR\n\
+                    \  Assets:Liquid:Degiro  -12414.85 CHF = 12791.83 CHF @ 0.9353 EUR\n"
+                ]
+                []
+            )
+
       it "Returns a readable error when a record can't be processed." $ do
         csvRecordsToLedger
           [ DegiroCsvRecord
@@ -112,7 +179,7 @@ tests = do
             Right _ -> False
             Left errMsg ->
               ( "Hledupt.Degiro.csvRecordsToLedger could not process all elements.\n"
-                  `isInfixOf` errMsg
+                  `Text.isInfixOf` errMsg
                     && "One remaining row's description: Bogus description"
-                  `isInfixOf` errMsg
+                  `Text.isInfixOf` errMsg
               )
