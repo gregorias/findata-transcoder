@@ -161,6 +161,23 @@ tests = do
                 []
             )
 
+      it "Parses a stock transaction" $ do
+        Right csvRecords <-
+          return $
+            parseCsvStatement
+              "Date,Time,Value date,Product,ISIN,Description,FX,Change,,Balance,,Order ID\n\
+              \04-03-2020,09:05,04-03-2020,ISHARES MSCI WOR A,IE00B4L5Y983,Buy 659 ISHARES MSCI WOR A@52.845 EUR (IE00B4L5Y983),,EUR,-34824.86,EUR,-34824.86,3a04a583-6cf7-4730-ab8b-31f989bd61fc"
+        csvRecordsToLedger csvRecords
+          `shouldBe` Right
+            ( LedgerReport
+                [ parseTransactionUnsafe
+                    "2020/03/04 * Degiro Stock Transaction\n\
+                    \  Assets:Investments:Degiro:IWDA  659 IWDA @ 52.845 EUR\n\
+                    \  Assets:Liquid:Degiro  -34824.86 EUR = -34824.86 EUR"
+                ]
+                []
+            )
+
       it "Returns a readable error when a record can't be processed." $ do
         csvRecordsToLedger
           [ DegiroCsvRecord

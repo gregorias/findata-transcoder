@@ -6,11 +6,12 @@ module Hledupt.Degiro
   )
 where
 
-import Control.Lens (over, view)
+import Control.Lens (over, set, view)
 import qualified Control.Lens as L
 import qualified Data.ByteString.Lazy as LBS
 import Data.Decimal (Decimal)
 import Data.List.HT (partitionMaybe)
+import Data.Ratio ((%))
 import qualified Data.Text as Text
 import Data.Time (Day)
 import Data.Time.LocalTime (TimeOfDay)
@@ -26,11 +27,19 @@ import Hledger
     transaction,
   )
 import Hledger.Data (Posting)
-import Hledger.Data.Extra (makeCashAmount)
-import Hledger.Data.Lens (aAmountPrice, pAmount, pBalanceAssertion, pStatus, tDescription, tStatus)
+import Hledger.Data.Extra (makeCashAmount, makeCommodityAmount)
+import Hledger.Data.Lens
+  ( aAmountPrice,
+    pAmount,
+    pBalanceAssertion,
+    pStatus,
+    tDescription,
+    tStatus,
+  )
+import Hledupt.Data (decimalParser)
 import Hledupt.Data.Cash (Cash (Cash), cashAmount, cashCurrency)
 import qualified Hledupt.Data.Cash as Cash
-import Hledupt.Data.Currency (Currency)
+import Hledupt.Data.Currency (Currency, currencyP)
 import Hledupt.Data.Isin (Isin, mkIsin)
 import Hledupt.Data.LedgerReport (LedgerReport (..))
 import Hledupt.Degiro.Csv
@@ -38,6 +47,11 @@ import Hledupt.Degiro.Csv
     parseCsvStatement,
   )
 import Relude
+import Relude.Extra (inverseMap)
+import Text.Megaparsec (Parsec, anySingle, manyTill, single)
+import qualified Text.Megaparsec as MP
+import Text.Megaparsec.Char (letterChar, space)
+import Text.Megaparsec.Char.Lexer (decimal)
 
 moneyMarketIsin :: Maybe Isin
 moneyMarketIsin = mkIsin "NL0011280581"
@@ -194,15 +208,99 @@ fxToTransaction (Fx date fstPost sndPost) =
             <$> fxPostingFx postArg
         )
 
+data StockTrade = StockTrade
+  { _stDate :: !Day,
+    _stIsin :: !Isin,
+    _stQuantity :: !Int,
+    _stPrice :: !Cash,
+    _stChange :: !Cash,
+    _stBalance :: !Cash
+  }
+
+data StockTradeType = Buy | Sell
+  deriving stock (Bounded, Enum, Eq, Show)
+
+stockTradeTypeP :: Text -> Maybe StockTradeType
+stockTradeTypeP = inverseMap (Text.pack . show)
+
+data StockTradeDescription = StockTradeDescription
+  { _stdType :: !StockTradeType,
+    _stdQuantity :: !Int,
+    _stdPrice :: !Cash
+  }
+
+stockTradeDescriptionP :: Text -> Maybe StockTradeDescription
+stockTradeDescriptionP = MP.parseMaybe parserP
+  where
+    parserP :: Parsec Void Text StockTradeDescription
+    parserP = do
+      Just tradeType <- stockTradeTypeP . Text.pack <$> some letterChar
+      space
+      quantity <- decimal
+      void $ manyTill anySingle (single '@')
+      price <- decimalParser
+      space
+      currency <- currencyP
+      void $ many anySingle
+      return $ StockTradeDescription tradeType quantity (Cash currency price)
+
+stockTradeP :: DegiroCsvRecord -> Maybe StockTrade
+stockTradeP rec = do
+  isin <- dcrIsin rec
+  (StockTradeDescription trType quantity price) <-
+    stockTradeDescriptionP $
+      dcrDescription rec
+  let qtyChange = case trType of
+        Buy -> id
+        Sell -> negate
+  change <- dcrChange rec
+  return $ StockTrade (dcrDate rec) isin (qtyChange quantity) price change (dcrBalance rec)
+
+prettyIsin :: Isin -> Text
+prettyIsin isin =
+  if Just isin == iwda then "IWDA" else show isin
+  where
+    iwda = mkIsin "IE00B4L5Y983"
+
+stockTradeToTransaction :: StockTrade -> Transaction
+stockTradeToTransaction (StockTrade date isin qty price change bal) =
+  transaction
+    date
+    [ post
+        ("Assets:Investments:Degiro:" `Text.append` prettyStockName)
+        ( makeCommodityAmount
+            (Text.unpack prettyStockName)
+            (fromRational $ toInteger qty % 1)
+            & set
+              aAmountPrice
+              ( Just
+                  . UnitPrice
+                  . setFullPrecision
+                  . makeCashAmount
+                  $ price
+              )
+        ),
+      post "Assets:Liquid:Degiro" (makeCashAmount change)
+        & L.set
+          pBalanceAssertion
+          (balassert $ makeCashAmount bal)
+    ]
+    & set tStatus Cleared
+      . set tDescription "Degiro Stock Transaction"
+  where
+    prettyStockName = prettyIsin isin
+
 data Activity
   = ActivityDeposit Deposit
   | ActivityConnectionFee ConnectionFee
   | ActivityFx Fx
+  | ActivityStockTrade StockTrade
 
 activityToTransaction :: Activity -> Transaction
 activityToTransaction (ActivityDeposit dep) = depositToTransaction dep
 activityToTransaction (ActivityConnectionFee cf) = connectionFeeToTransaction cf
 activityToTransaction (ActivityFx fx) = fxToTransaction fx
+activityToTransaction (ActivityStockTrade st) = stockTradeToTransaction st
 
 -- | Filters out money market records
 --
@@ -240,10 +338,13 @@ csvRecordsToActivities recs = do
         hoistEither $
           over L._Left ("Could not parse forex transactions.\n" `Text.append`) $
             fxP fxRows
+      (sts, newRecs3) <- partitionMaybe stockTradeP <$> get
+      put newRecs3
       return $
         (ActivityDeposit <$> deposits)
           ++ (ActivityConnectionFee <$> cfs)
           ++ (ActivityFx <$> fxs)
+          ++ (ActivityStockTrade <$> sts)
 
 -- | Transforms a parsed Degiro CSV statement into a Ledger report
 csvRecordsToLedger :: Vector DegiroCsvRecord -> Either Text LedgerReport
