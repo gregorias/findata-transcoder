@@ -1,15 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Hledupt.Mbank
-  ( MbankTransaction (..),
-    valueParser,
-    mbankCsvParser,
-    mTrToLedger,
-    mbankCsvToLedger,
-    pln,
-  )
-where
+module Hledupt.Mbank (
+  MbankTransaction (..),
+  valueParser,
+  mbankCsvParser,
+  mTrToLedger,
+  mbankCsvToLedger,
+  pln,
+) where
 
 import Data.Decimal (Decimal)
 import Data.Text (pack)
@@ -17,27 +16,27 @@ import Data.Time.Calendar (Day)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Hledger (missingamt, post)
 import Hledger.Data.Extra (makeCurrencyAmount)
-import Hledger.Data.Posting
-  ( balassert,
-    post',
-  )
+import Hledger.Data.Posting (
+  balassert,
+  post',
+ )
 import Hledger.Data.Transaction (transaction)
-import Hledger.Data.Types
-  ( Amount (..),
-    Quantity,
-    Transaction (..),
-  )
+import Hledger.Data.Types (
+  Amount (..),
+  Quantity,
+  Transaction (..),
+ )
 import Hledupt.Data (fromUnitsAndCents)
 import Hledupt.Data.Currency (Currency (PLN))
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Relude
-import Text.Megaparsec
-  ( Parsec,
-    eof,
-    noneOf,
-    oneOf,
-    parse,
-  )
+import Text.Megaparsec (
+  Parsec,
+  eof,
+  noneOf,
+  oneOf,
+  parse,
+ )
 import Text.Megaparsec.Char (char, string)
 import Text.Megaparsec.Char.Extra (eolOrEof)
 
@@ -46,10 +45,10 @@ pln = makeCurrencyAmount PLN
 
 -- | mBank's transaction data fetched from their website.
 data MbankTransaction = MbankTransaction
-  { mTrDate :: Day,
-    mTrTitle :: String,
-    mTrAmount :: Decimal,
-    mTrEndBalance :: Decimal
+  { mTrDate :: Day
+  , mTrTitle :: String
+  , mTrAmount :: Decimal
+  , mTrEndBalance :: Decimal
   }
   deriving stock (Eq, Show)
 
@@ -77,8 +76,8 @@ valueParser = do
     Nothing -> fail ""
   void $ string "PLN"
   return $ fromUnitsAndCents zlote grosze
-  where
-    removeSpaces = filter (' ' /=)
+ where
+  removeSpaces = filter (' ' /=)
 
 mbankCsvTransactionParser :: MbankParser MbankTransaction
 mbankCsvTransactionParser = do
@@ -100,21 +99,21 @@ mbankCsvParser = do
 
 sanitizeTitle :: String -> String
 sanitizeTitle = beforeTheGap
-  where
-    beforeTheGap title@(s : ss)
-      | take 3 title == "   " = ""
-      | otherwise = s : beforeTheGap ss
-    beforeTheGap _ = ""
+ where
+  beforeTheGap title@(s : ss)
+    | take 3 title == "   " = ""
+    | otherwise = s : beforeTheGap ss
+  beforeTheGap _ = ""
 
 mTrToLedger :: MbankTransaction -> Transaction
-mTrToLedger mTr = tr {tdescription = pack $ sanitizeTitle $ mTrTitle mTr}
-  where
-    tr =
-      transaction
-        (mTrDate mTr)
-        [ post' (pack "Assets:Liquid:mBank") (pln $ mTrAmount mTr) (balassert $ pln $ mTrEndBalance mTr),
-          post "Expenses:Other" missingamt
-        ]
+mTrToLedger mTr = tr{tdescription = pack $ sanitizeTitle $ mTrTitle mTr}
+ where
+  tr =
+    transaction
+      (mTrDate mTr)
+      [ post' (pack "Assets:Liquid:mBank") (pln $ mTrAmount mTr) (balassert $ pln $ mTrEndBalance mTr)
+      , post "Expenses:Other" missingamt
+      ]
 
 mbankCsvToLedger :: String -> Either String LedgerReport
 mbankCsvToLedger inputCsv = do

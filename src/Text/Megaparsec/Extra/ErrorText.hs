@@ -1,8 +1,7 @@
 -- | A text wrapper that can be used for error messages.
-module Text.Megaparsec.Extra.ErrorText
-  ( ErrorText (..),
-  )
-where
+module Text.Megaparsec.Extra.ErrorText (
+  ErrorText (..),
+) where
 
 import Relude
 import Text.Megaparsec.Error (ShowErrorComponent (..))

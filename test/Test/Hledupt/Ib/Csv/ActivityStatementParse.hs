@@ -22,8 +22,9 @@ tests = do
       it "Parses a range date correctly" $ do
         let stmtWithDateOnly =
               Statement
-                [ ( "Statement",
-                    Section
+                [
+                  ( "Statement"
+                  , Section
                       [ "Field Name,Field Value\n\
                         \Period,\"December 11, 2019 - December 4, 2020\"\n"
                       ]
@@ -35,14 +36,16 @@ tests = do
       it "Parses Csvs" $ do
         let csv =
               Statement
-                [ ( "Statement",
-                    Section
+                [
+                  ( "Statement"
+                  , Section
                       [ "Field Name,Field Value\n\
                         \Period,\"December 11, 2019 - December 4, 2020\"\n"
                       ]
-                  ),
-                  ( "Cash Report",
-                    Section
+                  )
+                ,
+                  ( "Cash Report"
+                  , Section
                       [ "Currency Summary,Currency,Total,Securities,Futures,Month to Date,Year to Date,\n\
                         \Starting Cash,Base Currency Summary,1.0,1.0,0,,,\n\
                         \Commissions,Base Currency Summary,-1.0,-1.0,0,0,-1.0,\n\
@@ -72,37 +75,42 @@ tests = do
                         \Ending Cash,USD,6.06,6.06,0,,,\n\
                         \Ending Settled Cash,USD,6.06,6.06,0,,,"
                       ]
-                  ),
-                  ( "Open Positions",
-                    Section
+                  )
+                ,
+                  ( "Open Positions"
+                  , Section
                       [ "DataDiscriminator,Asset Category,Currency,Symbol,Quantity,Mult,Cost Price,Cost Basis,Close Price,Value,Unrealized P/L,Unrealized P/L %,Code\n\
                         \Summary,Stocks,USD,VOO,7,1,1.0,1.0,336.55,2000.1,1.0,0.09,"
                       ]
-                  ),
-                  ( "Trades",
-                    Section
+                  )
+                ,
+                  ( "Trades"
+                  , Section
                       [ "DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Realized P/L %,MTM P/L,Code\n\
-                        \Order,Stocks,USD,VOO,\"2020-10-05, 09:52:53\",2,309.35,312.08,-618.7,-0.6187,619.3187,0,0,5.46,O;R",
-                        "DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,,Proceeds,Comm in CHF,,,,MTM in CHF,Code\n\
+                        \Order,Stocks,USD,VOO,\"2020-10-05, 09:52:53\",2,309.35,312.08,-618.7,-0.6187,619.3187,0,0,5.46,O;R"
+                      , "DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,,Proceeds,Comm in CHF,,,,MTM in CHF,Code\n\
                         \Order,Forex,CHF,USD.CHF,\"2020-01-15, 14:33:56\",\"-2,000,000\",0.96358,,2000000.76,-1.93502,,,,-11,"
                       ]
-                  ),
-                  ( "Dividends",
-                    Section
+                  )
+                ,
+                  ( "Dividends"
+                  , Section
                       [ "Currency,Date,Description,Amount\n\
                         \USD,2019-12-20,ACWF(US46434V3160) Cash Dividend USD 0.42537 per Share (Ordinary Dividend),1050.24\n\
                         \Total,,,10813.42"
                       ]
-                  ),
-                  ( "Withholding Tax",
-                    Section
+                  )
+                ,
+                  ( "Withholding Tax"
+                  , Section
                       [ "Currency,Date,Description,Amount,Code\n\
                         \USD,2019-09-06,BND(US9219378356) Cash Dividend USD 0.188198 per Share - US Tax,-2.72\n\
                         \Total,,,-1585.38,"
                       ]
-                  ),
-                  ( "Deposits & Withdrawals",
-                    Section
+                  )
+                ,
+                  ( "Deposits & Withdrawals"
+                  , Section
                       [ "Currency,Settle Date,Description,Amount\n\
                         \CHF,2020-01-20,title,100.32"
                       ]
@@ -111,24 +119,24 @@ tests = do
         parseActivityStatement csv
           `shouldBe` Right
             ( ActivityStatement
-                { asLastStatementDay = fromGregorian 2020 12 4,
-                  asCashPositions =
-                    [ EndingCash CHF (fromRational $ 1000011 % 10000),
-                      EndingCash USD (fromRational $ 606 % 100)
-                    ],
-                  asStockPositions =
+                { asLastStatementDay = fromGregorian 2020 12 4
+                , asCashPositions =
+                    [ EndingCash CHF (fromRational $ 1000011 % 10000)
+                    , EndingCash USD (fromRational $ 606 % 100)
+                    ]
+                , asStockPositions =
                     [ StockPosition "VOO" 7 (fromRational $ 33655 % 100)
-                    ],
-                  asCashMovements =
+                    ]
+                , asCashMovements =
                     [ CashMovement
                         (fromGregorian 2020 1 20)
                         CHF
                         (fromRational (10032 % 100))
-                    ],
-                  asStockTrades =
+                    ]
+                , asStockTrades =
                     [ StockTrade (fromGregorian 2020 10 5) "VOO" 2 (fromRational $ -6187 % 10) (fromRational $ -6187 % 10000)
-                    ],
-                  asForexTrades =
+                    ]
+                , asForexTrades =
                     [ ForexTrade
                         (fromGregorian 2020 1 15)
                         (QuotePair (BaseCurrency USD) (QuoteCurrency CHF))
@@ -136,15 +144,15 @@ tests = do
                         (fromRational $ 96358 % 100000)
                         (fromRational $ 200000076 % 100)
                         (fromRational $ - (193502 % 100000))
-                    ],
-                  asDividends =
+                    ]
+                , asDividends =
                     [ Dividend
                         (fromGregorian 2019 12 20)
                         "ACWF"
                         (fromRational $ 42537 % 100000)
                         (fromRational $ 105024 % 100)
-                    ],
-                  asTaxes =
+                    ]
+                , asTaxes =
                     [ WithholdingTax
                         (fromGregorian 2019 9 6)
                         "BND"
@@ -156,13 +164,14 @@ tests = do
       it "Gives a readable error string when taxes can't be parsed" $ do
         let csv =
               Statement
-                [ ( "Statement",
-                    Section
+                [
+                  ( "Statement"
+                  , Section
                       [ "Field Name,Field Value\n\
                         \Period,\"December 11, 2019 - December 4, 2020\"\n"
                       ]
-                  ),
-                  ("Withholding Tax", Section ["Mangled CSV"])
+                  )
+                , ("Withholding Tax", Section ["Mangled CSV"])
                 ]
         parseActivityStatement csv
           `shouldSatisfy` \case

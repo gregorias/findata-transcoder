@@ -1,10 +1,9 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Test.Hledupt.Degiro
-  ( tests,
-  )
-where
+module Test.Hledupt.Degiro (
+  tests,
+) where
 
 import qualified Data.Text as Text
 import Data.Time (fromGregorian)
@@ -15,10 +14,10 @@ import Hledupt.Data.Currency (Currency (..))
 import Hledupt.Data.Isin (mkIsin)
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Hledupt.Degiro (csvRecordsToLedger)
-import Hledupt.Degiro.Csv
-  ( DegiroCsvRecord (..),
-    parseCsvStatement,
-  )
+import Hledupt.Degiro.Csv (
+  DegiroCsvRecord (..),
+  parseCsvStatement,
+ )
 import Relude
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe, shouldMatchList, shouldSatisfy)
@@ -151,12 +150,12 @@ csvRecordsToLedgerTests = do
       `shouldMatchList` [ parseTransactionUnsafe
                             "2020/02/03 * Degiro Forex\n\
                             \  Assets:Liquid:Degiro  -12414.85 CHF = 12791.83 CHF @ 0.9353 EUR\n\
-                            \  Assets:Liquid:Degiro  11611.68 EUR = -9733.32 EUR\n",
-                          parseTransactionUnsafe
+                            \  Assets:Liquid:Degiro  11611.68 EUR = -9733.32 EUR\n"
+                        , parseTransactionUnsafe
                             "2020/02/03 * Degiro Forex\n\
                             \  Assets:Liquid:Degiro  -10406.57 CHF = 2385.26 CHF @ 0.9353 EUR\n\
-                            \  Assets:Liquid:Degiro    9733.32 EUR = 0 EUR\n",
-                          parseTransactionUnsafe
+                            \  Assets:Liquid:Degiro    9733.32 EUR = 0 EUR\n"
+                        , parseTransactionUnsafe
                             "2020/02/04 * Degiro Forex\n\
                             \  Assets:Liquid:Degiro  2.50 EUR = 0 EUR\n\
                             \  Assets:Liquid:Degiro  -2.67 CHF = 2382.59 CHF @ 0.9351 EUR\n"
@@ -193,13 +192,13 @@ csvRecordsToLedgerTests = do
     prices `shouldBe` []
     actualTrs
       `shouldBe` [ parseTransactionUnsafe
-                     "2020/02/03 * Degiro Stock Transaction\n\
-                     \  Assets:Investments:Degiro:IWDA  171 IWDA @ 56.92 EUR\n\
-                     \  Assets:Liquid:Degiro  -9733.32 EUR = -21345.00 EUR",
-                   parseTransactionUnsafe
-                     "2020/02/03 * Degiro Forex\n\
-                     \  Assets:Liquid:Degiro  -10406.57 CHF = 2385.26 CHF @ 0.9353 EUR\n\
-                     \  Assets:Liquid:Degiro    9733.32 EUR = 0 EUR\n"
+                    "2020/02/03 * Degiro Stock Transaction\n\
+                    \  Assets:Investments:Degiro:IWDA  171 IWDA @ 56.92 EUR\n\
+                    \  Assets:Liquid:Degiro  -9733.32 EUR = -21345.00 EUR"
+                 , parseTransactionUnsafe
+                    "2020/02/03 * Degiro Forex\n\
+                    \  Assets:Liquid:Degiro  -10406.57 CHF = 2385.26 CHF @ 0.9353 EUR\n\
+                    \  Assets:Liquid:Degiro    9733.32 EUR = 0 EUR\n"
                  ]
 
   it "Returns a readable error when a record can't be processed." $ do

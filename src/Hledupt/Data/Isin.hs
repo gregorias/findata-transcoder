@@ -1,9 +1,8 @@
-module Hledupt.Data.Isin
-  ( Isin,
-    mkIsin,
-    isinP,
-  )
-where
+module Hledupt.Data.Isin (
+  Isin,
+  mkIsin,
+  isinP,
+) where
 
 import Control.Applicative.Combinators (count)
 import Relude

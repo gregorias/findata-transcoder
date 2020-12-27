@@ -1,11 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hledupt.Degiro
-  ( csvStatementToLedger,
-    csvRecordsToLedger,
-  )
-where
+module Hledupt.Degiro (
+  csvStatementToLedger,
+  csvRecordsToLedger,
+) where
 
 import Control.Lens (over, set, view)
 import qualified Control.Lens as L
@@ -18,50 +17,50 @@ import Data.Time (Day)
 import Data.Time.LocalTime (TimeOfDay)
 import Data.Vector (Vector)
 import qualified Data.Vector as V
-import Hledger
-  ( AmountPrice (UnitPrice),
-    Status (Cleared, Pending),
-    Transaction,
-    balassert,
-    post,
-    setFullPrecision,
-    transaction,
-  )
+import Hledger (
+  AmountPrice (UnitPrice),
+  Status (Cleared, Pending),
+  Transaction,
+  balassert,
+  post,
+  setFullPrecision,
+  transaction,
+ )
 import Hledger.Data (Posting)
 import Hledger.Data.Extra (makeCashAmount, makeCommodityAmount)
-import Hledger.Data.Lens
-  ( aAmountPrice,
-    pAmount,
-    pBalanceAssertion,
-    pStatus,
-    tDescription,
-    tStatus,
-  )
+import Hledger.Data.Lens (
+  aAmountPrice,
+  pAmount,
+  pBalanceAssertion,
+  pStatus,
+  tDescription,
+  tStatus,
+ )
 import Hledupt.Data (decimalParser)
 import Hledupt.Data.Cash (Cash (Cash), cashAmount, cashCurrency)
 import qualified Hledupt.Data.Cash as Cash
 import Hledupt.Data.Currency (Currency, currencyP)
 import Hledupt.Data.Isin (Isin, mkIsin)
 import Hledupt.Data.LedgerReport (LedgerReport (..))
-import Hledupt.Degiro.Csv
-  ( DegiroCsvRecord (..),
-    parseCsvStatement,
-  )
+import Hledupt.Degiro.Csv (
+  DegiroCsvRecord (..),
+  parseCsvStatement,
+ )
 import Relude
 import Relude.Extra (inverseMap)
-import Text.Megaparsec
-  ( MonadParsec (eof, label, token),
-    ParseErrorBundle (bundleErrors),
-    Parsec,
-    Stream,
-    VisualStream,
-    anySingle,
-    choice,
-    customFailure,
-    manyTill,
-    parseErrorPretty,
-    single,
-  )
+import Text.Megaparsec (
+  MonadParsec (eof, label, token),
+  ParseErrorBundle (bundleErrors),
+  Parsec,
+  Stream,
+  VisualStream,
+  anySingle,
+  choice,
+  customFailure,
+  manyTill,
+  parseErrorPretty,
+  single,
+ )
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (letterChar, space)
 import Text.Megaparsec.Char.Lexer (decimal)
@@ -71,10 +70,10 @@ moneyMarketIsin :: Maybe Isin
 moneyMarketIsin = mkIsin "NL0011280581"
 
 data Deposit = Deposit
-  { _depositDate :: Day,
-    _depositTime :: TimeOfDay,
-    _depositAmount :: Cash,
-    _depositBalance :: Cash
+  { _depositDate :: Day
+  , _depositTime :: TimeOfDay
+  , _depositAmount :: Cash
+  , _depositBalance :: Cash
   }
 
 depositP :: DegiroCsvRecord -> Maybe Deposit
@@ -89,8 +88,8 @@ depositToTransaction (Deposit date _time amount balance) =
   transaction
     date
     [ post "Assets:Liquid:BCGE" (makeCashAmount $ Cash.negate amount)
-        & L.set pStatus Pending,
-      post "Assets:Liquid:Degiro" (makeCashAmount amount)
+        & L.set pStatus Pending
+    , post "Assets:Liquid:Degiro" (makeCashAmount amount)
         & L.set pStatus Cleared
           . L.set
             pBalanceAssertion
@@ -99,9 +98,9 @@ depositToTransaction (Deposit date _time amount balance) =
     & L.set tDescription "Deposit"
 
 data ConnectionFee = ConnectionFee
-  { _cfDate :: Day,
-    _cfAmount :: Cash,
-    _cfBalance :: Cash
+  { _cfDate :: Day
+  , _cfAmount :: Cash
+  , _cfBalance :: Cash
   }
 
 connectionFeeP :: DegiroCsvRecord -> Maybe ConnectionFee
@@ -118,8 +117,8 @@ connectionFeeToTransaction (ConnectionFee date amount balance) =
     [ post "Assets:Liquid:Degiro" (makeCashAmount amount)
         & L.set
           pBalanceAssertion
-          (balassert $ makeCashAmount balance),
-      post "Expenses:Financial Services" (makeCashAmount $ Cash.negate amount)
+          (balassert $ makeCashAmount balance)
+    , post "Expenses:Financial Services" (makeCashAmount $ Cash.negate amount)
     ]
     & L.set tDescription "Exchange Connection Fee"
       . L.set tStatus Cleared
@@ -127,11 +126,11 @@ connectionFeeToTransaction (ConnectionFee date amount balance) =
 data FxType = Credit | Debit
 
 data FxRow = FxRow
-  { fxRowDate :: Day,
-    fxRowTime :: TimeOfDay,
-    fxRowFx :: Maybe Decimal,
-    fxRowChange :: Cash,
-    fxRowBalance :: Cash
+  { fxRowDate :: Day
+  , fxRowTime :: TimeOfDay
+  , fxRowFx :: Maybe Decimal
+  , fxRowChange :: Cash
+  , fxRowBalance :: Cash
   }
 
 fxTypeP :: Text -> Maybe FxType
@@ -146,10 +145,10 @@ fxRowP rec = do
   return $ FxRow (dcrDate rec) (dcrTime rec) (dcrFx rec) change (dcrBalance rec)
 
 data FxPosting = FxPosting
-  { fxPostingFx :: Maybe Decimal,
-    fxPostingCurrency :: !Currency,
-    _fxPostingChange :: !Decimal,
-    _fxPostingBalance :: !Decimal
+  { fxPostingFx :: Maybe Decimal
+  , fxPostingCurrency :: !Currency
+  , _fxPostingChange :: !Decimal
+  , _fxPostingBalance :: !Decimal
   }
 
 mkFxPosting :: Maybe Decimal -> Cash -> Cash -> Maybe FxPosting
@@ -171,9 +170,9 @@ fxPostingToPosting (FxPosting _fx currency change balance) =
     & L.set pBalanceAssertion (balassert $ makeCashAmount (Cash currency balance))
 
 data Fx = Fx
-  { _fxDate :: !Day,
-    _fxFstPosting :: !FxPosting,
-    _fxSndPosting :: !FxPosting
+  { _fxDate :: !Day
+  , _fxFstPosting :: !FxPosting
+  , _fxSndPosting :: !FxPosting
   }
 
 fxP :: FxRow -> FxRow -> Either Text Fx
@@ -199,29 +198,29 @@ fxToTransaction (Fx date fstPost sndPost) =
   transaction
     date
     [ fxPostingToPosting fstPost
-        & setPrice sndPost,
-      fxPostingToPosting sndPost
+        & setPrice sndPost
+    , fxPostingToPosting sndPost
         & setPrice fstPost
     ]
     & L.set tDescription "Degiro Forex"
       . L.set tStatus Cleared
-  where
-    setPrice postArg =
-      L.set
-        (pAmount . aAmountPrice)
-        ( UnitPrice . setFullPrecision . makeCashAmount
-            . Cash
-              (fxPostingCurrency postArg)
-            <$> fxPostingFx postArg
-        )
+ where
+  setPrice postArg =
+    L.set
+      (pAmount . aAmountPrice)
+      ( UnitPrice . setFullPrecision . makeCashAmount
+          . Cash
+            (fxPostingCurrency postArg)
+          <$> fxPostingFx postArg
+      )
 
 data StockTrade = StockTrade
-  { _stDate :: !Day,
-    _stIsin :: !Isin,
-    _stQuantity :: !Int,
-    _stPrice :: !Cash,
-    _stChange :: !Cash,
-    _stBalance :: !Cash
+  { _stDate :: !Day
+  , _stIsin :: !Isin
+  , _stQuantity :: !Int
+  , _stPrice :: !Cash
+  , _stChange :: !Cash
+  , _stBalance :: !Cash
   }
 
 data StockTradeType = Buy | Sell
@@ -231,25 +230,25 @@ stockTradeTypeP :: Text -> Maybe StockTradeType
 stockTradeTypeP = inverseMap (Text.pack . show)
 
 data StockTradeDescription = StockTradeDescription
-  { _stdType :: !StockTradeType,
-    _stdQuantity :: !Int,
-    _stdPrice :: !Cash
+  { _stdType :: !StockTradeType
+  , _stdQuantity :: !Int
+  , _stdPrice :: !Cash
   }
 
 stockTradeDescriptionP :: Text -> Maybe StockTradeDescription
 stockTradeDescriptionP = MP.parseMaybe parserP
-  where
-    parserP :: Parsec Void Text StockTradeDescription
-    parserP = do
-      Just tradeType <- stockTradeTypeP . Text.pack <$> some letterChar
-      space
-      quantity <- decimal
-      void $ manyTill anySingle (single '@')
-      price <- decimalParser
-      space
-      currency <- currencyP
-      void $ many anySingle
-      return $ StockTradeDescription tradeType quantity (Cash currency price)
+ where
+  parserP :: Parsec Void Text StockTradeDescription
+  parserP = do
+    Just tradeType <- stockTradeTypeP . Text.pack <$> some letterChar
+    space
+    quantity <- decimal
+    void $ manyTill anySingle (single '@')
+    price <- decimalParser
+    space
+    currency <- currencyP
+    void $ many anySingle
+    return $ StockTradeDescription tradeType quantity (Cash currency price)
 
 stockTradeP :: DegiroCsvRecord -> Maybe StockTrade
 stockTradeP rec = do
@@ -266,8 +265,8 @@ stockTradeP rec = do
 prettyIsin :: Isin -> Text
 prettyIsin isin =
   if Just isin == iwda then "IWDA" else show isin
-  where
-    iwda = mkIsin "IE00B4L5Y983"
+ where
+  iwda = mkIsin "IE00B4L5Y983"
 
 stockTradeToTransaction :: StockTrade -> Transaction
 stockTradeToTransaction (StockTrade date isin qty price change bal) =
@@ -286,16 +285,16 @@ stockTradeToTransaction (StockTrade date isin qty price change bal) =
                   . makeCashAmount
                   $ price
               )
-        ),
-      post "Assets:Liquid:Degiro" (makeCashAmount change)
+        )
+    , post "Assets:Liquid:Degiro" (makeCashAmount change)
         & L.set
           pBalanceAssertion
           (balassert $ makeCashAmount bal)
     ]
     & set tStatus Cleared
       . set tDescription "Degiro Stock Transaction"
-  where
-    prettyStockName = prettyIsin isin
+ where
+  prettyStockName = prettyIsin isin
 
 -- | Represents money market records
 --
@@ -356,9 +355,9 @@ activityP :: Parsec ErrorText DegiroCsv Activity
 activityP = do
   let singleRecordPs :: [DegiroCsvRecord -> Maybe Activity]
       singleRecordPs =
-        [ fmap toActivity . depositP,
-          fmap toActivity . connectionFeeP,
-          fmap toActivity . stockTradeP
+        [ fmap toActivity . depositP
+        , fmap toActivity . connectionFeeP
+        , fmap toActivity . stockTradeP
         ]
       singleRecordParsecs = (`token` S.empty) <$> singleRecordPs
   choice singleRecordParsecs <|> fmap toActivity fxParsec

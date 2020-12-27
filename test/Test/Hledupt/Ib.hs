@@ -3,10 +3,9 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Test.Hledupt.Ib
-  ( tests,
-  )
-where
+module Test.Hledupt.Ib (
+  tests,
+) where
 
 import Data.List (isInfixOf)
 import Data.Ratio ((%))
@@ -44,8 +43,8 @@ parseTests = do
       statementActivityToLedgerReport stmt
         `shouldBe` Right
           ( LedgerReport
-              { ledgerReportMarketPrices = [],
-                ledgerReportTransactions =
+              { ledgerReportMarketPrices = []
+              , ledgerReportTransactions =
                   [ parseTransactionUnsafe
                       "2020/01/01 * VOO dividend @ 0.45 per share\n\
                       \  Assets:Liquid:IB:USD\n\
@@ -60,9 +59,9 @@ parseTests = do
             (IbCsv.nullActivityStatement (fromGregorian 2020 12 8))
               { IbCsv.asTaxes =
                   [ IbCsv.WithholdingTax
-                      { IbCsv.wtDate = fromGregorian 2020 1 1,
-                        IbCsv.wtSymbol = "VOO",
-                        IbCsv.wtTotalAmount = fromRational 1
+                      { IbCsv.wtDate = fromGregorian 2020 1 1
+                      , IbCsv.wtSymbol = "VOO"
+                      , IbCsv.wtTotalAmount = fromRational 1
                       }
                   ]
               }
@@ -158,23 +157,23 @@ parseTests = do
                   \ Assets:Liquid:IB:USD  USD -2200000.00 @ 0.96358 CHF\n\
                   \ Assets:Liquid:IB:CHF  CHF 2119800.76\n\
                   \ Assets:Liquid:IB:CHF  CHF -1.93502\n\
-                  \ Expenses:Financial Services  CHF 1.93502",
-                parseTransactionUnsafe
+                  \ Expenses:Financial Services  CHF 1.93502"
+              , parseTransactionUnsafe
                   "2020/01/20 IB Deposit/Withdrawal\n\
                   \*  Assets:Liquid:IB:CHF  CHF 100.32\n\
-                  \!  Todo",
-                parseTransactionUnsafe
+                  \!  Todo"
+              , parseTransactionUnsafe
                   "2020/10/02 * VOO dividend @ 1.3085 per share\n\
                   \  Assets:Liquid:IB:USD\n\
                   \  Assets:Illiquid:IB Withholding Tax  USD 0.25\n\
-                  \  Income:Capital Gains  USD -1.31",
-                parseTransactionUnsafe
+                  \  Income:Capital Gains  USD -1.31"
+              , parseTransactionUnsafe
                   "2020/10/05 * VOO trade\n\
                   \  Assets:Investments:IB:VOO  2 VOO\n\
                   \  Assets:Liquid:IB:USD  -1 USD\n\
                   \  Assets:Liquid:IB:USD  -0.5 USD\n\
-                  \  Expenses:Financial Services  0.5 USD",
-                parseTransactionUnsafe
+                  \  Expenses:Financial Services  0.5 USD"
+              , parseTransactionUnsafe
                   "2020/11/26 * IB Status\n\
                   \  Assets:Liquid:IB:CHF  CHF 0 = CHF 123.40\n\
                   \  Assets:Liquid:IB:USD  USD 0 = USD 567.80\n\

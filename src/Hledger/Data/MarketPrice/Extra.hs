@@ -1,10 +1,10 @@
 module Hledger.Data.MarketPrice.Extra (showMarketPrice) where
 
-import Data.Time.Format.ISO8601
-  ( FormatExtension (ExtendedFormat),
-    calendarFormat,
-    formatShow,
-  )
+import Data.Time.Format.ISO8601 (
+  FormatExtension (ExtendedFormat),
+  calendarFormat,
+  formatShow,
+ )
 import Hledger (MarketPrice (MarketPrice))
 import Relude
 import Text.Printf (printf)

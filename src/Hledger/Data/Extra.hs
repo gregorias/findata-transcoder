@@ -1,28 +1,27 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Hledger.Data.Extra
-  ( makeCashAmount,
-    makeCurrencyAmount,
-    makeCommodityAmount,
-    setCurrencyPrecision,
-  )
-where
+module Hledger.Data.Extra (
+  makeCashAmount,
+  makeCurrencyAmount,
+  makeCommodityAmount,
+  setCurrencyPrecision,
+) where
 
 import Control.Lens (over, set)
 import Data.Text (pack)
 import Hledger.Data.Amount (num)
-import Hledger.Data.Lens
-  ( aCommodity,
-    aStyle,
-    asCommoditySpaced,
-    asPrecision,
-  )
-import Hledger.Data.Types
-  ( Amount (..),
-    AmountPrecision (..),
-    Quantity,
-  )
+import Hledger.Data.Lens (
+  aCommodity,
+  aStyle,
+  asCommoditySpaced,
+  asPrecision,
+ )
+import Hledger.Data.Types (
+  Amount (..),
+  AmountPrecision (..),
+  Quantity,
+ )
 import Hledupt.Data.Cash (Cash (Cash))
 import Hledupt.Data.Currency (Currency)
 import Relude

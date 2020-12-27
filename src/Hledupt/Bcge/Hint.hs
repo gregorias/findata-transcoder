@@ -4,36 +4,35 @@
 -- -
 -- - You can fetch config for generating hints from a CSV file to have that
 -- - config in a private file instead of on Github.
-module Hledupt.Bcge.Hint
-  ( TransactionHint (..),
-    Config,
-    ConfigEntry (..),
-    configParser,
-    transactionTitleToHint,
-  )
-where
+module Hledupt.Bcge.Hint (
+  TransactionHint (..),
+  Config,
+  ConfigEntry (..),
+  configParser,
+  transactionTitleToHint,
+) where
 
 import Data.List (isInfixOf)
 import Relude
 import Safe (headMay)
-import Text.Megaparsec
-  ( Parsec,
-    anySingle,
-    eof,
-    noneOf,
-    notFollowedBy,
-  )
+import Text.Megaparsec (
+  Parsec,
+  anySingle,
+  eof,
+  noneOf,
+  notFollowedBy,
+ )
 import Text.Megaparsec.Char (char, eol, string)
 
 data TransactionHint = TransactionHint
-  { title :: String,
-    counterAccount :: String
+  { title :: String
+  , counterAccount :: String
   }
   deriving stock (Eq, Show)
 
 data ConfigEntry = ConfigEntry
-  { keyword :: String,
-    hint :: TransactionHint
+  { keyword :: String
+  , hint :: TransactionHint
   }
   deriving stock (Eq, Show)
 

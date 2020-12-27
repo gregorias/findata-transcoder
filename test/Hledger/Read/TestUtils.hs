@@ -1,53 +1,52 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Hledger.Read.TestUtils
-  ( postingParser,
-    transactionParser,
-    parseTransactionUnsafe,
-  )
-where
+module Hledger.Read.TestUtils (
+  postingParser,
+  transactionParser,
+  parseTransactionUnsafe,
+) where
 
 import qualified Control.Lens as L
 import Control.Monad (liftM2)
-import Control.Monad.Combinators
-  ( manyTill,
-    someTill,
-  )
+import Control.Monad.Combinators (
+  manyTill,
+  someTill,
+ )
 import Data.Maybe (fromJust)
 import Data.Text (pack, unpack)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Hledger (AmountPrice (TotalPrice, UnitPrice), missingamt, post, setFullPrecision)
 import Hledger.Data.Amount (num)
-import Hledger.Data.Extra
-  ( makeCommodityAmount,
-    setCurrencyPrecision,
-  )
-import Hledger.Data.Lens
-  ( pBalanceAssertion,
-    pStatus,
-    tDescription,
-    tStatus,
-  )
+import Hledger.Data.Extra (
+  makeCommodityAmount,
+  setCurrencyPrecision,
+ )
+import Hledger.Data.Lens (
+  pBalanceAssertion,
+  pStatus,
+  tDescription,
+  tStatus,
+ )
 import Hledger.Data.Posting (balassert)
 import qualified Hledger.Data.Transaction as Tr
-import Hledger.Data.Types
-  ( Amount (..),
-    BalanceAssertion (..),
-    Posting (..),
-    Status (..),
-    Transaction,
-  )
+import Hledger.Data.Types (
+  Amount (..),
+  BalanceAssertion (..),
+  Posting (..),
+  Status (..),
+  Transaction,
+ )
 import Hledupt.Data (decimalParser)
 import Relude
-import Text.Megaparsec
-  ( MonadParsec,
-    Token,
-    anySingle,
-    choice,
-    single,
-    try,
-  )
+import Text.Megaparsec (
+  MonadParsec,
+  Token,
+  anySingle,
+  choice,
+  single,
+  try,
+ )
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (alphaNumChar, char, newline, printChar, spaceChar, string)
 import qualified Text.Megaparsec.Char as Char
@@ -105,17 +104,17 @@ balanceAssertion = do
 statusParser :: (MonadParsec e s m, Token s ~ Char) => m Status
 statusParser =
   choice
-    [ try (single '*') $> Cleared,
-      try (single '!') $> Pending,
-      pure Unmarked
+    [ try (single '*') $> Cleared
+    , try (single '!') $> Pending
+    , pure Unmarked
     ]
 
 amountPriceParser :: MP.Parsec Void String AmountPrice
 amountPriceParser = do
   constructor <-
     choice
-      [ try (string "@@") $> TotalPrice,
-        single '@' $> UnitPrice
+      [ try (string "@@") $> TotalPrice
+      , single '@' $> UnitPrice
       ]
   void $ some spaceChar
   constructor . setFullPrecision <$> commodity

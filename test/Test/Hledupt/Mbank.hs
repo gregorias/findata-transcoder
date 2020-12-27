@@ -1,19 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Test.Hledupt.Mbank
-  ( mbankTests,
-  )
-where
+module Test.Hledupt.Mbank (
+  mbankTests,
+) where
 
 import Data.Time.Calendar (fromGregorian)
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.Data (fromUnitsAndCents)
-import Hledupt.Mbank
-  ( MbankTransaction (..),
-    mTrToLedger,
-    mbankCsvParser,
-    valueParser,
-  )
+import Hledupt.Mbank (
+  MbankTransaction (..),
+  mTrToLedger,
+  mbankCsvParser,
+  valueParser,
+ )
 import Relude
 import Test.Hspec (describe, it, shouldBe)
 import qualified Test.Hspec as Hspec

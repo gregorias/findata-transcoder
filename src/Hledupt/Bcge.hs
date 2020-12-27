@@ -2,21 +2,20 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Hledupt.Bcge
-  ( bcgeCsvToLedger,
-    BcgeTransaction (..),
-    bcgeTransactionToLedger,
-    CsvLine,
-    csvLineToBcgeTransaction,
-    parseStatementDate,
-    statementDateParser,
-    saldoToLedger,
-  )
-where
+module Hledupt.Bcge (
+  bcgeCsvToLedger,
+  BcgeTransaction (..),
+  bcgeTransactionToLedger,
+  CsvLine,
+  csvLineToBcgeTransaction,
+  parseStatementDate,
+  statementDateParser,
+  saldoToLedger,
+) where
 
-import Control.Lens
-  ( set,
-  )
+import Control.Lens (
+  set,
+ )
 import qualified Control.Lens as L
 import Control.Monad.Writer.Lazy (execWriter, tell)
 import Data.Decimal (Decimal)
@@ -25,19 +24,19 @@ import Data.Text (pack)
 import Data.Time.Calendar (Day)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import qualified Hledger.Data.Extra as HDE
-import Hledger.Data.Lens
-  ( pAccount,
-    pBalanceAssertion,
-    tDescription,
-    tStatus,
-  )
+import Hledger.Data.Lens (
+  pAccount,
+  pBalanceAssertion,
+  tDescription,
+  tStatus,
+ )
 import Hledger.Data.Posting (balassert, nullposting)
 import qualified Hledger.Data.Posting as Hledger
 import Hledger.Data.Transaction (transaction)
-import Hledger.Data.Types
-  ( Status (..),
-    Transaction (..),
-  )
+import Hledger.Data.Types (
+  Status (..),
+  Transaction (..),
+ )
 import qualified Hledupt.Bcge.Hint as Hint
 import Hledupt.Data (decimalParser)
 import Hledupt.Data.Cash (Cash (Cash), cashAmount)
@@ -45,12 +44,12 @@ import Hledupt.Data.Currency (Currency (CHF))
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Relude
 import Safe (headMay)
-import Text.Megaparsec
-  ( Parsec,
-    noneOf,
-    parse,
-    parseMaybe,
-  )
+import Text.Megaparsec (
+  Parsec,
+  noneOf,
+  parse,
+  parseMaybe,
+ )
 import Text.Megaparsec.Char (char, string)
 import Text.Megaparsec.Char.Extra (eolOrEof)
 
@@ -102,16 +101,16 @@ statementDateParser = do
 
 -- | BCGE's transaction data fetched from their website.
 data BcgeTransaction = BcgeTransaction
-  { bTrDate :: Day,
-    bTrTitle :: String,
-    bTrAmount :: Decimal
+  { bTrDate :: Day
+  , bTrTitle :: String
+  , bTrAmount :: Decimal
   }
   deriving stock (Eq, Show)
 
 data BcgeStatement = BcgeStatement
-  { bStatementDate :: Day,
-    bStatementBalance :: Decimal,
-    bStatementTransactions :: [BcgeTransaction]
+  { bStatementDate :: Day
+  , bStatementBalance :: Decimal
+  , bStatementTransactions :: [BcgeTransaction]
   }
   deriving stock (Eq, Show)
 
@@ -155,38 +154,38 @@ bcgeTransactionToLedger maybeConfig (BcgeTransaction date title amount) =
   transaction date [bcgePosting, counterPosting]
     & set tDescription description
       . set tStatus Cleared
-  where
-    maybeHint = do
-      config <- maybeConfig
-      Hint.transactionTitleToHint config title
-    description = maybe title Hint.title maybeHint
-    bcgePosting =
-      Hledger.post
-        (pack "Assets:Liquid:BCGE")
-        (HDE.makeCurrencyAmount CHF amount)
-    counterAccount = maybe "Expenses:Other" Hint.counterAccount maybeHint
-    counterPosting =
-      Hledger.post
-        (pack counterAccount)
-        (HDE.makeCurrencyAmount CHF $ negate amount)
+ where
+  maybeHint = do
+    config <- maybeConfig
+    Hint.transactionTitleToHint config title
+  description = maybe title Hint.title maybeHint
+  bcgePosting =
+    Hledger.post
+      (pack "Assets:Liquid:BCGE")
+      (HDE.makeCurrencyAmount CHF amount)
+  counterAccount = maybe "Expenses:Other" Hint.counterAccount maybeHint
+  counterPosting =
+    Hledger.post
+      (pack counterAccount)
+      (HDE.makeCurrencyAmount CHF $ negate amount)
 
 saldoToLedger :: Day -> Decimal -> Transaction
 saldoToLedger date balance =
   transaction date [balancePosting]
     & set tDescription "BCGE Status"
       . set tStatus Cleared
-  where
-    balancePosting =
-      nullposting
-        & set pAccount bcgeAccount
-          . set pBalanceAssertion (balassert . HDE.makeCurrencyAmount CHF $ balance)
+ where
+  balancePosting =
+    nullposting
+      & set pAccount bcgeAccount
+        . set pBalanceAssertion (balassert . HDE.makeCurrencyAmount CHF $ balance)
 
 bStToLedger :: Maybe Hint.Config -> BcgeStatement -> [Transaction]
 bStToLedger config (BcgeStatement date balance trs) = execWriter collectTrs
-  where
-    collectTrs = do
-      tell $ fmap (bcgeTransactionToLedger config) (reverse trs)
-      tell [saldoToLedger date balance]
+ where
+  collectTrs = do
+    tell $ fmap (bcgeTransactionToLedger config) (reverse trs)
+    tell [saldoToLedger date balance]
 
 bcgeCsvToLedger :: Maybe Hint.Config -> String -> Either String LedgerReport
 bcgeCsvToLedger config input =
@@ -194,8 +193,8 @@ bcgeCsvToLedger config input =
     Left err -> Left $ show err
     Right Nothing -> Left "Something went wrong in the transformation process."
     Right (Just res) -> Right $ LedgerReport res []
-  where
-    csvLines = parse bcgeCsvParser "" input
-    bcgeStatement :: Either _ (Maybe BcgeStatement) =
-      fmap csvLinesToBcgeStatement csvLines
-    ledgerTrs = fmap (fmap (bStToLedger config)) bcgeStatement
+ where
+  csvLines = parse bcgeCsvParser "" input
+  bcgeStatement :: Either _ (Maybe BcgeStatement) =
+    fmap csvLinesToBcgeStatement csvLines
+  ledgerTrs = fmap (fmap (bStToLedger config)) bcgeStatement

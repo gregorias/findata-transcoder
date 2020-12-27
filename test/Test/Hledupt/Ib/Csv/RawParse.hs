@@ -4,11 +4,11 @@ module Test.Hledupt.Ib.Csv.RawParse (tests) where
 
 import Data.List (isInfixOf)
 import qualified Data.Map.Lazy as Map
-import Hledupt.Ib.Csv.RawParse
-  ( Section (..),
-    Statement (..),
-    parse,
-  )
+import Hledupt.Ib.Csv.RawParse (
+  Section (..),
+  Statement (..),
+  parse,
+ )
 import Relude
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe, shouldSatisfy)
@@ -38,7 +38,7 @@ tests = do
         `shouldBe` Right
           ( Statement $
               Map.fromList
-                [ ("SecA", Section $ "Val\n1\n" :| ["Val,Amt\n"]),
-                  ("SecB", Section $ "Amt\n42\n" :| [])
+                [ ("SecA", Section $ "Val\n1\n" :| ["Val,Amt\n"])
+                , ("SecB", Section $ "Amt\n42\n" :| [])
                 ]
           )

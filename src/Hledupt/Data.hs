@@ -2,13 +2,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Hledupt.Data
-  ( fromUnitsAndCents,
-    MyDecimal (..),
-    myDecDec,
-    decimalParser,
-  )
-where
+module Hledupt.Data (
+  fromUnitsAndCents,
+  MyDecimal (..),
+  myDecDec,
+  decimalParser,
+) where
 
 import qualified Control.Lens.Iso as Lens
 import Data.ByteString.Char8 (unpack)
@@ -44,10 +43,10 @@ decimalParser = do
 
 fromUnitsAndCents :: Integer -> Integer -> Decimal
 fromUnitsAndCents units cents = unitsDec `op` centsDec
-  where
-    unitsDec = realFracToDecimal 0 (units % 1)
-    centsDec = realFracToDecimal 2 (cents % 100)
-    op = if units >= 0 then (+) else (-)
+ where
+  unitsDec = realFracToDecimal 0 (units % 1)
+  centsDec = realFracToDecimal 2 (cents % 100)
+  op = if units >= 0 then (+) else (-)
 
 newtype MyDecimal = MyDecimal Decimal
   deriving stock (Eq, Show)

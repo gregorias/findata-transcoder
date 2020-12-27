@@ -6,28 +6,28 @@ module Test.Hledger.Read.TestUtils (tests) where
 
 import qualified Control.Lens as L
 import Data.Time (fromGregorian)
-import Hledger
-  ( Amount (aprice),
-    AmountPrice (UnitPrice),
-    missingamt,
-    setFullPrecision,
-  )
-import Hledger.Data.Extra
-  ( makeCommodityAmount,
-    makeCurrencyAmount,
-  )
+import Hledger (
+  Amount (aprice),
+  AmountPrice (UnitPrice),
+  missingamt,
+  setFullPrecision,
+ )
+import Hledger.Data.Extra (
+  makeCommodityAmount,
+  makeCurrencyAmount,
+ )
 import Hledger.Data.Lens (tDescription, tStatus)
-import Hledger.Data.Posting
-  ( balassert,
-    nullposting,
-    post,
-  )
+import Hledger.Data.Posting (
+  balassert,
+  nullposting,
+  post,
+ )
 import Hledger.Data.Transaction (transaction)
-import Hledger.Data.Types
-  ( MixedAmount (..),
-    Posting (..),
-    Status (..),
-  )
+import Hledger.Data.Types (
+  MixedAmount (..),
+  Posting (..),
+  Status (..),
+ )
 import Hledger.Read.TestUtils (parseTransactionUnsafe, postingParser)
 import Hledupt.Data.Currency (Currency (..))
 import Relude
@@ -66,8 +66,8 @@ tests = do
             expectedTrBase =
               transaction
                 (fromGregorian 2019 10 28)
-                [ post "Assets:Bank With Spaces" missingamt,
-                  post "Expenses:Other" missingamt
+                [ post "Assets:Bank With Spaces" missingamt
+                , post "Expenses:Other" missingamt
                 ]
             expectedTr =
               expectedTrBase
@@ -84,8 +84,8 @@ tests = do
                 (fromGregorian 2019 10 28)
                 [ post
                     "Assets:Bank With Spaces"
-                    (makeCommodityAmount "SPY" (-15)),
-                  post "Expenses:Other" missingamt
+                    (makeCommodityAmount "SPY" (-15))
+                , post "Expenses:Other" missingamt
                 ]
             expectedTr =
               expectedTrBase
@@ -103,8 +103,8 @@ tests = do
                 [ (post "Assets:Bank" missingamt)
                     { pbalanceassertion =
                         balassert $ makeCommodityAmount "SPY" 123
-                    },
-                  post "Expenses:Other" missingamt
+                    }
+                , post "Expenses:Other" missingamt
                 ]
             expectedTr =
               expectedTrBase
@@ -120,13 +120,13 @@ tests = do
               transaction
                 (fromGregorian 2019 10 28)
                 [ nullposting
-                    { paccount = "Assets:Bank",
-                      pbalanceassertion =
+                    { paccount = "Assets:Bank"
+                    , pbalanceassertion =
                         balassert $
-                          makeCommodityAmount "SPY" 123,
-                      pamount = Mixed [makeCommodityAmount "SPY" 100]
-                    },
-                  post "Expenses:Other" missingamt
+                          makeCommodityAmount "SPY" 123
+                    , pamount = Mixed [makeCommodityAmount "SPY" 100]
+                    }
+                , post "Expenses:Other" missingamt
                 ]
             expectedTr =
               expectedTrBase

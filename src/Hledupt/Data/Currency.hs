@@ -1,11 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Hledupt.Data.Currency
-  ( Currency (..),
-    currencyP,
-  )
-where
+module Hledupt.Data.Currency (
+  Currency (..),
+  currencyP,
+) where
 
 import Control.Applicative.Combinators (count)
 import Data.ByteString.UTF8 as UTF8
@@ -31,9 +30,9 @@ instance Csv.FromField Currency where
       Nothing -> fail $ "Could not parse the currency: " ++ UTF8.toString field ++ "."
 
 currencyP ::
-  ( MonadFail m,
-    MonadParsec e s m,
-    Token s ~ Char
+  ( MonadFail m
+  , MonadParsec e s m
+  , Token s ~ Char
   ) =>
   m Currency
 currencyP = do

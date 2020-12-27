@@ -4,31 +4,30 @@
 -- |
 -- This module does a first-pass parsing of an IB statement CSV
 -- into individual CSVs.
-module Hledupt.Ib.Csv.RawParse
-  ( Statement (..),
-    Section (..),
-    Csv (..),
-    parse,
-  )
-where
+module Hledupt.Ib.Csv.RawParse (
+  Statement (..),
+  Section (..),
+  Csv (..),
+  parse,
+) where
 
 import qualified Control.Lens as L
 import Data.List.NonEmpty (some1)
 import qualified Data.Map as Map
 import Relude
-import Text.Megaparsec
-  ( MonadParsec (eof, label, lookAhead, takeWhileP, try),
-    ParseErrorBundle (bundleErrors),
-    Parsec,
-    Stream,
-    VisualStream,
-    anySingle,
-    errorBundlePretty,
-    manyTill,
-    parseErrorPretty,
-    satisfy,
-    single,
-  )
+import Text.Megaparsec (
+  MonadParsec (eof, label, lookAhead, takeWhileP, try),
+  ParseErrorBundle (bundleErrors),
+  Parsec,
+  Stream,
+  VisualStream,
+  anySingle,
+  errorBundlePretty,
+  manyTill,
+  parseErrorPretty,
+  satisfy,
+  single,
+ )
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (newline)
 import Text.Megaparsec.Char.Extra (bom)
@@ -49,9 +48,9 @@ newtype Csv = Csv
   deriving newtype (IsString, Eq, Show)
 
 data IbCsvLine = IbCsvLine
-  { iclSection :: String,
-    iclHeader :: String,
-    iclRest :: String
+  { iclSection :: String
+  , iclHeader :: String
+  , iclRest :: String
   }
   deriving stock (Eq, Ord)
 
@@ -59,18 +58,18 @@ data Hord = Header | Data
   deriving stock (Eq, Ord, Show)
 
 data IbCsvHordLine = IbCsvHordLine
-  { ichlSection :: String,
-    ichlHeader :: Hord,
-    ichlRest :: String
+  { ichlSection :: String
+  , ichlHeader :: Hord
+  , ichlRest :: String
   }
   deriving stock (Eq, Ord)
 
 toMaybeHordLine :: IbCsvLine -> Maybe IbCsvHordLine
 toMaybeHordLine
   IbCsvLine
-    { iclSection = sec,
-      iclHeader = header,
-      iclRest = rest
+    { iclSection = sec
+    , iclHeader = header
+    , iclRest = rest
     }
     | header == "Header" = Just $ IbCsvHordLine sec Header rest
     | header == "Data" = Just $ IbCsvHordLine sec Data rest
@@ -79,9 +78,9 @@ toMaybeHordLine
 showIbCsvHordLine :: IbCsvHordLine -> [Char]
 showIbCsvHordLine
   IbCsvHordLine
-    { ichlSection = sec,
-      ichlHeader = header,
-      ichlRest = rest
+    { ichlSection = sec
+    , ichlHeader = header
+    , ichlRest = rest
     } =
     sec ++ "," ++ show header ++ "," ++ rest ++ "\n"
 
@@ -170,6 +169,6 @@ parse csv = do
   prependErrorMessage
     "Could not parse the IB CSV statement.\n"
     $ MP.parse lineParser "" (IbCsvLines ibCsvHordLines)
-  where
-    prependErrorMessagePretty errMsg = first ((errMsg ++) . errorBundlePretty)
-    prependErrorMessage errMsg = first ((errMsg ++) . parseErrorPretty . head . bundleErrors)
+ where
+  prependErrorMessagePretty errMsg = first ((errMsg ++) . errorBundlePretty)
+  prependErrorMessage errMsg = first ((errMsg ++) . parseErrorPretty . head . bundleErrors)

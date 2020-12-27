@@ -1,18 +1,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Test.Hledupt.Data.LedgerReport
-  ( tests,
-  )
-where
+module Test.Hledupt.Data.LedgerReport (
+  tests,
+) where
 
 import Data.Ratio ((%))
 import Data.Time (fromGregorian)
 import Hledger (MarketPrice (MarketPrice))
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
-import Hledupt.Data.LedgerReport
-  ( LedgerReport (..),
-    showLedgerReport,
-  )
+import Hledupt.Data.LedgerReport (
+  LedgerReport (..),
+  showLedgerReport,
+ )
 import Relude
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe)
@@ -27,8 +26,8 @@ tests = do
               [ parseTransactionUnsafe
                   "2020/11/26 IB Status\n\
                   \  Assets:Investments:IB:ACWF  0 ACWF = ACWF 123\n\
-                  \  Assets:Liquid:IB:CHF  CHF 0 = CHF 100.0011305",
-                parseTransactionUnsafe
+                  \  Assets:Liquid:IB:CHF  CHF 0 = CHF 100.0011305"
+              , parseTransactionUnsafe
                   "2020/01/20 IB Deposit/Withdrawal\n\
                   \*  Assets:Liquid:IB:CHF  CHF 100.32\n\
                   \!  Todo"

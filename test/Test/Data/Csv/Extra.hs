@@ -1,17 +1,16 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Test.Data.Csv.Extra
-  ( tests,
-  )
-where
+module Test.Data.Csv.Extra (
+  tests,
+) where
 
 import qualified Data.Csv as Csv
-import Data.Csv.Extra
-  ( FromNamedRecord (..),
-    decodeByName,
-    lookup,
-  )
+import Data.Csv.Extra (
+  FromNamedRecord (..),
+  decodeByName,
+  lookup,
+ )
 import Data.Vector (Vector)
 import Relude
 import Test.Hspec (SpecWith, describe, it)
@@ -38,14 +37,15 @@ tests = do
         ( decodeByName "type\nA\nA\nB" ::
             Either
               String
-              ( Csv.Header,
-                Vector TestRecord
+              ( Csv.Header
+              , Vector TestRecord
               )
           )
           `shouldBe` Right
-            ( ["type"],
-              [ RecordA,
-                RecordA,
-                RecordB
+            ( ["type"]
+            ,
+              [ RecordA
+              , RecordA
+              , RecordB
               ]
             )

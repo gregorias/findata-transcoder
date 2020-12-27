@@ -1,20 +1,19 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Test.Hledupt.Degiro.Csv
-  ( tests,
-  )
-where
+module Test.Hledupt.Degiro.Csv (
+  tests,
+) where
 
 import Data.Time (fromGregorian)
 import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
 import Hledupt.Data.Cash (Cash (Cash))
 import Hledupt.Data.Currency (Currency (..))
 import Hledupt.Data.Isin (mkIsin)
-import Hledupt.Degiro.Csv
-  ( DegiroCsvRecord (..),
-    parseCsvStatement,
-  )
+import Hledupt.Degiro.Csv (
+  DegiroCsvRecord (..),
+  parseCsvStatement,
+ )
 import Relude
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe)
@@ -44,8 +43,8 @@ tests = do
                 Nothing
                 (Just $ Cash CHF (-0.01))
                 (Cash CHF 131.23)
-                "",
-              DegiroCsvRecord
+                ""
+            , DegiroCsvRecord
                 (fromGregorian 2020 9 2)
                 (TimeOfDay 12 02 0)
                 (fromGregorian 2020 9 1)
@@ -55,8 +54,8 @@ tests = do
                 Nothing
                 Nothing
                 (Cash CHF 131.72)
-                "",
-              DegiroCsvRecord
+                ""
+            , DegiroCsvRecord
                 (fromGregorian 2020 9 2)
                 (TimeOfDay 8 24 0)
                 (fromGregorian 2020 9 1)
@@ -66,8 +65,8 @@ tests = do
                 Nothing
                 (Just $ Cash CHF 0.01)
                 (Cash CHF 131.72)
-                "",
-              DegiroCsvRecord
+                ""
+            , DegiroCsvRecord
                 (fromGregorian 2020 9 2)
                 (TimeOfDay 8 24 0)
                 (fromGregorian 2020 9 1)
@@ -77,8 +76,8 @@ tests = do
                 (Just 0.9241)
                 (Just $ Cash EUR (-0.01))
                 (Cash EUR 0)
-                "",
-              DegiroCsvRecord
+                ""
+            , DegiroCsvRecord
                 (fromGregorian 2020 1 28)
                 (TimeOfDay 14 5 0)
                 (fromGregorian 2020 1 27)

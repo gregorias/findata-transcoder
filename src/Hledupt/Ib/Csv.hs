@@ -3,35 +3,34 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Hledupt.Ib.Csv
-  ( -- * Types
-    ActivityStatement (..),
-    nullActivityStatement,
-    CashMovement (..),
-    Dividend (..),
-    EndingCash (..),
-    StockPosition (..),
-    WithholdingTax (..),
-    StockTrade (..),
-    ForexTrade (..),
+module Hledupt.Ib.Csv (
+  -- * Types
+  ActivityStatement (..),
+  nullActivityStatement,
+  CashMovement (..),
+  Dividend (..),
+  EndingCash (..),
+  StockPosition (..),
+  WithholdingTax (..),
+  StockTrade (..),
+  ForexTrade (..),
 
-    -- * Parsers
-    parseActivity,
-  )
-where
+  -- * Parsers
+  parseActivity,
+) where
 
-import Hledupt.Ib.Csv.ActivityStatementParse
-  ( ActivityStatement (..),
-    CashMovement (..),
-    Dividend (..),
-    EndingCash (..),
-    ForexTrade (..),
-    StockPosition (..),
-    StockTrade (..),
-    WithholdingTax (..),
-    nullActivityStatement,
-    parseActivityStatement,
-  )
+import Hledupt.Ib.Csv.ActivityStatementParse (
+  ActivityStatement (..),
+  CashMovement (..),
+  Dividend (..),
+  EndingCash (..),
+  ForexTrade (..),
+  StockPosition (..),
+  StockTrade (..),
+  WithholdingTax (..),
+  nullActivityStatement,
+  parseActivityStatement,
+ )
 import qualified Hledupt.Ib.Csv.RawParse as RawParse
 import Relude
 

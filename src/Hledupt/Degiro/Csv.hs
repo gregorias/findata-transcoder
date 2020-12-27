@@ -2,14 +2,13 @@
 {-# LANGUAGE TypeApplications #-}
 
 -- | This module parses Degiro CSV statement
-module Hledupt.Degiro.Csv
-  ( -- * Parsing
-    parseCsvStatement,
+module Hledupt.Degiro.Csv (
+  -- * Parsing
+  parseCsvStatement,
 
-    -- * Types
-    DegiroCsvRecord (..),
-  )
-where
+  -- * Types
+  DegiroCsvRecord (..),
+) where
 
 import Control.Applicative.Combinators (count)
 import Control.Lens.Internal.ByteString (unpackStrict8)
@@ -18,12 +17,12 @@ import Data.Csv ((.!))
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
 import qualified Data.Text as Text
-import Data.Time
-  ( Day,
-    TimeOfDay (TimeOfDay),
-    defaultTimeLocale,
-    parseTimeM,
-  )
+import Data.Time (
+  Day,
+  TimeOfDay (TimeOfDay),
+  defaultTimeLocale,
+  parseTimeM,
+ )
 import Data.Vector (Vector)
 import Hledupt.Data (decimalParser)
 import Hledupt.Data.Cash (Cash (Cash))
@@ -50,16 +49,16 @@ timeP = do
   return $ TimeOfDay hours minutes 0
 
 data DegiroCsvRecord = DegiroCsvRecord
-  { dcrDate :: Day,
-    dcrTime :: TimeOfDay,
-    dcrValueDate :: Day,
-    dcrProduct :: Text,
-    dcrIsin :: Maybe Isin,
-    dcrDescription :: Text,
-    dcrFx :: Maybe Decimal,
-    dcrChange :: Maybe Cash,
-    dcrBalance :: Cash,
-    dcrOrderId :: Text
+  { dcrDate :: Day
+  , dcrTime :: TimeOfDay
+  , dcrValueDate :: Day
+  , dcrProduct :: Text
+  , dcrIsin :: Maybe Isin
+  , dcrDescription :: Text
+  , dcrFx :: Maybe Decimal
+  , dcrChange :: Maybe Cash
+  , dcrBalance :: Cash
+  , dcrOrderId :: Text
   }
   deriving stock (Eq, Ord, Show)
 

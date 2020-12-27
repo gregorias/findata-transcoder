@@ -2,15 +2,14 @@
 {-# LANGUAGE MonoLocalBinds #-}
 
 -- | Extensions or replacements for Cassava
-module Data.Csv.Extra
-  ( -- * Streamlined named record parsing
-    FromNamedRecord (..),
-    CassavaNamedRecord (..),
-    NamedRecordParser,
-    decodeByName,
-    lookup,
-  )
-where
+module Data.Csv.Extra (
+  -- * Streamlined named record parsing
+  FromNamedRecord (..),
+  CassavaNamedRecord (..),
+  NamedRecordParser,
+  decodeByName,
+  lookup,
+) where
 
 import Control.Lens (each, over, _2, _Right)
 import qualified Data.ByteString as BS

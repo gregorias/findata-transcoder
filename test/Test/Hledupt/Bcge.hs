@@ -5,26 +5,26 @@ module Test.Hledupt.Bcge (tests) where
 import Control.Lens (set)
 import Data.Time.Calendar (fromGregorian)
 import qualified Hledger.Data.Extra as HDE
-import Hledger.Data.Lens
-  ( pAccount,
-    pBalanceAssertion,
-    tDescription,
-    tStatus,
-  )
+import Hledger.Data.Lens (
+  pAccount,
+  pBalanceAssertion,
+  tDescription,
+  tStatus,
+ )
 import Hledger.Data.Posting (balassert, nullposting)
 import qualified Hledger.Data.Posting as Hledger
 import Hledger.Data.Transaction (transaction)
-import Hledger.Data.Types
-  ( Status (..),
-  )
-import Hledupt.Bcge
-  ( BcgeTransaction (..),
-    bcgeTransactionToLedger,
-    csvLineToBcgeTransaction,
-    parseStatementDate,
-    saldoToLedger,
-    statementDateParser,
-  )
+import Hledger.Data.Types (
+  Status (..),
+ )
+import Hledupt.Bcge (
+  BcgeTransaction (..),
+  bcgeTransactionToLedger,
+  csvLineToBcgeTransaction,
+  parseStatementDate,
+  saldoToLedger,
+  statementDateParser,
+ )
 import qualified Hledupt.Bcge.Hint as Hint
 import Hledupt.Data (fromUnitsAndCents)
 import Hledupt.Data.Currency (Currency (..))

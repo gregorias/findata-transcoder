@@ -16,11 +16,11 @@ tests = do
             `shouldBe` Just
               (BH.TransactionHint "Migros" "Expenses:Groceries")
         Nothing -> expectationFailure "Could not parse config"
-  where
-    maybeConfig =
-      parseMaybe
-        BH.configParser
-        ( "keyword,title,counterAccount\n"
-            ++ "MIGROS,Migros,Expenses:Groceries\n"
-            ++ "TWINT,Twint,Expenses:Other\n"
-        )
+ where
+  maybeConfig =
+    parseMaybe
+      BH.configParser
+      ( "keyword,title,counterAccount\n"
+          ++ "MIGROS,Migros,Expenses:Groceries\n"
+          ++ "TWINT,Twint,Expenses:Other\n"
+      )
