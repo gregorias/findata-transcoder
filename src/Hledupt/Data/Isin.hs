@@ -12,7 +12,7 @@ import Text.Megaparsec.Char (alphaNumChar, letterChar, numberChar)
 
 -- | A type representing an ISIN
 newtype Isin = Isin String
-  deriving newtype (Eq, Show)
+  deriving newtype (Eq, Ord, Show)
 
 -- | The ISIN parser
 isinP :: MP.Parsec Void Text Isin

@@ -19,7 +19,7 @@ import Text.Megaparsec.Stream (Stream (Token))
 
 -- | 'Currency' represents currencies I'm interested in.
 data Currency = CHF | EUR | PLN | USD
-  deriving stock (Bounded, Eq, Enum, Read, Show)
+  deriving stock (Bounded, Eq, Enum, Ord, Read, Show)
 
 parseCurrency :: Text -> Maybe Currency
 parseCurrency = inverseMap show

@@ -46,7 +46,7 @@ library:
   - extra
   - hledger-lib >= 1.19
   - lens
-  - megaparsec
+  - megaparsec == 9.0.1
   - mtl
   - parser-combinators
   - relude
@@ -55,7 +55,6 @@ library:
   - time
   - transformers
   - utf8-string
-  - utility-ht
   - vector
 
 executables:
@@ -70,7 +69,7 @@ executables:
     - bytestring
     - cli
     - hledupt
-    - megaparsec
+    - megaparsec == 9.0.1
     - mtl
     - relude
     - text
@@ -93,7 +92,7 @@ tests:
     - hspec
     - hspec-expectations-pretty-diff
     - lens
-    - megaparsec
+    - megaparsec == 9.0.1
     - parser-combinators
     - relude
     - replace-megaparsec

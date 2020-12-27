@@ -61,7 +61,7 @@ data DegiroCsvRecord = DegiroCsvRecord
     dcrBalance :: Cash,
     dcrOrderId :: Text
   }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Ord, Show)
 
 parseCash :: Csv.Field -> Csv.Field -> Csv.Parser (Maybe Cash)
 parseCash "" "" = pure Nothing

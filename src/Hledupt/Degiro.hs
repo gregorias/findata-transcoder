@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hledupt.Degiro
   ( csvStatementToLedger,
@@ -10,8 +11,8 @@ import Control.Lens (over, set, view)
 import qualified Control.Lens as L
 import qualified Data.ByteString.Lazy as LBS
 import Data.Decimal (Decimal)
-import Data.List.HT (partitionMaybe)
 import Data.Ratio ((%))
+import qualified Data.Set as S
 import qualified Data.Text as Text
 import Data.Time (Day)
 import Data.Time.LocalTime (TimeOfDay)
@@ -48,10 +49,23 @@ import Hledupt.Degiro.Csv
   )
 import Relude
 import Relude.Extra (inverseMap)
-import Text.Megaparsec (Parsec, anySingle, manyTill, single)
+import Text.Megaparsec
+  ( MonadParsec (eof, label, token),
+    ParseErrorBundle (bundleErrors),
+    Parsec,
+    Stream,
+    VisualStream,
+    anySingle,
+    choice,
+    customFailure,
+    manyTill,
+    parseErrorPretty,
+    single,
+  )
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (letterChar, space)
 import Text.Megaparsec.Char.Lexer (decimal)
+import Text.Megaparsec.Extra.ErrorText
 
 moneyMarketIsin :: Maybe Isin
 moneyMarketIsin = mkIsin "NL0011280581"
@@ -162,30 +176,23 @@ data Fx = Fx
     _fxSndPosting :: !FxPosting
   }
 
-fxP :: [FxRow] -> Either Text [Fx]
-fxP = sequenceA . go
-  where
-    go :: [FxRow] -> [Either Text Fx]
-    go [] = []
-    go (fxRowFst : fxRowSnd : fxRows) = fx : go fxRows
-      where
-        fx = over L._Left (Text.append "Could not merge Fx rows.\n") $ do
-          maybeToRight "" $ do
-            guard (((==) `on` fxRowDate) fxRowFst fxRowSnd)
-            guard (((==) `on` fxRowTime) fxRowFst fxRowSnd)
-            guard (((||) `on` (isJust . fxRowFx)) fxRowFst fxRowSnd)
-            fstP <-
-              mkFxPosting
-                (fxRowFx fxRowFst)
-                (fxRowChange fxRowFst)
-                (fxRowBalance fxRowFst)
-            sndP <-
-              mkFxPosting
-                (fxRowFx fxRowSnd)
-                (fxRowChange fxRowSnd)
-                (fxRowBalance fxRowSnd)
-            return $ Fx (fxRowDate fxRowFst) fstP sndP
-    go [_singleFxRow] = [Left "Found an unmatched fx record."]
+fxP :: FxRow -> FxRow -> Either Text Fx
+fxP fxRowFst fxRowSnd = over L._Left (Text.append "Could not merge Fx rows.\n") $
+  maybeToRight "" $ do
+    guard (((==) `on` fxRowDate) fxRowFst fxRowSnd)
+    guard (((==) `on` fxRowTime) fxRowFst fxRowSnd)
+    guard (((||) `on` (isJust . fxRowFx)) fxRowFst fxRowSnd)
+    fstP <-
+      mkFxPosting
+        (fxRowFx fxRowFst)
+        (fxRowChange fxRowFst)
+        (fxRowBalance fxRowFst)
+    sndP <-
+      mkFxPosting
+        (fxRowFx fxRowSnd)
+        (fxRowChange fxRowSnd)
+        (fxRowBalance fxRowSnd)
+    return $ Fx (fxRowDate fxRowFst) fstP sndP
 
 fxToTransaction :: Fx -> Transaction
 fxToTransaction (Fx date fstPost sndPost) =
@@ -290,11 +297,37 @@ stockTradeToTransaction (StockTrade date isin qty price change bal) =
   where
     prettyStockName = prettyIsin isin
 
+-- | Represents money market records
+--
+-- Degiro statements provide information on how the cash fares in their money market fund.
+-- The changes tend to be pennies, so I want to ignore them.
+data MoneyMarketOp = MoneyMarketOp
+
+moneyMarketOpP :: DegiroCsvRecord -> Maybe MoneyMarketOp
+moneyMarketOpP rec = do
+  guard $ (== moneyMarketIsin) $ dcrIsin rec
+  return MoneyMarketOp
+
 data Activity
   = ActivityDeposit Deposit
   | ActivityConnectionFee ConnectionFee
   | ActivityFx Fx
   | ActivityStockTrade StockTrade
+
+class ToActivity a where
+  toActivity :: a -> Activity
+
+instance ToActivity Deposit where
+  toActivity = ActivityDeposit
+
+instance ToActivity ConnectionFee where
+  toActivity = ActivityConnectionFee
+
+instance ToActivity Fx where
+  toActivity = ActivityFx
+
+instance ToActivity StockTrade where
+  toActivity = ActivityStockTrade
 
 activityToTransaction :: Activity -> Transaction
 activityToTransaction (ActivityDeposit dep) = depositToTransaction dep
@@ -302,49 +335,60 @@ activityToTransaction (ActivityConnectionFee cf) = connectionFeeToTransaction cf
 activityToTransaction (ActivityFx fx) = fxToTransaction fx
 activityToTransaction (ActivityStockTrade st) = stockTradeToTransaction st
 
--- | Filters out money market records
---
--- Degiro statements provide information on how the cash fares in their money market fund.
--- The changes tend to be pennies, so I want to ignore them.
-filterOutMoneyMarketRecords :: Isin -> [DegiroCsvRecord] -> [DegiroCsvRecord]
-filterOutMoneyMarketRecords mmIsin = filter ((/= pure mmIsin) . dcrIsin)
+newtype DegiroCsv = DegiroCsv [DegiroCsvRecord]
+  deriving newtype (Stream)
+
+instance VisualStream DegiroCsv where
+  showTokens _proxy = show
+
+moneyMarketOpParsec :: Parsec ErrorText DegiroCsv MoneyMarketOp
+moneyMarketOpParsec = label "Money Market Operation" $ token moneyMarketOpP S.empty
+
+fxParsec :: Parsec ErrorText DegiroCsv Fx
+fxParsec = do
+  fstRow <- token fxRowP S.empty
+  sndRow <- token fxRowP S.empty <|> customFailure "Found an unmatched fx record."
+  case fxP fstRow sndRow of
+    Left errMsg -> customFailure $ ErrorText errMsg
+    Right res -> return res
+
+activityP :: Parsec ErrorText DegiroCsv Activity
+activityP = do
+  let singleRecordPs :: [DegiroCsvRecord -> Maybe Activity]
+      singleRecordPs =
+        [ fmap toActivity . depositP,
+          fmap toActivity . connectionFeeP,
+          fmap toActivity . stockTradeP
+        ]
+      singleRecordParsecs = (`token` S.empty) <$> singleRecordPs
+  choice singleRecordParsecs <|> fmap toActivity fxParsec
+
+activitiesP :: Parsec ErrorText DegiroCsv [Activity]
+activitiesP = do
+  void $ many moneyMarketOpParsec
+  as <- many (activityP <* many moneyMarketOpParsec)
+  eof
+    <|> ( do
+            row <- anySingle
+            customFailure . ErrorText $
+              "Could not process all elements.\n"
+                `Text.append` "One remaining row's description: "
+                `Text.append` dcrDescription row
+                `Text.append` "\n"
+        )
+  return as
 
 -- | Parses a parsed Degiro CSV statement into stronger types
 csvRecordsToActivities :: [DegiroCsvRecord] -> Either Text [Activity]
-csvRecordsToActivities recs = do
-  Just mmIsin <- return moneyMarketIsin
-  (acts, remainingRecs) <-
-    fmap swap . sequence . swap $
-      runState (runExceptT (transform mmIsin)) recs
-  case listToMaybe remainingRecs of
-    Nothing -> Right acts
-    Just row ->
-      Left $
-        "Hledupt.Degiro.csvRecordsToLedger could not process all elements.\n"
-          `Text.append` "One remaining row's description: "
-          `Text.append` dcrDescription row
-          `Text.append` "\n"
-  where
-    transform :: Isin -> ExceptT Text (State [DegiroCsvRecord]) [Activity]
-    transform mmIsin = do
-      modify (filterOutMoneyMarketRecords mmIsin)
-      (deposits, newRecs0) <- partitionMaybe depositP <$> get
-      put newRecs0
-      (cfs, newRecs1) <- partitionMaybe connectionFeeP <$> get
-      put newRecs1
-      (fxRows, newRecs2) <- partitionMaybe fxRowP <$> get
-      put newRecs2
-      fxs <-
-        hoistEither $
-          over L._Left ("Could not parse forex transactions.\n" `Text.append`) $
-            fxP fxRows
-      (sts, newRecs3) <- partitionMaybe stockTradeP <$> get
-      put newRecs3
-      return $
-        (ActivityDeposit <$> deposits)
-          ++ (ActivityConnectionFee <$> cfs)
-          ++ (ActivityFx <$> fxs)
-          ++ (ActivityStockTrade <$> sts)
+csvRecordsToActivities recs =
+  over
+    L._Left
+    ( Text.pack
+        . parseErrorPretty
+        . head
+        . bundleErrors
+    )
+    $ MP.parse activitiesP "" (DegiroCsv (reverse recs))
 
 -- | Transforms a parsed Degiro CSV statement into a Ledger report
 csvRecordsToLedger :: Vector DegiroCsvRecord -> Either Text LedgerReport

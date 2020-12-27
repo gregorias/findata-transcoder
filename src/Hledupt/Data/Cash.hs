@@ -18,7 +18,7 @@ data Cash = Cash
   { _cashCurrency :: !Currency,
     _cashAmount :: !Decimal
   }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Ord, Show)
 
 makeLenses ''Cash
 
