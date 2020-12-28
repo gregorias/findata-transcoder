@@ -24,8 +24,8 @@ import Hledupt.Bcge (bcgeCsvToLedger)
 import qualified Hledupt.Bcge.Hint as BcgeHint
 import Hledupt.Data.CsvFile (CsvFile (CsvFile))
 import Hledupt.Data.LedgerReport (showLedgerReport)
+import qualified Hledupt.Degiro.AccountStatement as DegiroAccount (csvStatementToLedger)
 import qualified Hledupt.Degiro.Portfolio as DegiroPortfolio (csvStatementToLedger)
-import qualified Hledupt.Degiro.Transactions as DegiroTrs (csvStatementToLedger)
 import Hledupt.Ib as Ib (parseActivityCsv)
 import Hledupt.Mbank (mbankCsvToLedger)
 import Main.Utf8 (withUtf8)
@@ -117,10 +117,10 @@ parseBcgeAction bcgeFlags = action $
       return $ join (toParam $ bcgeFlagsHintsFile bcgeFlags :: Maybe (Maybe FilePath))
     liftIO $ parseBcgeIO (BcgeOptions inputFilePath hintsFilePath)
 
-parseDegiroTransactions :: OptionDesc (IO ()) ()
-parseDegiroTransactions = action $ \_ -> do
+parseDegiroAccountStatement :: OptionDesc (IO ()) ()
+parseDegiroAccountStatement = action $ \_ -> do
   inputCsv <- CsvFile <$> LBS.getContents
-  case DegiroTrs.csvStatementToLedger inputCsv of
+  case DegiroAccount.csvStatementToLedger inputCsv of
     Left err -> Text.hPutStr stderr err
     Right output -> Text.putStr . showLedgerReport $ output
 
@@ -141,9 +141,9 @@ main = defaultMain $ do
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
     hintsFileFlag <- flagParam (FlagLong hintsFileFlagName) (FlagOptional Nothing (fmap Just . filenameParser))
     parseBcgeAction $ BcgeFlags inputFileFlag hintsFileFlag
-  command "parse-degiro-transactions" $ do
-    description "Parses Degiro's transaction CSV and outputs Ledger data"
-    parseDegiroTransactions
+  command "parse-degiro-account-statement" $ do
+    description "Parses Degiro's account statement CSV and outputs Ledger data"
+    parseDegiroAccountStatement
   command "parse-degiro-portfolio" $ do
     description "Parses Degiro's portfolio CSV and outputs Ledger data"
     parseDegiroPortfolio

@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- | This module parses Degiro's Transaction CSV statement into Ledger.
-module Hledupt.Degiro.Transactions (
+-- | This module parses Degiro's account statement into Ledger.
+module Hledupt.Degiro.AccountStatement (
   csvStatementToLedger,
   csvRecordsToLedger,
 ) where
@@ -66,7 +66,7 @@ import Text.Megaparsec (
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (letterChar, space)
 import Text.Megaparsec.Char.Lexer (decimal)
-import Text.Megaparsec.Extra.ErrorText
+import Text.Megaparsec.Extra.ErrorText (ErrorText (..))
 
 moneyMarketIsin :: Maybe Isin
 moneyMarketIsin = mkIsin "NL0011280581"

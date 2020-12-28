@@ -8,8 +8,8 @@ import qualified Test.Hledupt.Bcge
 import qualified Test.Hledupt.Bcge.Hint as BcgeHint
 import qualified Test.Hledupt.Data
 import qualified Test.Hledupt.Data.LedgerReport
+import qualified Test.Hledupt.Degiro.AccountStatement
 import qualified Test.Hledupt.Degiro.Csv
-import qualified Test.Hledupt.Degiro.Transactions
 import qualified Test.Hledupt.Ib
 import qualified Test.Hledupt.Ib.Csv.ActivityStatementParse
 import qualified Test.Hledupt.Ib.Csv.RawParse
@@ -33,8 +33,8 @@ tests = do
   Test.Hledupt.Bcge.tests
   Test.Hledupt.Data.dataTests
   Test.Hledupt.Data.LedgerReport.tests
+  Test.Hledupt.Degiro.AccountStatement.tests
   Test.Hledupt.Degiro.Csv.tests
-  Test.Hledupt.Degiro.Transactions.tests
   Test.Hledupt.Ib.Csv.ActivityStatementParse.tests
   Test.Hledupt.Ib.Csv.RawParse.tests
   Test.Hledupt.Ib.tests
