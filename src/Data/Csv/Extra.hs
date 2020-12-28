@@ -49,4 +49,8 @@ lookup name = do
 
 -- | A replacement for 'Csv.decodeByName'
 decodeByName :: (FromNamedRecord a) => C.ByteString -> Either String (Csv.Header, Vector a)
-decodeByName csv = over (_Right . _2 . each) (\case CsvFnrWrapper a -> a) $ Csv.decodeByName csv
+decodeByName csv =
+  over
+    (_Right . _2 . each)
+    (\case CsvFnrWrapper a -> a)
+    $ Csv.decodeByName csv
