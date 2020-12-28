@@ -39,6 +39,7 @@ import Hledger.Data.Lens (
 import Hledupt.Data (decimalParser)
 import Hledupt.Data.Cash (Cash (Cash), cashAmount, cashCurrency)
 import qualified Hledupt.Data.Cash as Cash
+import Hledupt.Data.CsvFile (CsvFile)
 import Hledupt.Data.Currency (Currency, currencyP)
 import Hledupt.Data.Isin (Isin, mkIsin)
 import Hledupt.Data.LedgerReport (LedgerReport (..))
@@ -396,7 +397,7 @@ csvRecordsToLedger recs = do
   return $ LedgerReport (activityToTransaction <$> activities) []
 
 -- | Transforms a Degiro CSV statement into a Ledger report
-csvStatementToLedger :: LBS.ByteString -> Either Text LedgerReport
+csvStatementToLedger :: CsvFile LBS.ByteString -> Either Text LedgerReport
 csvStatementToLedger stmtTxt =
   over L._Left Text.pack (parseCsvStatement stmtTxt)
     >>= csvRecordsToLedger

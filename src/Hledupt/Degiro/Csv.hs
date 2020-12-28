@@ -26,6 +26,7 @@ import Data.Time (
 import Data.Vector (Vector)
 import Hledupt.Data (decimalParser)
 import Hledupt.Data.Cash (Cash (Cash))
+import Hledupt.Data.CsvFile (CsvFile (CsvFile))
 import Hledupt.Data.Isin (Isin, mkIsin)
 import Relude
 import Text.Megaparsec (single)
@@ -110,5 +111,5 @@ instance Csv.FromRecord DegiroCsvRecord where
 
 -- | Parses a Degiro CSV statement.
 -- The left return value contains an error message.
-parseCsvStatement :: LBS.ByteString -> Either String (Vector DegiroCsvRecord)
-parseCsvStatement = Csv.decode Csv.HasHeader
+parseCsvStatement :: CsvFile LBS.ByteString -> Either String (Vector DegiroCsvRecord)
+parseCsvStatement (CsvFile content) = Csv.decode Csv.HasHeader content

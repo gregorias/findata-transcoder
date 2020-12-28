@@ -1,27 +1,28 @@
 module Main (main) where
 
-import Console.Options
-  ( FlagFrag (FlagLong),
-    FlagParam,
-    FlagParser (FlagOptional, FlagRequired),
-    OptionDesc,
-    action,
-    command,
-    defaultMain,
-    description,
-    flagParam,
-    programDescription,
-    programName,
-    programVersion,
-  )
-import Control.Monad.Except
-  ( throwError,
-  )
+import Console.Options (
+  FlagFrag (FlagLong),
+  FlagParam,
+  FlagParser (FlagOptional, FlagRequired),
+  OptionDesc,
+  action,
+  command,
+  defaultMain,
+  description,
+  flagParam,
+  programDescription,
+  programName,
+  programVersion,
+ )
+import Control.Monad.Except (
+  throwError,
+ )
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text.IO as Text
 import Data.Version (makeVersion)
 import Hledupt.Bcge (bcgeCsvToLedger)
 import qualified Hledupt.Bcge.Hint as BcgeHint
+import Hledupt.Data.CsvFile (CsvFile (CsvFile))
 import Hledupt.Data.LedgerReport (showLedgerReport)
 import qualified Hledupt.Degiro as Degiro (csvStatementToLedger)
 import Hledupt.Ib as Ib (parseActivityCsv)
@@ -82,13 +83,13 @@ type InputFileFlag = FlagParam FilePath
 type HintsFileFlag = FlagParam (Maybe FilePath)
 
 data BcgeFlags = BcgeFlags
-  { bcgeFlagsInputFile :: InputFileFlag,
-    bcgeFlagsHintsFile :: HintsFileFlag
+  { bcgeFlagsInputFile :: InputFileFlag
+  , bcgeFlagsHintsFile :: HintsFileFlag
   }
 
 data BcgeOptions = BcgeOptions
-  { bcgeOptionsInputFile :: FilePath,
-    bcgeOptionsHintsFile :: Maybe FilePath
+  { bcgeOptionsInputFile :: FilePath
+  , bcgeOptionsHintsFile :: Maybe FilePath
   }
 
 parseBcgeHints :: FilePath -> IO (Maybe BcgeHint.Config)
@@ -117,7 +118,7 @@ parseBcgeAction bcgeFlags = action $
 
 parseDegiro :: OptionDesc (IO ()) ()
 parseDegiro = action $ \_ -> do
-  inputCsv <- LBS.getContents
+  inputCsv <- CsvFile <$> LBS.getContents
   case Degiro.csvStatementToLedger inputCsv of
     Left err -> Text.hPutStr stderr err
     Right output -> Text.putStr . showLedgerReport $ output
@@ -132,8 +133,8 @@ main = defaultMain $ do
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
     hintsFileFlag <- flagParam (FlagLong hintsFileFlagName) (FlagOptional Nothing (fmap Just . filenameParser))
     parseBcgeAction $ BcgeFlags inputFileFlag hintsFileFlag
-  command "parse-degiro" $ do
-    description "Parses Degiro's CSV file and outputs Ledger data"
+  command "parse-degiro-transactions" $ do
+    description "Parses Degiro's transaction CSV and outputs Ledger data"
     parseDegiro
   command "parse-ib-activity" $ do
     description "Parses IB's Activity Statement file and outputs ledupt data"

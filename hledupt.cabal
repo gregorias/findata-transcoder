@@ -33,6 +33,7 @@ library
       Hledupt.Bcge.Hint
       Hledupt.Data
       Hledupt.Data.Cash
+      Hledupt.Data.CsvFile
       Hledupt.Data.Currency
       Hledupt.Data.Isin
       Hledupt.Data.LedgerReport
