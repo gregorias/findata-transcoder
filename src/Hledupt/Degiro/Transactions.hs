@@ -1,7 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hledupt.Degiro (
+-- | This module parses Degiro's Transaction CSV statement into Ledger.
+module Hledupt.Degiro.Transactions (
   csvStatementToLedger,
   csvRecordsToLedger,
 ) where

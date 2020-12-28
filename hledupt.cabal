@@ -37,8 +37,8 @@ library
       Hledupt.Data.Currency
       Hledupt.Data.Isin
       Hledupt.Data.LedgerReport
-      Hledupt.Degiro
       Hledupt.Degiro.Csv
+      Hledupt.Degiro.Transactions
       Hledupt.Ib
       Hledupt.Ib.Csv
       Hledupt.Ib.Csv.ActivityStatementParse
@@ -107,8 +107,8 @@ test-suite hledupt-test
       Test.Hledupt.Bcge.Hint
       Test.Hledupt.Data
       Test.Hledupt.Data.LedgerReport
-      Test.Hledupt.Degiro
       Test.Hledupt.Degiro.Csv
+      Test.Hledupt.Degiro.Transactions
       Test.Hledupt.Ib
       Test.Hledupt.Ib.Csv.ActivityStatementParse
       Test.Hledupt.Ib.Csv.RawParse

@@ -24,7 +24,7 @@ import Hledupt.Bcge (bcgeCsvToLedger)
 import qualified Hledupt.Bcge.Hint as BcgeHint
 import Hledupt.Data.CsvFile (CsvFile (CsvFile))
 import Hledupt.Data.LedgerReport (showLedgerReport)
-import qualified Hledupt.Degiro as Degiro (csvStatementToLedger)
+import qualified Hledupt.Degiro.Transactions as DegiroTrs (csvStatementToLedger)
 import Hledupt.Ib as Ib (parseActivityCsv)
 import Hledupt.Mbank (mbankCsvToLedger)
 import Main.Utf8 (withUtf8)
@@ -116,10 +116,10 @@ parseBcgeAction bcgeFlags = action $
       return $ join (toParam $ bcgeFlagsHintsFile bcgeFlags :: Maybe (Maybe FilePath))
     liftIO $ parseBcgeIO (BcgeOptions inputFilePath hintsFilePath)
 
-parseDegiro :: OptionDesc (IO ()) ()
-parseDegiro = action $ \_ -> do
+parseDegiroTransactions :: OptionDesc (IO ()) ()
+parseDegiroTransactions = action $ \_ -> do
   inputCsv <- CsvFile <$> LBS.getContents
-  case Degiro.csvStatementToLedger inputCsv of
+  case DegiroTrs.csvStatementToLedger inputCsv of
     Left err -> Text.hPutStr stderr err
     Right output -> Text.putStr . showLedgerReport $ output
 
@@ -135,7 +135,7 @@ main = defaultMain $ do
     parseBcgeAction $ BcgeFlags inputFileFlag hintsFileFlag
   command "parse-degiro-transactions" $ do
     description "Parses Degiro's transaction CSV and outputs Ledger data"
-    parseDegiro
+    parseDegiroTransactions
   command "parse-ib-activity" $ do
     description "Parses IB's Activity Statement file and outputs ledupt data"
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
