@@ -7,7 +7,7 @@ module Hledupt.Data.CsvFile (
 import Relude
 
 newtype CsvFile a = CsvFile
-  { unCsv :: a
+  { unCsvFile :: a
   }
   deriving newtype
     ( IsString

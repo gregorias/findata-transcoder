@@ -4,4 +4,4 @@
 * [ ] Make the utility more unix-like by accepting input files on stdin
 * [ ] Delete my custom decimal parsing, since it's already in https://hackage.haskell.org/package/megaparsec-9.0.1/docs/Text-Megaparsec-Char-Lexer.html#v:decimal
 * [x] Move Degiro Transactions to Account!
-* [ ] exitFailure when the parsing fails
+* [x] exitFailure when the parsing fails

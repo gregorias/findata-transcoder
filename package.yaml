@@ -69,10 +69,12 @@ executables:
     - bytestring
     - cli
     - hledupt
+    - lens
     - megaparsec == 9.0.1
     - mtl
     - relude
     - text
+    - utf8-string
     - with-utf8
 
 tests:

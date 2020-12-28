@@ -14,17 +14,25 @@ import Console.Options (
   programName,
   programVersion,
  )
+import qualified Control.Lens as L
 import Control.Monad.Except (
   throwError,
  )
 import qualified Data.ByteString.Lazy as LBS
+import Data.ByteString.Lazy.UTF8 as UTF8
+import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 import Data.Version (makeVersion)
 import Hledupt.Bcge (bcgeCsvToLedger)
 import qualified Hledupt.Bcge.Hint as BcgeHint
-import Hledupt.Data.CsvFile (CsvFile (CsvFile))
-import Hledupt.Data.LedgerReport (showLedgerReport)
-import qualified Hledupt.Degiro.AccountStatement as DegiroAccount (csvStatementToLedger)
+import Hledupt.Data.CsvFile (CsvFile (..))
+import Hledupt.Data.LedgerReport (
+  LedgerReport,
+  showLedgerReport,
+ )
+import qualified Hledupt.Degiro.AccountStatement as DegiroAccount (
+  csvStatementToLedger,
+ )
 import qualified Hledupt.Degiro.Portfolio as DegiroPortfolio (csvStatementToLedger)
 import Hledupt.Ib as Ib (parseActivityCsv)
 import Hledupt.Mbank (mbankCsvToLedger)
@@ -117,19 +125,28 @@ parseBcgeAction bcgeFlags = action $
       return $ join (toParam $ bcgeFlagsHintsFile bcgeFlags :: Maybe (Maybe FilePath))
     liftIO $ parseBcgeIO (BcgeOptions inputFilePath hintsFilePath)
 
-parseDegiroAccountStatement :: OptionDesc (IO ()) ()
-parseDegiroAccountStatement = action $ \_ -> do
+parseBank :: (CsvFile LBS.ByteString -> Either Text LedgerReport) -> OptionDesc (IO ()) ()
+parseBank parser = action $ \_ -> do
   inputCsv <- CsvFile <$> LBS.getContents
-  case DegiroAccount.csvStatementToLedger inputCsv of
-    Left err -> Text.hPutStr stderr err
+  case parser inputCsv of
+    Left err -> do
+      Text.hPutStr stderr err
+      exitFailure
     Right output -> Text.putStr . showLedgerReport $ output
 
+parseDegiroAccountStatement :: OptionDesc (IO ()) ()
+parseDegiroAccountStatement = parseBank DegiroAccount.csvStatementToLedger
+
 parseDegiroPortfolio :: OptionDesc (IO ()) ()
-parseDegiroPortfolio = action $ \_ -> do
-  inputCsv <- CsvFile <$> LBS.getContents
-  case DegiroPortfolio.csvStatementToLedger inputCsv of
-    Left err -> Text.hPutStr stderr err
-    Right output -> Text.putStr . showLedgerReport $ output
+parseDegiroPortfolio = parseBank DegiroPortfolio.csvStatementToLedger
+
+parseIbActivity :: OptionDesc (IO ()) ()
+parseIbActivity =
+  parseBank
+    ( L.over L._Left Text.pack . Ib.parseActivityCsv
+        . UTF8.toString
+        . unCsvFile
+    )
 
 main :: IO ()
 main = defaultMain $ do
@@ -149,8 +166,7 @@ main = defaultMain $ do
     parseDegiroPortfolio
   command "parse-ib-activity" $ do
     description "Parses IB's Activity Statement file and outputs ledupt data"
-    inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
-    parseBankAction (fmap showLedgerReport . Ib.parseActivityCsv) inputFileFlag
+    parseIbActivity
   command "parse-mbank" $ do
     description "Parses mBank's CSV file and outputs ledupt data"
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
