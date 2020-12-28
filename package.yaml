@@ -1,7 +1,7 @@
 name:                hledupt
 version:             0.1.0.0
 github:              "githubuser/hledupt"
-license:             BSD3
+license:             AGPL-3
 author:              "Grzegorz Milka"
 maintainer:          "grzegorzmilka@gmail.com"
 copyright:           "2020 Grzegorz Milka"
