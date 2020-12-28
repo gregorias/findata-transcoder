@@ -18,7 +18,8 @@ import Data.Ratio ((%))
 import Relude
 import Text.Megaparsec (MonadParsec, Token)
 import qualified Text.Megaparsec as MP
-import Text.Megaparsec.Char (char, digitChar)
+import Text.Megaparsec.Char (char, digitChar, space)
+import Text.Megaparsec.Char.Lexer (decimal, signed)
 
 decimalFractionParser :: (MonadParsec e s m, Token s ~ Char) => m Rational
 decimalFractionParser = do
@@ -32,14 +33,10 @@ decimalFractionParser = do
       $ fractionalString
 
 decimalParser :: (MonadFail m, MonadParsec e s m, Token s ~ Char) => m Decimal
-decimalParser = do
-  negMod <- MP.try (char '-' >> pure negate) MP.<|> pure id
-  unitsString <- MP.some digitChar
-  units :: Integer <- case readMaybe unitsString of
-    Just u -> return u
-    Nothing -> fail "Could not parse units"
-  fract <- (char '.' >> decimalFractionParser) MP.<|> pure 0
-  return $ negMod $ fromRational (units % 1 + fract)
+decimalParser = signed space $ do
+  units :: Integer <- decimal
+  fract <- (char '.' >> decimalFractionParser) <|> pure 0
+  return $ fromRational (units % 1 + fract)
 
 fromUnitsAndCents :: Integer -> Integer -> Decimal
 fromUnitsAndCents units cents = unitsDec `op` centsDec
