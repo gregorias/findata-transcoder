@@ -24,6 +24,7 @@ import Hledupt.Bcge (bcgeCsvToLedger)
 import qualified Hledupt.Bcge.Hint as BcgeHint
 import Hledupt.Data.CsvFile (CsvFile (CsvFile))
 import Hledupt.Data.LedgerReport (showLedgerReport)
+import qualified Hledupt.Degiro.Portfolio as DegiroPortfolio (csvStatementToLedger)
 import qualified Hledupt.Degiro.Transactions as DegiroTrs (csvStatementToLedger)
 import Hledupt.Ib as Ib (parseActivityCsv)
 import Hledupt.Mbank (mbankCsvToLedger)
@@ -123,6 +124,13 @@ parseDegiroTransactions = action $ \_ -> do
     Left err -> Text.hPutStr stderr err
     Right output -> Text.putStr . showLedgerReport $ output
 
+parseDegiroPortfolio :: OptionDesc (IO ()) ()
+parseDegiroPortfolio = action $ \_ -> do
+  inputCsv <- CsvFile <$> LBS.getContents
+  case DegiroPortfolio.csvStatementToLedger inputCsv of
+    Left err -> Text.hPutStr stderr err
+    Right output -> Text.putStr . showLedgerReport $ output
+
 main :: IO ()
 main = defaultMain $ do
   programName "hledupt"
@@ -136,6 +144,9 @@ main = defaultMain $ do
   command "parse-degiro-transactions" $ do
     description "Parses Degiro's transaction CSV and outputs Ledger data"
     parseDegiroTransactions
+  command "parse-degiro-portfolio" $ do
+    description "Parses Degiro's portfolio CSV and outputs Ledger data"
+    parseDegiroPortfolio
   command "parse-ib-activity" $ do
     description "Parses IB's Activity Statement file and outputs ledupt data"
     inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)

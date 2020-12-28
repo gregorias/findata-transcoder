@@ -38,6 +38,7 @@ library
       Hledupt.Data.Isin
       Hledupt.Data.LedgerReport
       Hledupt.Degiro.Csv
+      Hledupt.Degiro.Portfolio
       Hledupt.Degiro.Transactions
       Hledupt.Ib
       Hledupt.Ib.Csv
