@@ -1,4 +1,5 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -21,6 +22,7 @@ import Control.Monad.Writer.Lazy (execWriter, tell)
 import Data.Decimal (Decimal)
 import Data.List (elemIndex)
 import Data.Text (pack)
+import qualified Data.Text as Text
 import Data.Time.Calendar (Day)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import qualified Hledger.Data.Extra as HDE
@@ -187,10 +189,10 @@ bStToLedger config (BcgeStatement date balance trs) = execWriter collectTrs
     tell $ fmap (bcgeTransactionToLedger config) (reverse trs)
     tell [saldoToLedger date balance]
 
-bcgeCsvToLedger :: Maybe Hint.Config -> String -> Either String LedgerReport
+bcgeCsvToLedger :: Maybe Hint.Config -> String -> Either Text LedgerReport
 bcgeCsvToLedger config input =
   case ledgerTrs of
-    Left err -> Left $ show err
+    Left err -> Left . Text.pack $ show err
     Right Nothing -> Left "Something went wrong in the transformation process."
     Right (Just res) -> Right $ LedgerReport res []
  where

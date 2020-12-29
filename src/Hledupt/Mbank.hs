@@ -12,6 +12,7 @@ module Hledupt.Mbank (
 
 import Data.Decimal (Decimal)
 import Data.Text (pack)
+import qualified Data.Text as Text
 import Data.Time.Calendar (Day)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Hledger (missingamt, post)
@@ -115,9 +116,11 @@ mTrToLedger mTr = tr{tdescription = pack $ sanitizeTitle $ mTrTitle mTr}
       , post "Expenses:Other" missingamt
       ]
 
-mbankCsvToLedger :: String -> Either String LedgerReport
+mbankCsvToLedger :: String -> Either Text LedgerReport
 mbankCsvToLedger inputCsv = do
-  let parserErrorToString err = "Could not parse mBank's CSV.\n" ++ show err
+  let parserErrorToString err =
+        Text.append "Could not parse mBank's CSV.\n" $
+          Text.pack (show err)
   mtransactions <- first parserErrorToString $ parse mbankCsvParser "" inputCsv
   let sortedMTransactions = sortOn mTrDate mtransactions
       ltransactions = fmap mTrToLedger sortedMTransactions

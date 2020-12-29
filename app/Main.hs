@@ -3,7 +3,7 @@ module Main (main) where
 import Console.Options (
   FlagFrag (FlagLong),
   FlagParam,
-  FlagParser (FlagOptional, FlagRequired),
+  FlagParser (FlagOptional),
   OptionDesc,
   action,
   command,
@@ -15,9 +15,6 @@ import Console.Options (
   programVersion,
  )
 import qualified Control.Lens as L
-import Control.Monad.Except (
-  throwError,
- )
 import qualified Data.ByteString.Lazy as LBS
 import Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.Text as Text
@@ -36,117 +33,74 @@ import qualified Hledupt.Degiro.AccountStatement as DegiroAccount (
 import qualified Hledupt.Degiro.Portfolio as DegiroPortfolio (csvStatementToLedger)
 import Hledupt.Ib as Ib (parseActivityCsv)
 import Hledupt.Mbank (mbankCsvToLedger)
-import Main.Utf8 (withUtf8)
 import Relude
-import System.IO (hPutStr)
 import qualified Text.Megaparsec as MP
 
 filenameParser :: String -> Either String String
 filenameParser "" = Left "The provided output filename is empty."
 filenameParser s = Right s
 
-maybeToExcept ::
-  (Monad m) =>
-  Maybe a ->
-  e ->
-  ExceptT e m a
-maybeToExcept ma e =
-  case ma of
-    Nothing -> throwError e
-    Just a -> return a
-
-printError :: ExceptT String IO () -> IO ()
-printError me = do
-  eitherError <- runExceptT me
-  case eitherError of
-    Left errorMsg -> do
-      putStrLn errorMsg
-      exitFailure
-    Right _ -> return ()
-
-inputFileFlagName :: String
-inputFileFlagName = "input_file"
-
 hintsFileFlagName :: String
 hintsFileFlagName = "hints_file"
 
-type LedgerParser = String -> Either String Text
-
-type IOParser = FilePath -> IO ()
-
-parseBankIO :: LedgerParser -> IOParser
-parseBankIO ledgerParser inputFilePath = withUtf8 $ do
-  inputFile <- readFile inputFilePath
-  case ledgerParser inputFile of
-    Left err -> hPutStr stderr err
-    Right output -> Text.putStr output
-
-parseBankAction :: LedgerParser -> FlagParam FilePath -> OptionDesc (IO ()) ()
-parseBankAction ledgerParser inputFileFlag = action $
-  \toParam -> printError $ do
-    (inputFilePath :: FilePath) <- maybeToExcept (toParam inputFileFlag) ("Provide " ++ inputFileFlagName)
-    liftIO $ parseBankIO ledgerParser inputFilePath
-
-type InputFileFlag = FlagParam FilePath
-
 type HintsFileFlag = FlagParam (Maybe FilePath)
-
-data BcgeFlags = BcgeFlags
-  { bcgeFlagsInputFile :: InputFileFlag
-  , bcgeFlagsHintsFile :: HintsFileFlag
-  }
-
-data BcgeOptions = BcgeOptions
-  { bcgeOptionsInputFile :: FilePath
-  , bcgeOptionsHintsFile :: Maybe FilePath
-  }
 
 parseBcgeHints :: FilePath -> IO (Maybe BcgeHint.Config)
 parseBcgeHints hintsFilePath = do
   contents <- readFile hintsFilePath
   return $ MP.parseMaybe BcgeHint.configParser contents
 
-parseBcgeIO :: BcgeOptions -> IO ()
-parseBcgeIO bcgeOptions = withUtf8 $ do
-  inputFile <- readFile $ bcgeOptionsInputFile bcgeOptions
-  let maybeHintsFilePath = bcgeOptionsHintsFile bcgeOptions
-  hints :: Maybe BcgeHint.Config <-
-    join
-      <$> mapM parseBcgeHints maybeHintsFilePath
-  case bcgeCsvToLedger hints inputFile of
-    Left err -> hPutStr stderr err
-    Right output -> Text.putStr $ showLedgerReport output
+parseBcgeAction :: HintsFileFlag -> OptionDesc (IO ()) ()
+parseBcgeAction hintsFileFlag = action $
+  \toParam -> do
+    (hintsFilePath :: Maybe FilePath) <- return $ join (toParam hintsFileFlag)
+    liftIO $ parseBcge hintsFilePath
 
-parseBcgeAction :: BcgeFlags -> OptionDesc (IO ()) ()
-parseBcgeAction bcgeFlags = action $
-  \toParam -> printError $ do
-    (inputFilePath :: FilePath) <- maybeToExcept (toParam $ bcgeFlagsInputFile bcgeFlags) ("Provide " ++ inputFileFlagName)
-    (hintsFilePath :: Maybe FilePath) <-
-      return $ join (toParam $ bcgeFlagsHintsFile bcgeFlags :: Maybe (Maybe FilePath))
-    liftIO $ parseBcgeIO (BcgeOptions inputFilePath hintsFilePath)
-
-parseBank :: (CsvFile LBS.ByteString -> Either Text LedgerReport) -> OptionDesc (IO ()) ()
-parseBank parser = action $ \_ -> do
-  inputCsv <- CsvFile <$> LBS.getContents
-  case parser inputCsv of
+parseBank :: (LBS.ByteString -> Either Text LedgerReport) -> IO ()
+parseBank parser = do
+  input <- LBS.getContents
+  case parser input of
     Left err -> do
       Text.hPutStr stderr err
       exitFailure
     Right output -> Text.putStr . showLedgerReport $ output
 
-parseDegiroAccountStatement :: OptionDesc (IO ()) ()
-parseDegiroAccountStatement = parseBank DegiroAccount.csvStatementToLedger
+parseBcge :: Maybe FilePath -> IO ()
+parseBcge maybeHintsFilePath = do
+  hints :: Maybe BcgeHint.Config <-
+    join
+      <$> mapM parseBcgeHints maybeHintsFilePath
+  parseBank $ bcgeCsvToLedger hints . UTF8.toString
 
-parseDegiroPortfolio :: OptionDesc (IO ()) ()
-parseDegiroPortfolio = parseBank DegiroPortfolio.csvStatementToLedger
+parseDegiroAccountStatement :: IO ()
+parseDegiroAccountStatement =
+  parseBank $
+    DegiroAccount.csvStatementToLedger . CsvFile
 
-parseIbActivity :: OptionDesc (IO ()) ()
+parseDegiroPortfolio :: IO ()
+parseDegiroPortfolio =
+  parseBank $
+    DegiroPortfolio.csvStatementToLedger . CsvFile
+
+parseIbActivity :: IO ()
 parseIbActivity =
   parseBank
-    ( L.over L._Left Text.pack . Ib.parseActivityCsv
+    ( L.over L._Left Text.pack
+        . Ib.parseActivityCsv
         . UTF8.toString
-        . unCsvFile
     )
+
+parseMbank :: IO ()
+parseMbank =
+  parseBank $
+    mbankCsvToLedger . UTF8.toString
+
+-- HLint would like to change \_ -> r to const r which leads to
+-- ambiguous type variable error. I can't fix the error in GHC 8.10.2:
+-- `const @_ @(Flag Bool -> Bool)` gives an error.
+{-# ANN ignoreAction "HLint: ignore" #-}
+ignoreAction :: r -> OptionDesc r ()
+ignoreAction r = action $ \_ -> r
 
 main :: IO ()
 main = defaultMain $ do
@@ -155,19 +109,17 @@ main = defaultMain $ do
   programDescription "A program to parse financial data into a ledger-like text file"
   command "parse-bcge" $ do
     description "Parses BCGE's CSV file and outputs ledupt data"
-    inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
     hintsFileFlag <- flagParam (FlagLong hintsFileFlagName) (FlagOptional Nothing (fmap Just . filenameParser))
-    parseBcgeAction $ BcgeFlags inputFileFlag hintsFileFlag
+    parseBcgeAction hintsFileFlag
   command "parse-degiro-account-statement" $ do
     description "Parses Degiro's account statement CSV and outputs Ledger data"
-    parseDegiroAccountStatement
+    ignoreAction parseDegiroAccountStatement
   command "parse-degiro-portfolio" $ do
     description "Parses Degiro's portfolio CSV and outputs Ledger data"
-    parseDegiroPortfolio
+    ignoreAction parseDegiroPortfolio
   command "parse-ib-activity" $ do
     description "Parses IB's Activity Statement file and outputs ledupt data"
-    parseIbActivity
+    ignoreAction parseIbActivity
   command "parse-mbank" $ do
     description "Parses mBank's CSV file and outputs ledupt data"
-    inputFileFlag <- flagParam (FlagLong inputFileFlagName) (FlagRequired filenameParser)
-    parseBankAction (fmap showLedgerReport . mbankCsvToLedger) inputFileFlag
+    ignoreAction parseMbank
