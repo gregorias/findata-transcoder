@@ -1,3 +1,5 @@
+module Spec (main) where
+
 import Relude
 import qualified Test.Data.Csv.Extra
 import qualified Test.Hledger.Data.Extra as HDE
