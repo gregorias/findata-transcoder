@@ -2,7 +2,6 @@ module Hledger.Data.Lens (
   aCommodity,
   aAmountPrice,
   aStyle,
-  asCommoditySide,
   asCommoditySpaced,
   asPrecision,
   maAmount,
@@ -34,7 +33,6 @@ import Hledger.Data.Types (
   CommoditySymbol,
   MixedAmount (..),
   Posting (..),
-  Side (..),
   Status (..),
   Transaction (..),
  )
@@ -59,11 +57,6 @@ asPrecision :: Lens' AmountStyle AmountPrecision
 asPrecision = lens asprecision setter
  where
   setter as prec = as{asprecision = prec}
-
-asCommoditySide :: Lens' AmountStyle Side
-asCommoditySide = lens ascommodityside setter
- where
-  setter as side = as{ascommodityside = side}
 
 asCommoditySpaced :: Lens' AmountStyle Bool
 asCommoditySpaced = lens ascommodityspaced setter

@@ -42,6 +42,7 @@ packages:
 # extra-deps: []
 extra-deps:
 - cli-0.2.0
+- weeder-2.1.3
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
