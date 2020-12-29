@@ -40,7 +40,7 @@ import Hledger.Data.Types (
 import Hledupt.Data (decimalParser)
 import Relude
 import Text.Megaparsec (
-  MonadParsec,
+  MonadParsec (lookAhead),
   Token,
   anySingle,
   choice,
@@ -48,10 +48,19 @@ import Text.Megaparsec (
   try,
  )
 import qualified Text.Megaparsec as MP
-import Text.Megaparsec.Char (alphaNumChar, char, newline, printChar, spaceChar, string)
+import Text.Megaparsec.Char (
+  alphaNumChar,
+  char,
+  newline,
+  printChar,
+  spaceChar,
+  string,
+ )
 import qualified Text.Megaparsec.Char as Char
-import Text.Megaparsec.Char.Extra (eolOrEof, space)
-import Text.Megaparsec.Extra (noConsume)
+import Text.Megaparsec.Char.Extra (eolOrEof)
+
+space :: (MonadParsec e s m, Token s ~ Char) => m Char
+space = single ' '
 
 doubleSpace :: (MonadParsec e s m, Token s ~ Char) => m [Char]
 doubleSpace = MP.count 2 space
@@ -93,7 +102,7 @@ accountParser =
   someTill
     printChar
     ( try (doubleSpace >> many space)
-        <|> try (many space >> noConsume eolOrEof)
+        <|> try (optional space >> lookAhead eolOrEof)
     )
 
 balanceAssertion :: MP.Parsec Void String BalanceAssertion

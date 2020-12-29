@@ -3,7 +3,6 @@
 module Text.Megaparsec.Char.Extra (
   bom,
   eolOrEof,
-  space,
 ) where
 
 import Relude
@@ -21,6 +20,3 @@ eolOrEof = eol <|> (eof $> "")
 
 bom :: (MonadParsec e s m, Token s ~ Char) => m Char
 bom = single '\65279'
-
-space :: (MonadParsec e s m, Token s ~ Char) => m Char
-space = single ' '

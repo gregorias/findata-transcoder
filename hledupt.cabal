@@ -46,7 +46,6 @@ library
       Hledupt.Ib.Csv.RawParse
       Hledupt.Mbank
       Text.Megaparsec.Char.Extra
-      Text.Megaparsec.Extra
       Text.Megaparsec.Extra.ErrorText
   other-modules:
       Paths_hledupt

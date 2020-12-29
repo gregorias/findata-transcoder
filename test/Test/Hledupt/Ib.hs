@@ -13,7 +13,10 @@ import Data.Time (fromGregorian)
 import Hledger (MarketPrice (MarketPrice))
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.Data.LedgerReport (LedgerReport (..))
-import Hledupt.Ib
+import Hledupt.Ib (
+  parseActivityCsv,
+  statementActivityToLedgerReport,
+ )
 import Hledupt.Ib.Csv (ActivityStatement (asDividends), nullActivityStatement)
 import qualified Hledupt.Ib.Csv as IbCsv
 import Relude
