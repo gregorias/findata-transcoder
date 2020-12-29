@@ -19,6 +19,7 @@ import qualified Data.ByteString.Lazy as LBS
 import Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
+import Data.Time.Clock (getCurrentTime, utctDay)
 import Data.Version (makeVersion)
 import Hledupt.Bcge (bcgeCsvToLedger)
 import qualified Hledupt.Bcge.Hint as BcgeHint
@@ -78,9 +79,10 @@ parseDegiroAccountStatement =
     DegiroAccount.csvStatementToLedger . CsvFile
 
 parseDegiroPortfolio :: IO ()
-parseDegiroPortfolio =
+parseDegiroPortfolio = do
+  today <- utctDay <$> getCurrentTime
   parseBank $
-    DegiroPortfolio.csvStatementToLedger . CsvFile
+    DegiroPortfolio.csvStatementToLedger today . CsvFile
 
 parseIbActivity :: IO ()
 parseIbActivity =

@@ -48,6 +48,7 @@ import Hledupt.Degiro.Csv (
   DegiroCsvRecord (..),
   parseCsvStatement,
  )
+import Hledupt.Degiro.IsinData (prettyIsin)
 import Relude
 import Relude.Extra (inverseMap)
 import Text.Megaparsec (
@@ -263,12 +264,6 @@ stockTradeP rec = do
         Sell -> negate
   change <- dcrChange rec
   return $ StockTrade (dcrDate rec) isin (qtyChange quantity) price change (dcrBalance rec)
-
-prettyIsin :: Isin -> Text
-prettyIsin isin =
-  if Just isin == iwda then "IWDA" else show isin
- where
-  iwda = mkIsin "IE00B4L5Y983"
 
 stockTradeToTransaction :: StockTrade -> Transaction
 stockTradeToTransaction (StockTrade date isin qty price change bal) =

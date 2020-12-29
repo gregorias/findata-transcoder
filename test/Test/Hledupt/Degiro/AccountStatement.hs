@@ -24,7 +24,7 @@ import Test.Hspec.Expectations.Pretty (shouldBe, shouldMatchList, shouldSatisfy)
 
 tests :: SpecWith ()
 tests = do
-  describe "Hledupt.Degiro" $ do
+  describe "Hledupt.Degiro.AccountStatement" $ do
     describe "csvRecordsToLedger" csvRecordsToLedgerTests
 
 csvRecordsToLedgerTests :: SpecWith ()

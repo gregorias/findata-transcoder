@@ -29,6 +29,7 @@ default-extensions:
   GeneralisedNewtypeDeriving
   InstanceSigs
   LambdaCase
+  MultiWayIf
   NoImplicitPrelude
   NumericUnderscores
   ScopedTypeVariables
@@ -73,6 +74,7 @@ executables:
     - megaparsec == 9.0.1
     - relude
     - text
+    - time
     - utf8-string
 
 tests:

@@ -2,6 +2,8 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Hledger.Data.Extra (
+  ToPosting (..),
+  ToTransaction (..),
   makeCashAmount,
   makeCurrencyAmount,
   makeCommodityAmount,
@@ -10,6 +12,7 @@ module Hledger.Data.Extra (
 
 import Control.Lens (over, set)
 import Data.Text (pack)
+import Hledger (Posting, Transaction)
 import Hledger.Data.Amount (num)
 import Hledger.Data.Lens (
   aCommodity,
@@ -47,3 +50,9 @@ makeCurrencyAmount currency quantity =
 
 makeCashAmount :: Cash -> Amount
 makeCashAmount (Cash currency quantity) = makeCurrencyAmount currency quantity
+
+class ToPosting a where
+  toPosting :: a -> Posting
+
+class ToTransaction a where
+  toTransaction :: a -> Transaction
