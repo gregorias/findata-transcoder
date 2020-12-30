@@ -16,7 +16,7 @@ import Console.Options (
  )
 import qualified Control.Lens as L
 import qualified Data.ByteString.Lazy as LBS
-import Data.ByteString.Lazy.UTF8 as UTF8
+import Data.ByteString.Lazy.UTF8 as UTF8 (toString)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 import Data.Time.Clock (getCurrentTime, utctDay)
@@ -31,7 +31,9 @@ import Hledupt.Data.LedgerReport (
 import qualified Hledupt.Degiro.AccountStatement as DegiroAccount (
   csvStatementToLedger,
  )
-import qualified Hledupt.Degiro.Portfolio as DegiroPortfolio (csvStatementToLedger)
+import qualified Hledupt.Degiro.Portfolio as DegiroPortfolio (
+  csvStatementToLedger,
+ )
 import Hledupt.Ib as Ib (parseActivityCsv)
 import Hledupt.Mbank (mbankCsvToLedger)
 import Relude
