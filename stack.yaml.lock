@@ -20,7 +20,7 @@ packages:
     hackage: weeder-2.1.3
 snapshots:
 - completed:
-    size: 558061
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2020/12/14.yaml
-    sha256: 0c80697b1db876c0ab31b43e42be53f886657a336eca59c73c361078e631d65b
-  original: nightly-2020-12-14
+    size: 562265
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2021/1/11.yaml
+    sha256: fbfadbcb74451699985d24e0f5bb56bac60b1fe05db553f09d94c724623fc826
+  original: nightly-2021-01-11
