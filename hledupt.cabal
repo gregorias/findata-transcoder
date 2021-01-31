@@ -32,6 +32,7 @@ library
       Hledupt.Bcge
       Hledupt.Bcge.Hint
       Hledupt.CharlesSchwab
+      Hledupt.CharlesSchwab.Csv
       Hledupt.Data
       Hledupt.Data.Cash
       Hledupt.Data.CsvFile
@@ -108,6 +109,7 @@ test-suite hledupt-test
       Test.Hledger.Read.TestUtils
       Test.Hledupt.Bcge
       Test.Hledupt.Bcge.Hint
+      Test.Hledupt.CharlesSchwab.Csv
       Test.Hledupt.Data
       Test.Hledupt.Data.LedgerReport
       Test.Hledupt.Degiro.AccountStatement

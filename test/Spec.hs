@@ -8,6 +8,7 @@ import qualified Test.Hledger.Data.MarketPrice.Extra
 import qualified Test.Hledger.Read.TestUtils
 import qualified Test.Hledupt.Bcge
 import qualified Test.Hledupt.Bcge.Hint as BcgeHint
+import qualified Test.Hledupt.CharlesSchwab.Csv
 import qualified Test.Hledupt.Data
 import qualified Test.Hledupt.Data.LedgerReport
 import qualified Test.Hledupt.Degiro.AccountStatement
@@ -34,6 +35,7 @@ tests = do
   Test.Hledger.Data.MarketPrice.Extra.tests
   Test.Hledger.Read.TestUtils.tests
   Test.Hledupt.Bcge.tests
+  Test.Hledupt.CharlesSchwab.Csv.tests
   Test.Hledupt.Data.dataTests
   Test.Hledupt.Data.LedgerReport.tests
   Test.Hledupt.Degiro.AccountStatement.tests
