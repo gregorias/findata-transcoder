@@ -27,6 +27,7 @@ import Data.Time.Clock (getCurrentTime, utctDay)
 import Data.Version (makeVersion)
 import Hledupt.Bcge (bcgeCsvToLedger)
 import qualified Hledupt.Bcge.Hint as BcgeHint
+import qualified Hledupt.CharlesSchwab as CharlesSchwab (csvToLedger)
 import Hledupt.Data.CsvFile (CsvFile (..))
 import Hledupt.Data.LedgerReport (
   LedgerReport,
@@ -79,6 +80,10 @@ parseBcge maybeHintsFilePath = do
       <$> mapM parseBcgeHints maybeHintsFilePath
   parseBank $ bcgeCsvToLedger hints . UTF8.toString
 
+parseCharlesSchwab :: IO ()
+parseCharlesSchwab =
+  parseBank $ CharlesSchwab.csvToLedger . CsvFile
+
 parseDegiroAccountStatement :: IO ()
 parseDegiroAccountStatement =
   parseBank $
@@ -115,6 +120,9 @@ main = defaultMain $ do
     description "Parses BCGE's CSV file and outputs ledupt data"
     hintsFileFlag <- flagParam (FlagLong hintsFileFlagName) (FlagOptional Nothing (fmap Just . filenameParser))
     parseBcgeAction hintsFileFlag
+  command "parse-cs" $ do
+    description "Parses Charles Schwabs' CSV and outputs Ledger data"
+    ignoreAction parseCharlesSchwab
   command "parse-degiro-account-statement" $ do
     description "Parses Degiro's account statement CSV and outputs Ledger data"
     ignoreAction parseDegiroAccountStatement

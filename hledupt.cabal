@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.2.
+-- This file has been generated from package.yaml by hpack version 0.34.3.
 --
 -- see: https://github.com/sol/hpack
 
@@ -31,6 +31,7 @@ library
       Hledger.Data.MarketPrice.Extra
       Hledupt.Bcge
       Hledupt.Bcge.Hint
+      Hledupt.CharlesSchwab
       Hledupt.Data
       Hledupt.Data.Cash
       Hledupt.Data.CsvFile
