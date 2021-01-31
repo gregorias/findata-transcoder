@@ -1,6 +1,10 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
+
 module Main (main) where
 
 import Console.Options (
+  Flag,
   FlagFrag (FlagLong),
   FlagParam,
   FlagParser (FlagOptional),
@@ -99,12 +103,8 @@ parseMbank =
   parseBank $
     mbankCsvToLedger . UTF8.toString
 
--- HLint would like to change \_ -> r to const r which leads to
--- ambiguous type variable error. I can't fix the error in GHC 8.10.2:
--- `const @_ @(Flag Bool -> Bool)` gives an error.
-{-# ANN ignoreAction "HLint: ignore" #-}
 ignoreAction :: r -> OptionDesc r ()
-ignoreAction r = action $ \_ -> r
+ignoreAction r = action $ const @_ @(Flag Bool -> Bool) r
 
 main :: IO ()
 main = defaultMain $ do
