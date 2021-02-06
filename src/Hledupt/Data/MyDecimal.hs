@@ -16,10 +16,11 @@ import qualified Data.Csv as Csv
 import Data.Decimal (Decimal, realFracToDecimal)
 import Data.Ratio ((%))
 import Relude
-import Text.Megaparsec (MonadParsec, Token)
+import Text.Megaparsec (MonadParsec, Token, Tokens, anySingle)
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (char, digitChar, space)
 import Text.Megaparsec.Char.Lexer (decimal, signed)
+import Text.Megaparsec.Stream (tokensToChunk)
 
 -- | A Decimal wrapper that is extended with parsing functions.
 newtype MyDecimal = MyDecimal Decimal
@@ -36,12 +37,19 @@ decimalFractionP = do
       . reverse
       $ fractionalString
 
+cleanUpCommas :: (MonadFail m, MonadParsec e s m, Token s ~ Char, Tokens s ~ s) => Proxy s -> m ()
+cleanUpCommas proxy = do
+  tokens <- many anySingle
+  let tokensWoComma :: [Char] = filter (/= ',') tokens
+  MP.setInput . tokensToChunk proxy $ tokensWoComma
+
 -- | A decimal parser
 --
 -- >>> parseMaybe decimalP "-2,000.41"
 -- 2000.41
-decimalP :: (MonadFail m, MonadParsec e s m, Token s ~ Char) => m Decimal
+decimalP :: (MonadFail m, MonadParsec e s m, Token s ~ Char, Tokens s ~ s) => m Decimal
 decimalP = signed space $ do
+  cleanUpCommas Proxy
   units :: Integer <- decimal
   fract <- (char '.' >> decimalFractionP) <|> pure 0
   return $ fromRational (units % 1 + fract)

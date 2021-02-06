@@ -48,6 +48,7 @@ import Relude
 import Text.Megaparsec (
   MonadParsec,
   Parsec,
+  ParsecT,
   Token,
   Tokens,
   anySingle,
@@ -310,8 +311,7 @@ symbolParser ::
 symbolParser = some letterChar
 
 symbolDpsParser ::
-  (MonadFail m, MonadParsec e s m, Token s ~ Char, Tokens s ~ String) =>
-  m (String, Decimal)
+  (Tokens s ~ String, Tokens s ~ s) => ParsecT Void s m (String, Decimal)
 symbolDpsParser = do
   symbol <- symbolParser
   void $ label "ISIN" $ char '(' >> some alphaNumChar >> char ')'
@@ -347,7 +347,7 @@ instance Csv.FromNamedRecord DividendRecord where
         <$> (Csv.lookup "Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
         <*> ( do
                 desc :: String <- Csv.lookup "Description"
-                let parsed = MP.parse @Void symbolDpsParser "" desc
+                let parsed = MP.parse symbolDpsParser "" desc
                 either
                   ( \err ->
                       fail $

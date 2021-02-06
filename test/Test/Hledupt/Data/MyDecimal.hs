@@ -31,6 +31,9 @@ tests = do
       it "parses a fraction" $ do
         parseMaybe decimalP "0.01"
           `shouldBe` Just (fromRational $ 1 % 100)
+      it "parses a number with commas" $ do
+        parseMaybe decimalP "2,000,000"
+          `shouldBe` Just (fromRational 2000000)
 
     describe "Csv.FromField MyDecimal" $ do
       it "Parses a decimal" $ do
