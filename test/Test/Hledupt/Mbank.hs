@@ -6,7 +6,7 @@ module Test.Hledupt.Mbank (
 
 import Data.Time.Calendar (fromGregorian)
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
-import Hledupt.Data (fromUnitsAndCents)
+import Hledupt.Data.MyDecimal (fromUnitsAndCents)
 import Hledupt.Mbank (
   MbankTransaction (..),
   mTrToLedger,

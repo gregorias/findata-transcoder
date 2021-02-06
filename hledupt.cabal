@@ -33,12 +33,12 @@ library
       Hledupt.Bcge.Hint
       Hledupt.CharlesSchwab
       Hledupt.CharlesSchwab.Csv
-      Hledupt.Data
       Hledupt.Data.Cash
       Hledupt.Data.CsvFile
       Hledupt.Data.Currency
       Hledupt.Data.Isin
       Hledupt.Data.LedgerReport
+      Hledupt.Data.MyDecimal
       Hledupt.Degiro.AccountStatement
       Hledupt.Degiro.Csv
       Hledupt.Degiro.IsinData
@@ -110,8 +110,8 @@ test-suite hledupt-test
       Test.Hledupt.Bcge
       Test.Hledupt.Bcge.Hint
       Test.Hledupt.CharlesSchwab.Csv
-      Test.Hledupt.Data
       Test.Hledupt.Data.LedgerReport
+      Test.Hledupt.Data.MyDecimal
       Test.Hledupt.Degiro.AccountStatement
       Test.Hledupt.Degiro.Csv
       Test.Hledupt.Degiro.Portfolio

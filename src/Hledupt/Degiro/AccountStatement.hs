@@ -37,13 +37,13 @@ import Hledger.Data.Lens (
   tDescription,
   tStatus,
  )
-import Hledupt.Data (decimalParser)
 import Hledupt.Data.Cash (Cash (Cash), cashAmount, cashCurrency)
 import qualified Hledupt.Data.Cash as Cash
 import Hledupt.Data.CsvFile (CsvFile)
 import Hledupt.Data.Currency (Currency, currencyP)
 import Hledupt.Data.Isin (Isin, mkIsin)
 import Hledupt.Data.LedgerReport (LedgerReport (..))
+import Hledupt.Data.MyDecimal (decimalP)
 import Hledupt.Degiro.Csv (
   DegiroCsvRecord (..),
   parseCsvStatement,
@@ -247,7 +247,7 @@ stockTradeDescriptionP = MP.parseMaybe parserP
     space
     quantity <- decimal
     void $ manyTill anySingle (single '@')
-    price <- decimalParser
+    price <- decimalP
     space
     currency <- currencyP
     void $ many anySingle

@@ -23,10 +23,10 @@ import Data.Time (
   parseTimeM,
  )
 import Data.Vector (Vector)
-import Hledupt.Data (decimalParser)
 import Hledupt.Data.Cash (Cash (Cash))
 import Hledupt.Data.CsvFile (CsvFile (CsvFile))
 import Hledupt.Data.Isin (Isin, mkIsin)
+import Hledupt.Data.MyDecimal (decimalP)
 import Relude
 import Text.Megaparsec (single)
 import qualified Text.Megaparsec as MP
@@ -67,7 +67,7 @@ parseCash "" "" = pure Nothing
 parseCash changeCurrencyField changeAmountField = do
   changeCurrency <- Csv.parseField changeCurrencyField
   Just changeAmount <-
-    MP.parseMaybe @Void decimalParser
+    MP.parseMaybe @Void decimalP
       <$> (Csv.parseField changeAmountField :: Csv.Parser String)
   return . Just $ Cash changeCurrency changeAmount
 
@@ -90,7 +90,7 @@ instance Csv.FromRecord DegiroCsvRecord where
       if null fxStr
         then return Nothing
         else do
-          Just fx <- return $ MP.parseMaybe @Void decimalParser fxStr
+          Just fx <- return $ MP.parseMaybe @Void decimalP fxStr
           return $ Just fx
     maybeChange <- join $ parseCash <$> rec .! 7 <*> rec .! 8
     Just balance <- join $ parseCash <$> rec .! 9 <*> rec .! 10

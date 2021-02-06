@@ -21,11 +21,11 @@ import Hledger (MarketPrice (MarketPrice), Status (Cleared), balassert, post, tr
 import Hledger.Data (Transaction)
 import Hledger.Data.Extra (ToPosting (..), makeCashAmount, makeCommodityAmount)
 import Hledger.Data.Lens (pBalanceAssertion, tDescription, tStatus)
-import Hledupt.Data (myDecDec)
 import Hledupt.Data.Cash (Cash (..))
 import Hledupt.Data.CsvFile (CsvFile (..))
 import Hledupt.Data.Isin (Isin, mkIsin)
 import Hledupt.Data.LedgerReport (LedgerReport (..))
+import Hledupt.Data.MyDecimal (myDecDec)
 import Hledupt.Degiro.IsinData (IsinData (IsinData), isinToIsinData, prettyIsin)
 import Relude
 

@@ -26,8 +26,8 @@ import Hledupt.Bcge (
   statementDateParser,
  )
 import qualified Hledupt.Bcge.Hint as Hint
-import Hledupt.Data (fromUnitsAndCents)
 import Hledupt.Data.Currency (Currency (..))
+import Hledupt.Data.MyDecimal (fromUnitsAndCents)
 import Relude
 import Test.Hspec (describe, it, shouldBe)
 import qualified Test.Hspec as Hspec

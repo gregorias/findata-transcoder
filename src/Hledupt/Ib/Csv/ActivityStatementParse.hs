@@ -37,8 +37,8 @@ import Data.List.Extra (allSame)
 import qualified Data.Map.Strict as Map
 import Data.Time (Day, defaultTimeLocale, fromGregorian, parseTimeM)
 import qualified Data.Vector as V
-import Hledupt.Data (decimalParser, myDecDec)
 import Hledupt.Data.Currency (Currency, currencyP)
+import Hledupt.Data.MyDecimal (decimalP, myDecDec)
 import Hledupt.Ib.Csv.RawParse (
   Csv (..),
   Section (..),
@@ -316,7 +316,7 @@ symbolDpsParser = do
   symbol <- symbolParser
   void $ label "ISIN" $ char '(' >> some alphaNumChar >> char ')'
   void $ string " Cash Dividend USD "
-  dps <- decimalParser
+  dps <- decimalP
   void $ string " per Share (Ordinary Dividend)"
   return (symbol, dps)
 

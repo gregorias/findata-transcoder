@@ -27,9 +27,9 @@ import Hledger.Data.Types (
   Quantity,
   Transaction (..),
  )
-import Hledupt.Data (fromUnitsAndCents)
 import Hledupt.Data.Currency (Currency (PLN))
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
+import Hledupt.Data.MyDecimal (fromUnitsAndCents)
 import Relude
 import Text.Megaparsec (
   Parsec,

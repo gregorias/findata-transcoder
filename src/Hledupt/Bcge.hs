@@ -40,10 +40,10 @@ import Hledger.Data.Types (
   Transaction (..),
  )
 import qualified Hledupt.Bcge.Hint as Hint
-import Hledupt.Data (decimalParser)
 import Hledupt.Data.Cash (Cash (Cash), cashAmount)
 import Hledupt.Data.Currency (Currency (CHF))
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
+import Hledupt.Data.MyDecimal (decimalP)
 import Relude
 import Safe (headMay)
 import Text.Megaparsec (
@@ -82,7 +82,7 @@ bcgeCsvParser = many bcgeCsvLineParser
 saldoParser :: BcgeParser Cash
 saldoParser = do
   void $ string "Saldo: CHF "
-  Cash CHF <$> decimalParser
+  Cash CHF <$> decimalP
 
 parseStatementDate :: String -> Maybe Day
 parseStatementDate = parseTimeM True defaultTimeLocale "%d.%m.%Y"
@@ -137,7 +137,7 @@ getSaldo header = do
 csvLineToBcgeTransaction :: CsvLine -> Maybe BcgeTransaction
 csvLineToBcgeTransaction (dateString, title, amountString) = do
   date <- parseTimeM True defaultTimeLocale "%d.%m.%y" dateString
-  amount <- parseMaybe decimalParser amountString
+  amount <- parseMaybe decimalP amountString
   return $ BcgeTransaction date title amount
 
 csvLinesToBcgeStatement :: [CsvLine] -> Maybe BcgeStatement

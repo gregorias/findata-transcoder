@@ -2,8 +2,8 @@ module Test.Hledger.Data.Extra (tests) where
 
 import Hledger.Data.Amount (num, showAmount)
 import qualified Hledger.Data.Extra as HDE
-import Hledupt.Data (fromUnitsAndCents)
 import Hledupt.Data.Currency (Currency (..))
+import Hledupt.Data.MyDecimal (fromUnitsAndCents)
 import Relude
 import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
