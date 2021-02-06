@@ -242,7 +242,7 @@ forexTradeToTransaction
       date
       [ post
           (cashAccountName base)
-          ( makeCurrencyAmount base (fromRational $ q % 1)
+          ( makeCurrencyAmount base q
               & L.set
                 aAmountPrice
                 ( Just . UnitPrice $

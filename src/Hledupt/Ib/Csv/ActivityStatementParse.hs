@@ -158,7 +158,7 @@ data StockTrade = StockTrade
 data ForexTrade = ForexTrade
   { forexTradeDate :: Day
   , forexTradeQuotePair :: QuotePair
-  , forexTradeQuantity :: Integer
+  , forexTradeQuantity :: Decimal
   , forexTradePrice :: Decimal
   , forexTradeTotalCost :: Decimal
   , forexTradeFee :: Decimal
@@ -242,7 +242,7 @@ instance Csv.FromNamedRecord ForexTrade where
                 eitherDate
           )
       <*> Csv.lookup "Symbol"
-      <*> (unQuantity <$> Csv.lookup "Quantity")
+      <*> (L.view myDecDec <$> Csv.lookup "Quantity")
       <*> (L.view myDecDec <$> Csv.lookup "T. Price")
       <*> (L.view myDecDec <$> Csv.lookup "Proceeds")
       <*> (L.view myDecDec <$> Csv.lookup "Comm in CHF")

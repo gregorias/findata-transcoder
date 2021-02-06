@@ -89,7 +89,8 @@ tests = do
                       [ "DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Realized P/L %,MTM P/L,Code\n\
                         \Order,Stocks,USD,VOO,\"2020-10-05, 09:52:53\",2,309.35,312.08,-618.7,-0.6187,619.3187,0,0,5.46,O;R"
                       , "DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,,Proceeds,Comm in CHF,,,,MTM in CHF,Code\n\
-                        \Order,Forex,CHF,USD.CHF,\"2020-01-15, 14:33:56\",\"-2,000,000\",0.96358,,2000000.76,-1.93502,,,,-11,"
+                        \Order,Forex,CHF,USD.CHF,\"2020-01-15, 14:33:56\",\"-2,000,000\",0.96358,,2000000.76,-1.93502,,,,-11,\n\
+                        \Order,Forex,PLN,CHF.PLN,\"2021-02-03, 20:14:08\",0.4313,4.14715,,-1.788665795,0,,,,0.001376,"
                       ]
                   )
                 ,
@@ -144,6 +145,13 @@ tests = do
                         (fromRational $ 96358 % 100000)
                         (fromRational $ 200000076 % 100)
                         (fromRational $ - (193502 % 100000))
+                    , ForexTrade
+                        (fromGregorian 2021 2 3)
+                        (QuotePair (BaseCurrency CHF) (QuoteCurrency PLN))
+                        0.4313
+                        (fromRational $ 414715 % 100000)
+                        (fromRational $ -1788665795 % 1000000000)
+                        (fromRational 0)
                     ]
                 , asDividends =
                     [ Dividend
