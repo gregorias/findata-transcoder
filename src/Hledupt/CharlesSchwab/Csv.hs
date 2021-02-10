@@ -97,7 +97,7 @@ data CsCsvRecord = CsCsvRecord
   , csQuantity :: !(Maybe Integer)
   , csPrice :: !(Maybe DollarAmount)
   , csFees :: !(Maybe DollarAmount)
-  , csAmount :: !DollarAmount
+  , csAmount :: !(Maybe DollarAmount)
   }
   deriving stock (Eq, Ord, Show)
 

@@ -82,7 +82,7 @@ parseBcge maybeHintsFilePath = do
 
 parseCharlesSchwab :: IO ()
 parseCharlesSchwab =
-  parseBank $ CharlesSchwab.csvToLedger . CsvFile
+  parseBank CharlesSchwab.csvToLedger
 
 parseDegiroAccountStatement :: IO ()
 parseDegiroAccountStatement =

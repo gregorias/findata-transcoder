@@ -23,6 +23,7 @@ tests = do
               \\"01/28/2021\",\"Credit Interest\",\"\",\"SCHWAB1 INT 12/30-01/27\",\"\",\"\",\"\",\"$0.19\",\n\
               \\"01/19/2021\",\"Wire Funds\",\"\",\"WIRED FUNDS DISBURSED\",\"\",\"\",\"\",\"-$123.45\",\n\
               \\"12/31/2020 as of 12/29/2020\",\"Sell\",\"GOOG\",\"ALPHABET INC. CLASS C\",\"5\",\"$1765.2706\",\"$0.20\",\"$8826.15\",\n\
+              \\"12/31/2020\",\"Stock Plan Activity\",\"GOOG\",\"ALPHABET INC. CLASS C\",\"5\",\"\",\"\",\"\",\n\
               \Transactions Total,\"\",\"\",\"\",\"\",\"\",\"\",$0.19"
         parseCsStatement csv
           `shouldBe` Right
@@ -34,7 +35,7 @@ tests = do
                 Nothing
                 Nothing
                 Nothing
-                (DollarAmount (fromRational $ 19 % 100))
+                (Just $ DollarAmount (fromRational $ 19 % 100))
             , CsCsvRecord
                 (fromGregorian 2021 1 19)
                 "Wire Funds"
@@ -43,7 +44,7 @@ tests = do
                 Nothing
                 Nothing
                 Nothing
-                (DollarAmount (fromRational $ -12345 % 100))
+                (Just $ DollarAmount (fromRational $ -12345 % 100))
             , CsCsvRecord
                 (fromGregorian 2020 12 31)
                 "Sell"
@@ -52,5 +53,14 @@ tests = do
                 (Just 5)
                 (Just $ DollarAmount (fromRational $ 17652706 % 10000))
                 (Just $ DollarAmount (fromRational $ 20 % 100))
-                (DollarAmount (fromRational $ 882615 % 100))
+                (Just $ DollarAmount (fromRational $ 882615 % 100))
+            , CsCsvRecord
+                (fromGregorian 2020 12 31)
+                "Stock Plan Activity"
+                "GOOG"
+                "ALPHABET INC. CLASS C"
+                (Just 5)
+                Nothing
+                Nothing
+                Nothing
             ]
