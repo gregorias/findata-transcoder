@@ -1,6 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -Wno-unused-imports #-}
-{-# OPTIONS_GHC -Wno-unused-matches #-}
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 -- | This module turns a parsed CS CSV statement into ledger format.
@@ -9,22 +7,18 @@ module Hledupt.CharlesSchwab.Ledger (
 ) where
 
 import qualified Control.Lens as L
-import qualified Data.ByteString.Lazy as LBS
-import Data.Ratio ((%))
 import qualified Data.Text as Text
 import Data.Time (Day)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import Hledger (Status (Cleared, Pending), Transaction, missingamt, post, transaction)
-import Hledger.Data (nulltransaction)
+import Hledger (AmountPrice (UnitPrice), Status (Cleared, Pending), Transaction, missingamt, post, setFullPrecision, transaction)
 import Hledger.Data.Extra (makeCommodityAmount, makeCurrencyAmount)
-import Hledger.Data.Lens (pMaybeAmount, pStatus, tDescription, tStatus)
+import Hledger.Data.Lens (aAmountPrice, pMaybeAmount, pStatus, tDescription, tStatus)
 import Hledupt.CharlesSchwab.Csv (
-  CsCsvRecord (CsCsvRecord, csAmount, csDate, csQuantity, csSymbol),
+  CsCsvRecord (csAmount, csDate, csFees, csPrice, csQuantity, csSymbol),
   DollarAmount (..),
   csAction,
  )
-import qualified Hledupt.CharlesSchwab.Csv as CsCsv
 import Hledupt.Data.Currency (Currency (USD))
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Relude
@@ -108,13 +102,49 @@ vestingToLedgerTransaction (Vesting day symbol q) =
     & L.set tDescription (toString $ symbol `Text.append` " Vesting")
       . L.set tStatus Cleared
 
+saleToLedgerTransaction :: CsCsvRecord -> Maybe Transaction
+saleToLedgerTransaction rec = do
+  guard $ csAction rec == "Sell"
+  (DollarAmount amount) <- csAmount rec
+  (DollarAmount fee) <- csFees rec
+  (DollarAmount price) <- csPrice rec
+  q <- csQuantity rec
+  let symbol = csSymbol rec
+  return $
+    transaction
+      (csDate rec)
+      [ post
+          (vestedStockAccount symbol)
+          ( makeCommodityAmount (toString symbol) (fromInteger $ - q)
+              & L.set
+                aAmountPrice
+                ( Just . UnitPrice $
+                    makeCommodityAmount "USD" price
+                      & setFullPrecision
+                )
+          )
+      , post usdAccount missingamt
+          & L.set pMaybeAmount (Just $ makeCurrencyAmount USD amount)
+      , post "Expenses:Financial Services" missingamt
+          & L.set pMaybeAmount (Just $ makeCurrencyAmount USD fee)
+      ]
+      & L.set tDescription (toString symbol ++ " Sale")
+        . L.set tStatus Cleared
+
 csvRecordToLedgerTransaction :: CsCsvRecord -> Maybe Transaction
 csvRecordToLedgerTransaction rec =
   let (wireF :: CsCsvRecord -> Maybe Transaction) = csvRecordToWireTransaction >=> (return . wireTransactionToLedgerTransaction)
       vestingF = csvRecordToVesting >=> (return . vestingToLedgerTransaction)
-   in asum ([wireF, vestingF, creditInterestToLedgerTransaction] <*> [rec])
+   in asum
+        ( [ wireF
+          , vestingF
+          , creditInterestToLedgerTransaction
+          , saleToLedgerTransaction
+          ]
+            <*> [rec]
+        )
 
 csvToLedger :: Vector CsCsvRecord -> Either Text LedgerReport
 csvToLedger recs =
   let trs = Vector.mapMaybe csvRecordToLedgerTransaction recs
-   in Right $ LedgerReport (Vector.toList trs) []
+   in Right $ LedgerReport (reverse $ Vector.toList trs) []

@@ -88,3 +88,26 @@ tests = do
                 ]
                 []
             )
+      it "transforms an sell entry" $ do
+        let entries =
+              [ CsCsvRecord
+                  (fromGregorian 2020 12 31)
+                  "Sell"
+                  "GOOG"
+                  "ALPHABET INC. CLASS C"
+                  (Just 8)
+                  (Just $ DollarAmount (fromRational $ 17652706 % 10000))
+                  (Just $ DollarAmount (fromRational $ 31 % 100))
+                  (Just $ DollarAmount (fromRational $ 1412185 % 100))
+              ]
+        csvToLedger entries
+          `shouldBe` Right
+            ( LedgerReport
+                [ parseTransactionUnsafe
+                    "2020/12/31 * GOOG Sale\n\
+                    \  Assets:Investments:Charles Schwab:GOOG  -8 GOOG @ 1765.2706 USD\n\
+                    \  Assets:Liquid:Charles Schwab:USD  14121.85 USD\n\
+                    \  Expenses:Financial Services  0.31 USD"
+                ]
+                []
+            )
