@@ -111,3 +111,25 @@ tests = do
                 ]
                 []
             )
+      it "transforms a withholding tax entry" $ do
+        let entries =
+              [ CsCsvRecord
+                  (fromGregorian 2020 12 31)
+                  "Journal"
+                  ""
+                  "Gencash transaction for SPS RS Lapse Tool"
+                  Nothing
+                  Nothing
+                  Nothing
+                  (Just $ DollarAmount (fromRational $ 123 % 100))
+              ]
+        csvToLedger entries
+          `shouldBe` Right
+            ( LedgerReport
+                [ parseTransactionUnsafe
+                    "2020/12/31 * Withholding Tax\n\
+                    \  Assets:Liquid:Charles Schwab:USD  -1.23 USD\n\
+                    \  Taxes"
+                ]
+                []
+            )

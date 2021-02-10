@@ -15,7 +15,7 @@ import Hledger (AmountPrice (UnitPrice), Status (Cleared, Pending), Transaction,
 import Hledger.Data.Extra (makeCommodityAmount, makeCurrencyAmount)
 import Hledger.Data.Lens (aAmountPrice, pMaybeAmount, pStatus, tDescription, tStatus)
 import Hledupt.CharlesSchwab.Csv (
-  CsCsvRecord (csAmount, csDate, csFees, csPrice, csQuantity, csSymbol),
+  CsCsvRecord (csAmount, csDate, csDescription, csFees, csPrice, csQuantity, csSymbol),
   DollarAmount (..),
   csAction,
  )
@@ -131,6 +131,23 @@ saleToLedgerTransaction rec = do
       & L.set tDescription (toString symbol ++ " Sale")
         . L.set tStatus Cleared
 
+taxToLedgerTransaction :: CsCsvRecord -> Maybe Transaction
+taxToLedgerTransaction rec = do
+  guard $ csAction rec == "Journal"
+  guard $ csDescription rec == "Gencash transaction for SPS RS Lapse Tool"
+  (DollarAmount amount) <- csAmount rec
+  return $
+    transaction
+      (csDate rec)
+      [ post
+          usdAccount
+          ( makeCurrencyAmount USD (- amount)
+          )
+      , post "Taxes" missingamt
+      ]
+      & L.set tDescription "Withholding Tax"
+        . L.set tStatus Cleared
+
 csvRecordToLedgerTransaction :: CsCsvRecord -> Maybe Transaction
 csvRecordToLedgerTransaction rec =
   let (wireF :: CsCsvRecord -> Maybe Transaction) = csvRecordToWireTransaction >=> (return . wireTransactionToLedgerTransaction)
@@ -140,6 +157,7 @@ csvRecordToLedgerTransaction rec =
           , vestingF
           , creditInterestToLedgerTransaction
           , saleToLedgerTransaction
+          , taxToLedgerTransaction
           ]
             <*> [rec]
         )
