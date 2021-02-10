@@ -44,3 +44,47 @@ tests = do
                 ]
                 []
             )
+      it "transforms a vesting entry" $ do
+        let entries =
+              [ CsCsvRecord
+                  (fromGregorian 2020 12 31)
+                  "Stock Plan Activity"
+                  "GOOG"
+                  "ALPHABET INC. CLASS C"
+                  (Just 5)
+                  Nothing
+                  Nothing
+                  Nothing
+              ]
+        csvToLedger entries
+          `shouldBe` Right
+            ( LedgerReport
+                [ parseTransactionUnsafe
+                    "2020/12/31 * GOOG Vesting\n\
+                    \  Assets:Illiquid:Charles Schwab:Unvested GOOG  -5 GOOG\n\
+                    \  Assets:Investments:Charles Schwab:GOOG  5 GOOG"
+                ]
+                []
+            )
+      it "transforms an interest entry" $ do
+        let entries =
+              [ CsCsvRecord
+                  (fromGregorian 2021 1 28)
+                  "Credit Interest"
+                  ""
+                  "SCHWAB1 INT 12/30-01/27"
+                  Nothing
+                  Nothing
+                  Nothing
+                  (Just $ DollarAmount (fromRational $ 19 % 100))
+              ]
+        csvToLedger entries
+          `shouldBe` Right
+            ( LedgerReport
+                [ parseTransactionUnsafe
+                    "2021/01/28 * Credit Interest\n\
+                    \  Assets:Liquid:Charles Schwab:USD  0.19 USD\n\
+                    \  Income:Google"
+                ]
+                []
+            )
