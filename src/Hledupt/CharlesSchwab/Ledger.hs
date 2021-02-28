@@ -11,7 +11,15 @@ import qualified Data.Text as Text
 import Data.Time (Day)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
-import Hledger (AmountPrice (UnitPrice), Status (Cleared, Pending), Transaction, missingamt, post, setFullPrecision, transaction)
+import Hledger (
+  AmountPrice (UnitPrice),
+  Status (Cleared, Pending),
+  Transaction,
+  missingamt,
+  post,
+  setFullPrecision,
+  transaction,
+ )
 import Hledger.Data.Extra (makeCommodityAmount, makeCurrencyAmount)
 import Hledger.Data.Lens (aAmountPrice, pMaybeAmount, pStatus, tDescription, tStatus)
 import Hledupt.CharlesSchwab.Csv (
@@ -21,7 +29,25 @@ import Hledupt.CharlesSchwab.Csv (
  )
 import Hledupt.Data.Currency (Currency (USD))
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
-import Relude
+import Relude (
+  Applicative ((<*>)),
+  Either (Right),
+  Eq ((==)),
+  Integer,
+  Maybe (Just),
+  Monad (return),
+  Num (fromInteger),
+  Text,
+  ToString (toString),
+  asum,
+  guard,
+  reverse,
+  ($),
+  (&),
+  (++),
+  (.),
+  (>=>),
+ )
 
 -- "Wire Fund", "Sell" & "Journal", "Credit Interest"
 
