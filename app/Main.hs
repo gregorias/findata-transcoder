@@ -39,7 +39,7 @@ import qualified Hledupt.Degiro.AccountStatement as DegiroAccount (
 import qualified Hledupt.Degiro.Portfolio as DegiroPortfolio (
   csvStatementToLedger,
  )
-import Hledupt.GPayslip (parsePayslip)
+import Hledupt.GPayslip (payslipTextToLedger)
 import Hledupt.Ib as Ib (parseActivityCsv)
 import Hledupt.Mbank (mbankCsvToLedger)
 import Relude
@@ -112,7 +112,7 @@ parseMbank =
 parseGPayslip :: IO ()
 parseGPayslip = do
   payslip <- Text.getContents
-  case parsePayslip payslip of
+  case payslipTextToLedger payslip of
     Left err -> do
       Text.hPutStr stderr err
       exitFailure
