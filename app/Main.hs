@@ -108,6 +108,11 @@ parseMbank =
   parseBank $
     mbankCsvToLedger . UTF8.toString
 
+parseGPayslip :: IO ()
+parseGPayslip = do
+  _ <- Text.getContents -- payslip
+  Text.putStrLn "parse-gpayslip is not yet implemented"
+
 ignoreAction :: r -> OptionDesc r ()
 ignoreAction r = action $ const @_ @(Flag Bool -> Bool) r
 
@@ -129,6 +134,9 @@ main = defaultMain $ do
   command "parse-degiro-portfolio" $ do
     description "Parses Degiro's portfolio CSV and outputs Ledger data"
     ignoreAction parseDegiroPortfolio
+  command "parse-gpayslip" $ do
+    description "Parses a text dump from a Google Payslip and outputs ledupt data"
+    ignoreAction parseGPayslip
   command "parse-ib-activity" $ do
     description "Parses IB's Activity Statement file and outputs ledupt data"
     ignoreAction parseIbActivity
