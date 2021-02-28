@@ -43,6 +43,7 @@ library
       Hledupt.Degiro.Csv
       Hledupt.Degiro.IsinData
       Hledupt.Degiro.Portfolio
+      Hledupt.GPayslip
       Hledupt.Ib
       Hledupt.Ib.Csv
       Hledupt.Ib.Csv.ActivityStatementParse

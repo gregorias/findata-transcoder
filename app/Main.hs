@@ -39,6 +39,7 @@ import qualified Hledupt.Degiro.AccountStatement as DegiroAccount (
 import qualified Hledupt.Degiro.Portfolio as DegiroPortfolio (
   csvStatementToLedger,
  )
+import Hledupt.GPayslip (parsePayslip)
 import Hledupt.Ib as Ib (parseActivityCsv)
 import Hledupt.Mbank (mbankCsvToLedger)
 import Relude
@@ -110,8 +111,12 @@ parseMbank =
 
 parseGPayslip :: IO ()
 parseGPayslip = do
-  _ <- Text.getContents -- payslip
-  Text.putStrLn "parse-gpayslip is not yet implemented"
+  payslip <- Text.getContents
+  case parsePayslip payslip of
+    Left err -> do
+      Text.hPutStr stderr err
+      exitFailure
+    Right output -> Text.putStr . showLedgerReport $ output
 
 ignoreAction :: r -> OptionDesc r ()
 ignoreAction r = action $ const @_ @(Flag Bool -> Bool) r
@@ -138,7 +143,7 @@ main = defaultMain $ do
     description "Parses a text dump from a Google Payslip and outputs ledupt data"
     ignoreAction parseGPayslip
   command "parse-ib-activity" $ do
-    description "Parses IB's Activity Statement file and outputs ledupt data"
+    description "Parses IB's Activity Statement file and outputs a ledger"
     ignoreAction parseIbActivity
   command "parse-mbank" $ do
     description "Parses mBank's CSV file and outputs ledupt data"
