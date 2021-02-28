@@ -117,6 +117,7 @@ test-suite hledupt-test
       Test.Hledupt.Degiro.AccountStatement
       Test.Hledupt.Degiro.Csv
       Test.Hledupt.Degiro.Portfolio
+      Test.Hledupt.GPayslip
       Test.Hledupt.Ib
       Test.Hledupt.Ib.Csv.ActivityStatementParse
       Test.Hledupt.Ib.Csv.RawParse
