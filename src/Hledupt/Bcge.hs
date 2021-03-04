@@ -43,7 +43,7 @@ import qualified Hledupt.Bcge.Hint as Hint
 import Hledupt.Data.Cash (Cash (Cash), cashAmount)
 import Hledupt.Data.Currency (Currency (CHF))
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
-import Hledupt.Data.MyDecimal (decimalP)
+import Hledupt.Data.MyDecimal (ChunkSepFormat (NoChunkSep), cashDecimalFormat, decimalP)
 import Relude
 import Safe (headMay)
 import Text.Megaparsec (
@@ -82,7 +82,7 @@ bcgeCsvParser = many bcgeCsvLineParser
 saldoParser :: BcgeParser Cash
 saldoParser = do
   void $ string "Saldo: CHF "
-  Cash CHF <$> decimalP
+  Cash CHF <$> bcgeCashP
 
 parseStatementDate :: String -> Maybe Day
 parseStatementDate = parseTimeM True defaultTimeLocale "%d.%m.%Y"
@@ -129,6 +129,9 @@ getDate header = do
   dateString <- headMay [f0 | (f0, _, _) <- header, take 11 f0 == "Kontoauszug"]
   parseMaybe statementDateParser dateString
 
+bcgeCashP :: BcgeParser Decimal
+bcgeCashP = decimalP (cashDecimalFormat NoChunkSep)
+
 getSaldo :: Header -> Maybe Cash
 getSaldo header = do
   saldoString <- headMay [f0 | (f0, _, _) <- header, take 5 f0 == "Saldo"]
@@ -137,7 +140,7 @@ getSaldo header = do
 csvLineToBcgeTransaction :: CsvLine -> Maybe BcgeTransaction
 csvLineToBcgeTransaction (dateString, title, amountString) = do
   date <- parseTimeM True defaultTimeLocale "%d.%m.%y" dateString
-  amount <- parseMaybe decimalP amountString
+  amount <- parseMaybe bcgeCashP amountString
   return $ BcgeTransaction date title amount
 
 csvLinesToBcgeStatement :: [CsvLine] -> Maybe BcgeStatement

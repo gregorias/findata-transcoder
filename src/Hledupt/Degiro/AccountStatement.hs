@@ -43,7 +43,10 @@ import Hledupt.Data.CsvFile (CsvFile)
 import Hledupt.Data.Currency (Currency, currencyP)
 import Hledupt.Data.Isin (Isin, mkIsin)
 import Hledupt.Data.LedgerReport (LedgerReport (..))
-import Hledupt.Data.MyDecimal (decimalP)
+import Hledupt.Data.MyDecimal (
+  decimalP,
+  defaultDecimalFormat,
+ )
 import Hledupt.Degiro.Csv (
   DegiroCsvRecord (..),
   parseCsvStatement,
@@ -247,7 +250,7 @@ stockTradeDescriptionP = MP.parseMaybe parserP
     space
     quantity <- decimal
     void $ manyTill anySingle (single '@')
-    price <- decimalP
+    price <- decimalP defaultDecimalFormat
     space
     currency <- currencyP
     void $ many anySingle

@@ -22,7 +22,10 @@ import Data.Time (Day, defaultTimeLocale)
 import Data.Time.Format (parseTimeM)
 import Data.Vector (Vector)
 import Hledupt.Data.CsvFile (CsvFile (CsvFile))
-import Hledupt.Data.MyDecimal (decimalP)
+import Hledupt.Data.MyDecimal (
+  decimalP,
+  defaultDecimalFormat,
+ )
 import Relude
 import Text.Megaparsec (Parsec, anySingle, chunk, single)
 import qualified Text.Megaparsec as MP
@@ -62,7 +65,7 @@ newtype DollarAmount = DollarAmount
 unsignedDollarAmountP :: Parsec Void Text Decimal
 unsignedDollarAmountP = do
   void $ single '$'
-  decimalP
+  decimalP defaultDecimalFormat
 
 dollarAmountP :: Parsec Void Text DollarAmount
 dollarAmountP = DollarAmount <$> signed space unsignedDollarAmountP

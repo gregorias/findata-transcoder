@@ -26,9 +26,14 @@ import Data.Vector (Vector)
 import Hledupt.Data.Cash (Cash (Cash))
 import Hledupt.Data.CsvFile (CsvFile (CsvFile))
 import Hledupt.Data.Isin (Isin, mkIsin)
-import Hledupt.Data.MyDecimal (decimalP)
+import Hledupt.Data.MyDecimal (
+  ChunkSepFormat (NoChunkSep),
+  DecimalFormat (..),
+  DecimalFractionFormat (OptionalUnlimitedDecimalFraction),
+  decimalP,
+ )
 import Relude
-import Text.Megaparsec (single)
+import Text.Megaparsec (Parsec, single)
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (numberChar)
 
@@ -62,12 +67,18 @@ data DegiroCsvRecord = DegiroCsvRecord
   }
   deriving stock (Eq, Ord, Show)
 
+degiroCashDecimalFormat :: DecimalFormat
+degiroCashDecimalFormat = DecimalFormat NoChunkSep (Just OptionalUnlimitedDecimalFraction)
+
+degiroCashP :: Parsec Void String Decimal
+degiroCashP = decimalP degiroCashDecimalFormat
+
 parseCash :: Csv.Field -> Csv.Field -> Csv.Parser (Maybe Cash)
 parseCash "" "" = pure Nothing
 parseCash changeCurrencyField changeAmountField = do
   changeCurrency <- Csv.parseField changeCurrencyField
   Just changeAmount <-
-    MP.parseMaybe @Void decimalP
+    MP.parseMaybe @Void degiroCashP
       <$> (Csv.parseField changeAmountField :: Csv.Parser String)
   return . Just $ Cash changeCurrency changeAmount
 
@@ -90,7 +101,7 @@ instance Csv.FromRecord DegiroCsvRecord where
       if null fxStr
         then return Nothing
         else do
-          Just fx <- return $ MP.parseMaybe @Void decimalP fxStr
+          Just fx <- return $ MP.parseMaybe @Void degiroCashP fxStr
           return $ Just fx
     maybeChange <- join $ parseCash <$> rec .! 7 <*> rec .! 8
     Just balance <- join $ parseCash <$> rec .! 9 <*> rec .! 10

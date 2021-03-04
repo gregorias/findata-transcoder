@@ -188,18 +188,21 @@ csvRecordsToLedgerTests = do
           \03-02-2020,09:05,03-02-2020,ISHARES MSCI WOR A,IE00B4L5Y983,FX Credit,0.9353,EUR,9733.32,EUR,0.00,a4457f95-c6b7-43b9-9afa-4410e5109954\n\
           \03-02-2020,09:05,03-02-2020,ISHARES MSCI WOR A,IE00B4L5Y983,FX Debit,,CHF,-10406.57,CHF,2385.26,a4457f95-c6b7-43b9-9afa-4410e5109954\n\
           \03-02-2020,09:05,03-02-2020,ISHARES MSCI WOR A,IE00B4L5Y983,Buy 171 ISHARES MSCI WOR A@56.92 EUR (IE00B4L5Y983),,EUR,-9733.32,EUR,-21345.00,a4457f95-c6b7-43b9-9afa-4410e5109954"
-    Right (LedgerReport actualTrs prices) <- return $ csvRecordsToLedger csvRecords
-    prices `shouldBe` []
-    actualTrs
-      `shouldBe` [ parseTransactionUnsafe
-                    "2020/02/03 * Degiro Stock Transaction\n\
-                    \  Assets:Investments:Degiro:IWDA  171 IWDA @ 56.92 EUR\n\
-                    \  Assets:Liquid:Degiro  -9733.32 EUR = -21345.00 EUR"
-                 , parseTransactionUnsafe
-                    "2020/02/03 * Degiro Forex\n\
-                    \  Assets:Liquid:Degiro  -10406.57 CHF = 2385.26 CHF @ 0.9353 EUR\n\
-                    \  Assets:Liquid:Degiro    9733.32 EUR = 0 EUR\n"
-                 ]
+    let ledgerReport = csvRecordsToLedger csvRecords
+    ledgerReport
+      `shouldBe` Right
+        ( LedgerReport
+            [ parseTransactionUnsafe
+                "2020/02/03 * Degiro Stock Transaction\n\
+                \  Assets:Investments:Degiro:IWDA  171 IWDA @ 56.92 EUR\n\
+                \  Assets:Liquid:Degiro  -9733.32 EUR = -21345.00 EUR"
+            , parseTransactionUnsafe
+                "2020/02/03 * Degiro Forex\n\
+                \  Assets:Liquid:Degiro  -10406.57 CHF = 2385.26 CHF @ 0.9353 EUR\n\
+                \  Assets:Liquid:Degiro    9733.32 EUR = 0 EUR\n"
+            ]
+            []
+        )
 
   it "Returns a readable error when a record can't be processed." $ do
     csvRecordsToLedger

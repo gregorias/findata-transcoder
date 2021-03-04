@@ -37,7 +37,7 @@ import Hledger.Data.Types (
   Status (..),
   Transaction,
  )
-import Hledupt.Data.MyDecimal (decimalP)
+import Hledupt.Data.MyDecimal (decimalP, defaultDecimalFormat)
 import Relude
 import Text.Megaparsec (
   MonadParsec (lookAhead),
@@ -78,11 +78,11 @@ commodity = do
       ( do
           symbol <- commoditySymbol
           void $ some space
-          amount <- decimalP
+          amount <- decimalP defaultDecimalFormat
           return (Just symbol, amount)
       )
       <|> ( do
-              amount <- decimalP
+              amount <- decimalP defaultDecimalFormat
               symbol <- optional (some space >> commoditySymbol)
               return (symbol, amount)
           )

@@ -4,12 +4,21 @@
 module Test.Hledupt.Data.MyDecimal (tests) where
 
 import qualified Data.Csv as Csv
-import Data.Decimal (realFracToDecimal)
+import Data.Decimal (Decimal, realFracToDecimal)
 import Data.Ratio ((%))
-import Hledupt.Data.MyDecimal (MyDecimal (..), decimalP, fromUnitsAndCents)
+import Hledupt.Data.MyDecimal (
+  ChunkSepFormat (ChunkSep, NoChunkSep),
+  DecimalFormat (..),
+  DecimalFractionFormat (OptionalUnlimitedDecimalFraction, TwoDigitDecimalFraction),
+  MyDecimal (..),
+  decimalP,
+  defaultDecimalFormat,
+  fromUnitsAndCents,
+ )
 import Relude
 import Test.Hspec (SpecWith, describe, it, shouldBe)
-import Text.Megaparsec (parseMaybe)
+import Text.Megaparsec (Parsec, parseMaybe)
+import Text.Megaparsec.Char (string)
 
 tests :: SpecWith ()
 tests = do
@@ -18,23 +27,42 @@ tests = do
       it "correctly handles negative numbers" $ do
         fromUnitsAndCents (-5) 50 `shouldBe` realFracToDecimal 2 (-5.50 :: Double)
 
-    describe "decimalP" $ do
+    describe "default decimalP" $ do
+      let (defaultDecimalP :: Parsec () Text Decimal) = decimalP defaultDecimalFormat
       it "parses a negative number" $ do
-        parseMaybe decimalP "-123.321"
+        parseMaybe defaultDecimalP "-123.321"
           `shouldBe` Just (fromRational $ -123 - (321 % 1000))
       it "parses a positive number" $ do
-        parseMaybe decimalP "123.321"
+        parseMaybe defaultDecimalP "123.321"
           `shouldBe` Just (fromRational $ 123 + (321 % 1000))
       it "parses a unit" $ do
-        parseMaybe decimalP "1"
+        parseMaybe defaultDecimalP "1"
           `shouldBe` Just (fromRational 1)
       it "parses a fraction" $ do
-        parseMaybe decimalP "0.01"
+        parseMaybe defaultDecimalP "0.01"
           `shouldBe` Just (fromRational $ 1 % 100)
+
+    describe "various decimalP" $ do
       it "parses a number with commas" $ do
-        parseMaybe decimalP "2,000,000"
+        parseMaybe (decimalP (DecimalFormat (ChunkSep ',') Nothing)) "2,000,000"
           `shouldBe` Just (fromRational 2000000)
+
+      it "parses a number with commas" $ do
+        parseMaybe (decimalP (DecimalFormat (ChunkSep ',') (Just OptionalUnlimitedDecimalFraction))) "2,000,000"
+          `shouldBe` Just (fromRational 2000000)
+
+      it "parses only two digits when TwoDigit format is set" $ do
+        parseMaybe
+          ( decimalP (DecimalFormat NoChunkSep (Just TwoDigitDecimalFraction))
+              <* string "123"
+          )
+          "2.00123"
+          `shouldBe` Just (fromRational 2)
 
     describe "Csv.FromField MyDecimal" $ do
       it "Parses a decimal" $ do
-        Csv.runParser (Csv.parseField "123.321") `shouldBe` Right (MyDecimal (fromRational $ 123 + (321 % 1000)))
+        Csv.runParser (Csv.parseField "123.321")
+          `shouldBe` Right (MyDecimal (fromRational $ 123 + (321 % 1000)))
+      it "Parses a whole decimal with commas" $ do
+        Csv.runParser (Csv.parseField "2,000,000")
+          `shouldBe` Right (MyDecimal (fromRational 2000000))
