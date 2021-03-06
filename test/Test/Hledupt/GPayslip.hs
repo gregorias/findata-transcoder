@@ -5,6 +5,7 @@ module Test.Hledupt.GPayslip (
 ) where
 
 import qualified Data.Text.IO as Text
+import Data.Time (fromGregorian)
 import Hledupt.GPayslip (
   Payslip (..),
   parsePayslip,
@@ -21,4 +22,9 @@ tests = do
       it "Parses a valid payslip" $ do
         gpayslip <- Text.readFile "test/data/gpayslip.txt"
         let parsedPayslip = parsePayslip gpayslip
-        parsedPayslip `shouldBe` Right (Payslip 11234.65)
+        parsedPayslip
+          `shouldBe` Right
+            ( Payslip
+                (fromGregorian 2020 1 24)
+                11234.65
+            )

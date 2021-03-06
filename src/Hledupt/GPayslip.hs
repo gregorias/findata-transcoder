@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 -- | This module parses a text dump from a Google Payslip and outputs a ledger.
@@ -14,7 +15,8 @@ import Control.Lens ((%~))
 import qualified Control.Lens as L
 import Data.Decimal (Decimal)
 import qualified Data.Text as Text
-import Data.Time (Day)
+import Data.Time (Day, defaultTimeLocale, parseTimeM)
+import Hledger (Transaction)
 import Hledupt.Data.LedgerReport (LedgerReport)
 import Hledupt.Data.MyDecimal (
   ChunkSepFormat (ChunkSep),
@@ -23,23 +25,28 @@ import Hledupt.Data.MyDecimal (
   decimalP,
  )
 import Relude
-import Text.Megaparsec (Parsec, anySingle, errorBundlePretty, manyTill, manyTill_, parse, try)
+import Text.Megaparsec (Parsec, anySingle, count, errorBundlePretty, manyTill, manyTill_, match, parse, try)
 import Text.Megaparsec.Char (
+  char,
+  digitChar,
   newline,
   space1,
   string,
  )
 
 data PayslipDuo = PayslipDuo
-  { payslipDate :: !Day
-  , payslipSalaryElements :: !SalaryElements
-  , payslipDeductions :: ()
-  , payslipTotal :: !Decimal
+  { payslipDuoDate :: !Day
+  , payslipDuoSalaryElements :: !SalaryElements
+  , payslipDuoDeductions :: ()
+  , payslipDuoTotal :: !Decimal
   }
   deriving stock (Show, Eq)
 
-newtype Payslip = Payslip Decimal
-  deriving newtype (Show, Eq)
+data Payslip = Payslip
+  { payslipDate :: !Day
+  , payslipTotal :: !Decimal
+  }
+  deriving stock (Show, Eq)
 
 data SalaryElements = SalaryElements
   { salaryElementsMonthlySalary :: !Decimal
@@ -56,8 +63,26 @@ data Deductions = Deductions
   }
   deriving stock (Show, Eq)
 
-anyLine :: Parsec Void Text ()
-anyLine = void $ manyTill anySingle newline
+anyLineP :: Parsec Void Text ()
+anyLineP = void $ manyTill anySingle newline
+
+dateLineP :: Parsec Void Text Day
+dateLineP = do
+  (dateString, _) <-
+    try $
+      match
+        ( count 2 digitChar
+            >> char '.'
+            >> count 2 digitChar
+            >> char '.'
+            >> many digitChar
+        )
+  void newline
+  parseTimeM
+    False
+    defaultTimeLocale
+    "%d.%m.%Y"
+    (Text.unpack dateString)
 
 mainTotalP :: Parsec Void Text Decimal
 mainTotalP = do
@@ -69,9 +94,10 @@ mainTotalP = do
 
 payslipP :: Parsec Void Text Payslip
 payslipP = do
-  (_, mainTotal) <- manyTill_ anyLine mainTotalP
-  void $ many anyLine
-  return $ Payslip mainTotal
+  (_, day) <- manyTill_ anyLineP dateLineP
+  (_, mainTotal) <- manyTill_ anyLineP mainTotalP
+  void $ many anyLineP
+  return $ Payslip day mainTotal
 
 prependErrorMessage :: Text -> Either Text a -> Either Text a
 prependErrorMessage err = L._Left %~ (errln `Text.append`)
@@ -85,6 +111,9 @@ parsePayslip payslip = prepareErrMsg parsedPayslip
   prepareErrMsg =
     prependErrorMessage "Could not parse the payslip."
       . first (Text.pack . errorBundlePretty)
+
+payslipToTransaction :: Payslip -> Transaction
+payslipToTransaction (Payslip _day _total) = undefined
 
 payslipToLedger :: Payslip -> Either Text LedgerReport
 payslipToLedger _payslip = Left "Unimplemented"
