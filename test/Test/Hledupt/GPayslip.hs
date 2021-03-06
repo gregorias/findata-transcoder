@@ -4,12 +4,21 @@ module Test.Hledupt.GPayslip (
   tests,
 ) where
 
+import qualified Data.Text.IO as Text
+import Hledupt.GPayslip (
+  Payslip (..),
+  parsePayslip,
+ )
 import Relude
-import Test.Hspec (describe)
+import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
+import Test.Hspec.Expectations.Pretty (shouldBe)
 
 tests :: Hspec.SpecWith ()
 tests = do
   describe "Hledupt.GPayslip" $ do
     describe "parsePayslip" $ do
-      return ()
+      it "Parses a valid payslip" $ do
+        gpayslip <- Text.readFile "test/data/gpayslip.txt"
+        let parsedPayslip = parsePayslip gpayslip
+        parsedPayslip `shouldBe` Right (Payslip 11234.65)

@@ -64,6 +64,7 @@ import Text.Megaparsec (
   choice,
   customFailure,
   manyTill,
+  parse,
   parseErrorPretty,
   single,
  )
@@ -387,7 +388,7 @@ csvRecordsToActivities recs =
         . head
         . bundleErrors
     )
-    $ MP.parse activitiesP "" (DegiroCsv (reverse recs))
+    $ parse activitiesP "" (DegiroCsv (reverse recs))
 
 -- | Transforms a parsed Degiro CSV statement into a Ledger report
 csvRecordsToLedger :: Vector DegiroCsvRecord -> Either Text LedgerReport
