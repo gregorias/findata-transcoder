@@ -34,8 +34,9 @@ tests = do
                 ( Deductions
                     { deductionsSwissSocialSecurity = 1234.50
                     , deductionsUnemploymentInsurance = 123.85 + 123.55
-                    , deductionsPensionFund = 123.30
+                    , deductionsPensionFund = Just 123.30
                     , deductionsTaxAtSource = 1234.75
+                    , deductionsDeductionNetAmount = Nothing
                     , deductionsMssbCsWithholding = Nothing
                     , deductionsGcard = Nothing
                     , deductionsTotal = 10000.95
@@ -43,6 +44,7 @@ tests = do
                 )
                 11234.65
             )
+
       it "Parses a valid payslip 1" $ do
         gpayslip <- Text.readFile "test/data/gpayslip1.txt"
         let parsedPayslip = parsePayslip gpayslip
@@ -54,8 +56,9 @@ tests = do
                 ( Deductions
                     { deductionsSwissSocialSecurity = 1234.50
                     , deductionsUnemploymentInsurance = 123.85 + 123.55
-                    , deductionsPensionFund = 123.30
+                    , deductionsPensionFund = Just 123.30
                     , deductionsTaxAtSource = 1234.75
+                    , deductionsDeductionNetAmount = Nothing
                     , deductionsMssbCsWithholding = Just (-1708)
                     , deductionsGcard = Nothing
                     , deductionsTotal = 10000.95
@@ -63,6 +66,7 @@ tests = do
                 )
                 11234.65
             )
+
       it "Parses a valid payslip 2" $ do
         gpayslip <- Text.readFile "test/data/gpayslip2.txt"
         let parsedPayslip = parsePayslip gpayslip
@@ -74,10 +78,33 @@ tests = do
                 ( Deductions
                     { deductionsSwissSocialSecurity = 1234.50
                     , deductionsUnemploymentInsurance = 123.85 + 123.55
-                    , deductionsPensionFund = 123.30
+                    , deductionsPensionFund = Just 123.30
                     , deductionsTaxAtSource = 1234.75
+                    , deductionsDeductionNetAmount = Nothing
                     , deductionsMssbCsWithholding = Nothing
                     , deductionsGcard = Just 123
+                    , deductionsTotal = 10000.95
+                    }
+                )
+                11234.65
+            )
+
+      it "Parses a valid payslip 3" $ do
+        gpayslip <- Text.readFile "test/data/gpayslip3.txt"
+        let parsedPayslip = parsePayslip gpayslip
+        parsedPayslip
+          `shouldBe` Right
+            ( Payslip
+                (fromGregorian 2020 1 24)
+                12345.60
+                ( Deductions
+                    { deductionsSwissSocialSecurity = 1234.50
+                    , deductionsUnemploymentInsurance = 123.55
+                    , deductionsPensionFund = Nothing
+                    , deductionsTaxAtSource = 0.05
+                    , deductionsDeductionNetAmount = Just 1234.00
+                    , deductionsMssbCsWithholding = Just (-1234.65)
+                    , deductionsGcard = Nothing
                     , deductionsTotal = 10000.95
                     }
                 )
@@ -93,8 +120,9 @@ tests = do
                 ( Deductions
                     { deductionsSwissSocialSecurity = 1234.50
                     , deductionsUnemploymentInsurance = 123.85 + 123.55
-                    , deductionsPensionFund = 123.30
+                    , deductionsPensionFund = Just 123.30
                     , deductionsTaxAtSource = 1234.75
+                    , deductionsDeductionNetAmount = Just 123
                     , deductionsMssbCsWithholding = Just (-1708)
                     , deductionsGcard = Just 100
                     , deductionsTotal = 10000.95
@@ -108,9 +136,10 @@ tests = do
             \  * Income:Google  -12345.60 CHF\n\
             \  * State:2020:Mandatory Contributions:Social Security  1234.50 CHF\n\
             \  * State:2020:Mandatory Contributions:Unemployment Insurance  247.40 CHF\n\
-            \  * SecondPillar  123.30 CHF\n\
             \  * State:2020:Withholding Tax:Total  1234.75 CHF\n\
-            \  * Equity:MssbCsWithholding  -1708.00 CHF\n\
+            \  * SecondPillar  123.30 CHF\n\
+            \  * Equity:Google Deduction Net Amount  123.00 CHF\n\
+            \  * Equity:MssbCs Withholding  -1708.00 CHF\n\
             \  * Assets:Debts:Google  100.00 CHF"
 
       it "Skips optional Fields" $ do
@@ -122,8 +151,9 @@ tests = do
                 ( Deductions
                     { deductionsSwissSocialSecurity = 1234.50
                     , deductionsUnemploymentInsurance = 123.85 + 123.55
-                    , deductionsPensionFund = 123.30
+                    , deductionsPensionFund = Nothing
                     , deductionsTaxAtSource = 1234.75
+                    , deductionsDeductionNetAmount = Nothing
                     , deductionsMssbCsWithholding = Nothing
                     , deductionsGcard = Nothing
                     , deductionsTotal = 10000.95
@@ -137,5 +167,4 @@ tests = do
             \  * Income:Google  -12345.60 CHF\n\
             \  * State:2020:Mandatory Contributions:Social Security  1234.50 CHF\n\
             \  * State:2020:Mandatory Contributions:Unemployment Insurance  247.40 CHF\n\
-            \  * SecondPillar  123.30 CHF\n\
             \  * State:2020:Withholding Tax:Total  1234.75 CHF"

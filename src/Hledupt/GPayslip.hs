@@ -78,8 +78,9 @@ data Payslip = Payslip
 data Deductions = Deductions
   { deductionsSwissSocialSecurity :: !Decimal
   , deductionsUnemploymentInsurance :: !Decimal
-  , deductionsPensionFund :: !Decimal
+  , deductionsPensionFund :: !(Maybe Decimal)
   , deductionsTaxAtSource :: !Decimal
+  , deductionsDeductionNetAmount :: !(Maybe Decimal)
   , deductionsMssbCsWithholding :: !(Maybe Decimal)
   , deductionsGcard :: !(Maybe Decimal)
   , deductionsTotal :: !Decimal
@@ -149,9 +150,10 @@ socialSecurityP =
 unemploymentInsuranceP :: Parsec Void Text Decimal
 unemploymentInsuranceP = do
   contribution0 <- nameReferenceRateAmountLineP unemploymentInsuranceNameP
-  void $ optional newline
-  contribution1 <- nameReferenceRateAmountLineP unemploymentInsuranceNameP
-  return $ contribution0 + contribution1
+  maybeContribution1 <- optional . try $ do
+    void $ optional newline
+    nameReferenceRateAmountLineP unemploymentInsuranceNameP
+  return $ contribution0 + fromMaybe 0 maybeContribution1
  where
   unemploymentInsuranceNameP :: Parsec Void Text ()
   unemploymentInsuranceNameP = do
@@ -162,7 +164,18 @@ unemploymentInsuranceP = do
         ]
 
 taxAtSourceP :: Parsec Void Text Decimal
-taxAtSourceP = nameReferenceRateAmountLineP (void $ string "Tax at Source")
+taxAtSourceP = do
+  tax <- taxLineP
+  taxs <- many $
+    try $ do
+      void $ optional newline
+      taxLineP
+  return $ tax + sum taxs
+ where
+  taxLineP = nameReferenceRateAmountLineP (void $ string "Tax at Source")
+
+deductionNetAmountP :: Parsec Void Text Decimal
+deductionNetAmountP = nameAndAmountLineP "Deduction Net Amount"
 
 mssbCsWithholdingP :: Parsec Void Text Decimal
 mssbCsWithholdingP = nameAndAmountLineP "MSSB/CS Withholding"
@@ -179,9 +192,12 @@ deductionsP = do
   (_, socialSecurity) <- manyTill_ newline socialSecurityP
   skipMany newline
   unemploymentInsurance <- unemploymentInsuranceP
-  (_, pensionFund) <- manyTill_ newline pensionFundP
+  skipMany newline
+  pensionFund <- optional pensionFundP
   skipMany newline
   taxAtSource <- taxAtSourceP
+  skipMany newline
+  deductionNetAmount <- optional deductionNetAmountP
   skipMany newline
   mssbCsWithholding <- optional mssbCsWithholdingP
   skipMany newline
@@ -193,6 +209,7 @@ deductionsP = do
       , deductionsUnemploymentInsurance = unemploymentInsurance
       , deductionsPensionFund = pensionFund
       , deductionsTaxAtSource = taxAtSource
+      , deductionsDeductionNetAmount = deductionNetAmount
       , deductionsMssbCsWithholding = mssbCsWithholding
       , deductionsGcard = gcard
       , deductionsTotal = total
@@ -239,8 +256,9 @@ payslipToTransaction
       Deductions
         { deductionsSwissSocialSecurity = socialSecurity
         , deductionsUnemploymentInsurance = unemploymentInsurance
-        , deductionsPensionFund = pensionFund
+        , deductionsPensionFund = maybePensionFund
         , deductionsTaxAtSource = taxAtSource
+        , deductionsDeductionNetAmount = maybeDeductionNetAmount
         , deductionsMssbCsWithholding = maybeMssbCsWithholding
         , deductionsGcard = maybeGcard
         , deductionsTotal = _
@@ -261,17 +279,32 @@ payslipToTransaction
         , post (statePrefix `Text.append` "Mandatory Contributions:Unemployment Insurance") missingamt
             & L.set pStatus Cleared
               . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF unemploymentInsurance)
-        , post secondPillarAccount missingamt
-            & L.set pStatus Cleared
-              . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF pensionFund)
         , post (statePrefix `Text.append` "Withholding Tax:Total") missingamt
             & L.set pStatus Cleared
               . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF taxAtSource)
         ]
           ++ maybe
             []
+            ( \pensionFund ->
+                [ post secondPillarAccount missingamt
+                    & L.set pStatus Cleared
+                      . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF pensionFund)
+                ]
+            )
+            maybePensionFund
+          ++ maybe
+            []
+            ( \deductionNetAmount ->
+                [ post "Equity:Google Deduction Net Amount" missingamt
+                    & L.set pStatus Cleared
+                      . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF deductionNetAmount)
+                ]
+            )
+            maybeDeductionNetAmount
+          ++ maybe
+            []
             ( \mssbCs ->
-                [ post "Equity:MssbCsWithholding" missingamt
+                [ post "Equity:MssbCs Withholding" missingamt
                     & L.set pStatus Cleared
                       . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF mssbCs)
                 ]
