@@ -1,7 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -Wno-deprecations #-}
-{-# OPTIONS_GHC -Wno-unused-matches #-}
-{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 -- | This module parses a text dump from a Google Payslip and outputs a ledger.
 module Hledupt.GPayslip (
@@ -230,7 +227,7 @@ payslipToTransaction
         , deductionsUnemploymentInsurance = unemploymentInsurance
         , deductionsPensionFund = pensionFund
         , deductionsTaxAtSource = taxAtSource
-        , deductionsTotal = total
+        , deductionsTotal = _
         }
       mainTotal
     ) =
