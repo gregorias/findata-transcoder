@@ -4,11 +4,13 @@
 
 -- | This module parses a text dump from a Google Payslip and outputs a ledger.
 module Hledupt.GPayslip (
+  payslipTextToLedger,
   Payslip (..),
   SalaryElements (..),
   Deductions (..),
+  PayslipLedgerConfig (..),
   parsePayslip,
-  payslipTextToLedger,
+  payslipToTransaction,
 ) where
 
 import Control.Lens ((%~))
@@ -16,8 +18,11 @@ import qualified Control.Lens as L
 import Data.Decimal (Decimal)
 import qualified Data.Text as Text
 import Data.Time (Day, defaultTimeLocale, parseTimeM)
-import Hledger (Transaction)
-import Hledupt.Data.LedgerReport (LedgerReport)
+import Hledger (Status (Cleared, Pending), Transaction, missingamt, post, transaction)
+import Hledger.Data.Extra (makeCurrencyAmount)
+import Hledger.Data.Lens (pMaybeAmount, pStatus, tDescription)
+import Hledupt.Data.Currency (Currency (CHF))
+import Hledupt.Data.LedgerReport (LedgerReport (..))
 import Hledupt.Data.MyDecimal (
   ChunkSepFormat (ChunkSep),
   DecimalFormat (..),
@@ -33,6 +38,21 @@ import Text.Megaparsec.Char (
   space1,
   string,
  )
+
+data PayslipLedgerConfig = PayslipLedgerConfig
+  { -- | The bank account Google sends the salary to.
+    payslipLedgerConfigBankAccount :: !Text
+  , payslipLedgerConfigSecondPillarAccount :: !Text
+  }
+  deriving stock (Show, Eq)
+
+defaultPayslipLedgerConfig :: PayslipLedgerConfig
+defaultPayslipLedgerConfig =
+  PayslipLedgerConfig
+    { payslipLedgerConfigBankAccount = "Assets:Liquid:BCGE"
+    , payslipLedgerConfigSecondPillarAccount =
+        "Assets:Illiquid:AXA Wintherthur Pension Fund"
+    }
 
 data PayslipDuo = PayslipDuo
   { payslipDuoDate :: !Day
@@ -112,13 +132,30 @@ parsePayslip payslip = prepareErrMsg parsedPayslip
     prependErrorMessage "Could not parse the payslip."
       . first (Text.pack . errorBundlePretty)
 
-payslipToTransaction :: Payslip -> Transaction
-payslipToTransaction (Payslip _day _total) = undefined
+payslipToTransaction :: PayslipLedgerConfig -> Payslip -> Transaction
+payslipToTransaction
+  (PayslipLedgerConfig bankAccount _secondPillarAccount)
+  (Payslip day mainTotal) =
+    transaction
+      day
+      [ post bankAccount missingamt
+          & L.set pStatus Pending
+            . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF mainTotal)
+      , post "Income:Google" missingamt
+          & L.set pStatus Cleared
+            . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF (- mainTotal))
+      ]
+      & L.set tDescription "Google Salary"
 
-payslipToLedger :: Payslip -> Either Text LedgerReport
-payslipToLedger _payslip = Left "Unimplemented"
+payslipToLedger :: PayslipLedgerConfig -> Payslip -> LedgerReport
+payslipToLedger payslipLedgerConfig payslip =
+  LedgerReport
+    [payslipToTransaction payslipLedgerConfig payslip]
+    []
 
+-- | Transforms text extracted from a Google payslip's PDF into a
+-- 'LedgerReport'.
 payslipTextToLedger :: Text -> Either Text LedgerReport
 payslipTextToLedger payslipText = do
   payslip <- parsePayslip payslipText
-  payslipToLedger payslip
+  return $ payslipToLedger defaultPayslipLedgerConfig payslip

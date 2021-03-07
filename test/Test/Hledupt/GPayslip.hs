@@ -6,9 +6,12 @@ module Test.Hledupt.GPayslip (
 
 import qualified Data.Text.IO as Text
 import Data.Time (fromGregorian)
+import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.GPayslip (
   Payslip (..),
+  PayslipLedgerConfig (PayslipLedgerConfig),
   parsePayslip,
+  payslipToTransaction,
  )
 import Relude
 import Test.Hspec (describe, it)
@@ -28,3 +31,12 @@ tests = do
                 (fromGregorian 2020 1 24)
                 11234.65
             )
+    describe "payslipToTransaction" $ do
+      it "Transforms a payslip" $ do
+        let config = PayslipLedgerConfig "Bank" "SecondFillar"
+        let payslip = Payslip (fromGregorian 2020 1 24) 11234.65
+        payslipToTransaction config payslip
+          `shouldBe` parseTransactionUnsafe
+            "2020/01/24 Google Salary\n\
+            \  ! Bank  11234.65 CHF\n\
+            \  * Income:Google  -11234.65 CHF\n"
