@@ -36,7 +36,8 @@ tests = do
                     , deductionsUnemploymentInsurance = 123.85 + 123.55
                     , deductionsPensionFund = 123.30
                     , deductionsTaxAtSource = 1234.75
-                    , deductionsMssbCsWithholding = -0
+                    , deductionsMssbCsWithholding = Nothing
+                    , deductionsGcard = Nothing
                     , deductionsTotal = 10000.95
                     }
                 )
@@ -55,7 +56,28 @@ tests = do
                     , deductionsUnemploymentInsurance = 123.85 + 123.55
                     , deductionsPensionFund = 123.30
                     , deductionsTaxAtSource = 1234.75
-                    , deductionsMssbCsWithholding = -1708
+                    , deductionsMssbCsWithholding = Just (-1708)
+                    , deductionsGcard = Nothing
+                    , deductionsTotal = 10000.95
+                    }
+                )
+                11234.65
+            )
+      it "Parses a valid payslip 2" $ do
+        gpayslip <- Text.readFile "test/data/gpayslip2.txt"
+        let parsedPayslip = parsePayslip gpayslip
+        parsedPayslip
+          `shouldBe` Right
+            ( Payslip
+                (fromGregorian 2020 1 24)
+                12345.60
+                ( Deductions
+                    { deductionsSwissSocialSecurity = 1234.50
+                    , deductionsUnemploymentInsurance = 123.85 + 123.55
+                    , deductionsPensionFund = 123.30
+                    , deductionsTaxAtSource = 1234.75
+                    , deductionsMssbCsWithholding = Nothing
+                    , deductionsGcard = Just 123
                     , deductionsTotal = 10000.95
                     }
                 )
@@ -73,7 +95,8 @@ tests = do
                     , deductionsUnemploymentInsurance = 123.85 + 123.55
                     , deductionsPensionFund = 123.30
                     , deductionsTaxAtSource = 1234.75
-                    , deductionsMssbCsWithholding = -1708
+                    , deductionsMssbCsWithholding = Just (-1708)
+                    , deductionsGcard = Just 100
                     , deductionsTotal = 10000.95
                     }
                 )
@@ -86,5 +109,33 @@ tests = do
             \  * State:2020:Mandatory Contributions:Social Security  1234.50 CHF\n\
             \  * State:2020:Mandatory Contributions:Unemployment Insurance  247.40 CHF\n\
             \  * SecondPillar  123.30 CHF\n\
+            \  * State:2020:Withholding Tax:Total  1234.75 CHF\n\
             \  * Equity:MssbCsWithholding  -1708.00 CHF\n\
+            \  * Assets:Debts:Google  100.00 CHF"
+
+      it "Skips optional Fields" $ do
+        let config = PayslipLedgerConfig "Bank" "SecondPillar"
+        let payslip =
+              Payslip
+                (fromGregorian 2020 1 24)
+                12345.60
+                ( Deductions
+                    { deductionsSwissSocialSecurity = 1234.50
+                    , deductionsUnemploymentInsurance = 123.85 + 123.55
+                    , deductionsPensionFund = 123.30
+                    , deductionsTaxAtSource = 1234.75
+                    , deductionsMssbCsWithholding = Nothing
+                    , deductionsGcard = Nothing
+                    , deductionsTotal = 10000.95
+                    }
+                )
+                11234.65
+        payslipToTransaction config payslip
+          `shouldBe` parseTransactionUnsafe
+            "2020/01/24 Google Salary\n\
+            \  ! Bank  11234.65 CHF\n\
+            \  * Income:Google  -12345.60 CHF\n\
+            \  * State:2020:Mandatory Contributions:Social Security  1234.50 CHF\n\
+            \  * State:2020:Mandatory Contributions:Unemployment Insurance  247.40 CHF\n\
+            \  * SecondPillar  123.30 CHF\n\
             \  * State:2020:Withholding Tax:Total  1234.75 CHF"

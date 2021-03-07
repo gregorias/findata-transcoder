@@ -40,7 +40,6 @@ import Text.Megaparsec (
   manyTill,
   manyTill_,
   match,
-  option,
   parse,
   skipMany,
   try,
@@ -81,7 +80,8 @@ data Deductions = Deductions
   , deductionsUnemploymentInsurance :: !Decimal
   , deductionsPensionFund :: !Decimal
   , deductionsTaxAtSource :: !Decimal
-  , deductionsMssbCsWithholding :: !Decimal
+  , deductionsMssbCsWithholding :: !(Maybe Decimal)
+  , deductionsGcard :: !(Maybe Decimal)
   , deductionsTotal :: !Decimal
   }
   deriving stock (Show, Eq)
@@ -167,6 +167,9 @@ taxAtSourceP = nameReferenceRateAmountLineP (void $ string "Tax at Source")
 mssbCsWithholdingP :: Parsec Void Text Decimal
 mssbCsWithholdingP = nameAndAmountLineP "MSSB/CS Withholding"
 
+gcardRepaymentP :: Parsec Void Text Decimal
+gcardRepaymentP = nameAndAmountLineP "Gcard Repayment"
+
 pensionFundP :: Parsec Void Text Decimal
 pensionFundP = nameAndAmountLineP "Pension Fund"
 
@@ -180,7 +183,9 @@ deductionsP = do
   skipMany newline
   taxAtSource <- taxAtSourceP
   skipMany newline
-  mssbCsWithholding <- option 0 mssbCsWithholdingP
+  mssbCsWithholding <- optional mssbCsWithholdingP
+  skipMany newline
+  gcard <- optional gcardRepaymentP
   (_, total) <- manyTill_ newline subTotalP
   return $
     Deductions
@@ -189,6 +194,7 @@ deductionsP = do
       , deductionsPensionFund = pensionFund
       , deductionsTaxAtSource = taxAtSource
       , deductionsMssbCsWithholding = mssbCsWithholding
+      , deductionsGcard = gcard
       , deductionsTotal = total
       }
 
@@ -235,35 +241,52 @@ payslipToTransaction
         , deductionsUnemploymentInsurance = unemploymentInsurance
         , deductionsPensionFund = pensionFund
         , deductionsTaxAtSource = taxAtSource
-        , deductionsMssbCsWithholding = mssbCsWithholding
+        , deductionsMssbCsWithholding = maybeMssbCsWithholding
+        , deductionsGcard = maybeGcard
         , deductionsTotal = _
         }
       mainTotal
     ) =
     transaction
       day
-      [ post bankAccount missingamt
-          & L.set pStatus Pending
-            . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF mainTotal)
-      , post "Income:Google" missingamt
-          & L.set pStatus Cleared
-            . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF (- salaryTotal))
-      , post (statePrefix `Text.append` "Mandatory Contributions:Social Security") missingamt
-          & L.set pStatus Cleared
-            . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF socialSecurity)
-      , post (statePrefix `Text.append` "Mandatory Contributions:Unemployment Insurance") missingamt
-          & L.set pStatus Cleared
-            . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF unemploymentInsurance)
-      , post secondPillarAccount missingamt
-          & L.set pStatus Cleared
-            . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF pensionFund)
-      , post "Equity:MssbCsWithholding" missingamt
-          & L.set pStatus Cleared
-            . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF mssbCsWithholding)
-      , post (statePrefix `Text.append` "Withholding Tax:Total") missingamt
-          & L.set pStatus Cleared
-            . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF taxAtSource)
-      ]
+      ( [ post bankAccount missingamt
+            & L.set pStatus Pending
+              . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF mainTotal)
+        , post "Income:Google" missingamt
+            & L.set pStatus Cleared
+              . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF (- salaryTotal))
+        , post (statePrefix `Text.append` "Mandatory Contributions:Social Security") missingamt
+            & L.set pStatus Cleared
+              . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF socialSecurity)
+        , post (statePrefix `Text.append` "Mandatory Contributions:Unemployment Insurance") missingamt
+            & L.set pStatus Cleared
+              . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF unemploymentInsurance)
+        , post secondPillarAccount missingamt
+            & L.set pStatus Cleared
+              . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF pensionFund)
+        , post (statePrefix `Text.append` "Withholding Tax:Total") missingamt
+            & L.set pStatus Cleared
+              . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF taxAtSource)
+        ]
+          ++ maybe
+            []
+            ( \mssbCs ->
+                [ post "Equity:MssbCsWithholding" missingamt
+                    & L.set pStatus Cleared
+                      . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF mssbCs)
+                ]
+            )
+            maybeMssbCsWithholding
+          ++ maybe
+            []
+            ( \gcard ->
+                [ post "Assets:Debts:Google" missingamt
+                    & L.set pStatus Cleared
+                      . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF gcard)
+                ]
+            )
+            maybeGcard
+      )
       & L.set tDescription "Google Salary"
    where
     year :: Integer = toGregorian day ^. L._1
