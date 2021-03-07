@@ -82,6 +82,7 @@ data Deductions = Deductions
   , deductionsTaxAtSource :: !Decimal
   , deductionsDeductionNetAmount :: !(Maybe Decimal)
   , deductionsMssbCsWithholding :: !(Maybe Decimal)
+  , deductionsGgive :: !(Maybe Decimal)
   , deductionsGcard :: !(Maybe Decimal)
   , deductionsTotal :: !Decimal
   }
@@ -180,6 +181,9 @@ deductionNetAmountP = nameAndAmountLineP "Deduction Net Amount"
 mssbCsWithholdingP :: Parsec Void Text Decimal
 mssbCsWithholdingP = nameAndAmountLineP "MSSB/CS Withholding"
 
+ggiveP :: Parsec Void Text Decimal
+ggiveP = nameAndAmountLineP "G Give charitable donation"
+
 gcardRepaymentP :: Parsec Void Text Decimal
 gcardRepaymentP = nameAndAmountLineP "Gcard Repayment"
 
@@ -201,6 +205,8 @@ deductionsP = do
   skipMany newline
   mssbCsWithholding <- optional mssbCsWithholdingP
   skipMany newline
+  ggive <- optional ggiveP
+  skipMany newline
   gcard <- optional gcardRepaymentP
   (_, total) <- manyTill_ newline subTotalP
   return $
@@ -211,6 +217,7 @@ deductionsP = do
       , deductionsTaxAtSource = taxAtSource
       , deductionsDeductionNetAmount = deductionNetAmount
       , deductionsMssbCsWithholding = mssbCsWithholding
+      , deductionsGgive = ggive
       , deductionsGcard = gcard
       , deductionsTotal = total
       }
@@ -260,6 +267,7 @@ payslipToTransaction
         , deductionsTaxAtSource = taxAtSource
         , deductionsDeductionNetAmount = maybeDeductionNetAmount
         , deductionsMssbCsWithholding = maybeMssbCsWithholding
+        , deductionsGgive = maybeGgive
         , deductionsGcard = maybeGcard
         , deductionsTotal = _
         }
@@ -310,6 +318,15 @@ payslipToTransaction
                 ]
             )
             maybeMssbCsWithholding
+          ++ maybe
+            []
+            ( \ggive ->
+                [ post "Expenses:Other" missingamt
+                    & L.set pStatus Cleared
+                      . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF ggive)
+                ]
+            )
+            maybeGgive
           ++ maybe
             []
             ( \gcard ->
