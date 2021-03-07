@@ -23,8 +23,8 @@ tests :: Hspec.SpecWith ()
 tests = do
   describe "Hledupt.GPayslip" $ do
     describe "parsePayslip" $ do
-      it "Parses a valid payslip" $ do
-        gpayslip <- Text.readFile "test/data/gpayslip.txt"
+      it "Parses a valid payslip 0" $ do
+        gpayslip <- Text.readFile "test/data/gpayslip0.txt"
         let parsedPayslip = parsePayslip gpayslip
         parsedPayslip
           `shouldBe` Right
@@ -36,6 +36,26 @@ tests = do
                     , deductionsUnemploymentInsurance = 123.85 + 123.55
                     , deductionsPensionFund = 123.30
                     , deductionsTaxAtSource = 1234.75
+                    , deductionsMssbCsWithholding = -0
+                    , deductionsTotal = 10000.95
+                    }
+                )
+                11234.65
+            )
+      it "Parses a valid payslip 1" $ do
+        gpayslip <- Text.readFile "test/data/gpayslip1.txt"
+        let parsedPayslip = parsePayslip gpayslip
+        parsedPayslip
+          `shouldBe` Right
+            ( Payslip
+                (fromGregorian 2020 1 24)
+                12345.60
+                ( Deductions
+                    { deductionsSwissSocialSecurity = 1234.50
+                    , deductionsUnemploymentInsurance = 123.85 + 123.55
+                    , deductionsPensionFund = 123.30
+                    , deductionsTaxAtSource = 1234.75
+                    , deductionsMssbCsWithholding = -1708
                     , deductionsTotal = 10000.95
                     }
                 )
@@ -53,6 +73,7 @@ tests = do
                     , deductionsUnemploymentInsurance = 123.85 + 123.55
                     , deductionsPensionFund = 123.30
                     , deductionsTaxAtSource = 1234.75
+                    , deductionsMssbCsWithholding = -1708
                     , deductionsTotal = 10000.95
                     }
                 )
@@ -65,4 +86,5 @@ tests = do
             \  * State:2020:Mandatory Contributions:Social Security  1234.50 CHF\n\
             \  * State:2020:Mandatory Contributions:Unemployment Insurance  247.40 CHF\n\
             \  * SecondPillar  123.30 CHF\n\
+            \  * Equity:MssbCsWithholding  -1708.00 CHF\n\
             \  * State:2020:Withholding Tax:Total  1234.75 CHF"

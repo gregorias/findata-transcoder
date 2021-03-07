@@ -40,6 +40,7 @@ import Text.Megaparsec (
   manyTill,
   manyTill_,
   match,
+  option,
   parse,
   skipMany,
   try,
@@ -80,6 +81,7 @@ data Deductions = Deductions
   , deductionsUnemploymentInsurance :: !Decimal
   , deductionsPensionFund :: !Decimal
   , deductionsTaxAtSource :: !Decimal
+  , deductionsMssbCsWithholding :: !Decimal
   , deductionsTotal :: !Decimal
   }
   deriving stock (Show, Eq)
@@ -162,6 +164,9 @@ unemploymentInsuranceP = do
 taxAtSourceP :: Parsec Void Text Decimal
 taxAtSourceP = nameReferenceRateAmountLineP (void $ string "Tax at Source")
 
+mssbCsWithholdingP :: Parsec Void Text Decimal
+mssbCsWithholdingP = nameAndAmountLineP "MSSB/CS Withholding"
+
 pensionFundP :: Parsec Void Text Decimal
 pensionFundP = nameAndAmountLineP "Pension Fund"
 
@@ -174,6 +179,8 @@ deductionsP = do
   (_, pensionFund) <- manyTill_ newline pensionFundP
   skipMany newline
   taxAtSource <- taxAtSourceP
+  skipMany newline
+  mssbCsWithholding <- option 0 mssbCsWithholdingP
   (_, total) <- manyTill_ newline subTotalP
   return $
     Deductions
@@ -181,6 +188,7 @@ deductionsP = do
       , deductionsUnemploymentInsurance = unemploymentInsurance
       , deductionsPensionFund = pensionFund
       , deductionsTaxAtSource = taxAtSource
+      , deductionsMssbCsWithholding = mssbCsWithholding
       , deductionsTotal = total
       }
 
@@ -227,6 +235,7 @@ payslipToTransaction
         , deductionsUnemploymentInsurance = unemploymentInsurance
         , deductionsPensionFund = pensionFund
         , deductionsTaxAtSource = taxAtSource
+        , deductionsMssbCsWithholding = mssbCsWithholding
         , deductionsTotal = _
         }
       mainTotal
@@ -248,6 +257,9 @@ payslipToTransaction
       , post secondPillarAccount missingamt
           & L.set pStatus Cleared
             . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF pensionFund)
+      , post "Equity:MssbCsWithholding" missingamt
+          & L.set pStatus Cleared
+            . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF mssbCsWithholding)
       , post (statePrefix `Text.append` "Withholding Tax:Total") missingamt
           & L.set pStatus Cleared
             . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF taxAtSource)
