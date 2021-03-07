@@ -28,34 +28,37 @@ import Hledger.Data.Types (
   Posting (..),
   Status (..),
  )
-import Hledger.Read.TestUtils (parseTransactionUnsafe, postingParser)
+import Hledger.Read.TestUtils (
+  parseTransactionUnsafe,
+  postingP,
+  transactionP,
+ )
 import Hledupt.Data.Currency (Currency (..))
 import Relude
 import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
 import Test.Hspec.Expectations.Pretty (shouldBe)
 import Text.Megaparsec (parseMaybe)
-import qualified Text.Megaparsec as MP
 
 tests :: Hspec.SpecWith ()
 tests = do
   describe "Test.Hledger.Read.TestUtils" $ do
-    describe "postingParser" $ do
+    describe "postingP" $ do
       it "Parses a posting transaction" $ do
         let p :: String = "  Expenses:Other"
             expectedP = post "Expenses:Other" missingamt
-        parseMaybe postingParser p `shouldBe` Just expectedP
+        parseMaybe postingP p `shouldBe` Just expectedP
       it "Parses a posting transaction with spaces" $ do
         let p :: String = "  Assets:Bank With Spaces\n"
             expectedP = post "Assets:Bank With Spaces" missingamt
-        parseMaybe postingParser p `shouldBe` Just expectedP
+        parseMaybe postingP p `shouldBe` Just expectedP
       it "Parses a cleared posting" $ do
         let p :: String = "*  Expenses:Other"
             expectedP =
               (post "Expenses:Other" missingamt)
                 { pstatus = Cleared
                 }
-        parseMaybe postingParser p `shouldBe` Just expectedP
+        parseMaybe postingP p `shouldBe` Just expectedP
 
     describe "transactionParser" $ do
       it "Parses a moneyless transaction" $ do
@@ -92,6 +95,21 @@ tests = do
                 & L.set tDescription "Title"
                 & L.set tStatus Cleared
         parseTransactionUnsafe tr `shouldBe` expectedTr
+      it "Parses a proper transaction with spaceless amount" $ do
+        let tr =
+              "2019/10/28 Title\n\
+              \  Bank  -15SPY"
+            expectedTrBase =
+              transaction
+                (fromGregorian 2019 10 28)
+                [ post
+                    "Bank"
+                    (makeCommodityAmount "SPY" (-15))
+                ]
+            expectedTr =
+              expectedTrBase
+                & L.set tDescription "Title"
+        parseMaybe transactionP tr `shouldBe` Just expectedTr
       it "Parses a proper transaction with balance" $ do
         let tr =
               "2019/10/28 * Title\n\
@@ -145,4 +163,4 @@ tests = do
                             & setFullPrecision
                     }
                 )
-        MP.parseMaybe postingParser posting `shouldBe` Just expectedPosting
+        parseMaybe postingP posting `shouldBe` Just expectedPosting
