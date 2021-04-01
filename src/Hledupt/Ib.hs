@@ -16,6 +16,7 @@ import Data.Ratio ((%))
 import qualified Data.Text as T
 import qualified Data.Text as Text
 import Data.Time (Day)
+import Data.Time.Calendar.OrdinalDate (toOrdinalDate)
 import Hledger (
   AmountPrice (UnitPrice),
   MarketPrice (MarketPrice),
@@ -190,7 +191,7 @@ dividendToTransaction
     transaction
       d
       [ post "Assets:Liquid:IB:USD" missingamt
-      , post "Assets:Illiquid:IB Withholding Tax" missingamt
+      , post whTaxTitle missingamt
           & L.set
             pMaybeAmount
             (Just $ makeCurrencyAmount USD (- taxAmt))
@@ -203,6 +204,11 @@ dividendToTransaction
         . L.set tStatus Cleared
    where
     title = sym ++ " dividend @ " ++ show dps ++ " per share"
+    whTaxTitle =
+      "State:"
+        `Text.append` (Text.pack . show . fst . toOrdinalDate $ d)
+        `Text.append` ":IB Withholding Tax:"
+        `Text.append` Text.pack sym
 
 stockTradeToTransaction :: StockTrade -> Transaction
 stockTradeToTransaction (StockTrade date sym q amount fee) =

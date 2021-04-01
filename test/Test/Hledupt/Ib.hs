@@ -51,7 +51,7 @@ parseTests = do
                   [ parseTransactionUnsafe
                       "2020/01/01 * VOO dividend @ 0.45 per share\n\
                       \  Assets:Liquid:IB:USD\n\
-                      \  Assets:Illiquid:IB Withholding Tax  USD 0\n\
+                      \  State:2020:IB Withholding Tax:VOO  USD 0\n\
                       \  Income:Capital Gains  USD -450"
                   ]
               }
@@ -168,7 +168,7 @@ parseTests = do
               , parseTransactionUnsafe
                   "2020/10/02 * VOO dividend @ 1.3085 per share\n\
                   \  Assets:Liquid:IB:USD\n\
-                  \  Assets:Illiquid:IB Withholding Tax  USD 0.25\n\
+                  \  State:2020:IB Withholding Tax:VOO  USD 0.25\n\
                   \  Income:Capital Gains  USD -1.31"
               , parseTransactionUnsafe
                   "2020/10/05 * VOO trade\n\
