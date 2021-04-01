@@ -43,6 +43,7 @@ library
       Hledupt.Degiro.Csv
       Hledupt.Degiro.IsinData
       Hledupt.Degiro.Portfolio
+      Hledupt.Finpension
       Hledupt.GPayslip
       Hledupt.Ib
       Hledupt.Ib.Csv
@@ -119,6 +120,7 @@ test-suite hledupt-test
       Test.Hledupt.Degiro.AccountStatement
       Test.Hledupt.Degiro.Csv
       Test.Hledupt.Degiro.Portfolio
+      Test.Hledupt.Finpension
       Test.Hledupt.GPayslip
       Test.Hledupt.Ib
       Test.Hledupt.Ib.Csv.ActivityStatementParse

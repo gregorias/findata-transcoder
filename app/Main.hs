@@ -39,6 +39,7 @@ import qualified Hledupt.Degiro.AccountStatement as DegiroAccount (
 import qualified Hledupt.Degiro.Portfolio as DegiroPortfolio (
   csvStatementToLedger,
  )
+import qualified Hledupt.Finpension as Finpension
 import Hledupt.GPayslip (payslipTextToLedger)
 import Hledupt.Ib as Ib (parseActivityCsv)
 import Hledupt.Mbank (mbankCsvToLedger)
@@ -96,6 +97,11 @@ parseDegiroPortfolio = do
   parseBank $
     DegiroPortfolio.csvStatementToLedger today . CsvFile
 
+parseFinpensionTransactions :: IO ()
+parseFinpensionTransactions =
+  parseBank $
+    Finpension.transactionsToLedger . CsvFile
+
 parseIbActivity :: IO ()
 parseIbActivity =
   parseBank
@@ -139,6 +145,9 @@ main = defaultMain $ do
   command "parse-degiro-portfolio" $ do
     description "Parses Degiro's portfolio CSV and outputs Ledger data"
     ignoreAction parseDegiroPortfolio
+  command "parse-finpension-transactions" $ do
+    description "Parses Finpensions' transaction CSV and outputs Ledger data"
+    ignoreAction parseFinpensionTransactions
   command "parse-gpayslip" $ do
     description "Parses a text dump from a Google Payslip and outputs ledupt data"
     ignoreAction parseGPayslip

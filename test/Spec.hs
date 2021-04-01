@@ -15,6 +15,7 @@ import qualified Test.Hledupt.Data.MyDecimal
 import qualified Test.Hledupt.Degiro.AccountStatement
 import qualified Test.Hledupt.Degiro.Csv
 import qualified Test.Hledupt.Degiro.Portfolio
+import qualified Test.Hledupt.Finpension
 import qualified Test.Hledupt.GPayslip
 import qualified Test.Hledupt.Ib
 import qualified Test.Hledupt.Ib.Csv.ActivityStatementParse
@@ -44,6 +45,7 @@ tests = do
   Test.Hledupt.Degiro.AccountStatement.tests
   Test.Hledupt.Degiro.Csv.tests
   Test.Hledupt.Degiro.Portfolio.tests
+  Test.Hledupt.Finpension.tests
   Test.Hledupt.GPayslip.tests
   Test.Hledupt.Ib.Csv.ActivityStatementParse.tests
   Test.Hledupt.Ib.Csv.RawParse.tests
