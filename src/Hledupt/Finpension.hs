@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wno-deprecations #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Hledupt.Finpension (
   transactionsToLedger,
@@ -10,4 +10,4 @@ import Hledupt.Data.LedgerReport (LedgerReport)
 import Relude
 
 transactionsToLedger :: CsvFile LBS.ByteString -> Either Text LedgerReport
-transactionsToLedger = undefined
+transactionsToLedger = const . Left $ "unimplemented"
