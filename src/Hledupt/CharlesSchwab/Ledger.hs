@@ -15,9 +15,9 @@ import Hledger (
   AmountPrice (UnitPrice),
   Status (Cleared, Pending),
   Transaction,
+  amountSetFullPrecision,
   missingamt,
   post,
-  setFullPrecision,
   transaction,
  )
 import Hledger.Data.Extra (makeCommodityAmount, makeCurrencyAmount)
@@ -146,7 +146,7 @@ saleToLedgerTransaction rec = do
                 aAmountPrice
                 ( Just . UnitPrice $
                     makeCommodityAmount "USD" price
-                      & setFullPrecision
+                      & amountSetFullPrecision
                 )
           )
       , post usdAccount missingamt

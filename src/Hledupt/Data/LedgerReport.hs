@@ -27,5 +27,5 @@ instance Monoid LedgerReport where
 -- | Shows 'LedgerReport' in Ledger format
 showLedgerReport :: LedgerReport -> Text
 showLedgerReport (LedgerReport trs mps) =
-  Text.concat (Text.pack . showTransaction <$> sortBy (compare `on` tdate) trs)
+  Text.concat (showTransaction <$> sortBy (compare `on` tdate) trs)
     `Text.append` Text.concat (Text.pack . showMarketPrice <$> mps)

@@ -22,10 +22,10 @@ import Hledger (
   MarketPrice (MarketPrice),
   Posting,
   Status (Cleared, Pending),
+  amountSetFullPrecision,
   balassert,
   missingamt,
   post,
-  setFullPrecision,
  )
 import Hledger.Data.Extra (makeCommodityAmount, makeCurrencyAmount)
 import Hledger.Data.Lens (
@@ -253,7 +253,7 @@ forexTradeToTransaction
                 aAmountPrice
                 ( Just . UnitPrice $
                     makeCommodityAmount (show quote) price
-                      & setFullPrecision
+                      & amountSetFullPrecision
                 )
           )
       , post (cashAccountName quote) (makeCurrencyAmount quote totalCost)

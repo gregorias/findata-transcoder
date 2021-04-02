@@ -9,8 +9,8 @@ import Data.Time (fromGregorian)
 import Hledger (
   Amount (aprice),
   AmountPrice (UnitPrice),
+  amountSetFullPrecision,
   missingamt,
-  setFullPrecision,
  )
 import Hledger.Data.Extra (
   makeCommodityAmount,
@@ -160,7 +160,7 @@ tests = do
                     { aprice =
                         Just . UnitPrice $
                           makeCommodityAmount "CHF" 0.9513
-                            & setFullPrecision
+                            & amountSetFullPrecision
                     }
                 )
         parseMaybe postingP posting `shouldBe` Just expectedPosting

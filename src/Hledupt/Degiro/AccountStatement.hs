@@ -22,9 +22,9 @@ import Hledger (
   AmountPrice (UnitPrice),
   Status (Cleared, Pending),
   Transaction,
+  amountSetFullPrecision,
   balassert,
   post,
-  setFullPrecision,
   transaction,
  )
 import Hledger.Data (Posting)
@@ -215,7 +215,7 @@ fxToTransaction (Fx date fstPost sndPost) =
   setPrice postArg =
     L.set
       (pAmount . aAmountPrice)
-      ( UnitPrice . setFullPrecision . makeCashAmount
+      ( UnitPrice . amountSetFullPrecision . makeCashAmount
           . Cash
             (fxPostingCurrency postArg)
           <$> fxPostingFx postArg
@@ -282,7 +282,7 @@ stockTradeToTransaction (StockTrade date isin qty price change bal) =
               aAmountPrice
               ( Just
                   . UnitPrice
-                  . setFullPrecision
+                  . amountSetFullPrecision
                   . makeCashAmount
                   $ price
               )

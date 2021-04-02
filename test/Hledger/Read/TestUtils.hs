@@ -16,7 +16,12 @@ import Control.Monad.Combinators (
 import Data.Maybe (fromJust)
 import Data.Text (pack, unpack)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
-import Hledger (AmountPrice (TotalPrice, UnitPrice), missingamt, post, setFullPrecision)
+import Hledger (
+  AmountPrice (TotalPrice, UnitPrice),
+  amountSetFullPrecision,
+  missingamt,
+  post,
+ )
 import Hledger.Data.Amount (num)
 import Hledger.Data.Extra (
   makeCommodityAmount,
@@ -127,7 +132,7 @@ amountPriceParser = do
       , single '@' $> UnitPrice
       ]
   void $ some spaceChar
-  constructor . setFullPrecision <$> commodityP
+  constructor . amountSetFullPrecision <$> commodityP
 
 -- | A partial Posting parser
 postingP :: MP.Parsec Void String Posting
