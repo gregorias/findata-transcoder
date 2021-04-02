@@ -4,11 +4,11 @@ module Test.Hledupt.Finpension (
   tests,
 ) where
 
-import Hledupt.Finpension (transactionsToLedger)
+import Hledupt.Finpension (funds, transactionsToLedger)
 import Relude
 import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
-import Test.Hspec.Expectations.Pretty (shouldBe)
+import Test.Hspec.Expectations.Pretty (shouldBe, shouldSatisfy)
 
 tests :: Hspec.SpecWith ()
 tests = do
@@ -24,3 +24,6 @@ tests = do
               \2021-03-01;Buy;\"CSIF (CH) Equity Switzerland Large Cap Blue ZB\";0.097000;CHF;1.000000;1420.050000;-137.744850;6745.255150\n\
               \2021-02-15;Deposit;;;CHF;1.000000;;6883.000000;6883.000000"
         transactionsToLedger input `shouldBe` Left "unimplemented"
+    describe "funds" $ do
+      it "areCorrectlyConstructedAndNotUndefined" $ do
+        funds `shouldSatisfy` (not . null)
