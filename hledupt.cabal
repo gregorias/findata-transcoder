@@ -64,6 +64,7 @@ library
     , bytestring
     , cassava
     , containers
+    , currency-codes
     , extra
     , hledger-lib >=1.19
     , lens
