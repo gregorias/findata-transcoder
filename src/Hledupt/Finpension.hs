@@ -8,7 +8,7 @@ module Hledupt.Finpension (
   transactionsToLedger,
 ) where
 
-import Control.Lens (each, over)
+import Control.Lens (each, over, set)
 import qualified Control.Lens as L
 import Control.Lens.Internal.ByteString (unpackStrict8)
 import qualified Data.ByteString.Char8 as BS
@@ -20,13 +20,29 @@ import Data.Fixed (E6, Fixed)
 import qualified Data.Text as T
 import Data.Time (Day, defaultTimeLocale, parseTimeM)
 import qualified Data.Vector as V
+import Hledger (
+  Status (Cleared, Pending),
+  balassert,
+  missingamt,
+ )
 import qualified Hledger as Ledger
+import qualified Hledger.Data.Extra as HDE
+import Hledger.Data.Lens (
+  pBalanceAssertion,
+  pStatus,
+  tDescription,
+  tStatus,
+ )
 import Hledupt.Data.CsvFile (CsvFile (..))
+import Hledupt.Data.Currency (Currency (CHF))
 import Hledupt.Data.Isin (Isin, mkIsin)
-import Hledupt.Data.LedgerReport (LedgerReport)
+import Hledupt.Data.LedgerReport (LedgerReport (..))
 import Hledupt.Data.MyDecimal (MyDecimal (unMyDecimal))
 import Relude
 import Relude.Unsafe (fromJust)
+
+cashAccount :: Text
+cashAccount = "Assets:Investments:Finpension:Cash"
 
 data Fund = Fund
   { fundFinpensionName :: !Text
@@ -143,8 +159,8 @@ data BuyTransaction = BuyTransaction
 data DepositTransaction = DepositTransaction
   { dtDate :: !Day
   , dtAssetCurrency :: !Alpha
-  , dtCashFlow :: !(Fixed E6)
-  , dtBalance :: !(Fixed E6)
+  , dtCashFlow :: !Decimal
+  , dtBalance :: !Decimal
   }
 
 transactionsCsvDecodeOptions :: CSV.DecodeOptions
@@ -153,17 +169,58 @@ transactionsCsvDecodeOptions =
     { CSV.decDelimiter = fromIntegral (ord ';')
     }
 
-transactionsP :: CsvFile LBS.ByteString -> Either Text [RawTransaction]
-transactionsP (CsvFile csvContent) = do
+rawTransactionsP :: CsvFile LBS.ByteString -> Either Text [RawTransaction]
+rawTransactionsP (CsvFile csvContent) = do
   (_header, trsVector) <-
     over L._Left T.pack $
       CSV.decodeByNameWith transactionsCsvDecodeOptions csvContent
   return $ V.toList trsVector
 
+rawTransactionToTransaction :: RawTransaction -> Transaction
+rawTransactionToTransaction rawTr@(RawTransaction date Deposit _ _ _ _ _ _ _) =
+  TrDeposit $
+    DepositTransaction
+      date
+      (rtAssetCurrency rawTr)
+      (rtCashFlow rawTr)
+      (rtBalance rawTr)
+rawTransactionToTransaction (RawTransaction date Buy _ _ _ _ _ _ _) =
+  TrBuy $
+    BuyTransaction
+      date
+      undefined
+      undefined
+      undefined
+      undefined
+      undefined
+      undefined
+      undefined
+
+todoPosting :: Ledger.Posting
+todoPosting =
+  Ledger.post "Todo" missingamt
+    & set pStatus Pending
+
 finpensionTransactionToLedgerTransaction :: Transaction -> Ledger.Transaction
-finpensionTransactionToLedgerTransaction = undefined
+finpensionTransactionToLedgerTransaction (TrDeposit depositTr) =
+  Ledger.transaction (dtDate depositTr) [depositPosting, todoPosting]
+    & set tDescription "Finpension Deposit"
+      . set tStatus Cleared
+ where
+  depositPosting =
+    Ledger.post
+      cashAccount
+      (HDE.makeCurrencyAmount CHF . dtCashFlow $ depositTr)
+      & set
+        pBalanceAssertion
+        (balassert . HDE.makeCurrencyAmount CHF . dtBalance $ depositTr)
+finpensionTransactionToLedgerTransaction (TrBuy _buyTr) =
+  Ledger.nulltransaction
+
+rawTransactionToLedgerTransaction :: RawTransaction -> Ledger.Transaction
+rawTransactionToLedgerTransaction = finpensionTransactionToLedgerTransaction . rawTransactionToTransaction
 
 transactionsToLedger :: CsvFile LBS.ByteString -> Either Text LedgerReport
 transactionsToLedger csv = do
-  _trs <- transactionsP csv
-  Left "unimplemented"
+  trs <- fmap rawTransactionToLedgerTransaction <$> rawTransactionsP csv
+  return $ LedgerReport trs []

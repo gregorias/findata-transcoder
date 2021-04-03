@@ -4,6 +4,8 @@ module Test.Hledupt.Finpension (
   tests,
 ) where
 
+import Hledger.Read.TestUtils (parseTransactionUnsafe)
+import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Hledupt.Finpension (funds, transactionsToLedger)
 import Relude
 import Test.Hspec (describe, it)
@@ -14,6 +16,20 @@ tests :: Hspec.SpecWith ()
 tests = do
   describe "Hledupt.Finpension" $ do
     describe "transactionsToLedger" $ do
+      it "convertsADepositTransaction" $ do
+        let input =
+              "Date;Category;\"Asset Name\";\"Number of Shares\";\"Asset Currency\";\"Currency Rate\";\"Asset Price in CHF\";\"Cash Flow\";Balance\n\
+              \2021-02-15;Deposit;;;CHF;1.000000;;6883.000000;6883.000000"
+        transactionsToLedger input
+          `shouldBe` Right
+            ( LedgerReport
+                [ parseTransactionUnsafe
+                    "2021/02/15 * Finpension Deposit\n\
+                    \  Assets:Investments:Finpension:Cash  6883 CHF = 6883 CHF\n\
+                    \  ! Todo"
+                ]
+                []
+            )
       it "convertsTransactions" $ do
         let input =
               "Date;Category;\"Asset Name\";\"Number of Shares\";\"Asset Currency\";\"Currency Rate\";\"Asset Price in CHF\";\"Cash Flow\";Balance\n\
@@ -23,7 +39,7 @@ tests = do
               \2021-03-01;Buy;\"CSIF (CH) Equity Switzerland Small & Mid Cap ZB\";0.055000;CHF;1.000000;2463.260000;-135.479300;6609.775850\n\
               \2021-03-01;Buy;\"CSIF (CH) Equity Switzerland Large Cap Blue ZB\";0.097000;CHF;1.000000;1420.050000;-137.744850;6745.255150\n\
               \2021-02-15;Deposit;;;CHF;1.000000;;6883.000000;6883.000000"
-        transactionsToLedger input `shouldBe` Left "unimplemented"
+        transactionsToLedger input `shouldSatisfy` isRight
     describe "funds" $ do
       it "areCorrectlyConstructedAndNotUndefined" $ do
         funds `shouldSatisfy` (not . null)
