@@ -80,10 +80,10 @@ endingCashToPosting (EndingCash currency amount) =
 stockPositionToPosting :: StockPosition -> Posting
 stockPositionToPosting (StockPosition symbol quantity _price) =
   post (stockAccountName symbol) missingamt
-    & L.set pMaybeAmount (Just $ makeCommodityAmount symbol 0)
+    & L.set pMaybeAmount (Just $ makeCommodityAmount (toText symbol) 0)
       . L.set
         pBalanceAssertion
-        (balassert . makeCommodityAmount symbol $ fromRational $ quantity % 1)
+        (balassert . makeCommodityAmount (toText symbol) $ fromRational $ quantity % 1)
 
 stockPositionToStockPrice :: Day -> StockPosition -> MarketPrice
 stockPositionToStockPrice day (StockPosition sym _q price) =
@@ -217,7 +217,7 @@ stockTradeToTransaction (StockTrade date sym q amount fee) =
     [ post (stockAccountName sym) missingamt
         & L.set
           pMaybeAmount
-          (Just $ makeCommodityAmount sym (fromRational $ q % 1))
+          (Just $ makeCommodityAmount (toText sym) (fromRational $ q % 1))
     , post (cashAccountName USD) missingamt
         & L.set
           pMaybeAmount

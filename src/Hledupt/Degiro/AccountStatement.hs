@@ -276,7 +276,7 @@ stockTradeToTransaction (StockTrade date isin qty price change bal) =
     [ post
         ("Assets:Investments:Degiro:" `Text.append` prettyStockName)
         ( makeCommodityAmount
-            (Text.unpack prettyStockName)
+            prettyStockName
             (fromRational $ toInteger qty % 1)
             & set
               aAmountPrice

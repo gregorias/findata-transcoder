@@ -122,8 +122,8 @@ vestingToLedgerTransaction :: Vesting -> Transaction
 vestingToLedgerTransaction (Vesting day symbol q) =
   transaction
     day
-    [ post (unvestedStockAccount symbol) (makeCommodityAmount (toString symbol) (fromInteger $ - q))
-    , post (vestedStockAccount symbol) (makeCommodityAmount (toString symbol) (fromInteger q))
+    [ post (unvestedStockAccount symbol) (makeCommodityAmount symbol (fromInteger $ - q))
+    , post (vestedStockAccount symbol) (makeCommodityAmount symbol (fromInteger q))
     ]
     & L.set tDescription (toString $ symbol `Text.append` " Vesting")
       . L.set tStatus Cleared
@@ -141,7 +141,7 @@ saleToLedgerTransaction rec = do
       (csDate rec)
       [ post
           (vestedStockAccount symbol)
-          ( makeCommodityAmount (toString symbol) (fromInteger $ - q)
+          ( makeCommodityAmount symbol (fromInteger $ - q)
               & L.set
                 aAmountPrice
                 ( Just . UnitPrice $

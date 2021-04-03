@@ -113,12 +113,12 @@ instance ToPosting StockPosition where
   toPosting (StockPosition isin amount _price) =
     post
       (T.append "Assets:Investments:Degiro:" name)
-      (makeCommodityAmount (T.unpack name) 0)
+      (makeCommodityAmount name 0)
       & L.set
         pBalanceAssertion
         ( balassert $
             makeCommodityAmount
-              (T.unpack name)
+              name
               (fromInteger amount)
         )
    where

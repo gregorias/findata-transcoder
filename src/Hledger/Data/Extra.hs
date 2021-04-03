@@ -11,7 +11,6 @@ module Hledger.Data.Extra (
 ) where
 
 import Control.Lens (over, set)
-import Data.Text (pack)
 import Hledger (Posting, Transaction)
 import Hledger.Data.Amount (num)
 import Hledger.Data.Lens (
@@ -29,10 +28,10 @@ import Hledupt.Data.Cash (Cash (Cash))
 import Hledupt.Data.Currency (Currency)
 import Relude
 
-makeCommodityAmount :: String -> Quantity -> Amount
+makeCommodityAmount :: Text -> Quantity -> Amount
 makeCommodityAmount commodity quantity =
   num quantity
-    & set aCommodity (pack commodity)
+    & set aCommodity commodity
       . set (aStyle . asCommoditySpaced) True
 
 setCurrencyPrecision :: Amount -> Amount

@@ -95,7 +95,7 @@ commodityP = do
   void $ many space
   return $
     case maybeSymbol of
-      Just symbol -> makeCommodityAmount symbol amount
+      Just symbol -> makeCommodityAmount (toText symbol) amount
       Nothing -> num amount
 
 whenCurrencyAdjustStyle :: Amount -> Amount
