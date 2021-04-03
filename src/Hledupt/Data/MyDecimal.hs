@@ -30,7 +30,7 @@ import Text.Megaparsec.Char (char, digitChar, space)
 import Text.Megaparsec.Char.Lexer (decimal, signed)
 
 -- | A Decimal wrapper that is extended with parsing functions.
-newtype MyDecimal = MyDecimal Decimal
+newtype MyDecimal = MyDecimal {unMyDecimal :: Decimal}
   deriving stock (Eq, Show)
 
 -- | 'DecimalFractionFormat' describes the format of the fraction part of a
