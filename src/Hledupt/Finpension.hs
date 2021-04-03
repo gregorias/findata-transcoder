@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 module Hledupt.Finpension (
@@ -12,6 +13,7 @@ import qualified Data.ByteString.Lazy as LBS
 import Data.Currency (Alpha)
 import Data.Fixed (E6, Fixed)
 import Data.Time (Day)
+import qualified Hledger as Ledger
 import Hledupt.Data.CsvFile (CsvFile)
 import Hledupt.Data.Isin (Isin, mkIsin)
 import Hledupt.Data.LedgerReport (LedgerReport)
@@ -75,6 +77,9 @@ data Transaction = Transaction
 
 transactionsP :: CsvFile LBS.ByteString -> Either Text [Transaction]
 transactionsP = const . Left $ "unimplemented"
+
+finpensionTransactionToLedgerTransaction :: Transaction -> Ledger.Transaction
+finpensionTransactionToLedgerTransaction = undefined
 
 transactionsToLedger :: CsvFile LBS.ByteString -> Either Text LedgerReport
 transactionsToLedger csv = do
