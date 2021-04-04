@@ -15,7 +15,6 @@ import qualified Data.Csv as CSV
 import Data.Currency (Alpha)
 import Data.Decimal (Decimal)
 import Data.Fixed (E6, Fixed)
-import qualified Data.Text as T
 import Data.Time (Day, defaultTimeLocale, parseTimeM)
 import qualified Data.Vector as V
 import Hledger (
@@ -170,7 +169,7 @@ transactionsCsvDecodeOptions =
 rawTransactionsP :: CsvFile LByteString -> Either Text [RawTransaction]
 rawTransactionsP (CsvFile csvContent) = do
   (_header, trsVector) <-
-    over L._Left T.pack $
+    over L._Left toText $
       CSV.decodeByNameWith transactionsCsvDecodeOptions csvContent
   return $ V.toList trsVector
 

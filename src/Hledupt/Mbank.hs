@@ -11,8 +11,6 @@ module Hledupt.Mbank (
 ) where
 
 import Data.Decimal (Decimal)
-import Data.Text (pack)
-import qualified Data.Text as Text
 import Data.Time.Calendar (Day)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Hledger (missingamt, post)
@@ -107,20 +105,19 @@ sanitizeTitle = beforeTheGap
   beforeTheGap _ = ""
 
 mTrToLedger :: MbankTransaction -> Transaction
-mTrToLedger mTr = tr{tdescription = pack $ sanitizeTitle $ mTrTitle mTr}
+mTrToLedger mTr = tr{tdescription = toText $ sanitizeTitle $ mTrTitle mTr}
  where
   tr =
     transaction
       (mTrDate mTr)
-      [ post' (pack "Assets:Liquid:mBank") (pln $ mTrAmount mTr) (balassert $ pln $ mTrEndBalance mTr)
+      [ post' "Assets:Liquid:mBank" (pln $ mTrAmount mTr) (balassert $ pln $ mTrEndBalance mTr)
       , post "Expenses:Other" missingamt
       ]
 
 mbankCsvToLedger :: String -> Either Text LedgerReport
 mbankCsvToLedger inputCsv = do
   let parserErrorToString err =
-        Text.append "Could not parse mBank's CSV.\n" $
-          Text.pack (show err)
+        "Could not parse mBank's CSV.\n" <> show err
   mtransactions <- first parserErrorToString $ parse mbankCsvParser "" inputCsv
   let sortedMTransactions = sortOn mTrDate mtransactions
       ltransactions = fmap mTrToLedger sortedMTransactions

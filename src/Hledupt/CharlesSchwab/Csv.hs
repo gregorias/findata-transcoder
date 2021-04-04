@@ -17,7 +17,6 @@ import qualified Data.ByteString.Lazy as LBS
 import Data.Csv (FromNamedRecord (..), (.:))
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
-import qualified Data.Text as Text
 import Data.Time (Day, defaultTimeLocale)
 import Data.Time.Format (parseTimeM)
 import Data.Vector (Vector)
@@ -86,9 +85,9 @@ maybeDollarAmountP rec name = do
 
 instance Csv.FromField DollarAmount where
   parseField field = do
-    let fieldString = Text.pack $ decodeUtf8 field
+    let fieldString = decodeUtf8 field
     maybe
-      (fail . Text.unpack $ "Could not parse the dollar amount: " `Text.append` fieldString)
+      (fail . toString $ "Could not parse the dollar amount: " <> fieldString)
       return
       (MP.parseMaybe dollarAmountP fieldString)
 
@@ -141,11 +140,11 @@ parseCsCsv (CsvFile input) =
   snd
     <$> L.over
       L._Left
-      Text.pack
+      toText
       ( Csv.decodeByName input
       )
 
 parseCsStatement :: LBS.ByteString -> Either Text (Vector CsCsvRecord)
 parseCsStatement stmt = do
-  csvContent <- over L._Left (Text.pack . MP.errorBundlePretty) $ MP.parse csStatementToCsvContentP "" stmt
+  csvContent <- over L._Left (toText . MP.errorBundlePretty) $ MP.parse csStatementToCsvContentP "" stmt
   parseCsCsv csvContent

@@ -15,7 +15,6 @@ import qualified Data.ByteString.Lazy as LBS
 import Data.Csv ((.!))
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
-import qualified Data.Text as Text
 import Data.Time (
   Day,
   TimeOfDay (TimeOfDay),
@@ -88,12 +87,12 @@ instance Csv.FromRecord DegiroCsvRecord where
     Just time <- MP.parseMaybe timeP <$> rec .! 1
     valueDate <- unDegiroDay <$> rec .! 2
     productStr <- rec .! 3
-    isinStr <- rec .! 4
+    isinStr :: String <- rec .! 4
     maybeIsin <-
-      if Text.null isinStr
+      if null isinStr
         then return Nothing
         else do
-          Just isin <- return $ mkIsin isinStr
+          Just isin <- return $ mkIsin $ toText isinStr
           return $ Just isin
     desc <- rec .! 5
     fxStr :: String <- rec .! 6

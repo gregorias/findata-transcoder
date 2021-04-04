@@ -6,7 +6,6 @@ module Hledupt.CharlesSchwab.Ledger (
 ) where
 
 import qualified Control.Lens as L
-import qualified Data.Text as Text
 import Data.Time (Day)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
@@ -36,10 +35,10 @@ usdAccount :: Text
 usdAccount = "Assets:Liquid:Charles Schwab:USD"
 
 unvestedStockAccount :: Text -> Text
-unvestedStockAccount symbol = "Assets:Illiquid:Charles Schwab:Unvested " `Text.append` symbol
+unvestedStockAccount symbol = "Assets:Illiquid:Charles Schwab:Unvested " <> symbol
 
 vestedStockAccount :: Text -> Text
-vestedStockAccount symbol = "Assets:Investments:Charles Schwab:" `Text.append` symbol
+vestedStockAccount symbol = "Assets:Investments:Charles Schwab:" <> symbol
 
 data WireTransaction = WireTransaction
   { _wireTransactionDate :: !Day

@@ -13,8 +13,6 @@ import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.UTF8 as UTF8
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
-import qualified Data.Text as T
-import qualified Data.Text as Text
 import Data.Time (Day)
 import Data.Vector (Vector)
 import Hledger (MarketPrice (MarketPrice), Status (Cleared), balassert, post, transaction)
@@ -34,7 +32,7 @@ data IsinOrEmpty = IsinOrEmptyIsin Isin | IsinOrEmptyEmpty
 
 instance Csv.FromField IsinOrEmpty where
   parseField "" = pure IsinOrEmptyEmpty
-  parseField field = case mkIsin . Text.pack . UTF8.toString $ field of
+  parseField field = case mkIsin . decodeUtf8 $ field of
     Just isin -> return $ IsinOrEmptyIsin isin
     Nothing -> mzero
 
@@ -112,7 +110,7 @@ data StockPosition = StockPosition
 instance ToPosting StockPosition where
   toPosting (StockPosition isin amount _price) =
     post
-      (T.append "Assets:Investments:Degiro:" name)
+      ("Assets:Investments:Degiro:" <> name)
       (makeCommodityAmount name 0)
       & L.set
         pBalanceAssertion
@@ -127,7 +125,7 @@ instance ToPosting StockPosition where
 stockPositionToMarketPrice :: Day -> StockPosition -> Maybe MarketPrice
 stockPositionToMarketPrice stmtDate (StockPosition isin _amt price) = do
   IsinData symbol currency <- isinToIsinData isin
-  return $ MarketPrice stmtDate symbol (T.pack . show $ currency) price
+  return $ MarketPrice stmtDate symbol (toText $ show @String currency) price
 
 data Position = PositionCash CashPosition | PositionStock StockPosition
 
@@ -177,7 +175,7 @@ csvStatementToLedger :: Day -> CsvFile LBS.ByteString -> Either Text LedgerRepor
 csvStatementToLedger stmtDate (CsvFile csvFile) = do
   csvRecords :: Vector CsvRecord <-
     over L._Right snd $
-      over L._Left Text.pack $ Csv.decodeByName csvFile
+      over L._Left toText $ Csv.decodeByName csvFile
   positions <-
     maybe
       (Left "Could not transform csv records to positions.\n")

@@ -13,8 +13,6 @@ import qualified Control.Lens as L
 import Data.Decimal (Decimal)
 import qualified Data.Map as Map
 import Data.Ratio ((%))
-import qualified Data.Text as T
-import qualified Data.Text as Text
 import Data.Time (Day)
 import Data.Time.Calendar.OrdinalDate (toOrdinalDate)
 import Hledger (
@@ -56,6 +54,7 @@ import Hledupt.Ib.Csv.ActivityStatementParse (
  )
 import Relude
 import Text.Printf (printf)
+import TextShow (showt)
 
 data AssetClass = Stocks | Forex
 
@@ -87,7 +86,7 @@ stockPositionToPosting (StockPosition symbol quantity _price) =
 
 stockPositionToStockPrice :: Day -> StockPosition -> MarketPrice
 stockPositionToStockPrice day (StockPosition sym _q price) =
-  MarketPrice day (T.pack sym) (T.pack "USD") price
+  MarketPrice day (toText sym) "USD" price
 
 cashMovementToTransaction :: IbCsv.CashMovement -> Transaction
 cashMovementToTransaction
@@ -207,7 +206,7 @@ dividendToTransaction
     title = sym <> " dividend @ " <> show dps <> " per share"
     whTaxTitle =
       "State:"
-        <> (Text.pack . show . fst . toOrdinalDate $ d)
+        <> (showt . fst . toOrdinalDate $ d)
         <> ":IB Withholding Tax:"
         <> sym
 

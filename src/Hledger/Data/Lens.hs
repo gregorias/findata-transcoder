@@ -23,7 +23,6 @@ import Control.Lens (
   lens,
   prism',
  )
-import Data.Text (pack, unpack)
 import Hledger (AmountPrice)
 import Hledger.Data.Types (
   Amount (..),
@@ -64,9 +63,9 @@ asCommoditySpaced = lens ascommodityspaced setter
   setter as side = as{ascommodityspaced = side}
 
 pAccount :: Lens' Posting String
-pAccount = lens (unpack . paccount) setter
+pAccount = lens (toString . paccount) setter
  where
-  setter p a = p{paccount = pack a}
+  setter p a = p{paccount = toText a}
 
 pMamount :: Lens' Posting MixedAmount
 pMamount = lens pamount setter

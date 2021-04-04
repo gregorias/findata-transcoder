@@ -9,7 +9,6 @@ module Hledupt.Data.Currency (
 import Control.Applicative.Combinators (count)
 import Data.ByteString.UTF8 as UTF8
 import qualified Data.Csv as Csv
-import qualified Data.Text as T
 import Relude
 import Relude.Extra (inverseMap)
 import Text.Megaparsec (MonadParsec)
@@ -25,7 +24,7 @@ parseCurrency = inverseMap show
 
 instance Csv.FromField Currency where
   parseField field =
-    case parseCurrency (T.pack $ UTF8.toString field) of
+    case parseCurrency (decodeUtf8 field) of
       Just currency -> return currency
       Nothing -> fail $ "Could not parse the currency: " ++ UTF8.toString field ++ "."
 
@@ -36,5 +35,5 @@ currencyP ::
   ) =>
   m Currency
 currencyP = do
-  Just cur <- parseCurrency . T.pack <$> count 3 letterChar
+  Just cur <- parseCurrency . toText <$> count 3 letterChar
   return cur

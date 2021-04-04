@@ -3,7 +3,6 @@ module Hledupt.Data.LedgerReport (
   showLedgerReport,
 ) where
 
-import qualified Data.Text as Text
 import Hledger (Transaction (tdate), showTransaction)
 import Hledger.Data (MarketPrice)
 import Hledger.Data.MarketPrice.Extra (showMarketPrice)
@@ -27,5 +26,5 @@ instance Monoid LedgerReport where
 -- | Shows 'LedgerReport' in Ledger format
 showLedgerReport :: LedgerReport -> Text
 showLedgerReport (LedgerReport trs mps) =
-  Text.concat (showTransaction <$> sortBy (compare `on` tdate) trs)
-    `Text.append` Text.concat (Text.pack . showMarketPrice <$> mps)
+  fold (showTransaction <$> sortBy (compare `on` tdate) trs)
+    <> fold (toText . showMarketPrice <$> mps)

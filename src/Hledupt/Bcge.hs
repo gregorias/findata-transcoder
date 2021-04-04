@@ -21,8 +21,6 @@ import qualified Control.Lens as L
 import Control.Monad.Writer.Lazy (execWriter, tell)
 import Data.Decimal (Decimal)
 import Data.List (elemIndex)
-import Data.Text (pack)
-import qualified Data.Text as Text
 import Data.Time.Calendar (Day)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import qualified Hledger.Data.Extra as HDE
@@ -166,12 +164,12 @@ bcgeTransactionToLedger maybeConfig (BcgeTransaction date title amount) =
   description = maybe title Hint.title maybeHint
   bcgePosting =
     Hledger.post
-      (pack "Assets:Liquid:BCGE")
+      "Assets:Liquid:BCGE"
       (HDE.makeCurrencyAmount CHF amount)
   counterAccount = maybe "Expenses:Other" Hint.counterAccount maybeHint
   counterPosting =
     Hledger.post
-      (pack counterAccount)
+      (toText counterAccount)
       (HDE.makeCurrencyAmount CHF $ negate amount)
 
 saldoToLedger :: Day -> Decimal -> Transaction
@@ -195,7 +193,7 @@ bStToLedger config (BcgeStatement date balance trs) = execWriter collectTrs
 bcgeCsvToLedger :: Maybe Hint.Config -> String -> Either Text LedgerReport
 bcgeCsvToLedger config input =
   case ledgerTrs of
-    Left err -> Left . Text.pack $ show err
+    Left err -> Left . toText $ show err
     Right Nothing -> Left "Something went wrong in the transformation process."
     Right (Just res) -> Right $ LedgerReport res []
  where

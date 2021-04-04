@@ -13,7 +13,6 @@ module Hledupt.GPayslip (
 import Control.Lens ((%~), (^.))
 import qualified Control.Lens as L
 import Data.Decimal (Decimal)
-import qualified Data.Text as Text
 import Data.Time (Day, defaultTimeLocale, parseTimeM)
 import Data.Time.Calendar (toGregorian)
 import Hledger (Status (Cleared, Pending), Transaction, missingamt, post, transaction)
@@ -107,7 +106,7 @@ dateLineP = do
     False
     defaultTimeLocale
     "%d.%m.%Y"
-    (Text.unpack dateString)
+    (toString dateString)
 
 nameAndAmountLineP :: Text -> Parsec Void Text Decimal
 nameAndAmountLineP name = do
@@ -242,9 +241,9 @@ payslipP = do
   return $ Payslip day salaryTotal deductions mainTotal
 
 prependErrorMessage :: Text -> Either Text a -> Either Text a
-prependErrorMessage err = L._Left %~ (errln `Text.append`)
+prependErrorMessage err = L._Left %~ (errln <>)
  where
-  errln = err `Text.append` "\n"
+  errln = err <> "\n"
 
 parsePayslip :: Text -> Either Text Payslip
 parsePayslip payslip = prepareErrMsg parsedPayslip
@@ -252,7 +251,7 @@ parsePayslip payslip = prepareErrMsg parsedPayslip
   parsedPayslip = parse payslipP "" payslip
   prepareErrMsg =
     prependErrorMessage "Could not parse the payslip."
-      . first (Text.pack . errorBundlePretty)
+      . first (toText . errorBundlePretty)
 
 payslipToTransaction :: PayslipLedgerConfig -> Payslip -> Transaction
 payslipToTransaction
@@ -281,13 +280,13 @@ payslipToTransaction
         , post "Income:Google" missingamt
             & L.set pStatus Cleared
               . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF (- salaryTotal))
-        , post (statePrefix `Text.append` "Mandatory Contributions:Social Security") missingamt
+        , post (statePrefix <> "Mandatory Contributions:Social Security") missingamt
             & L.set pStatus Cleared
               . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF socialSecurity)
-        , post (statePrefix `Text.append` "Mandatory Contributions:Unemployment Insurance") missingamt
+        , post (statePrefix <> "Mandatory Contributions:Unemployment Insurance") missingamt
             & L.set pStatus Cleared
               . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF unemploymentInsurance)
-        , post (statePrefix `Text.append` "Withholding Tax:Total") missingamt
+        , post (statePrefix <> "Withholding Tax:Total") missingamt
             & L.set pStatus Cleared
               . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF taxAtSource)
         ]
@@ -340,7 +339,7 @@ payslipToTransaction
       & L.set tDescription "Google Salary"
    where
     year :: Integer = toGregorian day ^. L._1
-    statePrefix = "State:" `Text.append` show year `Text.append` ":"
+    statePrefix = "State:" <> show year <> ":"
 
 payslipToLedger :: PayslipLedgerConfig -> Payslip -> LedgerReport
 payslipToLedger payslipLedgerConfig payslip =

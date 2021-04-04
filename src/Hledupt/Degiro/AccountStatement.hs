@@ -13,7 +13,7 @@ import qualified Data.ByteString.Lazy as LBS
 import Data.Decimal (Decimal)
 import Data.Ratio ((%))
 import qualified Data.Set as S
-import qualified Data.Text as Text
+import qualified Data.Text as T
 import Data.Time (Day)
 import Data.Time.LocalTime (TimeOfDay)
 import Data.Vector (Vector)
@@ -112,7 +112,7 @@ data ConnectionFee = ConnectionFee
 
 connectionFeeP :: DegiroCsvRecord -> Maybe ConnectionFee
 connectionFeeP rec
-  | "DEGIRO Exchange Connection Fee" `Text.isInfixOf` dcrDescription rec = do
+  | "DEGIRO Exchange Connection Fee" `T.isInfixOf` dcrDescription rec = do
     change <- dcrChange rec
     return $ ConnectionFee (dcrDate rec) change (dcrBalance rec)
   | otherwise = Nothing
@@ -183,7 +183,7 @@ data Fx = Fx
   }
 
 fxP :: FxRow -> FxRow -> Either Text Fx
-fxP fxRowFst fxRowSnd = over L._Left (Text.append "Could not merge Fx rows.\n") $
+fxP fxRowFst fxRowSnd = over L._Left ("Could not merge Fx rows.\n" <>) $
   maybeToRight "" $ do
     guard (((==) `on` fxRowDate) fxRowFst fxRowSnd)
     guard (((==) `on` fxRowTime) fxRowFst fxRowSnd)
@@ -234,7 +234,7 @@ data StockTradeType = Buy | Sell
   deriving stock (Bounded, Enum, Eq, Show)
 
 stockTradeTypeP :: Text -> Maybe StockTradeType
-stockTradeTypeP = inverseMap (Text.pack . show)
+stockTradeTypeP = inverseMap show
 
 data StockTradeDescription = StockTradeDescription
   { _stdType :: !StockTradeType
@@ -247,7 +247,7 @@ stockTradeDescriptionP = MP.parseMaybe parserP
  where
   parserP :: Parsec Void Text StockTradeDescription
   parserP = do
-    Just tradeType <- stockTradeTypeP . Text.pack <$> some letterChar
+    Just tradeType <- stockTradeTypeP . toText <$> some letterChar
     space
     quantity <- decimal
     void $ manyTill anySingle (single '@')
@@ -274,7 +274,7 @@ stockTradeToTransaction (StockTrade date isin qty price change bal) =
   transaction
     date
     [ post
-        ("Assets:Investments:Degiro:" `Text.append` prettyStockName)
+        ("Assets:Investments:Degiro:" <> prettyStockName)
         ( makeCommodityAmount
             prettyStockName
             (fromRational $ toInteger qty % 1)
@@ -372,9 +372,9 @@ activitiesP = do
             row <- anySingle
             customFailure . ErrorText $
               "Could not process all elements.\n"
-                `Text.append` "One remaining row's description: "
-                `Text.append` dcrDescription row
-                `Text.append` "\n"
+                <> "One remaining row's description: "
+                <> dcrDescription row
+                <> "\n"
         )
   return as
 
@@ -383,7 +383,7 @@ csvRecordsToActivities :: [DegiroCsvRecord] -> Either Text [Activity]
 csvRecordsToActivities recs =
   over
     L._Left
-    ( Text.pack
+    ( toText
         . parseErrorPretty
         . head
         . bundleErrors
@@ -399,5 +399,5 @@ csvRecordsToLedger recs = do
 -- | Transforms a Degiro CSV statement into a Ledger report
 csvStatementToLedger :: CsvFile LBS.ByteString -> Either Text LedgerReport
 csvStatementToLedger stmtTxt =
-  over L._Left Text.pack (parseCsvStatement stmtTxt)
+  over L._Left toText (parseCsvStatement stmtTxt)
     >>= csvRecordsToLedger
