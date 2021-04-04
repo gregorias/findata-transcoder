@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 -- | This module turns a parsed CS CSV statement into ledger format.
 module Hledupt.CharlesSchwab.Ledger (
@@ -43,8 +42,8 @@ vestedStockAccount :: Text -> Text
 vestedStockAccount symbol = "Assets:Investments:Charles Schwab:" `Text.append` symbol
 
 data WireTransaction = WireTransaction
-  { wireTransactionDate :: !Day
-  , wireTransactionAmount :: !DollarAmount
+  { _wireTransactionDate :: !Day
+  , _wireTransactionAmount :: !DollarAmount
   }
 
 wireFundsAction :: Text
@@ -86,9 +85,9 @@ creditInterestToLedgerTransaction rec = do
         . L.set tStatus Cleared
 
 data Vesting = Vesting
-  { vestingDate :: !Day
-  , vestingSymbol :: !Text
-  , vestingAmount :: !Integer
+  { _vestingDate :: !Day
+  , _vestingSymbol :: !Text
+  , _vestingAmount :: !Integer
   }
 
 vestingAction :: Text
