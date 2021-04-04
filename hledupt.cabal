@@ -74,6 +74,7 @@ library
     , relude
     , safe
     , text
+    , text-show
     , time
     , transformers
     , utf8-string

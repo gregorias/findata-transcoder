@@ -29,25 +29,7 @@ import Hledupt.CharlesSchwab.Csv (
  )
 import Hledupt.Data.Currency (Currency (USD))
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
-import Relude (
-  Applicative ((<*>)),
-  Either (Right),
-  Eq ((==)),
-  Integer,
-  Maybe (Just),
-  Monad (return),
-  Num (fromInteger),
-  Text,
-  ToString (toString),
-  asum,
-  guard,
-  reverse,
-  ($),
-  (&),
-  (++),
-  (.),
-  (>=>),
- )
+import Relude
 
 -- "Wire Fund", "Sell" & "Journal", "Credit Interest"
 
@@ -84,7 +66,7 @@ wireTransactionToLedgerTransaction (WireTransaction day (DollarAmount amount)) =
     , post "TODO" missingamt
         & L.set pStatus Pending
     ]
-    & L.set tDescription (toString wireFundsAction)
+    & L.set tDescription wireFundsAction
 
 creditInterestAction :: Text
 creditInterestAction = "Credit Interest"
@@ -100,7 +82,7 @@ creditInterestToLedgerTransaction rec = do
           & L.set pMaybeAmount (Just $ makeCurrencyAmount USD amount)
       , post "Income:Google" missingamt
       ]
-      & L.set tDescription (toString $ csAction rec)
+      & L.set tDescription (csAction rec)
         . L.set tStatus Cleared
 
 data Vesting = Vesting
@@ -125,7 +107,7 @@ vestingToLedgerTransaction (Vesting day symbol q) =
     [ post (unvestedStockAccount symbol) (makeCommodityAmount symbol (fromInteger $ - q))
     , post (vestedStockAccount symbol) (makeCommodityAmount symbol (fromInteger q))
     ]
-    & L.set tDescription (toString $ symbol `Text.append` " Vesting")
+    & L.set tDescription (symbol <> " Vesting")
       . L.set tStatus Cleared
 
 saleToLedgerTransaction :: CsCsvRecord -> Maybe Transaction
@@ -154,7 +136,7 @@ saleToLedgerTransaction rec = do
       , post "Expenses:Financial Services" missingamt
           & L.set pMaybeAmount (Just $ makeCurrencyAmount USD fee)
       ]
-      & L.set tDescription (toString symbol ++ " Sale")
+      & L.set tDescription (symbol <> " Sale")
         . L.set tStatus Cleared
 
 taxToLedgerTransaction :: CsCsvRecord -> Maybe Transaction

@@ -7,8 +7,8 @@ module Test.Hledupt.Ib (
   tests,
 ) where
 
-import Data.List (isInfixOf)
 import Data.Ratio ((%))
+import qualified Data.Text as T
 import Data.Time (fromGregorian)
 import Hledger (MarketPrice (MarketPrice))
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
@@ -75,7 +75,7 @@ parseTests = do
               \from 2020-01-01. This could happen due to IB statement \
               \cut-off (fetch a broader statement) or wrong data \
               \assumptions."
-                `isInfixOf` errorMsg
+                `T.isInfixOf` errorMsg
             )
           Right _ -> False
 

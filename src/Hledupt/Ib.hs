@@ -59,15 +59,15 @@ import Text.Printf (printf)
 
 data AssetClass = Stocks | Forex
 
-accountPrefix :: AssetClass -> String
+accountPrefix :: AssetClass -> Text
 accountPrefix Stocks = "Assets:Investments:IB"
 accountPrefix Forex = "Assets:Liquid:IB"
 
-cashAccountName :: Currency -> Text.Text
-cashAccountName cur = Text.pack $ accountPrefix Forex ++ ":" ++ show cur
+cashAccountName :: Currency -> Text
+cashAccountName cur = accountPrefix Forex <> ":" <> show cur
 
-stockAccountName :: String -> Text.Text
-stockAccountName symbol = Text.pack $ accountPrefix Stocks ++ ":" ++ symbol
+stockAccountName :: Text -> Text
+stockAccountName symbol = accountPrefix Stocks <> ":" <> symbol
 
 endingCashToPosting :: EndingCash -> Posting
 endingCashToPosting (EndingCash currency amount) =
@@ -79,7 +79,7 @@ endingCashToPosting (EndingCash currency amount) =
 
 stockPositionToPosting :: StockPosition -> Posting
 stockPositionToPosting (StockPosition symbol quantity _price) =
-  post (stockAccountName symbol) missingamt
+  post (stockAccountName . toText $ symbol) missingamt
     & L.set pMaybeAmount (Just $ makeCommodityAmount (toText symbol) 0)
       . L.set
         pBalanceAssertion
@@ -104,7 +104,7 @@ cashMovementToTransaction
 
 data DividendWithTax = DividendWithTax
   { dDate :: Day
-  , dSymbol :: String
+  , dSymbol :: !Text
   , dDividendPerShare :: Decimal
   , dTotalDividendAmount :: Decimal
   , dTotalTaxAmount :: Decimal
@@ -114,7 +114,7 @@ dividentToDividendWithTax :: IbCsv.Dividend -> DividendWithTax
 dividentToDividendWithTax dividend =
   DividendWithTax
     { dDate = IbCsv.dDate dividend
-    , dSymbol = IbCsv.dSymbol dividend
+    , dSymbol = toText $ IbCsv.dSymbol dividend
     , dDividendPerShare = IbCsv.dDividendPerShare dividend
     , dTotalDividendAmount = IbCsv.dTotalAmount dividend
     , dTotalTaxAmount = fromRational 0
@@ -131,24 +131,25 @@ mergeDividendWithTax dividend tax =
 
 data UnmatchedWithholdingTax = UnmatchedWithholdingTax
   { _uwtDate :: Day
-  , _uwtSymbol :: String
+  , _uwtSymbol :: !Text
   }
 
 withholdingTaxToUnmatchedWithholdingTax :: IbCsv.WithholdingTax -> UnmatchedWithholdingTax
 withholdingTaxToUnmatchedWithholdingTax (IbCsv.WithholdingTax day symbol _) =
-  UnmatchedWithholdingTax day symbol
+  UnmatchedWithholdingTax day (toText symbol)
 
 unmatchedWithholdingTaxToErrorMessage ::
-  UnmatchedWithholdingTax -> String
+  UnmatchedWithholdingTax -> Text
 unmatchedWithholdingTaxToErrorMessage (UnmatchedWithholdingTax date symbol) =
-  printf
-    "Could not find a dividend match for %s withholding tax from %s.\
-    \ This could happen due to IB statement cut-off (fetch a broader \
-    \statement) or wrong data assumptions."
-    symbol
-    (show date)
+  toText @String $
+    printf
+      "Could not find a dividend match for %s withholding tax from %s.\
+      \ This could happen due to IB statement cut-off (fetch a broader \
+      \statement) or wrong data assumptions."
+      symbol
+      (show date)
 
-type Key = (Day, String)
+type Key = (Day, Text)
 
 type Accum = (Map.Map Key IbCsv.WithholdingTax, [DividendWithTax])
 
@@ -162,8 +163,8 @@ joinDividendAndTaxRecords divs taxes =
     (Left . withholdingTaxToUnmatchedWithholdingTax)
     remainingTax
  where
-  dividendToKey dividend = (IbCsv.dDate dividend, IbCsv.dSymbol dividend)
-  taxToKey tax = (IbCsv.wtDate tax, IbCsv.wtSymbol tax)
+  dividendToKey dividend = (IbCsv.dDate dividend, toText $ IbCsv.dSymbol dividend)
+  taxToKey tax = (IbCsv.wtDate tax, toText $ IbCsv.wtSymbol tax)
   fromList' :: (Ord k) => (a -> k) -> [a] -> Map.Map k a
   fromList' key as = Map.fromList $ map (\a -> (key a, a)) as
   taxMap = fromList' taxToKey taxes
@@ -203,18 +204,18 @@ dividendToTransaction
       & L.set tDescription title
         . L.set tStatus Cleared
    where
-    title = sym ++ " dividend @ " ++ show dps ++ " per share"
+    title = sym <> " dividend @ " <> show dps <> " per share"
     whTaxTitle =
       "State:"
-        `Text.append` (Text.pack . show . fst . toOrdinalDate $ d)
-        `Text.append` ":IB Withholding Tax:"
-        `Text.append` Text.pack sym
+        <> (Text.pack . show . fst . toOrdinalDate $ d)
+        <> ":IB Withholding Tax:"
+        <> sym
 
 stockTradeToTransaction :: StockTrade -> Transaction
 stockTradeToTransaction (StockTrade date sym q amount fee) =
   transaction
     date
-    [ post (stockAccountName sym) missingamt
+    [ post (stockAccountName . toText $ sym) missingamt
         & L.set
           pMaybeAmount
           (Just $ makeCommodityAmount (toText sym) (fromRational $ q % 1))
@@ -228,7 +229,7 @@ stockTradeToTransaction (StockTrade date sym q amount fee) =
           pMaybeAmount
           (Just $ makeCurrencyAmount USD (- fee))
     ]
-    & L.set tDescription (sym ++ " trade")
+    & L.set tDescription (toText sym <> " trade")
       . L.set tStatus Cleared
 
 forexTradeToTransaction :: IbCsv.ForexTrade -> Transaction
@@ -260,12 +261,12 @@ forexTradeToTransaction
       , post (cashAccountName CHF) (makeCurrencyAmount CHF fee)
       , post "Expenses:Financial Services" (makeCurrencyAmount CHF (- fee))
       ]
-      & L.set tDescription (show base ++ "." ++ show quote)
+      & L.set tDescription (show base <> "." <> show quote)
         . L.set tStatus Cleared
 
 statementActivityToLedgerReport ::
   IbCsv.ActivityStatement ->
-  Either String LedgerReport
+  Either Text LedgerReport
 statementActivityToLedgerReport
   ActivityStatement
     { asLastStatementDay = stmtDate
@@ -288,7 +289,7 @@ statementActivityToLedgerReport
               return $
                 transaction
                   stmtDate
-                  (cashStatusPostings ++ stockStatusPostings)
+                  (cashStatusPostings <> stockStatusPostings)
                   & L.set tDescription "IB Status"
                     . L.set tStatus Cleared
           )
@@ -296,13 +297,13 @@ statementActivityToLedgerReport
       LedgerReport
         ( sortOn tdate $
             (cashMovementToTransaction <$> cashTransfers)
-              ++ (dividendToTransaction <$> dividendsWithTaxes)
-              ++ (stockTradeToTransaction <$> stockTrades)
-              ++ (forexTradeToTransaction <$> forexTrades)
-              ++ maybeStatus
+              <> (dividendToTransaction <$> dividendsWithTaxes)
+              <> (stockTradeToTransaction <$> stockTrades)
+              <> (forexTradeToTransaction <$> forexTrades)
+              <> maybeStatus
         )
         (stockPositionToStockPrice stmtDate <$> stocks)
 
 -- | Parses an IB Activity CSV statement into a Ledger status transaction
-parseActivityCsv :: String -> Either String LedgerReport
+parseActivityCsv :: Text -> Either Text LedgerReport
 parseActivityCsv csv = IbCsv.parseActivity csv >>= statementActivityToLedgerReport

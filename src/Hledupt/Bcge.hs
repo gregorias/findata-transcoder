@@ -157,7 +157,7 @@ csvLinesToBcgeStatement csvLines = do
 bcgeTransactionToLedger :: Maybe Hint.Config -> BcgeTransaction -> Transaction
 bcgeTransactionToLedger maybeConfig (BcgeTransaction date title amount) =
   transaction date [bcgePosting, counterPosting]
-    & set tDescription description
+    & set tDescription (toText description)
       . set tStatus Cleared
  where
   maybeHint = do

@@ -18,10 +18,8 @@ import Console.Options (
   programName,
   programVersion,
  )
-import qualified Control.Lens as L
 import qualified Data.ByteString.Lazy as LBS
 import Data.ByteString.Lazy.UTF8 as UTF8 (toString)
-import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Data.Version (makeVersion)
@@ -105,8 +103,8 @@ parseFinpensionTransactions =
 parseIbActivity :: IO ()
 parseIbActivity =
   parseBank
-    ( L.over L._Left Text.pack
-        . Ib.parseActivityCsv
+    ( Ib.parseActivityCsv
+        . toText
         . UTF8.toString
     )
 

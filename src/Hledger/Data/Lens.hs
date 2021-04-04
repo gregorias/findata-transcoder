@@ -106,10 +106,10 @@ pBalanceAssertion = lens pbalanceassertion setter
  where
   setter p ba = p{pbalanceassertion = ba}
 
-tDescription :: Lens' Transaction String
-tDescription = lens (unpack . tdescription) setter
+tDescription :: Lens' Transaction Text
+tDescription = lens tdescription setter
  where
-  setter tr description = tr{tdescription = pack description}
+  setter tr description = tr{tdescription = description}
 
 tStatus :: Lens' Transaction Status
 tStatus = lens tstatus setter

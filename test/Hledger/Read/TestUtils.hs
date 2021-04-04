@@ -185,7 +185,7 @@ transactionP = do
     manyTill MP.anySingle (some $ char ' ')
       >>= parseTimeM True defaultTimeLocale "%Y/%m/%d"
   status <- statusParser <* many space
-  title <- manyTill anySingle (try newline)
+  title <- toText <$> manyTill anySingle (try newline)
   ps <- some postingP
   return $
     Tr.transaction date ps
