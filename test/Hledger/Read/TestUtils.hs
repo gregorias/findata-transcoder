@@ -1,4 +1,5 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Hledger.Read.TestUtils (
@@ -14,7 +15,6 @@ import Control.Monad.Combinators (
   someTill,
  )
 import Data.Maybe (fromJust)
-import Data.Text (pack, unpack)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Hledger (
   AmountPrice (TotalPrice, UnitPrice),
@@ -65,6 +65,8 @@ import Text.Megaparsec.Char (
 import qualified Text.Megaparsec.Char as Char
 import Text.Megaparsec.Char.Extra (eolOrEof)
 
+type Parser = Parsec Void Text
+
 space :: (MonadParsec e s m, Token s ~ Char) => m Char
 space = single ' '
 
@@ -74,10 +76,10 @@ doubleSpace = MP.count 2 space
 commoditySymbol :: (MonadParsec e s m, Token s ~ Char) => m String
 commoditySymbol = liftM2 (:) Char.letterChar (many alphaNumChar)
 
-isCurrency :: String -> Bool
+isCurrency :: Text -> Bool
 isCurrency = flip elem ["CHF", "USD", "PLN", "EUR"]
 
-commodityP :: Parsec Void String Amount
+commodityP :: Parser Amount
 commodityP = do
   (maybeSymbol, amount) <-
     try
@@ -100,18 +102,19 @@ commodityP = do
 
 whenCurrencyAdjustStyle :: Amount -> Amount
 whenCurrencyAdjustStyle amt
-  | isCurrency (unpack $ acommodity amt) = setCurrencyPrecision amt
+  | isCurrency (acommodity amt) = setCurrencyPrecision amt
   | otherwise = amt
 
-accountParser :: MP.Parsec Void String String
+accountParser :: Parser Text
 accountParser =
-  someTill
-    printChar
-    ( try (doubleSpace >> many space)
-        <|> try (optional space >> lookAhead eolOrEof)
-    )
+  toText
+    <$> someTill
+      printChar
+      ( try (void $ doubleSpace >> many space)
+          <|> try (void $ optional space >> lookAhead eolOrEof)
+      )
 
-balanceAssertion :: MP.Parsec Void String BalanceAssertion
+balanceAssertion :: Parser BalanceAssertion
 balanceAssertion = do
   void $ MP.single '=' >> some space
   fmap (fromJust . balassert . whenCurrencyAdjustStyle) commodityP <* many space
@@ -124,7 +127,7 @@ statusParser =
     , pure Unmarked
     ]
 
-amountPriceParser :: MP.Parsec Void String AmountPrice
+amountPriceParser :: Parser AmountPrice
 amountPriceParser = do
   constructor <-
     choice
@@ -135,7 +138,7 @@ amountPriceParser = do
   constructor . amountSetFullPrecision <$> commodityP
 
 -- | A partial Posting parser
-postingP :: MP.Parsec Void String Posting
+postingP :: Parser Posting
 postingP = do
   status <- many space *> statusParser <* many space
   account <- accountParser
@@ -149,7 +152,7 @@ postingP = do
           }
   void eolOrEof
   return $
-    post (pack account) amount'
+    post account amount'
       & L.set pBalanceAssertion balAssert
         . L.set pStatus status
 
@@ -157,7 +160,7 @@ postingP = do
 --
 -- This parser parses typical Transaction syntax.
 -- It does not conform to the full Ledger spec.
-transactionP :: MP.Parsec Void String Transaction
+transactionP :: Parser Transaction
 transactionP = do
   date <-
     manyTill MP.anySingle (some $ char ' ')
@@ -170,5 +173,5 @@ transactionP = do
       & L.set tStatus status
         . L.set tDescription title
 
-parseTransactionUnsafe :: String -> Transaction
+parseTransactionUnsafe :: Text -> Transaction
 parseTransactionUnsafe = fromJust . MP.parseMaybe transactionP

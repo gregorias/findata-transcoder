@@ -45,15 +45,15 @@ tests = do
   describe "Test.Hledger.Read.TestUtils" $ do
     describe "postingP" $ do
       it "Parses a posting transaction" $ do
-        let p :: String = "  Expenses:Other"
+        let p = "  Expenses:Other"
             expectedP = post "Expenses:Other" missingamt
         parseMaybe postingP p `shouldBe` Just expectedP
       it "Parses a posting transaction with spaces" $ do
-        let p :: String = "  Assets:Bank With Spaces\n"
+        let p = "  Assets:Bank With Spaces\n"
             expectedP = post "Assets:Bank With Spaces" missingamt
         parseMaybe postingP p `shouldBe` Just expectedP
       it "Parses a cleared posting" $ do
-        let p :: String = "*  Expenses:Other"
+        let p = "*  Expenses:Other"
             expectedP =
               (post "Expenses:Other" missingamt)
                 { pstatus = Cleared
