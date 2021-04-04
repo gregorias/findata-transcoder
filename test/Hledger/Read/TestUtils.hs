@@ -9,11 +9,11 @@ module Hledger.Read.TestUtils (
 ) where
 
 import qualified Control.Lens as L
-import Control.Monad (liftM2)
 import Control.Monad.Combinators (
   manyTill,
   someTill,
  )
+import Data.Char (isDigit)
 import Data.Maybe (fromJust)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Hledger (
@@ -49,20 +49,21 @@ import Text.Megaparsec (
   Parsec,
   Token,
   anySingle,
+  between,
   choice,
+  label,
   single,
+  takeWhile1P,
   try,
  )
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (
-  alphaNumChar,
   char,
   newline,
   printChar,
   spaceChar,
   string,
  )
-import qualified Text.Megaparsec.Char as Char
 import Text.Megaparsec.Char.Extra (eolOrEof)
 
 type Parser = Parsec Void Text
@@ -73,31 +74,49 @@ space = single ' '
 doubleSpace :: (MonadParsec e s m, Token s ~ Char) => m [Char]
 doubleSpace = MP.count 2 space
 
-commoditySymbol :: (MonadParsec e s m, Token s ~ Char) => m String
-commoditySymbol = liftM2 (:) Char.letterChar (many alphaNumChar)
-
 isCurrency :: Text -> Bool
 isCurrency = flip elem ["CHF", "USD", "PLN", "EUR"]
+
+commoditySymbolP :: Parser Text
+commoditySymbolP =
+  label "commodity symbol" $
+    quotedCommoditySymbolP <|> simpleCommoditySymbolP
+
+quotedCommoditySymbolP :: Parser Text
+quotedCommoditySymbolP =
+  between (char '"') (char '"') $ takeWhile1P Nothing f
+ where
+  f c = c /= ';' && c /= '\n' && c /= '\"'
+
+simpleCommoditySymbolP :: Parser Text
+simpleCommoditySymbolP = takeWhile1P Nothing (not . isNonsimpleCommodityChar)
+
+-- characters that may not be used in a non-quoted commodity symbol
+isNonsimpleCommodityChar :: Char -> Bool
+isNonsimpleCommodityChar = liftA2 (||) isDigit isOther
+ where
+  otherChars = "-+.@*;\t\n \"{}="
+  isOther c = c `elem` otherChars
 
 commodityP :: Parser Amount
 commodityP = do
   (maybeSymbol, amount) <-
     try
       ( do
-          symbol <- commoditySymbol
+          symbol <- commoditySymbolP
           void $ some space
           amount <- decimalP defaultDecimalFormat
           return (Just symbol, amount)
       )
       <|> ( do
               amount <- decimalP defaultDecimalFormat
-              symbol <- optional (many space >> commoditySymbol)
+              symbol <- optional (many space >> commoditySymbolP)
               return (symbol, amount)
           )
   void $ many space
   return $
     case maybeSymbol of
-      Just symbol -> makeCommodityAmount (toText symbol) amount
+      Just symbol -> makeCommodityAmount symbol amount
       Nothing -> num amount
 
 whenCurrencyAdjustStyle :: Amount -> Amount

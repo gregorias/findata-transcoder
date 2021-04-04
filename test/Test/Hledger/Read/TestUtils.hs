@@ -59,6 +59,10 @@ tests = do
                 { pstatus = Cleared
                 }
         parseMaybe postingP p `shouldBe` Just expectedP
+      it "Parses a posting with a quoted commodity" $ do
+        let p = "Bank  2 \"ISINNUM123\""
+            expectedP = post "Bank" (makeCommodityAmount "ISINNUM123" 2)
+        parseMaybe postingP p `shouldBe` Just expectedP
 
     describe "transactionParser" $ do
       it "Parses a moneyless transaction" $ do
