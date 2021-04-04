@@ -15,7 +15,6 @@ module Hledupt.Data.MyDecimal (
 ) where
 
 import qualified Control.Lens.Iso as Lens
-import Data.ByteString.Char8 (unpack)
 import Data.Char (digitToInt)
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal, realFracToDecimal)
@@ -137,6 +136,6 @@ instance Csv.FromField MyDecimal where
     maybe
       (fail "Could not parse a decimal")
       (pure . MyDecimal)
-      $ MP.parseMaybe
+      $ MP.parseMaybe @Void @String
         (decimalP (DecimalFormat (ChunkSep ',') (Just OptionalUnlimitedDecimalFraction)))
-        (unpack field)
+        (decodeUtf8 field)

@@ -26,8 +26,6 @@ module Hledupt.Ib.Csv.ActivityStatementParse (
 ) where
 
 import qualified Control.Lens as L
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Csv as Csv hiding (FromNamedRecord, decodeByName, lookup)
 import qualified Data.Csv as CsvLookup (lookup)
 import qualified Data.Csv.Extra as Csv
@@ -144,7 +142,7 @@ instance Csv.FromField QuotePair where
   parseField =
     maybe (fail "Could not parse the quote pair") return
       . MP.parseMaybe quotePairParser
-      . (fmap (chr . fromEnum) . BS.unpack)
+      . (fmap (chr . fromEnum) . decodeUtf8 @String)
 
 data StockTrade = StockTrade
   { stockTradeDate :: Day
@@ -173,7 +171,7 @@ instance Csv.FromField AssetCategory where
   parseField "Stocks" = pure Stocks
   parseField field =
     fail $
-      "Could not parse asset category: " ++ (chr . fromEnum <$> BS.unpack field)
+      "Could not parse asset category: " ++ (chr . fromEnum <$> decodeUtf8 @String field)
 
 tradesDateTimeParser :: Parsec Void String Day
 tradesDateTimeParser =
@@ -225,7 +223,7 @@ instance Csv.FromField Quantity where
       . MP.parseMaybe quantityParser
       $ fieldStr
    where
-    fieldStr = fmap (chr . fromEnum) . BS.unpack $ field
+    fieldStr = fmap (chr . fromEnum) . decodeUtf8 @String $ field
 
 instance Csv.FromNamedRecord ForexTrade where
   parseNamedRecord =
@@ -255,7 +253,7 @@ detectTradesCsvCategory (Csv csv)
       Csv.decodeByNameWithP
         catParser
         Csv.defaultDecodeOptions
-        (C.pack csv)
+        (encodeUtf8 csv)
     extractCat $ toList cats
  where
   catParser nr = CsvLookup.lookup nr "Asset Category"
@@ -450,7 +448,7 @@ parseCsv :: (Csv.FromNamedRecord a) => Csv -> Either String [a]
 parseCsv (Csv csv) =
   if null csv
     then return []
-    else V.toList . snd <$> Csv.decodeByName (C.pack csv)
+    else V.toList . snd <$> Csv.decodeByName (encodeUtf8 csv)
 
 parseNamedSection :: (Csv.FromNamedRecord a) => String -> Statement -> Either String [a]
 parseNamedSection name stmt = do

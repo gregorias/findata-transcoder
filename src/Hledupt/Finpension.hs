@@ -11,8 +11,6 @@ module Hledupt.Finpension (
 import Control.Lens (each, over, set)
 import qualified Control.Lens as L
 import Control.Lens.Internal.ByteString (unpackStrict8)
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Csv as CSV
 import Data.Currency (Alpha)
 import Data.Decimal (Decimal)
@@ -91,8 +89,8 @@ instance CSV.FromField Category where
   parseField "Buy" = return Buy
   parseField "Deposit" = return Deposit
   parseField field =
-    fail . BS.unpack $
-      "Could not parse " `BS.append` field `BS.append` " as a category."
+    fail . decodeUtf8 $
+      "Could not parse " <> field <> " as a category."
 
 data RawTransaction = RawTransaction
   { rtDate :: !Day
@@ -169,7 +167,7 @@ transactionsCsvDecodeOptions =
     { CSV.decDelimiter = fromIntegral (ord ';')
     }
 
-rawTransactionsP :: CsvFile LBS.ByteString -> Either Text [RawTransaction]
+rawTransactionsP :: CsvFile LByteString -> Either Text [RawTransaction]
 rawTransactionsP (CsvFile csvContent) = do
   (_header, trsVector) <-
     over L._Left T.pack $
@@ -220,7 +218,7 @@ finpensionTransactionToLedgerTransaction (TrBuy _buyTr) =
 rawTransactionToLedgerTransaction :: RawTransaction -> Ledger.Transaction
 rawTransactionToLedgerTransaction = finpensionTransactionToLedgerTransaction . rawTransactionToTransaction
 
-transactionsToLedger :: CsvFile LBS.ByteString -> Either Text LedgerReport
+transactionsToLedger :: CsvFile LByteString -> Either Text LedgerReport
 transactionsToLedger csv = do
   trs <- fmap rawTransactionToLedgerTransaction <$> rawTransactionsP csv
   return $ LedgerReport trs []
