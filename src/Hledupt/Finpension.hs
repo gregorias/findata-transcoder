@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-deprecations #-}
-{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 -- | This module parses Finpension's reports and produces Ledger reports.
 module Hledupt.Finpension (
@@ -92,13 +91,13 @@ instance CSV.FromField Category where
       "Could not parse " <> field <> " as a category."
 
 data RawTransaction = RawTransaction
-  { rtDate :: !Day
-  , rtCategory :: !Category
-  , rtAssetName :: !Text
-  , rtNumberOfShares :: !(Maybe Decimal)
+  { _rtDate :: !Day
+  , _rtCategory :: !Category
+  , _rtAssetName :: !Text
+  , _rtNumberOfShares :: !(Maybe Decimal)
   , rtAssetCurrency :: !Alpha
-  , rtCurrencyRate :: !Decimal
-  , rtAssetPriceInChf :: !(Maybe Decimal)
+  , _rtCurrencyRate :: !Decimal
+  , _rtAssetPriceInChf :: !(Maybe Decimal)
   , rtCashFlow :: !Decimal
   , rtBalance :: !Decimal
   }
@@ -143,19 +142,19 @@ instance CSV.FromNamedRecord RawTransaction where
 data Transaction = TrBuy BuyTransaction | TrDeposit DepositTransaction
 
 data BuyTransaction = BuyTransaction
-  { btDate :: !Day
-  , btAssetName :: !Text
-  , btNumberOfShares :: !(Fixed E6)
-  , btAssetCurrency :: !Alpha
-  , btCurrencyRate :: !(Fixed E6)
-  , btAssetPriceInChf :: !(Fixed E6)
-  , btCashFlow :: !(Fixed E6)
-  , btBalance :: !(Fixed E6)
+  { _btDate :: !Day
+  , _btAssetName :: !Text
+  , _btNumberOfShares :: !(Fixed E6)
+  , _btAssetCurrency :: !Alpha
+  , _btCurrencyRate :: !(Fixed E6)
+  , _btAssetPriceInChf :: !(Fixed E6)
+  , _btCashFlow :: !(Fixed E6)
+  , _btBalance :: !(Fixed E6)
   }
 
 data DepositTransaction = DepositTransaction
   { dtDate :: !Day
-  , dtAssetCurrency :: !Alpha
+  , _dtAssetCurrency :: !Alpha
   , dtCashFlow :: !Decimal
   , dtBalance :: !Decimal
   }
