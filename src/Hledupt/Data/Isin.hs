@@ -1,5 +1,5 @@
 module Hledupt.Data.Isin (
-  Isin,
+  Isin (..),
   mkIsin,
   isinP,
 ) where
@@ -10,7 +10,9 @@ import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (alphaNumChar, letterChar, numberChar)
 
 -- | A type representing an ISIN
-newtype Isin = Isin String
+newtype Isin = Isin
+  { unIsin :: String
+  }
   deriving newtype (Eq, Ord, Show)
 
 -- | The ISIN parser

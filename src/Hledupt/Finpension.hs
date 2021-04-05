@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | This module parses Finpension's reports and produces Ledger reports.
 module Hledupt.Finpension (
@@ -9,27 +8,27 @@ module Hledupt.Finpension (
 
 import Control.Lens (each, over, set)
 import qualified Control.Lens as L
-import Control.Lens.Internal.ByteString (unpackStrict8)
 import qualified Data.Csv as CSV
 import Data.Currency (Alpha)
 import Data.Decimal (Decimal)
-import Data.Fixed (E6, Fixed)
 import Data.Time (Day, defaultTimeLocale, parseTimeM)
 import qualified Data.Vector as V
 import Hledger (
+  AmountPrice (UnitPrice),
   Status (Cleared),
   balassert,
  )
 import qualified Hledger as Ledger
 import qualified Hledger.Data.Extra as HDE
 import Hledger.Data.Lens (
+  aAmountPrice,
   pBalanceAssertion,
   tDescription,
   tStatus,
  )
 import Hledupt.Data.CsvFile (CsvFile (..))
 import Hledupt.Data.Currency (Currency (CHF))
-import Hledupt.Data.Isin (Isin, mkIsin)
+import Hledupt.Data.Isin (Isin (unIsin), mkIsin)
 import Hledupt.Data.LedgerReport (LedgerReport (..), todoPosting)
 import Hledupt.Data.MyDecimal (MyDecimal (unMyDecimal))
 import Relude
@@ -37,6 +36,9 @@ import Relude.Unsafe (fromJust)
 
 cashAccount :: Text
 cashAccount = "Assets:Investments:Finpension:Cash"
+
+fundAccount :: Text -> Text
+fundAccount shortName = "Assets:Investments:Finpension:" <> shortName
 
 data Fund = Fund
   { fundFinpensionName :: !Text
@@ -69,17 +71,21 @@ funds =
       )
     ,
       ( "CSIF (CH) Equity Switzerland Small & Mid Cap ZB"
-      , "CH0033782431"
+      , "CH0110869143"
       , "CH Small & Mid Cap"
       )
     ,
       ( "CSIF (CH) Equity Switzerland Large Cap Blue ZB"
-      , "CH0110869143"
-      , "Large Cap"
+      , "CH0033782431"
+      , "CH Large Cap"
       )
     ]
 
+findFundByFinpensionName :: Text -> Maybe Fund
+findFundByFinpensionName finpensionName = find ((== finpensionName) . fundFinpensionName) funds
+
 data Category = Buy | Deposit
+  deriving stock (Show, Eq)
 
 instance CSV.FromField Category where
   parseField "Buy" = return Buy
@@ -91,14 +97,15 @@ instance CSV.FromField Category where
 data RawTransaction = RawTransaction
   { _rtDate :: !Day
   , _rtCategory :: !Category
-  , _rtAssetName :: !Text
+  , rtAssetName :: !Text
   , _rtNumberOfShares :: !(Maybe Decimal)
   , rtAssetCurrency :: !Alpha
-  , _rtCurrencyRate :: !Decimal
+  , rtCurrencyRate :: !Decimal
   , _rtAssetPriceInChf :: !(Maybe Decimal)
   , rtCashFlow :: !Decimal
   , rtBalance :: !Decimal
   }
+  deriving stock (Show)
 
 newtype FinpensionDay = FinpensionDay
   { unFinpensionDay :: Day
@@ -107,7 +114,7 @@ newtype FinpensionDay = FinpensionDay
 instance CSV.FromField FinpensionDay where
   parseField field =
     FinpensionDay
-      <$> parseTimeM True defaultTimeLocale "%Y-%m-%d" (unpackStrict8 field)
+      <$> parseTimeM True defaultTimeLocale "%Y-%m-%d" (decodeUtf8 field)
 
 instance CSV.FromNamedRecord RawTransaction where
   parseNamedRecord nr = do
@@ -140,14 +147,14 @@ instance CSV.FromNamedRecord RawTransaction where
 data Transaction = TrBuy BuyTransaction | TrDeposit DepositTransaction
 
 data BuyTransaction = BuyTransaction
-  { _btDate :: !Day
-  , _btAssetName :: !Text
-  , _btNumberOfShares :: !(Fixed E6)
+  { btDate :: !Day
+  , btAssetName :: !Text
+  , btNumberOfShares :: !Decimal
   , _btAssetCurrency :: !Alpha
-  , _btCurrencyRate :: !(Fixed E6)
-  , _btAssetPriceInChf :: !(Fixed E6)
-  , _btCashFlow :: !(Fixed E6)
-  , _btBalance :: !(Fixed E6)
+  , _btCurrencyRate :: !Decimal
+  , btAssetPriceInChf :: !Decimal
+  , btCashFlow :: !Decimal
+  , btBalance :: !Decimal
   }
 
 data DepositTransaction = DepositTransaction
@@ -170,31 +177,46 @@ rawTransactionsP (CsvFile csvContent) = do
       CSV.decodeByNameWith transactionsCsvDecodeOptions csvContent
   return $ V.toList trsVector
 
-rawTransactionToTransaction :: RawTransaction -> Transaction
+rawTransactionToTransaction :: RawTransaction -> Maybe Transaction
 rawTransactionToTransaction rawTr@(RawTransaction date Deposit _ _ _ _ _ _ _) =
-  TrDeposit $
-    DepositTransaction
-      date
-      (rtAssetCurrency rawTr)
-      (rtCashFlow rawTr)
-      (rtBalance rawTr)
-rawTransactionToTransaction (RawTransaction date Buy _ _ _ _ _ _ _) =
-  TrBuy $
-    BuyTransaction
-      date
-      undefined
-      undefined
-      undefined
-      undefined
-      undefined
-      undefined
-      undefined
+  return $
+    TrDeposit $
+      DepositTransaction
+        date
+        (rtAssetCurrency rawTr)
+        (rtCashFlow rawTr)
+        (rtBalance rawTr)
+rawTransactionToTransaction
+  rawTr@( RawTransaction
+            date
+            Buy
+            _
+            (Just nShares)
+            _
+            _
+            (Just assetPriceInChf)
+            _
+            _
+          ) =
+    return $
+      TrBuy $
+        BuyTransaction
+          date
+          (rtAssetName rawTr)
+          nShares
+          (rtAssetCurrency rawTr)
+          (rtCurrencyRate rawTr)
+          assetPriceInChf
+          (rtCashFlow rawTr)
+          (rtBalance rawTr)
+rawTransactionToTransaction (RawTransaction _ Buy _ _ _ _ _ _ _) = empty
 
-finpensionTransactionToLedgerTransaction :: Transaction -> Ledger.Transaction
+finpensionTransactionToLedgerTransaction :: Transaction -> Either Text Ledger.Transaction
 finpensionTransactionToLedgerTransaction (TrDeposit depositTr) =
-  Ledger.transaction (dtDate depositTr) [depositPosting, todoPosting]
-    & set tDescription "Finpension Deposit"
-      . set tStatus Cleared
+  return $
+    Ledger.transaction (dtDate depositTr) [depositPosting, todoPosting]
+      & set tDescription "Finpension Deposit"
+        . set tStatus Cleared
  where
   depositPosting =
     Ledger.post
@@ -203,13 +225,56 @@ finpensionTransactionToLedgerTransaction (TrDeposit depositTr) =
       & set
         pBalanceAssertion
         (balassert . HDE.makeCurrencyAmount CHF . dtBalance $ depositTr)
-finpensionTransactionToLedgerTransaction (TrBuy _buyTr) =
-  Ledger.nulltransaction
+finpensionTransactionToLedgerTransaction (TrBuy buyTr) = do
+  let finpensionName = btAssetName buyTr
+  (Fund _ isin shortName) <-
+    maybeToRight
+      ( "Could not find fund named "
+          <> finpensionName
+          <> " in registry."
+          <> " You might need to add the fund to the registry."
+      )
+      (findFundByFinpensionName finpensionName)
+  let fundPosting =
+        Ledger.post
+          (fundAccount shortName)
+          ( (HDE.makeCommodityAmount (toText $ unIsin isin) . btNumberOfShares $ buyTr)
+              & L.set
+                aAmountPrice
+                ( Just . UnitPrice $
+                    HDE.makeCurrencyAmount CHF (btAssetPriceInChf buyTr)
+                )
+          )
+  return $
+    Ledger.transaction (btDate buyTr) [cashPosting, fundPosting]
+      & set tDescription "Finpension Purchase"
+        . set tStatus Cleared
+ where
+  cashPosting =
+    Ledger.post
+      cashAccount
+      (HDE.makeCurrencyAmount CHF . btCashFlow $ buyTr)
+      & set
+        pBalanceAssertion
+        (balassert . HDE.makeCurrencyAmount CHF . btBalance $ buyTr)
 
-rawTransactionToLedgerTransaction :: RawTransaction -> Ledger.Transaction
-rawTransactionToLedgerTransaction = finpensionTransactionToLedgerTransaction . rawTransactionToTransaction
+rawTransactionToLedgerTransaction :: RawTransaction -> Either Text Ledger.Transaction
+rawTransactionToLedgerTransaction rawTr = do
+  finpensionTr <-
+    maybe
+      ( Left $
+          "Could not recognize the following CSV transaction as a finpension transaction."
+            <> " You might need to implement it. "
+            <> show rawTr
+      )
+      Right
+      (rawTransactionToTransaction rawTr)
+  finpensionTransactionToLedgerTransaction finpensionTr
 
 transactionsToLedger :: CsvFile LByteString -> Either Text LedgerReport
 transactionsToLedger csv = do
-  trs <- fmap rawTransactionToLedgerTransaction <$> rawTransactionsP csv
+  rawTrs <- sortChronologically <$> rawTransactionsP csv
+  trs <- sequence $ rawTransactionToLedgerTransaction <$> rawTrs
   return $ LedgerReport trs []
+ where
+  sortChronologically = reverse
