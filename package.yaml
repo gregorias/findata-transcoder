@@ -55,7 +55,6 @@ library:
   - text
   - time
   - transformers
-  - utf8-string
   - vector
 
 executables:
@@ -75,7 +74,6 @@ executables:
     - relude
     - text
     - time
-    - utf8-string
 
 tests:
   hledupt-test:

@@ -7,7 +7,6 @@ module Hledupt.Data.Currency (
 ) where
 
 import Control.Applicative.Combinators (count)
-import Data.ByteString.UTF8 as UTF8
 import qualified Data.Csv as Csv
 import Relude
 import Relude.Extra (inverseMap)
@@ -26,7 +25,7 @@ instance Csv.FromField Currency where
   parseField field =
     case parseCurrency (decodeUtf8 field) of
       Just currency -> return currency
-      Nothing -> fail $ "Could not parse the currency: " ++ UTF8.toString field ++ "."
+      Nothing -> fail $ "Could not parse the currency: " <> decodeUtf8 field <> "."
 
 currencyP ::
   ( MonadFail m

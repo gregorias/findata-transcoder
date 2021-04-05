@@ -10,7 +10,6 @@ import qualified Control.Lens as L
 import qualified Data.ByteString as BS
 import Data.ByteString.Internal (c2w)
 import qualified Data.ByteString.Lazy as LBS
-import qualified Data.ByteString.UTF8 as UTF8
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
 import Data.Time (Day)
@@ -41,7 +40,7 @@ data AmountOrEmpty = AmountOrEmptyAmount Integer | AmountOrEmptyEmpty
 
 instance Csv.FromField AmountOrEmpty where
   parseField "" = pure AmountOrEmptyEmpty
-  parseField field = case readMaybe . UTF8.toString $ field of
+  parseField field = case readMaybe . decodeUtf8 $ field of
     Just amt -> return . AmountOrEmptyAmount $ amt
     Nothing -> mzero
 

@@ -19,7 +19,6 @@ import Console.Options (
   programVersion,
  )
 import qualified Data.ByteString.Lazy as LBS
-import Data.ByteString.Lazy.UTF8 as UTF8 (toString)
 import qualified Data.Text.IO as Text
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Data.Version (makeVersion)
@@ -78,7 +77,7 @@ parseBcge maybeHintsFilePath = do
   hints :: Maybe BcgeHint.Config <-
     join
       <$> mapM parseBcgeHints maybeHintsFilePath
-  parseBank $ bcgeCsvToLedger hints . UTF8.toString
+  parseBank $ bcgeCsvToLedger hints . decodeUtf8
 
 parseCharlesSchwab :: IO ()
 parseCharlesSchwab =
@@ -104,14 +103,13 @@ parseIbActivity :: IO ()
 parseIbActivity =
   parseBank
     ( Ib.parseActivityCsv
-        . toText
-        . UTF8.toString
+        . decodeUtf8
     )
 
 parseMbank :: IO ()
 parseMbank =
   parseBank $
-    mbankCsvToLedger . UTF8.toString
+    mbankCsvToLedger . decodeUtf8
 
 parseGPayslip :: IO ()
 parseGPayslip = do
