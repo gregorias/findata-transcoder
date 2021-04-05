@@ -54,7 +54,6 @@ import Hledupt.Ib.Csv.ActivityStatementParse (
  )
 import Relude
 import Text.Printf (printf)
-import TextShow (showt)
 
 data AssetClass = Stocks | Forex
 
@@ -206,7 +205,7 @@ dividendToTransaction
     title = sym <> " dividend @ " <> show dps <> " per share"
     whTaxTitle =
       "State:"
-        <> (showt . fst . toOrdinalDate $ d)
+        <> (show . fst . toOrdinalDate $ d)
         <> ":IB Withholding Tax:"
         <> sym
 
