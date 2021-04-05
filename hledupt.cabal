@@ -68,7 +68,7 @@ library
     , extra
     , hledger-lib >=1.19
     , lens
-    , megaparsec ==9.0.1
+    , megaparsec
     , mtl
     , parser-combinators
     , relude
@@ -94,7 +94,7 @@ executable hledupt
     , cli
     , hledupt
     , lens
-    , megaparsec ==9.0.1
+    , megaparsec
     , relude
     , text
     , time
@@ -144,7 +144,7 @@ test-suite hledupt-test
     , hspec
     , hspec-expectations-pretty-diff
     , lens
-    , megaparsec ==9.0.1
+    , megaparsec
     , parser-combinators
     , relude
     , replace-megaparsec
