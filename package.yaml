@@ -4,7 +4,7 @@ github:              "githubuser/hledupt"
 license:             AGPL-3
 author:              "Grzegorz Milka"
 maintainer:          "grzegorzmilka@gmail.com"
-copyright:           "2020 Grzegorz Milka"
+copyright:           "2020-2021 Grzegorz Milka"
 
 extra-source-files:
 - README.md
