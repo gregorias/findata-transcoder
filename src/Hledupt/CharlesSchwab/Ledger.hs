@@ -11,7 +11,7 @@ import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Hledger (
   AmountPrice (UnitPrice),
-  Status (Cleared, Pending),
+  Status (Cleared),
   Transaction,
   amountSetFullPrecision,
   missingamt,
@@ -26,7 +26,7 @@ import Hledupt.CharlesSchwab.Csv (
   csAction,
  )
 import Hledupt.Data.Currency (Currency (USD))
-import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
+import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport), todoPosting)
 import Relude
 
 -- "Wire Fund", "Sell" & "Journal", "Credit Interest"
@@ -61,8 +61,7 @@ wireTransactionToLedgerTransaction (WireTransaction day (DollarAmount amount)) =
     [ post usdAccount missingamt
         & L.set pStatus Cleared
           . L.set pMaybeAmount (Just $ makeCurrencyAmount USD amount)
-    , post "TODO" missingamt
-        & L.set pStatus Pending
+    , todoPosting
     ]
     & L.set tDescription wireFundsAction
 

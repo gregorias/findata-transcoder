@@ -40,7 +40,7 @@ tests = do
                 [ parseTransactionUnsafe
                     "2021/01/19 Wire Funds\n\
                     \  * Assets:Liquid:Charles Schwab:USD  -123.45 USD\n\
-                    \  ! TODO"
+                    \  ! Todo"
                 ]
                 []
             )

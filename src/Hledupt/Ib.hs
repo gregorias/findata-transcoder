@@ -19,7 +19,7 @@ import Hledger (
   AmountPrice (UnitPrice),
   MarketPrice (MarketPrice),
   Posting,
-  Status (Cleared, Pending),
+  Status (Cleared),
   amountSetFullPrecision,
   balassert,
   missingamt,
@@ -39,7 +39,7 @@ import Hledger.Data.Types (
   Transaction (..),
  )
 import Hledupt.Data.Currency (Currency (CHF, USD))
-import Hledupt.Data.LedgerReport (LedgerReport (..))
+import Hledupt.Data.LedgerReport (LedgerReport (..), todoPosting)
 import Hledupt.Ib.Csv (
   ActivityStatement (..),
   EndingCash (..),
@@ -95,8 +95,7 @@ cashMovementToTransaction
       [ post (cashAccountName currency) missingamt
           & L.set pMaybeAmount (Just $ makeCurrencyAmount currency amount)
             . L.set pStatus Cleared
-      , post "Todo" missingamt
-          & L.set pStatus Pending
+      , todoPosting
       ]
       & L.set tDescription "IB Deposit/Withdrawal"
 

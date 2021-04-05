@@ -17,22 +17,20 @@ import Data.Fixed (E6, Fixed)
 import Data.Time (Day, defaultTimeLocale, parseTimeM)
 import qualified Data.Vector as V
 import Hledger (
-  Status (Cleared, Pending),
+  Status (Cleared),
   balassert,
-  missingamt,
  )
 import qualified Hledger as Ledger
 import qualified Hledger.Data.Extra as HDE
 import Hledger.Data.Lens (
   pBalanceAssertion,
-  pStatus,
   tDescription,
   tStatus,
  )
 import Hledupt.Data.CsvFile (CsvFile (..))
 import Hledupt.Data.Currency (Currency (CHF))
 import Hledupt.Data.Isin (Isin, mkIsin)
-import Hledupt.Data.LedgerReport (LedgerReport (..))
+import Hledupt.Data.LedgerReport (LedgerReport (..), todoPosting)
 import Hledupt.Data.MyDecimal (MyDecimal (unMyDecimal))
 import Relude
 import Relude.Unsafe (fromJust)
@@ -191,11 +189,6 @@ rawTransactionToTransaction (RawTransaction date Buy _ _ _ _ _ _ _) =
       undefined
       undefined
       undefined
-
-todoPosting :: Ledger.Posting
-todoPosting =
-  Ledger.post "Todo" missingamt
-    & set pStatus Pending
 
 finpensionTransactionToLedgerTransaction :: Transaction -> Ledger.Transaction
 finpensionTransactionToLedgerTransaction (TrDeposit depositTr) =
