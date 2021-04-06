@@ -8,6 +8,7 @@ module Hledupt.Finpension (
 
 import Control.Lens (each, over, set)
 import qualified Control.Lens as L
+import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Csv as CSV
 import Data.Currency (Alpha)
 import Data.Decimal (Decimal)
@@ -273,8 +274,11 @@ rawTransactionToLedgerTransaction rawTr = do
 
 transactionsToLedger :: CsvFile LByteString -> Either Text LedgerReport
 transactionsToLedger csv = do
-  rawTrs <- sortChronologically <$> rawTransactionsP csv
+  let bomLessCsv = dropBom <$> csv
+  rawTrs <- sortChronologically <$> rawTransactionsP bomLessCsv
   trs <- sequence $ rawTransactionToLedgerTransaction <$> rawTrs
   return $ LedgerReport trs []
  where
   sortChronologically = reverse
+  dropBom :: LByteString -> LByteString
+  dropBom = LBS.drop 3

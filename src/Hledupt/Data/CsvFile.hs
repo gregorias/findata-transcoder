@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveFunctor #-}
+
 -- | A wrapper type to indicate that a string
 -- is a CSV file.
 module Hledupt.Data.CsvFile (
@@ -15,3 +17,4 @@ newtype CsvFile a = CsvFile
     , Show
     , Eq
     )
+  deriving stock (Functor)
