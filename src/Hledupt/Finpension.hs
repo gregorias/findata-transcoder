@@ -17,6 +17,7 @@ import qualified Data.Vector as V
 import Hledger (
   AmountPrice (UnitPrice),
   Status (Cleared),
+  amountSetFullPrecision,
   balassert,
  )
 import qualified Hledger as Ledger
@@ -239,11 +240,14 @@ finpensionTransactionToLedgerTransaction (TrBuy buyTr) = do
   let fundPosting =
         Ledger.post
           (fundAccount shortName)
-          ( (HDE.makeCommodityAmount (toText $ unIsin isin) . btNumberOfShares $ buyTr)
+          ( ( (HDE.makeCommodityAmount (toText $ unIsin isin) . btNumberOfShares $ buyTr)
+                & amountSetFullPrecision
+            )
               & L.set
                 aAmountPrice
                 ( Just . UnitPrice $
                     HDE.makeCurrencyAmount CHF (btAssetPriceInChf buyTr)
+                      & amountSetFullPrecision
                 )
           )
   return $
@@ -254,10 +258,16 @@ finpensionTransactionToLedgerTransaction (TrBuy buyTr) = do
   cashPosting =
     Ledger.post
       cashAccount
-      (HDE.makeCurrencyAmount CHF . btCashFlow $ buyTr)
+      ( (HDE.makeCurrencyAmount CHF . btCashFlow $ buyTr)
+          & amountSetFullPrecision
+      )
       & set
         pBalanceAssertion
-        (balassert . HDE.makeCurrencyAmount CHF . btBalance $ buyTr)
+        ( balassert
+            ( (HDE.makeCurrencyAmount CHF . btBalance $ buyTr)
+                & amountSetFullPrecision
+            )
+        )
 
 rawTransactionToLedgerTransaction :: RawTransaction -> Either Text Ledger.Transaction
 rawTransactionToLedgerTransaction rawTr = do
