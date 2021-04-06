@@ -5,7 +5,7 @@ module Test.Hledupt.Degiro.AccountStatement (
   tests,
 ) where
 
-import qualified Data.Text as Text
+import qualified Data.Text as T
 import Data.Time (fromGregorian)
 import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
@@ -222,7 +222,7 @@ csvRecordsToLedgerTests = do
         Right _ -> False
         Left errMsg ->
           ( "Could not process all elements.\n"
-              `Text.isInfixOf` errMsg
+              `T.isInfixOf` errMsg
                 && "One remaining row's description: Bogus description"
-              `Text.isInfixOf` errMsg
+              `T.isInfixOf` errMsg
           )

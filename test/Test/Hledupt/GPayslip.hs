@@ -4,7 +4,6 @@ module Test.Hledupt.GPayslip (
   tests,
 ) where
 
-import qualified Data.Text.IO as Text
 import Data.Time (fromGregorian)
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.GPayslip (
@@ -24,7 +23,7 @@ tests = do
   describe "Hledupt.GPayslip" $ do
     describe "parsePayslip" $ do
       it "Parses a valid payslip 0" $ do
-        gpayslip <- Text.readFile "test/data/gpayslip0.txt"
+        gpayslip <- readFileText "test/data/gpayslip0.txt"
         let parsedPayslip = parsePayslip gpayslip
         parsedPayslip
           `shouldBe` Right
@@ -47,7 +46,7 @@ tests = do
             )
 
       it "Parses a valid payslip 1" $ do
-        gpayslip <- Text.readFile "test/data/gpayslip1.txt"
+        gpayslip <- readFileText "test/data/gpayslip1.txt"
         let parsedPayslip = parsePayslip gpayslip
         parsedPayslip
           `shouldBe` Right
@@ -70,7 +69,7 @@ tests = do
             )
 
       it "Parses a valid payslip 2" $ do
-        gpayslip <- Text.readFile "test/data/gpayslip2.txt"
+        gpayslip <- readFileText "test/data/gpayslip2.txt"
         let parsedPayslip = parsePayslip gpayslip
         parsedPayslip
           `shouldBe` Right
@@ -93,7 +92,7 @@ tests = do
             )
 
       it "Parses a valid payslip 3" $ do
-        gpayslip <- Text.readFile "test/data/gpayslip3.txt"
+        gpayslip <- readFileText "test/data/gpayslip3.txt"
         let parsedPayslip = parsePayslip gpayslip
         parsedPayslip
           `shouldBe` Right
@@ -116,7 +115,7 @@ tests = do
             )
 
       it "Parses a valid payslip 4" $ do
-        gpayslip <- Text.readFile "test/data/gpayslip4.txt"
+        gpayslip <- readFileText "test/data/gpayslip4.txt"
         let parsedPayslip = parsePayslip gpayslip
         parsedPayslip
           `shouldBe` Right
