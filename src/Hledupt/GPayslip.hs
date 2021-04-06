@@ -18,7 +18,7 @@ import Data.Time.Calendar (toGregorian)
 import Hledger (Status (Cleared, Pending), Transaction, missingamt, post, transaction)
 import Hledger.Data.Extra (makeCurrencyAmount)
 import Hledger.Data.Lens (pMaybeAmount, pStatus, tDescription)
-import Hledupt.Data.Currency (Currency (CHF))
+import Hledupt.Data.Currency (chf)
 import Hledupt.Data.LedgerReport (LedgerReport (..))
 import Hledupt.Data.MyDecimal (
   ChunkSepFormat (ChunkSep, NoChunkSep),
@@ -276,26 +276,26 @@ payslipToTransaction
       day
       ( [ post bankAccount missingamt
             & L.set pStatus Pending
-              . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF mainTotal)
+              . L.set pMaybeAmount (Just $ makeCurrencyAmount chf mainTotal)
         , post "Income:Google" missingamt
             & L.set pStatus Cleared
-              . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF (- salaryTotal))
+              . L.set pMaybeAmount (Just $ makeCurrencyAmount chf (- salaryTotal))
         , post (statePrefix <> "Mandatory Contributions:Social Security") missingamt
             & L.set pStatus Cleared
-              . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF socialSecurity)
+              . L.set pMaybeAmount (Just $ makeCurrencyAmount chf socialSecurity)
         , post (statePrefix <> "Mandatory Contributions:Unemployment Insurance") missingamt
             & L.set pStatus Cleared
-              . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF unemploymentInsurance)
+              . L.set pMaybeAmount (Just $ makeCurrencyAmount chf unemploymentInsurance)
         , post (statePrefix <> "Withholding Tax:Total") missingamt
             & L.set pStatus Cleared
-              . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF taxAtSource)
+              . L.set pMaybeAmount (Just $ makeCurrencyAmount chf taxAtSource)
         ]
           ++ maybe
             []
             ( \pensionFund ->
                 [ post secondPillarAccount missingamt
                     & L.set pStatus Cleared
-                      . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF pensionFund)
+                      . L.set pMaybeAmount (Just $ makeCurrencyAmount chf pensionFund)
                 ]
             )
             maybePensionFund
@@ -304,7 +304,7 @@ payslipToTransaction
             ( \deductionNetAmount ->
                 [ post "Equity:Google Deduction Net Amount" missingamt
                     & L.set pStatus Cleared
-                      . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF deductionNetAmount)
+                      . L.set pMaybeAmount (Just $ makeCurrencyAmount chf deductionNetAmount)
                 ]
             )
             maybeDeductionNetAmount
@@ -313,7 +313,7 @@ payslipToTransaction
             ( \mssbCs ->
                 [ post "Equity:MssbCs Withholding" missingamt
                     & L.set pStatus Cleared
-                      . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF mssbCs)
+                      . L.set pMaybeAmount (Just $ makeCurrencyAmount chf mssbCs)
                 ]
             )
             maybeMssbCsWithholding
@@ -322,7 +322,7 @@ payslipToTransaction
             ( \ggive ->
                 [ post "Expenses:Other" missingamt
                     & L.set pStatus Cleared
-                      . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF ggive)
+                      . L.set pMaybeAmount (Just $ makeCurrencyAmount chf ggive)
                 ]
             )
             maybeGgive
@@ -331,7 +331,7 @@ payslipToTransaction
             ( \gcard ->
                 [ post "Assets:Debts:Google" missingamt
                     & L.set pStatus Cleared
-                      . L.set pMaybeAmount (Just $ makeCurrencyAmount CHF gcard)
+                      . L.set pMaybeAmount (Just $ makeCurrencyAmount chf gcard)
                 ]
             )
             maybeGcard

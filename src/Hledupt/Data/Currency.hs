@@ -1,22 +1,28 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
+-- | This module extends 'Alpha'.
 module Hledupt.Data.Currency (
   Currency (..),
   currencyP,
+  chf,
+  eur,
+  pln,
+  usd,
 ) where
 
 import Control.Applicative.Combinators (count)
 import qualified Data.Csv as Csv
+import Data.Currency (Alpha (CHF, EUR, PLN, USD))
 import Relude
 import Relude.Extra (inverseMap)
 import Text.Megaparsec (MonadParsec)
 import Text.Megaparsec.Char (letterChar)
 import Text.Megaparsec.Stream (Stream (Token))
 
--- | 'Currency' represents currencies I'm interested in.
-data Currency = CHF | EUR | PLN | USD
-  deriving stock (Bounded, Eq, Enum, Ord, Read, Show)
+-- | 'Currency' wraps 'Alpha' to provide additional instances and custom parsers.
+newtype Currency = Currency Alpha
+  deriving newtype (Bounded, Eq, Enum, Ord, Read, Show, NFData)
 
 parseCurrency :: Text -> Maybe Currency
 parseCurrency = inverseMap show
@@ -36,3 +42,15 @@ currencyP ::
 currencyP = do
   Just cur <- parseCurrency . toText <$> count 3 letterChar
   return cur
+
+chf :: Currency
+chf = Currency CHF
+
+eur :: Currency
+eur = Currency EUR
+
+pln :: Currency
+pln = Currency PLN
+
+usd :: Currency
+usd = Currency USD

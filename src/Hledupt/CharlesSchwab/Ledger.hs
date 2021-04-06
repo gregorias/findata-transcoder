@@ -25,7 +25,7 @@ import Hledupt.CharlesSchwab.Csv (
   DollarAmount (..),
   csAction,
  )
-import Hledupt.Data.Currency (Currency (USD))
+import Hledupt.Data.Currency (usd)
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport), todoPosting)
 import Relude
 
@@ -60,7 +60,7 @@ wireTransactionToLedgerTransaction (WireTransaction day (DollarAmount amount)) =
     day
     [ post usdAccount missingamt
         & L.set pStatus Cleared
-          . L.set pMaybeAmount (Just $ makeCurrencyAmount USD amount)
+          . L.set pMaybeAmount (Just $ makeCurrencyAmount usd amount)
     , todoPosting
     ]
     & L.set tDescription wireFundsAction
@@ -76,7 +76,7 @@ creditInterestToLedgerTransaction rec = do
     transaction
       (csDate rec)
       [ post usdAccount missingamt
-          & L.set pMaybeAmount (Just $ makeCurrencyAmount USD amount)
+          & L.set pMaybeAmount (Just $ makeCurrencyAmount usd amount)
       , post "Income:Google" missingamt
       ]
       & L.set tDescription (csAction rec)
@@ -129,9 +129,9 @@ saleToLedgerTransaction rec = do
                 )
           )
       , post usdAccount missingamt
-          & L.set pMaybeAmount (Just $ makeCurrencyAmount USD amount)
+          & L.set pMaybeAmount (Just $ makeCurrencyAmount usd amount)
       , post "Expenses:Financial Services" missingamt
-          & L.set pMaybeAmount (Just $ makeCurrencyAmount USD fee)
+          & L.set pMaybeAmount (Just $ makeCurrencyAmount usd fee)
       ]
       & L.set tDescription (symbol <> " Sale")
         . L.set tStatus Cleared
@@ -146,7 +146,7 @@ taxToLedgerTransaction rec = do
       (csDate rec)
       [ post
           usdAccount
-          ( makeCurrencyAmount USD (- amount)
+          ( makeCurrencyAmount usd (- amount)
           )
       , post "Taxes" missingamt
       ]

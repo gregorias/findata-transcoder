@@ -38,7 +38,7 @@ import Hledger.Data.Transaction (transaction)
 import Hledger.Data.Types (
   Transaction (..),
  )
-import Hledupt.Data.Currency (Currency (CHF, USD))
+import Hledupt.Data.Currency (Currency, chf, usd)
 import Hledupt.Data.LedgerReport (LedgerReport (..), todoPosting)
 import Hledupt.Ib.Csv (
   ActivityStatement (..),
@@ -192,11 +192,11 @@ dividendToTransaction
       , post whTaxTitle missingamt
           & L.set
             pMaybeAmount
-            (Just $ makeCurrencyAmount USD (- taxAmt))
+            (Just $ makeCurrencyAmount usd (- taxAmt))
       , post "Income:Capital Gains" missingamt
           & L.set
             pMaybeAmount
-            (Just $ makeCurrencyAmount USD (- divAmt))
+            (Just $ makeCurrencyAmount usd (- divAmt))
       ]
       & L.set tDescription title
         . L.set tStatus Cleared
@@ -216,15 +216,15 @@ stockTradeToTransaction (StockTrade date sym q amount fee) =
         & L.set
           pMaybeAmount
           (Just $ makeCommodityAmount (toText sym) (fromRational $ q % 1))
-    , post (cashAccountName USD) missingamt
+    , post (cashAccountName usd) missingamt
         & L.set
           pMaybeAmount
-          (Just $ makeCurrencyAmount USD amount)
-    , post (cashAccountName USD) (makeCurrencyAmount USD fee)
+          (Just $ makeCurrencyAmount usd amount)
+    , post (cashAccountName usd) (makeCurrencyAmount usd fee)
     , post "Expenses:Financial Services" missingamt
         & L.set
           pMaybeAmount
-          (Just $ makeCurrencyAmount USD (- fee))
+          (Just $ makeCurrencyAmount usd (- fee))
     ]
     & L.set tDescription (toText sym <> " trade")
       . L.set tStatus Cleared
@@ -255,8 +255,8 @@ forexTradeToTransaction
                 )
           )
       , post (cashAccountName quote) (makeCurrencyAmount quote totalCost)
-      , post (cashAccountName CHF) (makeCurrencyAmount CHF fee)
-      , post "Expenses:Financial Services" (makeCurrencyAmount CHF (- fee))
+      , post (cashAccountName chf) (makeCurrencyAmount chf fee)
+      , post "Expenses:Financial Services" (makeCurrencyAmount chf (- fee))
       ]
       & L.set tDescription (show base <> "." <> show quote)
         . L.set tStatus Cleared

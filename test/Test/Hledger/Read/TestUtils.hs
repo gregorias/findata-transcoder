@@ -33,7 +33,7 @@ import Hledger.Read.TestUtils (
   postingP,
   transactionP,
  )
-import Hledupt.Data.Currency (Currency (..))
+import Hledupt.Data.Currency (usd)
 import Relude
 import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
@@ -160,7 +160,7 @@ tests = do
             expectedPosting =
               post
                 "Assets:Bank"
-                ( (makeCurrencyAmount USD 100)
+                ( (makeCurrencyAmount usd 100)
                     { aprice =
                         Just . UnitPrice $
                           makeCommodityAmount "CHF" 0.9513

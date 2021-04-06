@@ -8,7 +8,7 @@ module Test.Hledupt.Degiro.Csv (
 import Data.Time (fromGregorian)
 import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
 import Hledupt.Data.Cash (Cash (Cash))
-import Hledupt.Data.Currency (Currency (..))
+import Hledupt.Data.Currency (chf, eur)
 import Hledupt.Data.Isin (mkIsin)
 import Hledupt.Degiro.Csv (
   DegiroCsvRecord (..),
@@ -41,8 +41,8 @@ tests = do
                 (Just nlIsin)
                 "Cash Market fund price change (CHF)"
                 Nothing
-                (Just $ Cash CHF (-0.01))
-                (Cash CHF 131.23)
+                (Just $ Cash chf (-0.01))
+                (Cash chf 131.23)
                 ""
             , DegiroCsvRecord
                 (fromGregorian 2020 9 2)
@@ -53,7 +53,7 @@ tests = do
                 "Cash Market fund conversion: Sell 123.5678 at 0.981 CHF"
                 Nothing
                 Nothing
-                (Cash CHF 131.72)
+                (Cash chf 131.72)
                 ""
             , DegiroCsvRecord
                 (fromGregorian 2020 9 2)
@@ -63,8 +63,8 @@ tests = do
                 Nothing
                 "FX Debit"
                 Nothing
-                (Just $ Cash CHF 0.01)
-                (Cash CHF 131.72)
+                (Just $ Cash chf 0.01)
+                (Cash chf 131.72)
                 ""
             , DegiroCsvRecord
                 (fromGregorian 2020 9 2)
@@ -74,8 +74,8 @@ tests = do
                 Nothing
                 "FX Debit"
                 (Just 0.9241)
-                (Just $ Cash EUR (-0.01))
-                (Cash EUR 0)
+                (Just $ Cash eur (-0.01))
+                (Cash eur 0)
                 ""
             , DegiroCsvRecord
                 (fromGregorian 2020 1 28)
@@ -85,7 +85,7 @@ tests = do
                 Nothing
                 "Deposit"
                 Nothing
-                (Just $ Cash CHF 2500)
-                (Cash CHF 2520.92)
+                (Just $ Cash chf 2500)
+                (Cash chf 2520.92)
                 ""
             ]

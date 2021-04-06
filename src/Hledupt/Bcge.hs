@@ -39,7 +39,7 @@ import Hledger.Data.Types (
  )
 import qualified Hledupt.Bcge.Hint as Hint
 import Hledupt.Data.Cash (Cash (Cash), cashAmount)
-import Hledupt.Data.Currency (Currency (CHF))
+import Hledupt.Data.Currency (chf)
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Hledupt.Data.MyDecimal (ChunkSepFormat (NoChunkSep), cashDecimalFormat, decimalP)
 import Relude
@@ -80,7 +80,7 @@ bcgeCsvParser = many bcgeCsvLineParser
 saldoParser :: BcgeParser Cash
 saldoParser = do
   void $ string "Saldo: CHF "
-  Cash CHF <$> bcgeCashP
+  Cash chf <$> bcgeCashP
 
 parseStatementDate :: String -> Maybe Day
 parseStatementDate = parseTimeM True defaultTimeLocale "%d.%m.%Y"
@@ -165,12 +165,12 @@ bcgeTransactionToLedger maybeConfig (BcgeTransaction date title amount) =
   bcgePosting =
     Hledger.post
       "Assets:Liquid:BCGE"
-      (HDE.makeCurrencyAmount CHF amount)
+      (HDE.makeCurrencyAmount chf amount)
   counterAccount = maybe "Expenses:Other" Hint.counterAccount maybeHint
   counterPosting =
     Hledger.post
       (toText counterAccount)
-      (HDE.makeCurrencyAmount CHF $ negate amount)
+      (HDE.makeCurrencyAmount chf $ negate amount)
 
 saldoToLedger :: Day -> Decimal -> Transaction
 saldoToLedger date balance =
@@ -181,7 +181,7 @@ saldoToLedger date balance =
   balancePosting =
     nullposting
       & set pAccount bcgeAccount
-        . set pBalanceAssertion (balassert . HDE.makeCurrencyAmount CHF $ balance)
+        . set pBalanceAssertion (balassert . HDE.makeCurrencyAmount chf $ balance)
 
 bStToLedger :: Maybe Hint.Config -> BcgeStatement -> [Transaction]
 bStToLedger config (BcgeStatement date balance trs) = execWriter collectTrs

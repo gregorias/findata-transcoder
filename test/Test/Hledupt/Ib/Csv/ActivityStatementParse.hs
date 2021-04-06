@@ -7,7 +7,7 @@ module Test.Hledupt.Ib.Csv.ActivityStatementParse (tests) where
 
 import Data.Ratio ((%))
 import Data.Time (fromGregorian)
-import Hledupt.Data.Currency (Currency (..))
+import Hledupt.Data.Currency (chf, pln, usd)
 import Hledupt.Ib.Csv.ActivityStatementParse
 import Hledupt.Ib.Csv.RawParse
 import Relude
@@ -122,8 +122,8 @@ tests = do
             ( ActivityStatement
                 { asLastStatementDay = fromGregorian 2020 12 4
                 , asCashPositions =
-                    [ EndingCash CHF (fromRational $ 1000011 % 10000)
-                    , EndingCash USD (fromRational $ 606 % 100)
+                    [ EndingCash chf (fromRational $ 1000011 % 10000)
+                    , EndingCash usd (fromRational $ 606 % 100)
                     ]
                 , asStockPositions =
                     [ StockPosition "VOO" 7 (fromRational $ 33655 % 100)
@@ -131,7 +131,7 @@ tests = do
                 , asCashMovements =
                     [ CashMovement
                         (fromGregorian 2020 1 20)
-                        CHF
+                        chf
                         (fromRational (10032 % 100))
                     ]
                 , asStockTrades =
@@ -140,14 +140,14 @@ tests = do
                 , asForexTrades =
                     [ ForexTrade
                         (fromGregorian 2020 1 15)
-                        (QuotePair (BaseCurrency USD) (QuoteCurrency CHF))
+                        (QuotePair (BaseCurrency usd) (QuoteCurrency chf))
                         (-2000000)
                         (fromRational $ 96358 % 100000)
                         (fromRational $ 200000076 % 100)
                         (fromRational $ - (193502 % 100000))
                     , ForexTrade
                         (fromGregorian 2021 2 3)
-                        (QuotePair (BaseCurrency CHF) (QuoteCurrency PLN))
+                        (QuotePair (BaseCurrency chf) (QuoteCurrency pln))
                         0.4313
                         (fromRational $ 414715 % 100000)
                         (fromRational $ -1788665795 % 1000000000)

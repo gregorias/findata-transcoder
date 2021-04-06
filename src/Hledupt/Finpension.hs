@@ -29,7 +29,7 @@ import Hledger.Data.Lens (
   tStatus,
  )
 import Hledupt.Data.CsvFile (CsvFile (..))
-import Hledupt.Data.Currency (Currency (CHF))
+import Hledupt.Data.Currency (chf)
 import Hledupt.Data.Isin (Isin (unIsin), mkIsin)
 import Hledupt.Data.LedgerReport (LedgerReport (..), todoPosting)
 import Hledupt.Data.MyDecimal (MyDecimal (unMyDecimal))
@@ -223,10 +223,10 @@ finpensionTransactionToLedgerTransaction (TrDeposit depositTr) =
   depositPosting =
     Ledger.post
       cashAccount
-      (HDE.makeCurrencyAmount CHF . dtCashFlow $ depositTr)
+      (HDE.makeCurrencyAmount chf . dtCashFlow $ depositTr)
       & set
         pBalanceAssertion
-        (balassert . HDE.makeCurrencyAmount CHF . dtBalance $ depositTr)
+        (balassert . HDE.makeCurrencyAmount chf . dtBalance $ depositTr)
 finpensionTransactionToLedgerTransaction (TrBuy buyTr) = do
   let finpensionName = btAssetName buyTr
   (Fund _ isin shortName) <-
@@ -246,7 +246,7 @@ finpensionTransactionToLedgerTransaction (TrBuy buyTr) = do
               & L.set
                 aAmountPrice
                 ( Just . UnitPrice $
-                    HDE.makeCurrencyAmount CHF (btAssetPriceInChf buyTr)
+                    HDE.makeCurrencyAmount chf (btAssetPriceInChf buyTr)
                       & amountSetFullPrecision
                 )
           )
@@ -258,13 +258,13 @@ finpensionTransactionToLedgerTransaction (TrBuy buyTr) = do
   cashPosting =
     Ledger.post
       cashAccount
-      ( (HDE.makeCurrencyAmount CHF . btCashFlow $ buyTr)
+      ( (HDE.makeCurrencyAmount chf . btCashFlow $ buyTr)
           & amountSetFullPrecision
       )
       & set
         pBalanceAssertion
         ( balassert
-            ( (HDE.makeCurrencyAmount CHF . btBalance $ buyTr)
+            ( (HDE.makeCurrencyAmount chf . btBalance $ buyTr)
                 & amountSetFullPrecision
             )
         )

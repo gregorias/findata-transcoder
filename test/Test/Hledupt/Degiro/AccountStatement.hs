@@ -10,7 +10,7 @@ import Data.Time (fromGregorian)
 import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.Data.Cash (Cash (Cash))
-import Hledupt.Data.Currency (Currency (..))
+import Hledupt.Data.Currency (chf, eur)
 import Hledupt.Data.Isin (mkIsin)
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Hledupt.Degiro.AccountStatement (csvRecordsToLedger)
@@ -44,7 +44,7 @@ csvRecordsToLedgerTests = do
           "Money Market fund conversion: Sell 123.5678 at 0.981 CHF"
           Nothing
           Nothing
-          (Cash CHF 131.72)
+          (Cash chf 131.72)
           ""
       ]
       `shouldBe` Right (LedgerReport [] [])
@@ -59,8 +59,8 @@ csvRecordsToLedgerTests = do
           Nothing
           "Deposit"
           Nothing
-          (Just $ Cash CHF 5)
-          (Cash CHF 5.05)
+          (Just $ Cash chf 5)
+          (Cash chf 5.05)
           ""
       ]
       `shouldBe` Right
@@ -83,8 +83,8 @@ csvRecordsToLedgerTests = do
           Nothing
           "DEGIRO Exchange Connection Fee 2020 (Euronext Amsterdam - EAM)"
           Nothing
-          (Just $ Cash EUR $ -2.50)
-          (Cash EUR $ -2.50)
+          (Just $ Cash eur $ -2.50)
+          (Cash eur $ -2.50)
           ""
       ]
       `shouldBe` Right
@@ -215,7 +215,7 @@ csvRecordsToLedgerTests = do
           "Bogus description"
           Nothing
           Nothing
-          (Cash CHF 0)
+          (Cash chf 0)
           ""
       ]
       `shouldSatisfy` \case
