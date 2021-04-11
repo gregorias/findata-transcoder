@@ -10,6 +10,7 @@ import qualified Test.Hledupt.Bcge
 import qualified Test.Hledupt.Bcge.Hint as BcgeHint
 import qualified Test.Hledupt.CharlesSchwab.Csv
 import qualified Test.Hledupt.CharlesSchwab.Ledger
+import qualified Test.Hledupt.Coop
 import qualified Test.Hledupt.Data.LedgerReport
 import qualified Test.Hledupt.Data.MyDecimal
 import qualified Test.Hledupt.Degiro.AccountStatement
@@ -40,6 +41,7 @@ tests = do
   Test.Hledupt.Bcge.tests
   Test.Hledupt.CharlesSchwab.Csv.tests
   Test.Hledupt.CharlesSchwab.Ledger.tests
+  Test.Hledupt.Coop.tests
   Test.Hledupt.Data.LedgerReport.tests
   Test.Hledupt.Data.MyDecimal.tests
   Test.Hledupt.Degiro.AccountStatement.tests

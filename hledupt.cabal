@@ -33,6 +33,7 @@ library
       Hledupt.CharlesSchwab
       Hledupt.CharlesSchwab.Csv
       Hledupt.CharlesSchwab.Ledger
+      Hledupt.Coop
       Hledupt.Data.Cash
       Hledupt.Data.CsvFile
       Hledupt.Data.Currency
@@ -114,6 +115,7 @@ test-suite hledupt-test
       Test.Hledupt.Bcge.Hint
       Test.Hledupt.CharlesSchwab.Csv
       Test.Hledupt.CharlesSchwab.Ledger
+      Test.Hledupt.Coop
       Test.Hledupt.Data.LedgerReport
       Test.Hledupt.Data.MyDecimal
       Test.Hledupt.Degiro.AccountStatement

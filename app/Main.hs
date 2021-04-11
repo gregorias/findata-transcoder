@@ -25,6 +25,7 @@ import Data.Version (makeVersion)
 import Hledupt.Bcge (bcgeCsvToLedger)
 import qualified Hledupt.Bcge.Hint as BcgeHint
 import qualified Hledupt.CharlesSchwab as CharlesSchwab (csvToLedger)
+import qualified Hledupt.Coop as Coop
 import Hledupt.Data.CsvFile (CsvFile (..))
 import Hledupt.Data.LedgerReport (
   LedgerReport,
@@ -118,7 +119,16 @@ parseGPayslip = do
     Left err -> do
       Text.hPutStr stderr err
       exitFailure
-    Right output -> Text.putStr . showLedgerReport $ output
+    Right output -> putText . showLedgerReport $ output
+
+parseCoop :: IO ()
+parseCoop = do
+  receipt <- Text.getContents
+  case Coop.receiptToLedger receipt of
+    Left err -> do
+      Text.hPutStr stderr err
+      exitFailure
+    Right output -> putText . showLedgerReport $ output
 
 ignoreAction :: r -> OptionDesc r ()
 ignoreAction r = action $ const @_ @(Flag Bool -> Bool) r
@@ -132,6 +142,9 @@ main = defaultMain $ do
     description "Parses BCGE's CSV file and outputs ledupt data"
     hintsFileFlag <- flagParam (FlagLong hintsFileFlagName) (FlagOptional Nothing (fmap Just . filenameParser))
     parseBcgeAction hintsFileFlag
+  command "parse-coop" $ do
+    description "Parses a text dump from a Coop receipt and outputs Ledger data"
+    ignoreAction parseCoop
   command "parse-cs" $ do
     description "Parses Charles Schwabs' CSV and outputs Ledger data"
     ignoreAction parseCharlesSchwab
