@@ -11,7 +11,7 @@ import Hledupt.GPayslip (
   Payslip (..),
   PayslipLedgerConfig (PayslipLedgerConfig),
   parsePayslip,
-  payslipToTransaction,
+  payslipToLedger,
  )
 import Relude
 import Test.Hspec (describe, it)
@@ -157,7 +157,7 @@ tests = do
                     }
                 )
                 11234.65
-        payslipToTransaction config payslip
+        payslipToLedger config payslip
           `shouldBe` parseTransactionUnsafe
             "2020/01/24 Google Salary\n\
             \  ! Bank  11234.65 CHF\n\
@@ -190,7 +190,7 @@ tests = do
                     }
                 )
                 11234.65
-        payslipToTransaction config payslip
+        payslipToLedger config payslip
           `shouldBe` parseTransactionUnsafe
             "2020/01/24 Google Salary\n\
             \  ! Bank  11234.65 CHF\n\

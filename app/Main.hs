@@ -28,7 +28,7 @@ import qualified Hledupt.CharlesSchwab as CharlesSchwab (csvToLedger)
 import qualified Hledupt.Coop as Coop
 import Hledupt.Data.CsvFile (CsvFile (..))
 import Hledupt.Data.LedgerReport (
-  LedgerReport,
+  LedgerReport (..),
   showLedgerReport,
  )
 import qualified Hledupt.Degiro.AccountStatement as DegiroAccount (
@@ -119,7 +119,7 @@ parseGPayslip = do
     Left err -> do
       Text.hPutStr stderr err
       exitFailure
-    Right output -> putText . showLedgerReport $ output
+    Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
 
 parseCoop :: IO ()
 parseCoop = do
@@ -158,7 +158,7 @@ main = defaultMain $ do
     description "Parses Finpensions' transaction CSV and outputs Ledger data"
     ignoreAction parseFinpensionTransactions
   command "parse-gpayslip" $ do
-    description "Parses a text dump from a Google Payslip and outputs ledupt data"
+    description "Parses a text dump from a Google Payslip and outputs Ledger data"
     ignoreAction parseGPayslip
   command "parse-ib-activity" $ do
     description "Parses IB's Activity Statement file and outputs a ledger"

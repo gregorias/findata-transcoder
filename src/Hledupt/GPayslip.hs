@@ -2,12 +2,12 @@
 
 -- | This module parses a text dump from a Google Payslip and outputs a ledger.
 module Hledupt.GPayslip (
+  parsePayslip,
+  payslipToLedger,
   payslipTextToLedger,
   Payslip (..),
   Deductions (..),
   PayslipLedgerConfig (..),
-  parsePayslip,
-  payslipToTransaction,
 ) where
 
 import Control.Lens ((%~), (^.))
@@ -19,7 +19,6 @@ import Hledger (Status (Cleared, Pending), Transaction, missingamt, post, transa
 import Hledger.Data.Extra (makeCurrencyAmount)
 import Hledger.Data.Lens (pMaybeAmount, pStatus, tDescription)
 import Hledupt.Data.Currency (chf)
-import Hledupt.Data.LedgerReport (LedgerReport (..))
 import Hledupt.Data.MyDecimal (
   ChunkSepFormat (ChunkSep, NoChunkSep),
   DecimalFormat (..),
@@ -253,8 +252,8 @@ parsePayslip payslip = prepareErrMsg parsedPayslip
     prependErrorMessage "Could not parse the payslip."
       . first (toText . errorBundlePretty)
 
-payslipToTransaction :: PayslipLedgerConfig -> Payslip -> Transaction
-payslipToTransaction
+payslipToLedger :: PayslipLedgerConfig -> Payslip -> Transaction
+payslipToLedger
   (PayslipLedgerConfig bankAccount secondPillarAccount)
   ( Payslip
       day
@@ -341,15 +340,9 @@ payslipToTransaction
     year :: Integer = toGregorian day ^. L._1
     statePrefix = "State:" <> show year <> ":"
 
-payslipToLedger :: PayslipLedgerConfig -> Payslip -> LedgerReport
-payslipToLedger payslipLedgerConfig payslip =
-  LedgerReport
-    [payslipToTransaction payslipLedgerConfig payslip]
-    []
-
 -- | Transforms text extracted from a Google payslip's PDF into a
 -- 'LedgerReport'.
-payslipTextToLedger :: Text -> Either Text LedgerReport
+payslipTextToLedger :: Text -> Either Text Transaction
 payslipTextToLedger payslipText = do
   payslip <- parsePayslip payslipText
   return $ payslipToLedger defaultPayslipLedgerConfig payslip
