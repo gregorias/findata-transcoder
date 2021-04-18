@@ -123,6 +123,7 @@ entryNameToExpenseCategory entry =
  where
   itemToExpenseCategoryPairs =
     [ ([regex|Stimorol|], "Groceries:Chewing Gum")
+    , ([regex|Salmon Poké|], "Groceries:Ready Meals")
     ]
 
 prependErrorMessage :: Text -> Either Text a -> Either Text a

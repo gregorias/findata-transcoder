@@ -24,3 +24,13 @@ tests = do
                 \  Expenses:Groceries:Chewing Gum  1.60 CHF\n\
                 \  Expenses:Groceries  4.50 CHF"
         Coop.receiptToLedger coop `shouldBe` Right expectedTr
+
+      it "correctlyAssignsCategories" $ do
+        coop <- readFileText "test/data/coop-cat.txt"
+        let expectedTr =
+              parseTransactionUnsafe
+                "2021/04/09 * Coop\n\
+                \  ! Assets:Liquid:BCGE  -0.02 CHF\n\
+                \  Expenses:Groceries:Chewing Gum  0.01 CHF\n\
+                \  Expenses:Groceries:Ready Meals  0.01 CHF"
+        Coop.receiptToLedger coop `shouldBe` Right expectedTr
