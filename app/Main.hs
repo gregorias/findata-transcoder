@@ -128,7 +128,7 @@ parseCoop = do
     Left err -> do
       Text.hPutStr stderr err
       exitFailure
-    Right output -> putText . showLedgerReport $ output
+    Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
 
 ignoreAction :: r -> OptionDesc r ()
 ignoreAction r = action $ const @_ @(Flag Bool -> Bool) r
