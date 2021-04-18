@@ -146,7 +146,7 @@ receiptToTransaction (Receipt day entries total) =
   bcgePosting =
     Ledger.post
       "Assets:Liquid:BCGE"
-      (HDE.makeCurrencyAmount chf total)
+      (HDE.makeCurrencyAmount chf (- total))
       & L.set pStatus Pending
   (catAndTotals :: [(Text, Decimal)]) =
     map

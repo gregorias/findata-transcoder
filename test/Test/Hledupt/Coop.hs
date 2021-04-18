@@ -20,7 +20,7 @@ tests = do
         let expectedTr =
               parseTransactionUnsafe
                 "2021/04/09 * Coop\n\
-                \  ! Assets:Liquid:BCGE  6.10 CHF\n\
+                \  ! Assets:Liquid:BCGE  -6.10 CHF\n\
                 \  Expenses:Groceries:Chewing Gum  1.60 CHF\n\
                 \  Expenses:Groceries  4.50 CHF"
         Coop.receiptToLedger coop `shouldBe` Right expectedTr
