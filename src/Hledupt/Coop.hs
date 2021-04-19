@@ -170,6 +170,7 @@ entryNameToExpenseCategory entry =
     , ([regex|Desinfektionstücher|], haushalt)
     , ([regex|Listerine|], "Gesundheit")
     , ([regex|Reinigung|], haushalt)
+    , ([regex|Compo-Bag|], haushalt)
     , ([regex|ZEISS|], haushalt)
     ]
 
