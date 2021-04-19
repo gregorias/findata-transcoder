@@ -164,6 +164,7 @@ entryNameToExpenseCategory entry =
     [ ([regex|Stimorol|], "Groceries:Chewing Gum")
     , ([regex|Salmon Poké|], readyMeals)
     , ([regex|ZENBU|], readyMeals)
+    , ([regex|Findus Egli|], readyMeals)
     , ([regex|WC Frisch|], haushalt)
     , ([regex|Schwamm|], haushalt)
     , ([regex|Desinfektionstücher|], haushalt)
