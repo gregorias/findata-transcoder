@@ -34,3 +34,14 @@ tests = do
                 \  Expenses:Groceries:Chewing Gum  0.01 CHF\n\
                 \  Expenses:Groceries:Ready Meals  0.01 CHF"
         Coop.receiptToLedger coop `shouldBe` Right expectedTr
+
+      it "correctlyHandlesARabatt" $ do
+        coop <- readFileText "test/data/coop-rabatt.txt"
+        let expectedTr =
+              parseTransactionUnsafe
+                "2021/04/09 * Coop\n\
+                \  ! Assets:Liquid:BCGE  -44.35 CHF\n\
+                \  Expenses:Haushalt       9.40 CHF\n\
+                \  Expenses:Groceries     37.35 CHF\n\
+                \  Expenses:Other         -2.40 CHF"
+        Coop.receiptToLedger coop `shouldBe` Right expectedTr

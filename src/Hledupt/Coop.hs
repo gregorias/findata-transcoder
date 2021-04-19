@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 module Hledupt.Coop (
   receiptToLedger,
@@ -9,7 +8,6 @@ module Hledupt.Coop (
 
 import Control.Lens (
   has,
-  lens,
   (^?),
  )
 import qualified Control.Lens as L
@@ -49,6 +47,7 @@ import Text.Megaparsec.Char (char, digitChar, newline, string)
 data Receipt = Receipt
   { _receiptDate :: !Day
   , _receiptEntries :: [Entry]
+  , _receiptRabatt :: !(Maybe Rabatt)
   , _receiptTotal :: !Decimal
   }
 
@@ -56,9 +55,6 @@ data Entry = Entry
   { _entryName :: !Text
   , _entryTotal :: !Decimal
   }
-
-entryName :: L.Lens' Entry Text
-entryName = lens _entryName (\entry name -> entry{_entryName = name})
 
 type Parser = Parsec Void Text
 
@@ -86,7 +82,8 @@ entryLineP = do
       return
       ( destructureMatchGroups
           =<< ( entryLine
-                  ^? [regex|(.*) (\d+) (\d+\.\d\d)( \d+\.\d\d)? (\d+\.\d\d) \d+|] . LR.groups
+                  ^? [regex|(.*) (\d+|\d+\.\d+) (\d+\.\d\d)( \d+\.\d\d)? (\d+\.\d\d)( \d+)?|]
+                    . LR.groups
               )
       )
   total <- case parseMaybe @Void (decimalP defaultDecimalFormat) totalText of
@@ -97,7 +94,34 @@ entryLineP = do
   destructureMatchGroups =
     \case
       [entryName', _menge, _preAktionTotal, _preis, total] -> Just (entryName', total)
+      [entryName', _menge, _preAktionTotal, _preis, total, _zusatz] -> Just (entryName', total)
       _ -> Nothing
+
+newtype Rabatt = Rabatt Decimal
+
+maybeRabattAndTotalP :: Parser (Maybe Rabatt, Decimal)
+maybeRabattAndTotalP = do
+  maybeRabatt <- optional (rabattLineP <* many newline)
+  total <- totalLineP
+  return (maybeRabatt, total)
+
+rabattLineP :: Parser Rabatt
+rabattLineP = do
+  void $ string "Rabatt "
+  rest :: Text <- anyLineP
+  let maybeRabatt = rest ^? [regex|.* (-\d+\.\d\d)|] . LR.groups
+  rabattText <-
+    maybe
+      (fail . toString $ "Could not parse the rabatt line: " <> rest)
+      ( \case
+          [rabattText] -> return rabattText
+          x -> (fail $ "Could not destructure the rabatt line: " <> show x)
+      )
+      maybeRabatt
+  total <- case parseMaybe @Void (decimalP defaultDecimalFormat) rabattText of
+    Nothing -> fail . toString $ "Could not parse the rabatt's total: " <> rabattText
+    Just t -> return t
+  return . Rabatt $ total
 
 totalLineP :: Parser Decimal
 totalLineP = do
@@ -108,11 +132,11 @@ receiptP :: Parser Receipt
 receiptP = do
   (_, day) <- manyTill_ anyLineP dateLineP
   void $ manyTill anyLineP headerLineP
-  (maybeEntries, total) <-
+  (maybeEntries, (maybeRabatt, total)) <-
     manyTill_
       ((newline >> return Nothing) <|> (Just <$> entryLineP))
-      totalLineP
-  return $ Receipt day (catMaybes maybeEntries) total
+      maybeRabattAndTotalP
+  return $ Receipt day (catMaybes maybeEntries) maybeRabatt total
 
 entryNameToExpenseCategory :: Text -> Text
 entryNameToExpenseCategory entry =
@@ -121,9 +145,12 @@ entryNameToExpenseCategory entry =
     ( listToMaybe (mapMaybe (\(rgx, cat) -> if has rgx entry then Just cat else Nothing) itemToExpenseCategoryPairs)
     )
  where
+  haushalt = "Haushalt"
   itemToExpenseCategoryPairs =
     [ ([regex|Stimorol|], "Groceries:Chewing Gum")
     , ([regex|Salmon Poké|], "Groceries:Ready Meals")
+    , ([regex|Schwamm|], haushalt)
+    , ([regex|Desinfektionstücher|], haushalt)
     ]
 
 prependErrorMessage :: Text -> Either Text a -> Either Text a
@@ -138,12 +165,12 @@ parseReceipt receipt = prepareErrMsg parsedReceipt
       . first (toText . errorBundlePretty)
 
 receiptToTransaction :: Receipt -> Transaction
-receiptToTransaction (Receipt day entries total) =
+receiptToTransaction (Receipt day entries rabatt total) =
   transaction day postings
     & L.set tDescription "Coop"
       . L.set tStatus Cleared
  where
-  postings = [bcgePosting] <> items
+  postings = [bcgePosting] <> items <> rabattPosting
   bcgePosting =
     Ledger.post
       "Assets:Liquid:BCGE"
@@ -163,6 +190,11 @@ receiptToTransaction (Receipt day entries total) =
             (HDE.makeCurrencyAmount chf total')
       )
       (HashMap.toList catToTotal)
+  rabattToPosting (Rabatt rabattVal) =
+    Ledger.post
+      "Expenses:Other"
+      (HDE.makeCurrencyAmount chf rabattVal)
+  rabattPosting = rabattToPosting <$> maybeToList rabatt
 
 receiptToLedger :: Text -> Either Text Transaction
 receiptToLedger receiptText = do
