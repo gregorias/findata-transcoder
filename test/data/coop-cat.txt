@@ -47,15 +47,17 @@ Stimorol Peppermint 14g 1 0.01 0.01 0
 
 ZENBU Salmon Poké 270G 1 0.01 0.01 0
 
-Total CHF 0.02
+WC Frisch Blau Kraft-Aktiv Ozean 50gr 1 0.01 0.01
 
-TWINT 0.02
+Total CHF 0.03
+
+TWINT 0.03
 
 COOP GENOSSENSCHAFT, CHE-116.311.185 MWST
 
 GR MWST% TOTAL MWST
 
-0 2.50 0.02 0.00
+0 2.50 0.03 0.00
 
 SUPERCARD NR.:  0000*****0000
 

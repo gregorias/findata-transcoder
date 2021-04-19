@@ -149,6 +149,7 @@ entryNameToExpenseCategory entry =
   itemToExpenseCategoryPairs =
     [ ([regex|Stimorol|], "Groceries:Chewing Gum")
     , ([regex|Salmon Poké|], "Groceries:Ready Meals")
+    , ([regex|WC Frisch|], haushalt)
     , ([regex|Schwamm|], haushalt)
     , ([regex|Desinfektionstücher|], haushalt)
     ]
