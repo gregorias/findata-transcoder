@@ -43,23 +43,33 @@ Pfäffikon SZ Etzels.
 
 Artikel Menge Preis Aktion Total Zusatz
 
-Stimorol Peppermint 14g 1 0.01 0.01 0
+ZENBU Nigiri & Maki 218G 1 14.95 14.95 0
 
-ZENBU Salmon Poké 270G 1 0.01 0.01 0
+Total CHF 14.95
 
-ZENBU Nigiri & Maki 218G 1 0.01 0.01 0
+Mastercard 14.95
 
-WC Frisch Blau Kraft-Aktiv Ozean 50gr 1 0.01 0.01
+Buchung
 
-Total CHF 0.04
+XXXXXX******YYYY
 
-TWINT 0.04
+13.04.2021
+
+#00000000*00000000/000000#
+
+Total-EFT CHF:
+
+Mastercard
+
+00:00
+
+14.95
 
 COOP GENOSSENSCHAFT, CHE-116.311.185 MWST
 
 GR MWST% TOTAL MWST
 
-0 2.50 0.04 0.00
+0 2.50 14.95 0.36
 
 SUPERCARD NR.:  0000*****0000
 

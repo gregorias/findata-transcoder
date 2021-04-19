@@ -49,12 +49,19 @@ data Receipt = Receipt
   , _receiptEntries :: [Entry]
   , _receiptRabatt :: !(Maybe Rabatt)
   , _receiptTotal :: !Decimal
+  , _receiptPaymentMethod :: !PaymentMethod
   }
 
 data Entry = Entry
   { _entryName :: !Text
   , _entryTotal :: !Decimal
   }
+
+data PaymentMethod = TWINT | Mastercard
+
+paymentMethodToAccount :: PaymentMethod -> Text
+paymentMethodToAccount TWINT = "Assets:Liquid:BCGE"
+paymentMethodToAccount Mastercard = "Assets:Liquid:BCGE CC"
 
 type Parser = Parsec Void Text
 
@@ -128,6 +135,11 @@ totalLineP = do
   void $ string "Total CHF "
   decimalP (DecimalFormat (ChunkSep '\'') (Just TwoDigitDecimalFraction))
 
+paymentMethodP :: Parser PaymentMethod
+paymentMethodP =
+  (string "TWINT" >> anyLineP >> return TWINT)
+    <|> (string "Mastercard" >> anyLineP >> return Mastercard)
+
 receiptP :: Parser Receipt
 receiptP = do
   (_, day) <- manyTill_ anyLineP dateLineP
@@ -136,7 +148,8 @@ receiptP = do
     manyTill_
       ((newline >> return Nothing) <|> (Just <$> entryLineP))
       maybeRabattAndTotalP
-  return $ Receipt day (catMaybes maybeEntries) maybeRabatt total
+  void $ many newline
+  Receipt day (catMaybes maybeEntries) maybeRabatt total <$> paymentMethodP
 
 entryNameToExpenseCategory :: Text -> Text
 entryNameToExpenseCategory entry =
@@ -146,9 +159,11 @@ entryNameToExpenseCategory entry =
     )
  where
   haushalt = "Haushalt"
+  readyMeals = "Groceries:Ready Meals"
   itemToExpenseCategoryPairs =
     [ ([regex|Stimorol|], "Groceries:Chewing Gum")
-    , ([regex|Salmon Poké|], "Groceries:Ready Meals")
+    , ([regex|Salmon Poké|], readyMeals)
+    , ([regex|ZENBU|], readyMeals)
     , ([regex|WC Frisch|], haushalt)
     , ([regex|Schwamm|], haushalt)
     , ([regex|Desinfektionstücher|], haushalt)
@@ -166,7 +181,7 @@ parseReceipt receipt = prepareErrMsg parsedReceipt
       . first (toText . errorBundlePretty)
 
 receiptToTransaction :: Receipt -> Transaction
-receiptToTransaction (Receipt day entries rabatt total) =
+receiptToTransaction (Receipt day entries rabatt total paymentMethod) =
   transaction day postings
     & L.set tDescription "Coop"
       . L.set tStatus Cleared
@@ -174,7 +189,7 @@ receiptToTransaction (Receipt day entries rabatt total) =
   postings = [bcgePosting] <> items <> rabattPosting
   bcgePosting =
     Ledger.post
-      "Assets:Liquid:BCGE"
+      (paymentMethodToAccount paymentMethod)
       (HDE.makeCurrencyAmount chf (- total))
       & L.set pStatus Pending
   (catAndTotals :: [(Text, Decimal)]) =
