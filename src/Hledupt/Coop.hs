@@ -167,6 +167,9 @@ entryNameToExpenseCategory entry =
     , ([regex|WC Frisch|], haushalt)
     , ([regex|Schwamm|], haushalt)
     , ([regex|Desinfektionstücher|], haushalt)
+    , ([regex|Listerine|], "Gesundheit")
+    , ([regex|Reinigung|], haushalt)
+    , ([regex|ZEISS|], haushalt)
     ]
 
 prependErrorMessage :: Text -> Either Text a -> Either Text a

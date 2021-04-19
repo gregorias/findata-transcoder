@@ -51,15 +51,21 @@ ZENBU Nigiri & Maki 218G 1 0.01 0.01 0
 
 WC Frisch Blau Kraft-Aktiv Ozean 50gr 1 0.01 0.01
 
-Total CHF 0.04
+Coop Bildschirm Reinigungst., 10Stk 1 0.01 0.01
 
-TWINT 0.04
+Listerine Cool Mint milder Geschmack 500 1 0.01 0.01
+
+ZEISS AntiBESCHLAG Set 1 0.01 0.01
+
+Total CHF 0.07
+
+TWINT 0.07
 
 COOP GENOSSENSCHAFT, CHE-116.311.185 MWST
 
 GR MWST% TOTAL MWST
 
-0 2.50 0.04 0.00
+0 2.50 0.07 0.00
 
 SUPERCARD NR.:  0000*****0000
 
