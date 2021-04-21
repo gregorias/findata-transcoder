@@ -55,21 +55,23 @@ WC Frisch Blau Kraft-Aktiv Ozean 50gr 1 0.01 0.01
 
 Coop Bildschirm Reinigungst., 10Stk 1 0.01 0.01
 
+Brita Kartusche Maxtra+ 3St 1 0.01 0.01
+
 Compo-Bag 9 l 10Stk 1 0.01 0.01
 
 Listerine Cool Mint milder Geschmack 500 1 0.01 0.01
 
 ZEISS AntiBESCHLAG Set 1 0.01 0.01
 
-Total CHF 0.09
+Total CHF 0.10
 
-TWINT 0.09
+TWINT 0.10
 
 COOP GENOSSENSCHAFT, CHE-116.311.185 MWST
 
 GR MWST% TOTAL MWST
 
-0 2.50 0.09 0.00
+0 2.50 0.10 0.00
 
 SUPERCARD NR.:  0000*****0000
 
