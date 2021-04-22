@@ -61,17 +61,19 @@ Compo-Bag 9 l 10Stk 1 0.01 0.01
 
 Listerine Cool Mint milder Geschmack 500 1 0.01 0.01
 
+Nivea Sun Protect&Dry Touch LSF50 200ML 1 0.01 0.01
+
 ZEISS AntiBESCHLAG Set 1 0.01 0.01
 
-Total CHF 0.10
+Total CHF 0.11
 
-TWINT 0.10
+TWINT 0.11
 
 COOP GENOSSENSCHAFT, CHE-116.311.185 MWST
 
 GR MWST% TOTAL MWST
 
-0 2.50 0.10 0.00
+0 2.50 0.11 0.00
 
 SUPERCARD NR.:  0000*****0000
 

@@ -160,6 +160,7 @@ entryNameToExpenseCategory entry =
  where
   haushalt = "Haushalt"
   readyMeals = "Groceries:Ready Meals"
+  health = "Gesundheit"
   itemToExpenseCategoryPairs =
     [ ([regex|Stimorol|], "Groceries:Chewing Gum")
     , ([regex|Salmon Poké|], readyMeals)
@@ -168,11 +169,12 @@ entryNameToExpenseCategory entry =
     , ([regex|WC Frisch|], haushalt)
     , ([regex|Schwamm|], haushalt)
     , ([regex|Desinfektionstücher|], haushalt)
-    , ([regex|Listerine|], "Gesundheit")
     , ([regex|Reinigung|], haushalt)
     , ([regex|Compo-Bag|], haushalt)
     , ([regex|Brita|], haushalt)
     , ([regex|ZEISS|], haushalt)
+    , ([regex|Listerine|], health)
+    , ([regex|Nivea|], health)
     ]
 
 prependErrorMessage :: Text -> Either Text a -> Either Text a
