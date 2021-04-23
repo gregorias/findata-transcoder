@@ -51,6 +51,7 @@ library
       Hledupt.Ib.Csv.ActivityStatementParse
       Hledupt.Ib.Csv.RawParse
       Hledupt.Mbank
+      Hledupt.Wallet
       Text.Megaparsec.Char.Extra
       Text.Megaparsec.Extra.ErrorText
   other-modules:

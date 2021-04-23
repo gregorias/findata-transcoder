@@ -33,6 +33,7 @@ import Hledupt.Data.Currency (chf)
 import Hledupt.Data.Isin (Isin (unIsin), mkIsin)
 import Hledupt.Data.LedgerReport (LedgerReport (..), todoPosting)
 import Hledupt.Data.MyDecimal (MyDecimal (unMyDecimal))
+import Hledupt.Wallet (financialServices)
 import Relude
 import Relude.Unsafe (fromJust)
 
@@ -86,12 +87,14 @@ funds =
 findFundByFinpensionName :: Text -> Maybe Fund
 findFundByFinpensionName finpensionName = find ((== finpensionName) . fundFinpensionName) funds
 
-data Category = Buy | Deposit
+data Category = Buy | Deposit | Fee | Sell
   deriving stock (Show, Eq)
 
 instance CSV.FromField Category where
   parseField "Buy" = return Buy
   parseField "Deposit" = return Deposit
+  parseField "Flat-rate administrative fee" = return Fee
+  parseField "Sell" = return Sell
   parseField field =
     fail . decodeUtf8 $
       "Could not parse " <> field <> " as a category."
@@ -146,9 +149,12 @@ instance CSV.FromNamedRecord RawTransaction where
         cashFlow
         bal
 
-data Transaction = TrBuy BuyTransaction | TrDeposit DepositTransaction
+data Transaction
+  = TrStock StockTransaction
+  | TrDeposit DepositTransaction
+  | TrFee FeeTransaction
 
-data BuyTransaction = BuyTransaction
+data StockTransaction = StockTransaction
   { btDate :: !Day
   , btAssetName :: !Text
   , btNumberOfShares :: !Decimal
@@ -166,6 +172,13 @@ data DepositTransaction = DepositTransaction
   , dtBalance :: !Decimal
   }
 
+data FeeTransaction = FeeTransaction
+  { ftDate :: !Day
+  , _ftAssetCurrency :: !Alpha
+  , ftCashFlow :: !Decimal
+  , ftBalance :: !Decimal
+  }
+
 transactionsCsvDecodeOptions :: CSV.DecodeOptions
 transactionsCsvDecodeOptions =
   CSV.defaultDecodeOptions
@@ -180,14 +193,6 @@ rawTransactionsP (CsvFile csvContent) = do
   return $ V.toList trsVector
 
 rawTransactionToTransaction :: RawTransaction -> Maybe Transaction
-rawTransactionToTransaction rawTr@(RawTransaction date Deposit _ _ _ _ _ _ _) =
-  return $
-    TrDeposit $
-      DepositTransaction
-        date
-        (rtAssetCurrency rawTr)
-        (rtCashFlow rawTr)
-        (rtBalance rawTr)
 rawTransactionToTransaction
   rawTr@( RawTransaction
             date
@@ -201,8 +206,31 @@ rawTransactionToTransaction
             _
           ) =
     return $
-      TrBuy $
-        BuyTransaction
+      TrStock $
+        StockTransaction
+          date
+          (rtAssetName rawTr)
+          nShares
+          (rtAssetCurrency rawTr)
+          (rtCurrencyRate rawTr)
+          assetPriceInChf
+          (rtCashFlow rawTr)
+          (rtBalance rawTr)
+rawTransactionToTransaction
+  rawTr@( RawTransaction
+            date
+            Sell
+            _
+            (Just nShares)
+            _
+            _
+            (Just assetPriceInChf)
+            _
+            _
+          ) =
+    return $
+      TrStock $
+        StockTransaction
           date
           (rtAssetName rawTr)
           nShares
@@ -212,6 +240,23 @@ rawTransactionToTransaction
           (rtCashFlow rawTr)
           (rtBalance rawTr)
 rawTransactionToTransaction (RawTransaction _ Buy _ _ _ _ _ _ _) = empty
+rawTransactionToTransaction (RawTransaction _ Sell _ _ _ _ _ _ _) = empty
+rawTransactionToTransaction rawTr@(RawTransaction date Deposit _ _ _ _ _ _ _) =
+  return $
+    TrDeposit $
+      DepositTransaction
+        date
+        (rtAssetCurrency rawTr)
+        (rtCashFlow rawTr)
+        (rtBalance rawTr)
+rawTransactionToTransaction rawTr@(RawTransaction date Fee _ _ _ _ _ _ _) =
+  return $
+    TrFee $
+      FeeTransaction
+        date
+        (rtAssetCurrency rawTr)
+        (rtCashFlow rawTr)
+        (rtBalance rawTr)
 
 finpensionTransactionToLedgerTransaction :: Transaction -> Either Text Ledger.Transaction
 finpensionTransactionToLedgerTransaction (TrDeposit depositTr) =
@@ -227,7 +272,28 @@ finpensionTransactionToLedgerTransaction (TrDeposit depositTr) =
       & set
         pBalanceAssertion
         (balassert . HDE.makeCurrencyAmount chf . dtBalance $ depositTr)
-finpensionTransactionToLedgerTransaction (TrBuy buyTr) = do
+finpensionTransactionToLedgerTransaction (TrFee feeTr) =
+  return $
+    Ledger.transaction (ftDate feeTr) [feePosting, financialServicesPosting]
+      & set tDescription "Finpension Fee"
+        . set tStatus Cleared
+ where
+  feePosting =
+    Ledger.post
+      cashAccount
+      ( (HDE.makeCurrencyAmount chf . ftCashFlow $ feeTr)
+          & amountSetFullPrecision
+      )
+      & set
+        pBalanceAssertion
+        (balassert . amountSetFullPrecision . HDE.makeCurrencyAmount chf . ftBalance $ feeTr)
+  financialServicesPosting =
+    Ledger.post
+      financialServices
+      ( (HDE.makeCurrencyAmount chf . negate . ftCashFlow $ feeTr)
+          & amountSetFullPrecision
+      )
+finpensionTransactionToLedgerTransaction (TrStock buyTr) = do
   let finpensionName = btAssetName buyTr
   (Fund _ isin shortName) <-
     maybeToRight
@@ -252,7 +318,7 @@ finpensionTransactionToLedgerTransaction (TrBuy buyTr) = do
           )
   return $
     Ledger.transaction (btDate buyTr) [cashPosting, fundPosting]
-      & set tDescription "Finpension Purchase"
+      & set tDescription "Finpension Purchase/Sell"
         . set tStatus Cleared
  where
   cashPosting =
