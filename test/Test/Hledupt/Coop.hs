@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Test.Hledupt.Coop (
   tests,
@@ -6,6 +7,7 @@ module Test.Hledupt.Coop (
 
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import qualified Hledupt.Coop as Coop
+import NeatInterpolation (trimming)
 import Relude
 import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
@@ -19,40 +21,45 @@ tests = do
         coop <- readFileText "test/data/coop.txt"
         let expectedTr =
               parseTransactionUnsafe
-                "2021/04/09 * Coop\n\
-                \  ! Assets:Liquid:BCGE  -6.10 CHF\n\
-                \  Expenses:Groceries:Chewing Gum  1.60 CHF\n\
-                \  Expenses:Groceries  4.50 CHF"
+                [trimming|
+                  2021/04/09 * Coop
+                    ! Assets:Liquid:BCGE  -6.10 CHF
+                    Expenses:Groceries:Chewing Gum  1.60 CHF
+                    Expenses:Groceries  4.50 CHF|]
         Coop.receiptToLedger coop `shouldBe` Right expectedTr
 
       it "correctlyAssignsCategories" $ do
         coop <- readFileText "test/data/coop-cat.txt"
         let expectedTr =
               parseTransactionUnsafe
-                "2021/04/09 * Coop\n\
-                \  ! Assets:Liquid:BCGE  -0.12 CHF\n\
-                \  Expenses:Gesundheit             0.02 CHF\n\
-                \  Expenses:Haushalt               0.06 CHF\n\
-                \  Expenses:Groceries:Chewing Gum  0.01 CHF\n\
-                \  Expenses:Groceries:Ready Meals  0.03 CHF"
+                [trimming|
+                2021/04/09 * Coop
+                  ! Assets:Liquid:BCGE  -0.12 CHF
+                  Expenses:Gesundheit             0.02 CHF
+                  Expenses:Haushalt               0.06 CHF
+                  Expenses:Groceries:Chewing Gum  0.01 CHF
+                  Expenses:Groceries:Ready Meals  0.03 CHF|]
+
         Coop.receiptToLedger coop `shouldBe` Right expectedTr
 
       it "correctlyHandlesARabatt" $ do
         coop <- readFileText "test/data/coop-rabatt.txt"
         let expectedTr =
               parseTransactionUnsafe
-                "2021/04/09 * Coop\n\
-                \  ! Assets:Liquid:BCGE  -44.35 CHF\n\
-                \  Expenses:Haushalt       9.40 CHF\n\
-                \  Expenses:Groceries     37.35 CHF\n\
-                \  Expenses:Other         -2.40 CHF"
+                [trimming|
+                2021/04/09 * Coop
+                  ! Assets:Liquid:BCGE  -44.35 CHF
+                  Expenses:Haushalt       9.40 CHF
+                  Expenses:Groceries     37.35 CHF
+                  Expenses:Other         -2.40 CHF|]
         Coop.receiptToLedger coop `shouldBe` Right expectedTr
 
       it "correctlyRecognizesMyCC" $ do
         coop <- readFileText "test/data/coop-card.txt"
         let expectedTr =
               parseTransactionUnsafe
-                "2021/04/09 * Coop\n\
-                \  ! Assets:Liquid:BCGE CC        -14.95 CHF\n\
-                \  Expenses:Groceries:Ready Meals  14.95 CHF"
+                [trimming|
+                  2021/04/09 * Coop
+                    ! Assets:Liquid:BCGE CC        -14.95 CHF
+                    Expenses:Groceries:Ready Meals  14.95 CHF|]
         Coop.receiptToLedger coop `shouldBe` Right expectedTr

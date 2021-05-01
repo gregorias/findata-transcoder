@@ -150,6 +150,7 @@ test-suite hledupt-test
     , hspec-expectations-pretty-diff
     , lens
     , megaparsec
+    , neat-interpolation
     , parser-combinators
     , relude
     , replace-megaparsec
