@@ -173,6 +173,7 @@ entryNameToExpenseCategory entry =
     , ([regex|Compo-Bag|], haushalt)
     , ([regex|Brita|], haushalt)
     , ([regex|ZEISS|], haushalt)
+    , ([regex|Finish|], haushalt)
     , ([regex|Listerine|], health)
     , ([regex|Nivea|], health)
     ]
