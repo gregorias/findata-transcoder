@@ -1,0 +1,160 @@
+
+
+P.P.
+CH-8050 Zürich
+
+Response Zentral Post CH AG
+Postbox 7007 L
+
+
+
+
+Mr
+John Doe
+Street 123
+0123 City A
+
+Issued by
+Viseca Card Services SA
+Hagenholzstrasse 56
+Postfach 7007
+8050 Zürich
+
+Customer service
+Phone +41 (0)58 958 84 00
+Fax +41 (0)58 958 88 85
+
+Collection of the claim by
+Viseca Payment Services SA,
+Hagenholzstrasse 56, 8050 Zurich
+
+Page 1/2
+
+Invoice of 23.04.2021
+Global limit CHF 5'000
+Card account number 0000 0000 0000 0000
+PayNet number 00 00000 00000 00000
+Accountholder John Doe
+
+Date
+Value
+date Details Currency Amount
+
+Amount in
+CHF
+
+23.02.21 Total Amount last settlement 530.40
+
+23.02.21 24.02.21 Your payment - Thank you 530.40 -
+
+0000 XXXX XXXX 0000 Mastercard Gold, John Doe
+Card limit CHF 5'000
+
+01.03.21 02.03.21 LASTPASS.COM US USD 36.00 34.20
+IT services, programming
+Exchange rate 0.9328 of 02.03.21 CHF 33.60
+Processing fee 1.75% CHF 0.60
+
+05.03.21 08.03.21 PAYPAL *GITHUB INC CHF 2.56 2.60
+Computer software
+Processing fee 1.75% CHF 0.05
+
+06.03.21 08.03.21 PAYPAL *GITHUB INC CHF 5.82 5.90
+Computer software
+Processing fee 1.75% CHF 0.10
+
+17.03.21 24.02.21 GOOGLE *SERVICES, g.co/helppay# GB EUR 9.16 10.50 -
+Business services
+Exchange rate 1.125589 of 18.03.21 CHF 10.30
+Credit of processing fee 1.75% CHF 0.20
+
+27.03.21 29.03.21 SBB EasyRide, Bern 65 SBB CH 3.10
+Transportation services
+
+28.03.21 29.03.21 TODOIST, PALO ALTO US EUR 36.00 41.25
+Computer software
+Exchange rate 1.125823 of 29.03.21 CHF 40.55
+Processing fee 1.75% CHF 0.70
+
+26.03.21 29.03.21 GOOGLE *Google Storage, g.co/helppay# GB 2.00
+IT services, programming
+
+31.03.21 31.03.21 WWW.RICARDO.CH, ZUG CH 8.10
+IT services, programming
+
+Card interim amount 86.65
+
+Total interim amount 86.65
+
+
+
+Issued by
+Viseca Card Services SA
+Hagenholzstrasse 56
+Postfach 7007
+8050 Zürich
+
+Collection of the claim by
+Viseca Payment Services SA,
+Hagenholzstrasse 56, 8050 Zurich
+
+Page 2/2
+
+Date
+Value
+date Details Currency Amount
+
+Amount in
+CHF
+
+Total carried forward 86.65
+
+0000 XXXX XXXX 0000 Mastercard Gold, John Doe
+Card limit CHF 5'000
+
+Card carried forward 86.65
+06.04.21 08.04.21 PAYPAL *GITHUB INC US CHF 5.90 6.00
+
+Computer software
+Processing fee 1.75% CHF 0.10
+
+13.04.21 14.04.21 Coop SZ CH 14.95
+Supermarkets, grocery stores
+
+15.04.21 16.04.21 Mucho Mobile, Carouge CH 9.90
+Telecommunication services
+
+16.04.21 19.04.21 PAYPAL *STEAM GAMES GB CHF 48.00 48.85
+Game, toy, and hobby shops
+Processing fee 1.75% CHF 0.85
+
+16.04.21 19.04.21 Coop SZ CH 4.30
+Supermarkets, grocery stores
+
+20.04.21 21.04.21 Bio Store CH 38.35
+Supermarkets, grocery stores
+
+19.04.21 21.04.21 Power Food AG, Schaffhausen CH 83.70
+Specialty food stores
+
+Total card Mastercard Gold 0000 XXXX XXXX 0000 292.70
+
+Total balance in our favour 292.70
+
+The amount due will be debited to your account CH00 XXXX 0000 0 292.70
+
+Information on your surprize rewards programme
+You can check your surprize points balance any time in the "one" digital service or the "one" app.
+
+Points tip for surprize users
+Until 30 April 2021, you will receive double surprize points when you use your payment card in Swiss supermarkets and at bp petrol stations
+(2 points per Swiss franc spent). From 1 May 2021, you will earn 1 point for every Swiss franc spent on all card purchases. Further information can
+be found at: https://www.viseca.ch/en/viseca-bonus-programme.
+
+Important:
+Viseca has been restructured: As of October 2020, Viseca Card Services SA is the card issuer and your contract partner for the credit card. For all
+card-related insurance policies, your contract partner is Viseca Payment Services SA. Basically nothing has changed for you: same services, same
+protection - simply two contract partners. The adjusted GIC of the insurance policies and the updated data protection regulations can be found at
+https://www.viseca.ch/en/customer-service/downloads.
+
+

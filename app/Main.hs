@@ -24,6 +24,7 @@ import Data.Time.Clock (getCurrentTime, utctDay)
 import Data.Version (makeVersion)
 import Hledupt.Bcge (bcgeCsvToLedger)
 import qualified Hledupt.Bcge.Hint as BcgeHint
+import qualified Hledupt.BcgeCC as BcgeCC
 import qualified Hledupt.CharlesSchwab as CharlesSchwab (csvToLedger)
 import qualified Hledupt.Coop as Coop
 import Hledupt.Data.CsvFile (CsvFile (..))
@@ -121,6 +122,15 @@ parseGPayslip = do
       exitFailure
     Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
 
+parseBcgeCC :: IO ()
+parseBcgeCC = do
+  rechnung <- Text.getContents
+  case BcgeCC.rechnungToLedger rechnung of
+    Left err -> do
+      Text.hPutStr stderr err
+      exitFailure
+    Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
+
 parseCoop :: IO ()
 parseCoop = do
   receipt <- Text.getContents
@@ -142,6 +152,9 @@ main = defaultMain $ do
     description "Parses BCGE's CSV file and outputs ledupt data"
     hintsFileFlag <- flagParam (FlagLong hintsFileFlagName) (FlagOptional Nothing (fmap Just . filenameParser))
     parseBcgeAction hintsFileFlag
+  command "parse-bcge-cc" $ do
+    description "Parses a text dump from a BCGE CC bill and outputs Ledger data"
+    ignoreAction parseBcgeCC
   command "parse-coop" $ do
     description "Parses a text dump from a Coop receipt and outputs Ledger data"
     ignoreAction parseCoop

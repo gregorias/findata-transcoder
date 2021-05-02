@@ -31,6 +31,7 @@ library
       Hledger.Data.MarketPrice.Extra
       Hledupt.Bcge
       Hledupt.Bcge.Hint
+      Hledupt.BcgeCC
       Hledupt.CharlesSchwab
       Hledupt.CharlesSchwab.Csv
       Hledupt.CharlesSchwab.Ledger
@@ -134,6 +135,7 @@ test-suite hledupt-test
       Test.Hledger.Read.TestUtils
       Test.Hledupt.Bcge
       Test.Hledupt.Bcge.Hint
+      Test.Hledupt.BcgeCC
       Test.Hledupt.CharlesSchwab.Csv
       Test.Hledupt.CharlesSchwab.Ledger
       Test.Hledupt.Coop
