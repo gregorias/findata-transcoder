@@ -21,7 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/greg
 dependencies:
 - base >= 4.7 && < 5
 
-# Defaults recommended by https://kowainik.github.io/posts/2019-02-06-style-guide#default-extensions
+# Some defaults recommended by https://kowainik.github.io/posts/2019-02-06-style-guide#default-extensions
 # Also use Relude
 default-extensions:
   DerivingStrategies
@@ -35,6 +35,7 @@ default-extensions:
   TupleSections
   TypeApplications
   UnicodeSyntax
+  QuasiQuotes
   OverloadedStrings
 
 library:
