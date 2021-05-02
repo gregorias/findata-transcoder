@@ -25,6 +25,7 @@ source-repository head
 library
   exposed-modules:
       Data.Csv.Extra
+      Data.Text.Trim
       Hledger.Data.Extra
       Hledger.Data.Lens
       Hledger.Data.MarketPrice.Extra
@@ -102,6 +103,23 @@ executable hledupt
     , relude
     , text
     , time
+  default-language: Haskell2010
+
+test-suite doctest
+  type: exitcode-stdio-1.0
+  main-is: DocTest.hs
+  other-modules:
+      Paths_hledupt
+  hs-source-dirs:
+      doctest
+  default-extensions:
+      DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiWayIf NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -main-is DocTest
+  build-depends:
+      base >=4.7 && <5
+    , doctest
+    , hledupt
+    , relude
   default-language: Haskell2010
 
 test-suite hledupt-test

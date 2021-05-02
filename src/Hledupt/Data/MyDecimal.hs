@@ -23,6 +23,7 @@ import Relude
 import Text.Megaparsec (
   MonadParsec,
   Token,
+  parseMaybe,
  )
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (char, digitChar, space)
@@ -67,8 +68,8 @@ cashDecimalFormat = flip DecimalFormat (Just TwoDigitDecimalFraction)
 
 -- | A decimal parser that handles separators and fractions.
 --
--- >>> parseMaybe decimalP "-2,000.41"
--- 2000.41
+-- >>> parseMaybe (decimalP defaultDecimalFormat) "-2000.41"
+-- Just -2000.41
 decimalP ::
   ( MonadFail m
   , MonadParsec e s m
@@ -136,6 +137,6 @@ instance Csv.FromField MyDecimal where
     maybe
       (fail "Could not parse a decimal")
       (pure . MyDecimal)
-      $ MP.parseMaybe @Void @String
+      $ parseMaybe @Void @String
         (decimalP (DecimalFormat (ChunkSep ',') (Just OptionalUnlimitedDecimalFraction)))
         (decodeUtf8 field)
