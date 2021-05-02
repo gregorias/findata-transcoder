@@ -35,6 +35,7 @@ default-extensions:
   TupleSections
   TypeApplications
   UnicodeSyntax
+  OverloadedStrings
 
 library:
   source-dirs: src

@@ -60,7 +60,7 @@ library
   hs-source-dirs:
       src
   default-extensions:
-      DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiWayIf NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax
+      DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiWayIf NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax OverloadedStrings
   build-depends:
       Decimal
     , base >=4.7 && <5
@@ -91,7 +91,7 @@ executable hledupt
   hs-source-dirs:
       app
   default-extensions:
-      DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiWayIf NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax
+      DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiWayIf NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax OverloadedStrings
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
@@ -113,7 +113,7 @@ test-suite doctest
   hs-source-dirs:
       doctest
   default-extensions:
-      DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiWayIf NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax
+      DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiWayIf NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax OverloadedStrings
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -main-is DocTest
   build-depends:
       base >=4.7 && <5
@@ -155,7 +155,7 @@ test-suite hledupt-test
   hs-source-dirs:
       test
   default-extensions:
-      DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiWayIf NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax
+      DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiWayIf NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax OverloadedStrings
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -main-is Spec
   build-depends:
       Decimal

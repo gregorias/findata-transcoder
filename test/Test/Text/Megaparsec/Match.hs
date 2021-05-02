@@ -9,6 +9,6 @@ tests = do
   describe "Text.Megaparsec.Match" $ do
     describe "matches" $ do
       it "Matches" $ do
-        "Oh, hello there" `matches` "hello" `shouldBe` True
+        ("Oh, hello there" :: Text) `matches` "hello" `shouldBe` True
       it "Does not match" $ do
-        "Oh, hi there" =~ "hello" `shouldBe` False
+        ("Oh, hi there" :: Text) =~ "hello" `shouldBe` False
