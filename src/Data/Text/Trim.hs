@@ -7,7 +7,7 @@ import Data.Char (isSpace)
 import qualified Data.Text as T
 import Relude
 
--- | Remove smartly indentation from a multiline string.
+-- | Smartly removes indentation from a multiline string.
 --
 -- >>> unindent "  func() {\n    return 0;\n  }\n"
 -- "func() {\n  return 0;\n}\n"
