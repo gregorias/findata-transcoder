@@ -9,5 +9,8 @@ cradle:
     - path: "./app/Paths_hledupt.hs"
       component: "hledupt:exe:hledupt"
 
+    - path: "./doctest"
+      component: "hledupt:test:doctest"
+
     - path: "./test"
       component: "hledupt:test:hledupt-test"
