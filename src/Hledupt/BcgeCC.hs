@@ -4,7 +4,6 @@ module Hledupt.BcgeCC (
   rechnungToLedger,
 ) where
 
-import Control.Lens (mapped)
 import qualified Control.Lens as L
 import Control.Lens.Regex.Text (regex)
 import qualified Control.Lens.Regex.Text as LR
@@ -33,6 +32,7 @@ import Hledupt.Wallet (
   financialServices,
  )
 import Relude
+import Relude.Extra.Map (lookup)
 import Text.Megaparsec (
   MonadParsec (try),
   Parsec,
@@ -109,40 +109,27 @@ transactionP = label "transaction" $ do
     void $ string "Exchange rate "
     anyLineP
   processingFeeP = label "processing fee line" $ do
-    void $ string "Processing fee" <|> string "Credit of processing fee"
+    sgn <-
+      (string "Processing fee" >> return id)
+        <|> (string "Credit of processing fee" >> return negate)
     void $ string " 1.75% CHF "
-    decimalP (DecimalFormat NoChunkSep (Just TwoDigitDecimalFraction)) <* newline
-  toTitleAndAmount :: Text -> Maybe (Text, Text)
-  toTitleAndAmount rol =
-    asum
-      [ ( \case
-            [title, _, _, _, amt] -> Just (title, amt)
-            _ -> Nothing
-        )
-          =<< L.preview
-            ( [regex|(?<title>.*) (?<countrycode>[A-Z]{2}) (?<currency>[A-Z]{3}) (?<amount>\d+\.\d\d) (?<amountchf>\d+\.\d\d)|]
-                . LR.groups
-            )
-            rol
-      , ( \case
-            [title, _, _, amt] -> Just (title, amt)
-            _ -> Nothing
-        )
-          =<< L.preview
-            ( [regex|(?<title>.*) (?<currency>[A-Z]{3}) (?<amount>\d+\.\d\d) (?<amountchf>\d+\.\d\d)|]
-                . LR.groups
-            )
-            rol
-      , ( \case
-            [title, _, amt] -> Just (title, amt)
-            _ -> Nothing
-        )
-          =<< L.preview
-            ( [regex|(?<title>.*) (?<countrycode>[A-Z]{2}) (?<amountchf>\d+\.\d\d)|]
-                . LR.groups
-            )
-            rol
+    fee <- decimalP (DecimalFormat NoChunkSep (Just TwoDigitDecimalFraction))
+    void newline
+    return . sgn $ fee
+  toTitleAndAmount :: Text -> Maybe (Text, Text, Bool)
+  toTitleAndAmount rol = do
+    namedGroups <- maybeNamedGroups
+    title <- lookup "title" namedGroups
+    amt <- lookup "amountchf" namedGroups
+    return $ (title, amt, isCredit)
+   where
+    regexes =
+      [ [regex|(?<title>.*) (?<countrycode>[A-Z]{2}) (?<currency>[A-Z]{3}) (?<amount>\d+\.\d\d) (?<amountchf>\d+\.\d\d)|]
+      , [regex|(?<title>.*) (?<currency>[A-Z]{3}) (?<amount>\d+\.\d\d) (?<amountchf>\d+\.\d\d)|]
+      , [regex|(?<title>.*) (?<countrycode>[A-Z]{2}) (?<amountchf>\d+\.\d\d)|]
       ]
+    maybeNamedGroups :: (Maybe (Map Text Text)) = asum $ flip L.preview rol <$> fmap (. LR.namedGroups) regexes
+    isCredit = isJust $ L.preview [regex| -$|] rol
   amtP :: Text -> Maybe Decimal
   amtP = parseMaybe @Void (decimalP defaultDecimalFormat)
   titleAndAmountP :: BcgeCCParser (Text, Decimal)
@@ -150,12 +137,10 @@ transactionP = label "transaction" $ do
     try $ do
       before <- getParserState
       rol :: Text <- anyLineP
-      let (maybeTitleAndAmount :: Maybe (Text, Decimal)) =
-            join
-              . L.over mapped sequence
-              . L.over (mapped . L._2) amtP
-              . toTitleAndAmount
-              $ rol
+      let (maybeTitleAndAmount :: Maybe (Text, Decimal)) = do
+            (title, amtText, sign) <- toTitleAndAmount rol
+            amt <- amtP amtText
+            return (title, if sign then - amt else amt)
       maybe
         (updateParserState (const before) >> empty)
         return
@@ -232,7 +217,7 @@ rechnungToTransactions
    where
     balancePosting =
       post bcgeCCAccount (HDE.makeCurrencyAmount chf 0)
-        & L.set pBalanceAssertion (balassert . HDE.makeCurrencyAmount chf $ owedAmount)
+        & L.set pBalanceAssertion (balassert . HDE.makeCurrencyAmount chf $ - owedAmount)
 
 rechnungToLedger :: Text -> Either Text [Transaction]
 rechnungToLedger rechnungTxt = rechnungToTransactions <$> parseRechnung rechnungTxt

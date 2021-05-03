@@ -41,9 +41,9 @@ convertsBcgeCCRechnungTest = do
         , parseTransactionUnsafe
             [trimming|
             2021/03/17 * GOOGLE *SERVICES, g.co/helppay#
-              Assets:Liquid:BCGE CC  -10.50 CHF
-              Expenses:Financial Services  0.20 CHF
-              Expenses:Other  10.30 CHF|]
+              Assets:Liquid:BCGE CC  10.50 CHF
+              Expenses:Financial Services  -0.20 CHF
+              Expenses:Other  -10.30 CHF|]
         , parseTransactionUnsafe
             [trimming|
             2021/03/27 * SBB EasyRide, Bern 65 SBB
@@ -63,7 +63,7 @@ convertsBcgeCCRechnungTest = do
         , parseTransactionUnsafe
             [trimming|
             2021/04/23 * BCGE CC Status
-              Assets:Liquid:BCGE CC  0.0 CHF = 292.70 CHF|]
+              Assets:Liquid:BCGE CC  0.0 CHF = -292.70 CHF|]
         ]
   BcgeCC.rechnungToLedger rechnung
     `shouldBe` Right expectedTrs
