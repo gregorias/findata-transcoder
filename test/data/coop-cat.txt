@@ -51,9 +51,13 @@ ZENBU Nigiri & Maki 218G 1 0.01 0.01 0
 
 Findus Egli Knusperli MSC TK 230g 1 0.01 0.01 0
 
+Coop Maxiteelichte 12Stk. 8h weiss 1 0.01 0.01
+
 WC Frisch Blau Kraft-Aktiv Ozean 50gr 1 0.01 0.01
 
 Coop Bildschirm Reinigungst., 10Stk 1 0.01 0.01
+
+Oecoplan Haushaltpapier weiss Maxi 1 0.01 0.01
 
 Finish Allin1 AlpineLem 3x35 Tabs Trio 1 0.02 0.01 0.01 A
 
@@ -67,15 +71,15 @@ Nivea Sun Protect&Dry Touch LSF50 200ML 1 0.01 0.01
 
 ZEISS AntiBESCHLAG Set 1 0.01 0.01
 
-Total CHF 0.12
+Total CHF 0.14
 
-TWINT 0.12
+TWINT 0.14
 
 COOP GENOSSENSCHAFT, CHE-116.311.185 MWST
 
 GR MWST% TOTAL MWST
 
-0 2.50 0.12 0.00
+0 2.50 0.14 0.00
 
 SUPERCARD NR.:  0000*****0000
 
