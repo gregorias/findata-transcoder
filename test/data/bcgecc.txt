@@ -71,17 +71,6 @@ Credit of processing fee 1.75% CHF 0.20
 27.03.21 29.03.21 SBB EasyRide, Bern 65 SBB CH 3.10
 Transportation services
 
-28.03.21 29.03.21 TODOIST, PALO ALTO US EUR 36.00 41.25
-Computer software
-Exchange rate 1.125823 of 29.03.21 CHF 40.55
-Processing fee 1.75% CHF 0.70
-
-26.03.21 29.03.21 GOOGLE *Google Storage, g.co/helppay# GB 2.00
-IT services, programming
-
-31.03.21 31.03.21 WWW.RICARDO.CH, ZUG CH 8.10
-IT services, programming
-
 Card interim amount 86.65
 
 Total interim amount 86.65
@@ -113,26 +102,9 @@ Total carried forward 86.65
 Card limit CHF 5'000
 
 Card carried forward 86.65
-06.04.21 08.04.21 PAYPAL *GITHUB INC US CHF 5.90 6.00
-
-Computer software
-Processing fee 1.75% CHF 0.10
-
-13.04.21 14.04.21 Coop SZ CH 14.95
-Supermarkets, grocery stores
-
-15.04.21 16.04.21 Mucho Mobile, Carouge CH 9.90
-Telecommunication services
-
 16.04.21 19.04.21 PAYPAL *STEAM GAMES GB CHF 48.00 48.85
 Game, toy, and hobby shops
 Processing fee 1.75% CHF 0.85
-
-16.04.21 19.04.21 Coop SZ CH 4.30
-Supermarkets, grocery stores
-
-20.04.21 21.04.21 Bio Store CH 38.35
-Supermarkets, grocery stores
 
 19.04.21 21.04.21 Power Food AG, Schaffhausen CH 83.70
 Specialty food stores

@@ -129,7 +129,7 @@ parseBcgeCC = do
     Left err -> do
       Text.hPutStr stderr err
       exitFailure
-    Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
+    Right output -> putText . showLedgerReport . (`LedgerReport` []) $ output
 
 parseCoop :: IO ()
 parseCoop = do
