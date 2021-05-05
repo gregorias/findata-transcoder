@@ -15,7 +15,6 @@ main =
     , "-XTypeApplications"
     , "-XScopedTypeVariables"
     , "-isrc"
-    , "src/Data/Text/Trim.hs"
     , "src/Hledupt/Data/MyDecimal.hs"
     , "src/Hledupt/Data/Isin.hs"
     ]
