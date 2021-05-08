@@ -167,6 +167,7 @@ entryNameToExpenseCategory entry =
     , ([regex|Haushalt|], haushalt)
     , ([regex|Schwamm|], haushalt)
     , ([regex|Desinfektionstücher|], haushalt)
+    , ([regex|Persil|], haushalt)
     , ([regex|Reinigung|], haushalt)
     , ([regex|Compo-Bag|], haushalt)
     , ([regex|Brita|], haushalt)

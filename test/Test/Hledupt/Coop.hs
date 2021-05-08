@@ -31,9 +31,9 @@ tests = do
               parseTransactionUnsafe
                 [trimming|
                 2021/04/09 * Coop
-                  ! Assets:Liquid:BCGE  -0.14 CHF
+                  ! Assets:Liquid:BCGE  -0.15 CHF
                   Expenses:Gesundheit             0.02 CHF
-                  Expenses:Haushalt               0.08 CHF
+                  Expenses:Haushalt               0.09 CHF
                   Expenses:Groceries:Chewing Gum  0.01 CHF
                   Expenses:Groceries:Ready Meals  0.03 CHF|]
 

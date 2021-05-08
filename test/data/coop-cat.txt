@@ -55,6 +55,8 @@ Coop Maxiteelichte 12Stk. 8h weiss 1 0.01 0.01
 
 WC Frisch Blau Kraft-Aktiv Ozean 50gr 1 0.01 0.01
 
+Persil ECO Universal 3.25L, 65WG 1 0.02 0.01 0.01 A
+
 Coop Bildschirm Reinigungst., 10Stk 1 0.01 0.01
 
 Oecoplan Haushaltpapier weiss Maxi 1 0.01 0.01
@@ -71,15 +73,15 @@ Nivea Sun Protect&Dry Touch LSF50 200ML 1 0.01 0.01
 
 ZEISS AntiBESCHLAG Set 1 0.01 0.01
 
-Total CHF 0.14
+Total CHF 0.15
 
-TWINT 0.14
+TWINT 0.15
 
 COOP GENOSSENSCHAFT, CHE-116.311.185 MWST
 
 GR MWST% TOTAL MWST
 
-0 2.50 0.14 0.00
+0 2.50 0.15 0.00
 
 SUPERCARD NR.:  0000*****0000
 
