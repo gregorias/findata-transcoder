@@ -29,6 +29,7 @@ tests = do
               CsvFile . encodeUtf8 $
                 [trimming|
               Date,Time,Value date,Product,ISIN,Description,FX,Change,,Balance,,Order ID
+              10-05-2021,00:00,09-05-2021,,,Money Market fund price change (CHF),,CHF,-0.03,CHF,3.50,
               18-12-2020,00:00,17-12-2020,FUNDSHARE UCITS CHF CASH FUND,NL0011280581,Cash Market fund price change (CHF),,CHF,-0.01,CHF,131.23,
               02-09-2020,12:02,01-09-2020,FUNDSHARE UCITS CHF CASH FUND,NL0011280581,"Cash Market fund conversion: Sell 123.5678 at 0.981 CHF",,,,CHF,131.72,
               02-09-2020,08:24,01-09-2020,,,FX Debit,,CHF,0.01,CHF,131.72,
@@ -38,6 +39,17 @@ tests = do
         parseCsvStatement csv
           `shouldBe` Right
             [ DegiroCsvRecord
+                (fromGregorian 2021 5 10)
+                (TimeOfDay 0 0 0)
+                (fromGregorian 2021 5 9)
+                ""
+                Nothing
+                "Money Market fund price change (CHF)"
+                Nothing
+                (Just $ Cash chf (-0.03))
+                (Cash chf 3.50)
+                ""
+            , DegiroCsvRecord
                 (fromGregorian 2020 12 18)
                 (TimeOfDay 0 0 0)
                 (fromGregorian 2020 12 17)

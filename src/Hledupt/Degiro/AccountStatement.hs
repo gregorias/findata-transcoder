@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | This module parses Degiro's account statement into Ledger.
@@ -303,9 +302,14 @@ stockTradeToTransaction (StockTrade date isin qty price change bal) =
 -- The changes tend to be pennies, so I want to ignore them.
 data MoneyMarketOp = MoneyMarketOp
 
-moneyMarketOpP :: DegiroCsvRecord -> Maybe MoneyMarketOp
-moneyMarketOpP rec = do
+moneyMarketFundOpP :: DegiroCsvRecord -> Maybe MoneyMarketOp
+moneyMarketFundOpP rec = do
   guard $ (== moneyMarketIsin) $ dcrIsin rec
+  return MoneyMarketOp
+
+moneyMarketFundPriceChangeP :: DegiroCsvRecord -> Maybe MoneyMarketOp
+moneyMarketFundPriceChangeP rec = do
+  guard $ (== "Money Market fund price change (CHF)") $ dcrDescription rec
   return MoneyMarketOp
 
 data Activity
@@ -341,8 +345,15 @@ newtype DegiroCsv = DegiroCsv [DegiroCsvRecord]
 instance VisualStream DegiroCsv where
   showTokens _proxy = show
 
-moneyMarketOpParsec :: Parsec ErrorText DegiroCsv MoneyMarketOp
-moneyMarketOpParsec = label "Money Market Operation" $ token moneyMarketOpP S.empty
+moneyMarketFundOpParsec :: Parsec ErrorText DegiroCsv MoneyMarketOp
+moneyMarketFundOpParsec = label "Money Market Operation" $ token moneyMarketFundOpP S.empty
+
+moneyMarketFundPriceChangeParsec :: Parsec ErrorText DegiroCsv MoneyMarketOp
+moneyMarketFundPriceChangeParsec =
+  label "Money Market Fund Price Change" $ token moneyMarketFundPriceChangeP S.empty
+
+moneyMarketOpP :: Parsec ErrorText DegiroCsv MoneyMarketOp
+moneyMarketOpP = moneyMarketFundPriceChangeParsec <|> moneyMarketFundOpParsec
 
 fxParsec :: Parsec ErrorText DegiroCsv Fx
 fxParsec = do
@@ -365,8 +376,8 @@ activityP = do
 
 activitiesP :: Parsec ErrorText DegiroCsv [Activity]
 activitiesP = do
-  void $ many moneyMarketOpParsec
-  as <- many (activityP <* many moneyMarketOpParsec)
+  void $ many moneyMarketOpP
+  as <- many (activityP <* many moneyMarketOpP)
   eof
     <|> ( do
             row <- anySingle

@@ -49,6 +49,22 @@ csvRecordsToLedgerTests = do
       ]
       `shouldBe` Right (LedgerReport [] [])
 
+  it "Filters out money market fund price changes" $ do
+    csvRecordsToLedger
+      [ DegiroCsvRecord
+          (fromGregorian 2021 5 10)
+          (TimeOfDay 0 0 0)
+          (fromGregorian 2021 5 9)
+          ""
+          Nothing
+          "Money Market fund price change (CHF)"
+          Nothing
+          (Just $ Cash chf (-0.03))
+          (Cash chf 3.50)
+          ""
+      ]
+      `shouldBe` Right (LedgerReport [] [])
+
   it "Parses deposits" $ do
     csvRecordsToLedger
       [ DegiroCsvRecord
