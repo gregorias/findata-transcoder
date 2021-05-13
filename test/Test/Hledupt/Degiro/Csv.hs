@@ -8,12 +8,14 @@ module Test.Hledupt.Degiro.Csv (
 import Data.Time (fromGregorian)
 import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
 import Hledupt.Data.Cash (Cash (Cash))
+import Hledupt.Data.CsvFile (CsvFile (CsvFile))
 import Hledupt.Data.Currency (chf, eur)
 import Hledupt.Data.Isin (mkIsin)
 import Hledupt.Degiro.Csv (
   DegiroCsvRecord (..),
   parseCsvStatement,
  )
+import NeatInterpolation (trimming)
 import Relude
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe)
@@ -24,12 +26,14 @@ tests = do
     describe "parseCsvStatement" $ do
       it "Parses a statement" $ do
         let csv =
-              "Date,Time,Value date,Product,ISIN,Description,FX,Change,,Balance,,Order ID\n\
-              \18-12-2020,00:00,17-12-2020,FUNDSHARE UCITS CHF CASH FUND,NL0011280581,Cash Market fund price change (CHF),,CHF,-0.01,CHF,131.23,\n\
-              \02-09-2020,12:02,01-09-2020,FUNDSHARE UCITS CHF CASH FUND,NL0011280581,\"Cash Market fund conversion: Sell 123.5678 at 0.981 CHF\",,,,CHF,131.72,\n\
-              \02-09-2020,08:24,01-09-2020,,,FX Debit,,CHF,0.01,CHF,131.72,\n\
-              \02-09-2020,08:24,01-09-2020,,,FX Debit,0.9241,EUR,-0.01,EUR,-0.00,\n\
-              \28-01-2020,14:05,27-01-2020,,,Deposit,,CHF,2500.00,CHF,2520.92,"
+              CsvFile . encodeUtf8 $
+                [trimming|
+              Date,Time,Value date,Product,ISIN,Description,FX,Change,,Balance,,Order ID
+              18-12-2020,00:00,17-12-2020,FUNDSHARE UCITS CHF CASH FUND,NL0011280581,Cash Market fund price change (CHF),,CHF,-0.01,CHF,131.23,
+              02-09-2020,12:02,01-09-2020,FUNDSHARE UCITS CHF CASH FUND,NL0011280581,"Cash Market fund conversion: Sell 123.5678 at 0.981 CHF",,,,CHF,131.72,
+              02-09-2020,08:24,01-09-2020,,,FX Debit,,CHF,0.01,CHF,131.72,
+              02-09-2020,08:24,01-09-2020,,,FX Debit,0.9241,EUR,-0.01,EUR,-0.00,
+              28-01-2020,14:05,27-01-2020,,,Deposit,,CHF,2500.00,CHF,2520.92,|]
         Just nlIsin <- return $ mkIsin "NL0011280581"
         parseCsvStatement csv
           `shouldBe` Right
