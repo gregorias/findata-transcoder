@@ -61,6 +61,10 @@ Coop Bildschirm Reinigungst., 10Stk 1 0.01 0.01
 
 Oecoplan Haushaltpapier weiss Maxi 1 0.01 0.01
 
+Flup Siphon 1 Liter 1 0.01 0.01
+
+Sun All-in1 Complete Gel Lemon 720ml 1 0.01 0.01
+
 Finish Allin1 AlpineLem 3x35 Tabs Trio 1 0.02 0.01 0.01 A
 
 Brita Kartusche Maxtra+ 3St 1 0.01 0.01
@@ -73,15 +77,15 @@ Nivea Sun Protect&Dry Touch LSF50 200ML 1 0.01 0.01
 
 ZEISS AntiBESCHLAG Set 1 0.01 0.01
 
-Total CHF 0.15
+Total CHF 0.17
 
-TWINT 0.15
+TWINT 0.17
 
 COOP GENOSSENSCHAFT, CHE-116.311.185 MWST
 
 GR MWST% TOTAL MWST
 
-0 2.50 0.15 0.00
+0 2.50 0.17 0.00
 
 SUPERCARD NR.:  0000*****0000
 
