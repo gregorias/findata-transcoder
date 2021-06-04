@@ -25,7 +25,7 @@ import Hledupt.Data.MyDecimal (
   defaultDecimalFormat,
  )
 import Relude
-import Relude.Extra (groupBy)
+import Relude.Extra (fold1, groupBy)
 import Text.Megaparsec (
   MonadParsec (try),
   Parsec,
@@ -102,9 +102,12 @@ entryLineP = do
 
 newtype Rabatt = Rabatt Decimal
 
+instance Semigroup Rabatt where
+  (<>) (Rabatt a) (Rabatt b) = Rabatt (a + b)
+
 maybeRabattAndTotalP :: Parser (Maybe Rabatt, Decimal)
 maybeRabattAndTotalP = do
-  maybeRabatt <- optional (rabattLineP <* many newline)
+  maybeRabatt <- viaNonEmpty fold1 <$> many (rabattLineP <* many newline)
   total <- totalLineP
   return (maybeRabatt, total)
 
