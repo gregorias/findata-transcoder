@@ -38,6 +38,22 @@ default-extensions:
   QuasiQuotes
   OverloadedStrings
 
+# no-type-defaults, this is dangerous, but in terms of convenience it's so
+# useful to use ExtendedDefaultRules that I keep it.
+ghc-options:
+  - -Werror
+  - -Wall
+  - -Wcompat
+  - -Wmissing-deriving-strategies
+  - -Widentities
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wmissing-export-lists
+  - -Wpartial-fields
+  - -Wredundant-constraints
+  - -Wno-type-defaults
+  - -Wno-partial-type-signatures
+
 library:
   source-dirs: src
   dependencies:
