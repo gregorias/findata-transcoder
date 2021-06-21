@@ -51,6 +51,17 @@ tests = do
                   Expenses:Other         -2.40 CHF|]
         Coop.receiptToLedger coop `shouldBe` Right expectedTr
 
+      it "correctlyCountsAUnnotatedRabatt" $ do
+        coop <- readFileText "test/data/coop-spargel-rabatt.txt"
+        let expectedTr =
+              parseTransactionUnsafe
+                [trimming|
+                2021/04/09 * Coop
+                  ! Assets:Liquid:BCGE           -9.90 CHF
+                  Expenses:Groceries             11.90 CHF
+                  Expenses:Other                 -2.00 CHF|]
+        Coop.receiptToLedger coop `shouldBe` Right expectedTr
+
       it "correctlyRecognizesMyCC" $ do
         coop <- readFileText "test/data/coop-card.txt"
         let expectedTr =

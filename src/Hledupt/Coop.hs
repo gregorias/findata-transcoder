@@ -112,8 +112,7 @@ maybeRabattAndTotalP = do
   return (maybeRabatt, total)
 
 rabattLineP :: Parser Rabatt
-rabattLineP = do
-  void $ string "Rabatt "
+rabattLineP = try $ do
   rest :: Text <- anyLineP
   let maybeRabatt = rest ^? [regex|.* (-\d+\.\d\d)|] . LR.groups
   rabattText <-
