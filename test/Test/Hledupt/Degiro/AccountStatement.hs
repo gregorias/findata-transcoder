@@ -89,6 +89,30 @@ csvRecordsToLedgerTests = do
             []
         )
 
+  it "Parses withdrawals" $ do
+    csvRecordsToLedger
+      [ DegiroCsvRecord
+          (fromGregorian 2021 6 20)
+          (TimeOfDay 12 33 0)
+          (fromGregorian 2021 6 20)
+          ""
+          Nothing
+          "Withdrawal"
+          Nothing
+          (Just $ Cash chf (-11.28))
+          (Cash chf 246.43)
+          ""
+      ]
+      `shouldBe` Right
+        ( LedgerReport
+            [ parseTransactionUnsafe
+                "2021/06/20 Deposit\n\
+                \  ! Assets:Liquid:BCGE    11.28 CHF\n\
+                \  * Assets:Liquid:Degiro  -11.28 CHF = 246.43 CHF"
+            ]
+            []
+        )
+
   it "Parses connection fees" $ do
     csvRecordsToLedger
       [ DegiroCsvRecord

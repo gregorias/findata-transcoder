@@ -89,6 +89,13 @@ depositP rec
     change <- dcrChange rec
     return $ Deposit (dcrDate rec) (dcrTime rec) change (dcrBalance rec)
 
+withdrawalP :: DegiroCsvRecord -> Maybe Deposit
+withdrawalP rec
+  | dcrDescription rec /= "Withdrawal" = Nothing
+  | otherwise = do
+    change <- dcrChange rec
+    return $ Deposit (dcrDate rec) (dcrTime rec) change (dcrBalance rec)
+
 depositToTransaction :: Deposit -> Transaction
 depositToTransaction (Deposit date _time amount balance) =
   transaction
@@ -368,6 +375,7 @@ activityP = do
   let singleRecordPs :: [DegiroCsvRecord -> Maybe Activity]
       singleRecordPs =
         [ fmap toActivity . depositP
+        , fmap toActivity . withdrawalP
         , fmap toActivity . connectionFeeP
         , fmap toActivity . stockTradeP
         ]
