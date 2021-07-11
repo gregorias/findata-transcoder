@@ -38,6 +38,7 @@ import qualified Hledupt.Degiro.AccountStatement as DegiroAccount (
 import qualified Hledupt.Degiro.Portfolio as DegiroPortfolio (
   csvStatementToLedger,
  )
+import qualified Hledupt.EasyRide as EasyRide
 import qualified Hledupt.Finpension as Finpension
 import Hledupt.GPayslip (payslipTextToLedger)
 import Hledupt.Ib as Ib (parseActivityCsv)
@@ -140,6 +141,15 @@ parseCoop = do
       exitFailure
     Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
 
+parseEasyRide :: IO ()
+parseEasyRide = do
+  receipt <- Text.getContents
+  case EasyRide.receiptToLedger receipt of
+    Left err -> do
+      Text.hPutStr stderr err
+      exitFailure
+    Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
+
 ignoreAction :: r -> OptionDesc r ()
 ignoreAction r = action $ const @_ @(Flag Bool -> Bool) r
 
@@ -167,6 +177,9 @@ main = defaultMain $ do
   command "parse-degiro-portfolio" $ do
     description "Parses Degiro's portfolio CSV and outputs Ledger data"
     ignoreAction parseDegiroPortfolio
+  command "parse-easy-ride" $ do
+    description "Parses a text dump from an EasyRide receipt and outputs Ledger data"
+    ignoreAction parseEasyRide
   command "parse-finpension-transactions" $ do
     description "Parses Finpensions' transaction CSV and outputs Ledger data"
     ignoreAction parseFinpensionTransactions

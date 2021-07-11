@@ -73,6 +73,7 @@ library:
   - safe
   - text
   - time
+  - time-compat
   - transformers
   - unordered-containers
   - vector

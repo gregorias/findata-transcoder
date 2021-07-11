@@ -24,6 +24,7 @@ import Hledupt.Data.MyDecimal (
   decimalP,
   defaultDecimalFormat,
  )
+import Hledupt.Wallet (bcgeAccount, bcgeCCAccount)
 import Relude
 import Relude.Extra (fold1, groupBy)
 import Text.Megaparsec (
@@ -56,8 +57,8 @@ data Entry = Entry
 data PaymentMethod = TWINT | Mastercard
 
 paymentMethodToAccount :: PaymentMethod -> Text
-paymentMethodToAccount TWINT = "Assets:Liquid:BCGE"
-paymentMethodToAccount Mastercard = "Assets:Liquid:BCGE CC"
+paymentMethodToAccount TWINT = bcgeAccount
+paymentMethodToAccount Mastercard = bcgeCCAccount
 
 type Parser = Parsec Void Text
 

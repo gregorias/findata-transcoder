@@ -45,6 +45,7 @@ library
       Hledupt.Degiro.Csv
       Hledupt.Degiro.IsinData
       Hledupt.Degiro.Portfolio
+      Hledupt.EasyRide
       Hledupt.Finpension
       Hledupt.GPayslip
       Hledupt.Ib
@@ -80,6 +81,7 @@ library
     , safe
     , text
     , time
+    , time-compat
     , transformers
     , unordered-containers
     , vector
@@ -144,6 +146,7 @@ test-suite hledupt-test
       Test.Hledupt.Degiro.AccountStatement
       Test.Hledupt.Degiro.Csv
       Test.Hledupt.Degiro.Portfolio
+      Test.Hledupt.EasyRide
       Test.Hledupt.Finpension
       Test.Hledupt.GPayslip
       Test.Hledupt.Ib
