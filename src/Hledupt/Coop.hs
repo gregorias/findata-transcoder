@@ -24,7 +24,7 @@ import Hledupt.Data.MyDecimal (
   decimalP,
   defaultDecimalFormat,
  )
-import Hledupt.Wallet (bcgeAccount, bcgeCCAccount)
+import Hledupt.Wallet (bcgeAccount, bcgeCCAccount, (<:>))
 import Relude
 import Relude.Extra (fold1, groupBy)
 import Text.Megaparsec (
@@ -178,8 +178,10 @@ entryNameToExpenseCategory entry =
     , ([regex|Brita|], haushalt)
     , ([regex|ZEISS|], haushalt)
     , ([regex|Finish|], haushalt)
+    , ([regex|Tesa|], haushalt)
     , ([regex|Listerine|], health)
     , ([regex|Nivea|], health)
+    , ([regex|Mücken|], haushalt <:> "Mückenschutz")
     ]
 
 prependErrorMessage :: Text -> Either Text a -> Either Text a

@@ -7,6 +7,7 @@ module Hledupt.Wallet (
   expensesOther,
   expensesTransport,
   financialServices,
+  (<:>),
 ) where
 
 import Hledger (AccountName)
@@ -15,23 +16,30 @@ import Relude
 assets :: AccountName
 assets = "Assets"
 
+(<:>) :: AccountName -> AccountName -> AccountName
+(<:>) parent child = parent <> ":" <> child
+
+-- Assign fixity 5, which is one less than for '<>' (6) and therefore binds
+-- less tightly.
+infixl 5 <:>
+
 liquidAssets :: AccountName
-liquidAssets = assets <> ":Liquid"
+liquidAssets = assets <:> "Liquid"
 
 bcgeAccount :: AccountName
-bcgeAccount = liquidAssets <> ":BCGE"
+bcgeAccount = liquidAssets <:> "BCGE"
 
 bcgeCCAccount :: AccountName
-bcgeCCAccount = liquidAssets <> ":BCGE CC"
+bcgeCCAccount = liquidAssets <:> "BCGE CC"
 
 expenses :: AccountName
 expenses = "Expenses"
 
 financialServices :: AccountName
-financialServices = expenses <> ":Financial Services"
+financialServices = expenses <:> "Financial Services"
 
 expensesOther :: AccountName
-expensesOther = expenses <> ":Other"
+expensesOther = expenses <:> "Other"
 
 expensesTransport :: AccountName
-expensesTransport = expenses <> ":Transport"
+expensesTransport = expenses <:> "Transport"
