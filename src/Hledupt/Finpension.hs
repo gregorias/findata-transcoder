@@ -19,6 +19,7 @@ import Hledger (
   Status (Cleared),
   amountSetFullPrecision,
   balassert,
+  missingamt,
  )
 import qualified Hledger as Ledger
 import qualified Hledger.Data.Extra as HDE
@@ -63,6 +64,11 @@ funds =
       , "World ex CH"
       )
     ,
+      ( "CSIF (CH) III Equity World ex CH Blue - Pension Fund Plus ZB"
+      , "CH0130458182"
+      , "World ex CH"
+      )
+    ,
       ( "CSIF (CH) III Equity World ex CH Small Cap Blue - Pension Fund DB"
       , "CH0017844686"
       , "World ex CH Small Cap"
@@ -87,12 +93,13 @@ funds =
 findFundByFinpensionName :: Text -> Maybe Fund
 findFundByFinpensionName finpensionName = find ((== finpensionName) . fundFinpensionName) funds
 
-data Category = Buy | Deposit | Fee | Sell
+data Category = Buy | Deposit | Dividend | Fee | Sell
   deriving stock (Show, Eq)
 
 instance CSV.FromField Category where
   parseField "Buy" = return Buy
   parseField "Deposit" = return Deposit
+  parseField "Dividend" = return Dividend
   parseField "Flat-rate administrative fee" = return Fee
   parseField "Sell" = return Sell
   parseField field =
@@ -152,6 +159,7 @@ instance CSV.FromNamedRecord RawTransaction where
 data Transaction
   = TrStock StockTransaction
   | TrDeposit DepositTransaction
+  | TrDividend DividendTransaction
   | TrFee FeeTransaction
 
 data StockTransaction = StockTransaction
@@ -170,6 +178,14 @@ data DepositTransaction = DepositTransaction
   , _dtAssetCurrency :: !Alpha
   , dtCashFlow :: !Decimal
   , dtBalance :: !Decimal
+  }
+
+data DividendTransaction = DividendTransaction
+  { divTrDate :: !Day
+  , divTrAssetName :: !Text
+  , _divTrAssetCurrency :: !Alpha
+  , divTrCashFlow :: !Decimal
+  , divTrBalance :: !Decimal
   }
 
 data FeeTransaction = FeeTransaction
@@ -249,6 +265,15 @@ rawTransactionToTransaction rawTr@(RawTransaction date Deposit _ _ _ _ _ _ _) =
         (rtAssetCurrency rawTr)
         (rtCashFlow rawTr)
         (rtBalance rawTr)
+rawTransactionToTransaction rawTr@(RawTransaction date Dividend _ _ _ _ _ _ _) =
+  return $
+    TrDividend $
+      DividendTransaction
+        date
+        (rtAssetName rawTr)
+        (rtAssetCurrency rawTr)
+        (rtCashFlow rawTr)
+        (rtBalance rawTr)
 rawTransactionToTransaction rawTr@(RawTransaction date Fee _ _ _ _ _ _ _) =
   return $
     TrFee $
@@ -272,6 +297,22 @@ finpensionTransactionToLedgerTransaction (TrDeposit depositTr) =
       & set
         pBalanceAssertion
         (balassert . HDE.makeCurrencyAmount chf . dtBalance $ depositTr)
+finpensionTransactionToLedgerTransaction (TrDividend divTr) =
+  return $
+    Ledger.transaction (divTrDate divTr) [divPosting, incomePosting]
+      & set tDescription ("Finpension Dividend -- " <> divTrAssetName divTr)
+        . set tStatus Cleared
+ where
+  divPosting =
+    Ledger.post
+      cashAccount
+      ( (HDE.makeCurrencyAmount chf . divTrCashFlow $ divTr)
+          & amountSetFullPrecision
+      )
+      & set
+        pBalanceAssertion
+        (balassert . amountSetFullPrecision . HDE.makeCurrencyAmount chf . divTrBalance $ divTr)
+  incomePosting = Ledger.post "Income:Capital Gains" missingamt
 finpensionTransactionToLedgerTransaction (TrFee feeTr) =
   return $
     Ledger.transaction (ftDate feeTr) [feePosting, financialServicesPosting]

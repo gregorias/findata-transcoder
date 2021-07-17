@@ -11,6 +11,7 @@ import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import Hledupt.Data.CsvFile (CsvFile (CsvFile))
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Hledupt.Finpension (funds, transactionsToLedger)
+import NeatInterpolation (trimming)
 import Relude
 import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
@@ -73,6 +74,12 @@ convertsTransactionsTest = do
             "2021/04/07 * Finpension Fee\n\
             \  Assets:Investments:Finpension:Cash          -4.9102 CHF = 72.348910 CHF\n\
             \  Expenses:Financial Services                  4.9102 CHF"
+        , parseTransactionUnsafe
+            [trimming|
+            2021/05/25 * Finpension Dividend -- CSIF (CH) Equity Emerging Markets Blue DB
+              Assets:Investments:Finpension:Cash  6.027682 CHF = 78.376592 CHF
+              Income:Capital Gains
+            |]
         ]
           & L.over (L.each . tPostings . L.mapped . pAmounts) amountSetFullPrecision
   transactionsToLedger csv
