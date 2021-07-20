@@ -158,13 +158,15 @@ entryNameToExpenseCategory entry =
     )
  where
   haushalt = "Haushalt"
-  readyMeals = "Groceries:Ready Meals"
+  readyMeals = "Groceries" <:> "Ready Meals"
+  alcohol = "Groceries" <:> "Alcohol"
   health = "Gesundheit"
   itemToExpenseCategoryPairs =
     [ ([regex|Stimorol|], "Groceries:Chewing Gum")
     , ([regex|Salmon Poké|], readyMeals)
     , ([regex|ZENBU|], readyMeals)
     , ([regex|Findus Egli|], readyMeals)
+    , ([regex|Nero|], alcohol)
     , ([regex|[tT]eelicht|], haushalt)
     , ([regex|WC Frisch|], haushalt)
     , ([regex|Haushalt|], haushalt)
