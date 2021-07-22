@@ -181,6 +181,7 @@ entryNameToExpenseCategory entry =
     , ([regex|ZEISS|], haushalt)
     , ([regex|Finish|], haushalt)
     , ([regex|Tesa|], haushalt)
+    , ([regex|CR2032|], haushalt)
     , ([regex|Listerine|], health)
     , ([regex|Nivea|], health)
     , ([regex|Mücken|], haushalt <:> "Mückenschutz")
