@@ -167,6 +167,7 @@ entryNameToExpenseCategory entry =
     , ([regex|Salmon Poké|], readyMeals)
     , ([regex|ZENBU|], readyMeals)
     , ([regex|Findus Egli|], readyMeals)
+    , ([regex|Cahors|], alcohol)
     , ([regex|Dôle|], alcohol)
     , ([regex|Moscato|], alcohol)
     , ([regex|Nero|], alcohol)
