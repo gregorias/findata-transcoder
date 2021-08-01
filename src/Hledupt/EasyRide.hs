@@ -53,6 +53,7 @@ germanMonthToMonthOfYear "Mai" = return 5
 germanMonthToMonthOfYear "Juni" = return 6
 germanMonthToMonthOfYear "Juli" = return 7
 germanMonthToMonthOfYear "August" = return 8
+germanMonthToMonthOfYear "Aug." = return 8
 germanMonthToMonthOfYear "September" = return 9
 germanMonthToMonthOfYear "Oktober" = return 10
 germanMonthToMonthOfYear "November" = return 11
@@ -64,7 +65,7 @@ dateLineP = do
   void $ string "Zahlungsbeleg – "
   day <- decimal
   void $ char ' '
-  monthString <- toText <$> some letterChar
+  monthString <- toText <$> some (letterChar <|> char '.')
   void $ char ' '
   year <- decimal
   void anyLineP
