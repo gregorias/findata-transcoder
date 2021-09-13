@@ -182,6 +182,7 @@ entryNameToExpenseCategory entry =
     , ([regex|^Persil|], haushalt)
     , ([regex|^Flup|], haushalt)
     , ([regex|^Sun|], haushalt)
+    , ([regex|^Palmolive Ultra|], haushalt)
     , ([regex|Reinigung|], haushalt)
     , ([regex|Compo-Bag|], haushalt)
     , ([regex|Brita|], haushalt)
