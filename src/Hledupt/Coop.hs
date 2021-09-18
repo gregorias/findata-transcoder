@@ -11,20 +11,23 @@ import Control.Lens.Regex.Text (regex)
 import qualified Control.Lens.Regex.Text as LR
 import Data.Decimal (Decimal)
 import qualified Data.HashMap.Strict as HashMap
+import Data.List.NonEmpty (some1)
 import Data.Time (Day, defaultTimeLocale, parseTimeM)
-import Hledger (Status (Cleared, Pending), Transaction, transaction)
+import Hledger (Posting, Status (Cleared, Pending, Unmarked), Transaction, transaction)
 import qualified Hledger as Ledger
 import qualified Hledger.Data.Extra as HDE
 import Hledger.Data.Lens (pStatus, tDescription, tStatus)
 import Hledupt.Data.Currency (chf)
 import Hledupt.Data.MyDecimal (
-  ChunkSepFormat (ChunkSep),
+  ChunkSepFormat (ChunkSep, NoChunkSep),
   DecimalFormat (..),
   DecimalFractionFormat (TwoDigitDecimalFraction),
+  cashDecimalFormat,
   decimalP,
   defaultDecimalFormat,
  )
 import Hledupt.Wallet (bcgeAccount, bcgeCCAccount, (<:>))
+import qualified Hledupt.Wallet as Wallet
 import Relude
 import Relude.Extra (fold1, groupBy)
 import Text.Megaparsec (
@@ -39,14 +42,14 @@ import Text.Megaparsec (
   parse,
   parseMaybe,
  )
-import Text.Megaparsec.Char (char, digitChar, newline, string)
+import Text.Megaparsec.Char (char, digitChar, hspace1, newline, string)
 
 data Receipt = Receipt
   { _receiptDate :: !Day
   , _receiptEntries :: [Entry]
   , _receiptRabatt :: !(Maybe Rabatt)
   , _receiptTotal :: !Decimal
-  , _receiptPaymentMethod :: !PaymentMethod
+  , _receiptPayments :: NonEmpty Payment
   }
 
 data Entry = Entry
@@ -54,11 +57,17 @@ data Entry = Entry
   , _entryTotal :: !Decimal
   }
 
-data PaymentMethod = TWINT | Mastercard
+data PaymentMethod = TWINT | Mastercard | Supercash
 
 paymentMethodToAccount :: PaymentMethod -> Text
 paymentMethodToAccount TWINT = bcgeAccount
 paymentMethodToAccount Mastercard = bcgeCCAccount
+paymentMethodToAccount Supercash = Wallet.expensesOther
+
+data Payment = Payment
+  { paymentMethod :: !PaymentMethod
+  , paymentTotal :: !Decimal
+  }
 
 type Parser = Parsec Void Text
 
@@ -136,8 +145,25 @@ totalLineP = do
 
 paymentMethodP :: Parser PaymentMethod
 paymentMethodP =
-  (string "TWINT" >> anyLineP >> return TWINT)
-    <|> (string "Mastercard" >> anyLineP >> return Mastercard)
+  (string "TWINT" >> return TWINT)
+    <|> (string "Mastercard" >> return Mastercard)
+    <|> (string "Supercash" >> return Supercash)
+
+paymentP :: Parser Payment
+paymentP = do
+  method <- paymentMethodP
+  total <- case method of
+    Supercash -> do
+      hspace1
+      void $ decimalP defaultDecimalFormat
+      hspace1
+      void $ decimalP (cashDecimalFormat NoChunkSep)
+      hspace1
+      decimalP (DecimalFormat (ChunkSep '\'') (Just TwoDigitDecimalFraction))
+    _ -> do
+      hspace1
+      decimalP (DecimalFormat (ChunkSep '\'') (Just TwoDigitDecimalFraction))
+  return $ Payment method total
 
 receiptP :: Parser Receipt
 receiptP = do
@@ -148,7 +174,7 @@ receiptP = do
       ((newline >> return Nothing) <|> (Just <$> entryLineP))
       maybeRabattAndTotalP
   void $ many newline
-  Receipt day (catMaybes maybeEntries) maybeRabatt total <$> paymentMethodP
+  Receipt day (catMaybes maybeEntries) maybeRabatt total <$> some1 (paymentP <* many newline)
 
 entryNameToExpenseCategory :: Text -> Text
 entryNameToExpenseCategory entry =
@@ -207,18 +233,25 @@ parseReceipt receipt = prepareErrMsg parsedReceipt
     prependErrorMessage "Could not parse the payslip."
       . first (toText . errorBundlePretty)
 
+paymentToPosting :: Payment -> Posting
+paymentToPosting Payment{paymentMethod = method, paymentTotal = total} =
+  Ledger.post
+    (paymentMethodToAccount method)
+    (HDE.makeCurrencyAmount chf (- total))
+    & L.set pStatus (postingStatus method)
+ where
+  postingStatus Supercash = Unmarked
+  postingStatus TWINT = Pending
+  postingStatus Mastercard = Pending
+
 receiptToTransaction :: Receipt -> Transaction
-receiptToTransaction (Receipt day entries rabatt total paymentMethod) =
+receiptToTransaction (Receipt day entries rabatt _total payments) =
   transaction day postings
     & L.set tDescription "Coop"
       . L.set tStatus Cleared
  where
-  postings = [bcgePosting] <> items <> rabattPosting
-  bcgePosting =
-    Ledger.post
-      (paymentMethodToAccount paymentMethod)
-      (HDE.makeCurrencyAmount chf (- total))
-      & L.set pStatus Pending
+  postings = toList paymentPostings <> items <> rabattPosting
+  paymentPostings = paymentToPosting <$> payments
   (catAndTotals :: [(Text, Decimal)]) =
     map
       (\(Entry name total') -> ("Expenses:" <> entryNameToExpenseCategory name, total'))

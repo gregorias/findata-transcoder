@@ -71,3 +71,14 @@ tests = do
                     ! Assets:Liquid:BCGE CC        -14.95 CHF
                     Expenses:Groceries:Ready Meals  14.95 CHF|]
         Coop.receiptToLedger coop `shouldBe` Right expectedTr
+
+      it "correctly handles multiple payment methods with supercash" $ do
+        coop <- readFileText "test/data/coop-supercash.txt"
+        let expectedTr =
+              parseTransactionUnsafe
+                [trimming|
+                  2021/04/09 * Coop
+                    Expenses:Other                -7.00 CHF
+                    ! Assets:Liquid:BCGE CC         -7.95 CHF
+                    Expenses:Groceries:Ready Meals  14.95 CHF|]
+        Coop.receiptToLedger coop `shouldBe` Right expectedTr
