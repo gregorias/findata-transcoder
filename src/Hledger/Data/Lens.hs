@@ -12,6 +12,7 @@ module Hledger.Data.Lens (
   pAmounts,
   pAmount,
   pBalanceAssertion,
+  pComment,
   pMamount,
   pMaybeAmount,
   pStatus,
@@ -74,6 +75,11 @@ pAccount :: Lens' Posting String
 pAccount = lens (toString . paccount) setter
  where
   setter p a = p{paccount = toText a}
+
+pComment :: Lens' Posting Text
+pComment = lens pcomment setter
+ where
+  setter p a = p{pcomment = a}
 
 pMamount :: Lens' Posting MixedAmount
 pMamount = lens pamount setter

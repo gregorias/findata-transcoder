@@ -27,12 +27,7 @@ import Hledger.Data.Extra (
   makeCommodityAmount,
   setCurrencyPrecision,
  )
-import Hledger.Data.Lens (
-  pBalanceAssertion,
-  pStatus,
-  tDescription,
-  tStatus,
- )
+import Hledger.Data.Lens (pBalanceAssertion, pComment, pStatus, tDescription, tStatus)
 import Hledger.Data.Posting (balassert)
 import qualified Hledger.Data.Transaction as Tr
 import Hledger.Data.Types (
@@ -156,6 +151,11 @@ amountPriceParser = do
   void $ some spaceChar
   constructor . amountSetFullPrecision <$> commodityP
 
+commentP :: Parser Text
+commentP = do
+  void $ single ';'
+  toText <$> manyTill anySingle newline
+
 -- | A partial Posting parser
 postingP :: Parser Posting
 postingP = do
@@ -165,6 +165,8 @@ postingP = do
   balAssert <- optional (try balanceAssertion)
   void $ many $ single ' '
   amountPrice <- optional amountPriceParser
+  void $ many $ single ' '
+  comment <- fromMaybe "" <$> optional commentP
   let amount' =
         amount
           { aprice = amountPrice
@@ -174,6 +176,7 @@ postingP = do
     post account amount'
       & L.set pBalanceAssertion balAssert
         . L.set pStatus status
+        . L.set pComment comment
 
 -- | A partial Transaction parser
 --
