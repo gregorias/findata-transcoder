@@ -24,24 +24,42 @@ dependencies:
 # Some defaults recommended by https://kowainik.github.io/posts/2019-02-06-style-guide#default-extensions
 # Also use Relude
 default-extensions:
+  BangPatterns
+  DataKinds
+  DeriveDataTypeable
+  DeriveFoldable
+  DeriveFunctor
+  DeriveGeneric
+  DeriveTraversable
   DerivingStrategies
+  DerivingVia
+  FlexibleContexts
+  FlexibleInstances
+  FunctionalDependencies
+  GADTs
   GeneralisedNewtypeDeriving
   InstanceSigs
   LambdaCase
+  MultiParamTypeClasses
   MultiWayIf
   NoImplicitPrelude
   NumericUnderscores
+  OverloadedLabels
+  OverloadedStrings
+  PatternSynonyms
+  QuasiQuotes
   ScopedTypeVariables
+  StandaloneDeriving
   TupleSections
   TypeApplications
+  TypeFamilies
+  TypeOperators
   UnicodeSyntax
-  QuasiQuotes
-  OverloadedStrings
+  ViewPatterns
 
 # no-type-defaults, this is dangerous, but in terms of convenience it's so
 # useful to use ExtendedDefaultRules that I keep it.
 ghc-options:
-  - -Werror
   - -Wall
   - -Wcompat
   - -Wmissing-deriving-strategies

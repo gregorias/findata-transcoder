@@ -61,8 +61,8 @@ library
   hs-source-dirs:
       src
   default-extensions:
-      DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiWayIf NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax QuasiQuotes OverloadedStrings
-  ghc-options: -Werror -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures
+      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
+  ghc-options: -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures
   build-depends:
       Decimal
     , base >=4.7 && <5
@@ -94,8 +94,8 @@ executable hledupt
   hs-source-dirs:
       app
   default-extensions:
-      DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiWayIf NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax QuasiQuotes OverloadedStrings
-  ghc-options: -Werror -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N
+      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
+  ghc-options: -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , bytestring
@@ -116,8 +116,8 @@ test-suite doctest
   hs-source-dirs:
       doctest
   default-extensions:
-      DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiWayIf NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax QuasiQuotes OverloadedStrings
-  ghc-options: -Werror -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -main-is DocTest
+      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
+  ghc-options: -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -main-is DocTest
   build-depends:
       base >=4.7 && <5
     , doctest
@@ -160,8 +160,8 @@ test-suite hledupt-test
   hs-source-dirs:
       test
   default-extensions:
-      DerivingStrategies GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiWayIf NoImplicitPrelude NumericUnderscores ScopedTypeVariables TupleSections TypeApplications UnicodeSyntax QuasiQuotes OverloadedStrings
-  ghc-options: -Werror -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -main-is Spec
+      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
+  ghc-options: -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -main-is Spec
   build-depends:
       Decimal
     , base >=4.7 && <5
