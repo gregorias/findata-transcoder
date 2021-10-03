@@ -57,6 +57,7 @@ germanMonthToMonthOfYear "Aug." = return 8
 germanMonthToMonthOfYear "September" = return 9
 germanMonthToMonthOfYear "Sept." = return 9
 germanMonthToMonthOfYear "Oktober" = return 10
+germanMonthToMonthOfYear "Okt." = return 10
 germanMonthToMonthOfYear "November" = return 11
 germanMonthToMonthOfYear "Dezember" = return 12
 germanMonthToMonthOfYear _ = Nothing
