@@ -4,6 +4,7 @@
 module Hledupt.Wallet (
   bcgeAccount,
   bcgeCCAccount,
+  equity,
   expensesOther,
   expensesTransport,
   financialServices,
@@ -15,6 +16,9 @@ import Relude
 
 assets :: AccountName
 assets = "Assets"
+
+equity :: AccountName
+equity = "Equity"
 
 (<:>) :: AccountName -> AccountName -> AccountName
 (<:>) parent child = parent <> ":" <> child

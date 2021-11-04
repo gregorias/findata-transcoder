@@ -10,6 +10,7 @@ import Data.Time (Day)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Hledger (
+  AccountName,
   AmountPrice (UnitPrice),
   Status (Cleared),
   Transaction,
@@ -27,15 +28,22 @@ import Hledupt.CharlesSchwab.Csv (
  )
 import Hledupt.Data.Currency (usd)
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport), todoPosting)
+import Hledupt.Wallet (
+  equity,
+  (<:>),
+ )
 import Relude
 
 -- "Wire Fund", "Sell" & "Journal", "Credit Interest"
 
+equityCs :: AccountName
+equityCs = equity <:> "Charles Schwab"
+
 usdAccount :: Text
 usdAccount = "Assets:Liquid:Charles Schwab:USD"
 
-unvestedStockAccount :: Text -> Text
-unvestedStockAccount symbol = "Assets:Illiquid:Charles Schwab:Unvested " <> symbol
+unvestedGoog :: AccountName
+unvestedGoog = equityCs <:> "Unvested GOOG"
 
 vestedStockAccount :: Text -> Text
 vestedStockAccount symbol = "Assets:Investments:Charles Schwab:" <> symbol
@@ -101,7 +109,7 @@ vestingToLedgerTransaction :: Vesting -> Transaction
 vestingToLedgerTransaction (Vesting day symbol q) =
   transaction
     day
-    [ post (unvestedStockAccount symbol) (makeCommodityAmount symbol (fromInteger $ - q))
+    [ post unvestedGoog (makeCommodityAmount symbol (fromInteger $ - q))
     , post (vestedStockAccount symbol) (makeCommodityAmount symbol (fromInteger q))
     ]
     & L.set tDescription (symbol <> " Vesting")
@@ -148,7 +156,7 @@ taxToLedgerTransaction rec = do
           usdAccount
           ( makeCurrencyAmount usd (- amount)
           )
-      , post "Taxes" missingamt
+      , post (equityCs <:> "Unvested GOOG Withholding Tax") missingamt
       ]
       & L.set tDescription "Withholding Tax"
         . L.set tStatus Cleared

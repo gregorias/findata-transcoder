@@ -61,7 +61,7 @@ tests = do
             ( LedgerReport
                 [ parseTransactionUnsafe
                     "2020/12/31 * GOOG Vesting\n\
-                    \  Assets:Illiquid:Charles Schwab:Unvested GOOG  -5 GOOG\n\
+                    \  Equity:Charles Schwab:Unvested GOOG  -5 GOOG\n\
                     \  Assets:Investments:Charles Schwab:GOOG  5 GOOG"
                 ]
                 []
@@ -129,7 +129,7 @@ tests = do
                 [ parseTransactionUnsafe
                     "2020/12/31 * Withholding Tax\n\
                     \  Assets:Liquid:Charles Schwab:USD  -1.23 USD\n\
-                    \  Taxes"
+                    \  Equity:Charles Schwab:Unvested GOOG Withholding Tax"
                 ]
                 []
             )
