@@ -9,6 +9,7 @@ module Hledupt.Data.Isin (
 ) where
 
 import Control.Applicative.Combinators (count)
+import qualified Data.Csv as CSV
 import Relude
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (alphaNumChar, letterChar, numberChar)
@@ -18,6 +19,9 @@ newtype Isin = Isin
   { unIsin :: Text
   }
   deriving newtype (Eq, Ord, Show)
+
+instance CSV.FromField Isin where
+  parseField = maybe empty return . mkIsin . decodeUtf8
 
 -- | The ISIN parser
 isinP :: MP.Parsec Void Text Isin

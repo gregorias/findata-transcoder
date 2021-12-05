@@ -45,11 +45,11 @@ convertsTransactionsTest = do
         , parseTransactionUnsafe
             "2021/03/01 * Finpension Purchase/Sell\n\
             \  Assets:Investments:Finpension:Cash  -1027.46762 CHF = 5582.30823 CHF\n\
-            \  Assets:Investments:Finpension:Emerging Markets  0.443 \"CH0214967314\" @ 2319.34 CHF"
+            \  Assets:Investments:Finpension:Emerging Markets  0.443 \"CH0017844686\" @ 2319.34 CHF"
         , parseTransactionUnsafe
             "2021/03/01 * Finpension Purchase/Sell\n\
             \  Assets:Investments:Finpension:Cash  -700.01376 CHF = 4882.29447 CHF\n\
-            \  Assets:Investments:Finpension:World ex CH Small Cap  0.354 \"CH0017844686\" @ 1977.44 CHF"
+            \  Assets:Investments:Finpension:World ex CH Small Cap  0.354 \"CH0214967314\" @ 1977.44 CHF"
         , parseTransactionUnsafe
             "2021/03/01 * Finpension Purchase/Sell\n\
             \  Assets:Investments:Finpension:Cash  -4897.77028 CHF = -15.47581 CHF\n\
@@ -65,11 +65,11 @@ convertsTransactionsTest = do
         , parseTransactionUnsafe
             "2021/04/01 * Finpension Purchase/Sell\n\
             \  Assets:Investments:Finpension:Cash  4.153080 CHF = 128.931170 CHF\n\
-            \  Assets:Investments:Finpension:World ex CH Small Cap  -0.002 \"CH0017844686\" @ 2076.54 CHF"
+            \  Assets:Investments:Finpension:World ex CH Small Cap  -0.002 \"CH0214967314\" @ 2076.54 CHF"
         , parseTransactionUnsafe
             "2021/04/01 * Finpension Purchase/Sell\n\
             \  Assets:Investments:Finpension:Cash     CHF -51.67206 = CHF 77.25911\n\
-            \  Assets:Investments:Finpension:Emerging Markets    \"CH0214967314\" 0.022 @ CHF 2348.73"
+            \  Assets:Investments:Finpension:Emerging Markets    \"CH0017844686\" 0.022 @ CHF 2348.73"
         , parseTransactionUnsafe
             "2021/04/07 * Finpension Fee\n\
             \  Assets:Investments:Finpension:Cash          -4.9102 CHF = 72.348910 CHF\n\

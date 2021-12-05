@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- | This module parses Finpension's reports and produces Ledger reports.
+-- | Parses Finpension's reports and produces Ledger reports.
 module Hledupt.Finpension (
   funds,
   transactionsToLedger,
@@ -44,9 +44,9 @@ cashAccount = "Assets:Investments:Finpension:Cash"
 fundAccount :: Text -> Text
 fundAccount shortName = "Assets:Investments:Finpension:" <> shortName
 
+-- | Fund metadata. A mapping from an ISIN to the funds short name.
 data Fund = Fund
-  { fundFinpensionName :: !Text
-  , fundIsin :: !Isin
+  { fundIsin :: !Isin
   , fundShortName :: !Text
   }
   deriving stock (Show)
@@ -54,44 +54,38 @@ data Fund = Fund
 funds :: [Fund]
 funds =
   fromJust $
-    fmap (\(a, b, c) -> Fund a b c)
-      <$> L.traverseOf (each . L._2) mkIsin sourcelist
+    fmap (uncurry Fund)
+      <$> L.traverseOf (each . L._1) mkIsin sourcelist
  where
   sourcelist =
     [
-      ( "CSIF (CH) III Equity World ex CH Blue - Pension Fund ZB"
-      , "CH0130458182"
+      ( "CH0130458182"
       , "World ex CH"
       )
     ,
-      ( "CSIF (CH) III Equity World ex CH Blue - Pension Fund Plus ZB"
-      , "CH0130458182"
+      ( "CH0130458182"
       , "World ex CH"
       )
     ,
-      ( "CSIF (CH) III Equity World ex CH Small Cap Blue - Pension Fund DB"
-      , "CH0017844686"
+      ( "CH0214967314"
       , "World ex CH Small Cap"
       )
     ,
-      ( "CSIF (CH) Equity Emerging Markets Blue DB"
-      , "CH0214967314"
+      ( "CH0017844686"
       , "Emerging Markets"
       )
     ,
-      ( "CSIF (CH) Equity Switzerland Small & Mid Cap ZB"
-      , "CH0110869143"
+      ( "CH0110869143"
       , "CH Small & Mid Cap"
       )
     ,
-      ( "CSIF (CH) Equity Switzerland Large Cap Blue ZB"
-      , "CH0033782431"
+      ( "CH0033782431"
       , "CH Large Cap"
       )
     ]
 
-findFundByFinpensionName :: Text -> Maybe Fund
-findFundByFinpensionName finpensionName = find ((== finpensionName) . fundFinpensionName) funds
+findFundByIsin :: Isin -> Maybe Fund
+findFundByIsin isin = find ((== isin) . fundIsin) funds
 
 data Category = Buy | Deposit | Dividend | Fee | Sell
   deriving stock (Show, Eq)
@@ -110,6 +104,7 @@ data RawTransaction = RawTransaction
   { _rtDate :: !Day
   , _rtCategory :: !Category
   , rtAssetName :: !Text
+  , rtIsin :: !(Maybe Isin)
   , _rtNumberOfShares :: !(Maybe Decimal)
   , rtAssetCurrency :: !Alpha
   , rtCurrencyRate :: !Decimal
@@ -133,6 +128,7 @@ instance CSV.FromNamedRecord RawTransaction where
     date <- unFinpensionDay <$> CSV.lookup nr "Date"
     cat <- CSV.lookup nr "Category"
     assetName <- CSV.lookup nr "Asset Name"
+    isin <- CSV.lookup nr "ISIN"
     nShares <- fmap unMyDecimal <$> CSV.lookup nr "Number of Shares"
     assetCurrency <- do
       alphaText <- CSV.lookup nr "Asset Currency"
@@ -149,6 +145,7 @@ instance CSV.FromNamedRecord RawTransaction where
         date
         cat
         assetName
+        isin
         nShares
         assetCurrency
         currencyRate
@@ -164,7 +161,8 @@ data Transaction
 
 data StockTransaction = StockTransaction
   { btDate :: !Day
-  , btAssetName :: !Text
+  , _btAssetName :: !Text
+  , btIsin :: !Isin
   , btNumberOfShares :: !Decimal
   , _btAssetCurrency :: !Alpha
   , _btCurrencyRate :: !Decimal
@@ -183,6 +181,7 @@ data DepositTransaction = DepositTransaction
 data DividendTransaction = DividendTransaction
   { divTrDate :: !Day
   , divTrAssetName :: !Text
+  , _divTrIsin :: !Isin
   , _divTrAssetCurrency :: !Alpha
   , divTrCashFlow :: !Decimal
   , divTrBalance :: !Decimal
@@ -214,6 +213,7 @@ rawTransactionToTransaction
             date
             Buy
             _
+            (Just isin)
             (Just nShares)
             _
             _
@@ -226,6 +226,7 @@ rawTransactionToTransaction
         StockTransaction
           date
           (rtAssetName rawTr)
+          isin
           nShares
           (rtAssetCurrency rawTr)
           (rtCurrencyRate rawTr)
@@ -237,6 +238,7 @@ rawTransactionToTransaction
             date
             Sell
             _
+            (Just isin)
             (Just nShares)
             _
             _
@@ -249,15 +251,16 @@ rawTransactionToTransaction
         StockTransaction
           date
           (rtAssetName rawTr)
+          isin
           nShares
           (rtAssetCurrency rawTr)
           (rtCurrencyRate rawTr)
           assetPriceInChf
           (rtCashFlow rawTr)
           (rtBalance rawTr)
-rawTransactionToTransaction (RawTransaction _ Buy _ _ _ _ _ _ _) = empty
-rawTransactionToTransaction (RawTransaction _ Sell _ _ _ _ _ _ _) = empty
-rawTransactionToTransaction rawTr@(RawTransaction date Deposit _ _ _ _ _ _ _) =
+rawTransactionToTransaction (RawTransaction _ Buy _ _ _ _ _ _ _ _) = empty
+rawTransactionToTransaction (RawTransaction _ Sell _ _ _ _ _ _ _ _) = empty
+rawTransactionToTransaction rawTr@(RawTransaction date Deposit _ _ _ _ _ _ _ _) =
   return $
     TrDeposit $
       DepositTransaction
@@ -265,16 +268,18 @@ rawTransactionToTransaction rawTr@(RawTransaction date Deposit _ _ _ _ _ _ _) =
         (rtAssetCurrency rawTr)
         (rtCashFlow rawTr)
         (rtBalance rawTr)
-rawTransactionToTransaction rawTr@(RawTransaction date Dividend _ _ _ _ _ _ _) =
+rawTransactionToTransaction rawTr@(RawTransaction date Dividend _ (Just isin) _ _ _ _ _ _) =
   return $
     TrDividend $
       DividendTransaction
         date
         (rtAssetName rawTr)
+        isin
         (rtAssetCurrency rawTr)
         (rtCashFlow rawTr)
         (rtBalance rawTr)
-rawTransactionToTransaction rawTr@(RawTransaction date Fee _ _ _ _ _ _ _) =
+rawTransactionToTransaction (RawTransaction _ Dividend _ _ _ _ _ _ _ _) = empty
+rawTransactionToTransaction rawTr@(RawTransaction date Fee _ _ _ _ _ _ _ _) =
   return $
     TrFee $
       FeeTransaction
@@ -335,15 +340,13 @@ finpensionTransactionToLedgerTransaction (TrFee feeTr) =
           & amountSetFullPrecision
       )
 finpensionTransactionToLedgerTransaction (TrStock buyTr) = do
-  let finpensionName = btAssetName buyTr
-  (Fund _ isin shortName) <-
+  let isin = btIsin buyTr
+  (Fund _ shortName) <-
     maybeToRight
-      ( "Could not find fund named "
-          <> finpensionName
-          <> " in registry."
+      ( "Could not find fund " <> show isin <> " in registry."
           <> " You might need to add the fund to the registry."
       )
-      (findFundByFinpensionName finpensionName)
+      (findFundByIsin isin)
   let fundPosting =
         Ledger.post
           (fundAccount shortName)
