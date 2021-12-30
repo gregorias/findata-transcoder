@@ -43,6 +43,7 @@ import qualified Hledupt.Finpension as Finpension
 import Hledupt.GPayslip (payslipTextToLedger)
 import Hledupt.Ib as Ib (parseActivityCsv)
 import Hledupt.Mbank (mbankCsvToLedger)
+import qualified Hledupt.Revolut as Revolut
 import Relude
 import qualified Text.Megaparsec as MP
 
@@ -113,6 +114,9 @@ parseMbank :: IO ()
 parseMbank =
   parseBank $
     mbankCsvToLedger . decodeUtf8
+
+parseRevolut :: IO ()
+parseRevolut = parseBank $ Revolut.parseCsvToLedger . decodeUtf8
 
 parseGPayslip :: IO ()
 parseGPayslip = do
@@ -192,3 +196,6 @@ main = defaultMain $ do
   command "parse-mbank" $ do
     description "Parses mBank's CSV file and outputs ledupt data"
     ignoreAction parseMbank
+  command "parse-revolut" $ do
+    description "Parses Revolut's CSV file and outputs ledger data"
+    ignoreAction parseRevolut
