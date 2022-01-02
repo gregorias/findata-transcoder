@@ -116,7 +116,7 @@ parseMbank =
     mbankCsvToLedger . decodeUtf8
 
 parseRevolut :: IO ()
-parseRevolut = parseBank $ Revolut.parseCsvToLedger . decodeUtf8
+parseRevolut = parseBank Revolut.parseCsvToLedger
 
 parseGPayslip :: IO ()
 parseGPayslip = do
