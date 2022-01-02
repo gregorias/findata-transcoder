@@ -1,10 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeApplications #-}
 
 module Main (main) where
 
 import Console.Options (
-  Flag,
   FlagFrag (FlagLong),
   FlagParam,
   FlagParser (FlagOptional),
@@ -154,8 +152,9 @@ parseEasyRide = do
       exitFailure
     Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
 
+{- HLINT ignore ignoreAction -}
 ignoreAction :: r -> OptionDesc r ()
-ignoreAction r = action $ const @_ @(Flag Bool -> Bool) r
+ignoreAction r = action $ \_ -> r
 
 main :: IO ()
 main = defaultMain $ do

@@ -52,7 +52,6 @@ import Hledupt.Degiro.Csv (
  )
 import Hledupt.Degiro.IsinData (prettyIsin)
 import Relude
-import Relude.Extra (inverseMap)
 import Text.Megaparsec (
   MonadParsec (eof, label, token),
   ParseErrorBundle (bundleErrors),

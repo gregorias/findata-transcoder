@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
+
 module Hledger.Data.Lens (
   aCommodity,
   aAmountPrice,
@@ -7,7 +9,6 @@ module Hledger.Data.Lens (
   baAmount,
   maAmount,
   maAmounts,
-  maMaybeAmount,
   pAccount,
   pAmounts,
   pAmount,
@@ -32,7 +33,8 @@ import Control.Lens (
   prism',
   sets,
  )
-import Hledger (AmountPrice)
+import Data.Map.Strict (assocs, elems)
+import Hledger (AmountPrice (TotalPrice, UnitPrice))
 import Hledger.Data.Types (
   Amount (..),
   AmountPrecision,
@@ -40,6 +42,7 @@ import Hledger.Data.Types (
   BalanceAssertion (..),
   CommoditySymbol,
   MixedAmount (..),
+  MixedAmountKey (MixedAmountKeyNoPrice, MixedAmountKeyTotalPrice, MixedAmountKeyUnitPrice),
   Posting (..),
   Status (..),
   Transaction (..),
@@ -96,28 +99,37 @@ baAmount = lens baamount setter
  where
   setter ba amt = ba{baamount = amt}
 
+amountToMixedAmountKey :: Amount -> MixedAmountKey
+amountToMixedAmountKey (Amount comm _ _ Nothing) = MixedAmountKeyNoPrice comm
+amountToMixedAmountKey (Amount comm _ _ (Just ap)) =
+  case ap of
+    UnitPrice (Amount comm' q _ _) -> MixedAmountKeyUnitPrice comm comm' q
+    TotalPrice (Amount comm' _ _ __) -> MixedAmountKeyTotalPrice comm comm'
+
 maAmount :: Prism' MixedAmount Amount
 maAmount = prism' setter getter
  where
-  setter = Mixed . (: [])
-  getter (Mixed (a : _)) = Just a
-  getter (Mixed _) = Nothing
+  setter amount = Mixed $ one (amountToMixedAmountKey amount, amount)
+  getter (Mixed m) = case elems m of
+    (a : _) -> Just a
+    [] -> Nothing
 
 maAmounts :: Lens' MixedAmount [Amount]
 maAmounts = lens getter setter
  where
-  setter _ = Mixed
-  getter (Mixed as) = as
+  setter _ as = Mixed . fromList $ (\a -> (amountToMixedAmountKey a, a)) <$> as
+  getter (Mixed as) = elems as
 
 maMaybeAmount :: Lens' MixedAmount (Maybe Amount)
 maMaybeAmount = lens getter setter
  where
-  setter (Mixed (_ : as)) (Just a') = Mixed (a' : as)
-  setter (Mixed (_ : as)) Nothing = Mixed as
-  setter (Mixed []) (Just a') = Mixed [a']
-  setter (Mixed []) Nothing = Mixed []
-  getter (Mixed (a : _)) = Just a
-  getter (Mixed _) = Nothing
+  setter (Mixed m) maybeAmount =
+    case assocs m of
+      [] -> Mixed . fromList $ (\a -> (amountToMixedAmountKey a, a)) <$> maybeToList maybeAmount
+      (_ : kas) -> case maybeAmount of
+        Nothing -> Mixed . fromList $ kas
+        Just a -> Mixed . fromList $ (amountToMixedAmountKey a, a) : kas
+  getter (Mixed m) = listToMaybe $ elems m
 
 pAmounts :: Setter' Posting Amount
 pAmounts = sets setter

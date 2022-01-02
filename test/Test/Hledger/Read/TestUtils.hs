@@ -25,6 +25,7 @@ import Hledger.Data.Posting (
 import Hledger.Data.Transaction (transaction)
 import Hledger.Data.Types (
   MixedAmount (..),
+  MixedAmountKey (MixedAmountKeyNoPrice),
   Posting (..),
   Status (..),
  )
@@ -146,7 +147,7 @@ tests = do
                     , pbalanceassertion =
                         balassert $
                           makeCommodityAmount "SPY" 123
-                    , pamount = Mixed [makeCommodityAmount "SPY" 100]
+                    , pamount = Mixed $ fromList [(MixedAmountKeyNoPrice "SPY", makeCommodityAmount "SPY" 100)]
                     }
                 , post "Expenses:Other" missingamt
                 ]

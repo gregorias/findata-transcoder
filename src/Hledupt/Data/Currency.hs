@@ -15,7 +15,6 @@ import Control.Applicative.Combinators (count)
 import qualified Data.Csv as Csv
 import Data.Currency (Alpha (CHF, EUR, PLN, USD))
 import Relude
-import Relude.Extra (inverseMap)
 import Text.Megaparsec (MonadParsec)
 import Text.Megaparsec.Char (letterChar)
 import Text.Megaparsec.Stream (Stream (Token))

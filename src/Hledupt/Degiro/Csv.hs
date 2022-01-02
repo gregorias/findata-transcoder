@@ -10,7 +10,6 @@ module Hledupt.Degiro.Csv (
 ) where
 
 import Control.Applicative.Combinators (count)
-import Control.Lens.Internal.ByteString (unpackStrict8)
 import qualified Data.ByteString.Lazy as LBS
 import Data.Csv ((.!))
 import qualified Data.Csv as Csv
@@ -43,7 +42,7 @@ newtype DegiroDay = DegiroDay
 instance Csv.FromField DegiroDay where
   parseField field =
     DegiroDay
-      <$> parseTimeM True defaultTimeLocale "%d-%m-%Y" (unpackStrict8 field)
+      <$> parseTimeM True defaultTimeLocale "%d-%m-%Y" (decodeUtf8 field)
 
 timeP :: MP.Parsec Void String TimeOfDay
 timeP = do
