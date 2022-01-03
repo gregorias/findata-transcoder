@@ -3,17 +3,24 @@ module Hledupt.Revolut (
 ) where
 
 import Control.Lens (over, _Left)
+import qualified Control.Lens as L
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
 import Data.Time (Day, defaultTimeLocale, parseTimeM)
+import Hledger (AccountName, Status (Cleared, Pending), Transaction, balassert, missingamt)
+import Hledger.Data (post, transaction)
+import Hledger.Data.Extra (makeCurrencyAmount)
+import Hledger.Data.Lens (pBalanceAssertion, pStatus, tDescription, tStatus)
 import Hledupt.Data.Currency (Currency)
-import Hledupt.Data.LedgerReport (LedgerReport)
+import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Hledupt.Data.MyDecimal (MyDecimal (unMyDecimal))
+import Hledupt.Wallet (liquidAssets, (<:>))
 import Relude
 
 data TransactionType = Topup | CardPayment | Transfer | Exchange
 
-data OneWayTransactionType = OwttTopup | OwttCardPayment | OwttTransfer
+getAccountName :: Currency -> AccountName
+getAccountName currency = liquidAssets <:> "Revolut" <:> show currency
 
 instance Csv.FromField TransactionType where
   parseField "TOPUP" = pure Topup
@@ -22,19 +29,13 @@ instance Csv.FromField TransactionType where
   parseField "EXCHANGE" = pure Exchange
   parseField field = fail $ "Could not parse transaction type: " <> decodeUtf8 field
 
-instance Csv.FromField OneWayTransactionType where
-  parseField "TOPUP" = pure OwttTopup
-  parseField "CARD_PAYMENT" = pure OwttCardPayment
-  parseField "TRANSFER" = pure OwttTransfer
-  parseField field = fail $ "Could not parse transaction type: " <> decodeUtf8 field
-
-data OneWayTransaction = OneWayTransaction
-  { transactionType :: !OneWayTransactionType
-  , date :: !Day
-  , description :: !Text
-  , amount :: !Decimal
-  , currency :: !Currency
-  , balance :: !Decimal
+data RevolutTransaction = RevolutTransaction
+  { _transactionType :: !TransactionType
+  , _date :: !Day
+  , _description :: !Text
+  , _amount :: !Decimal
+  , _currency :: !Currency
+  , _balance :: !Decimal
   }
 
 newtype RevolutDay = RevolutDay
@@ -46,7 +47,7 @@ instance Csv.FromField RevolutDay where
     RevolutDay
       <$> parseTimeM True defaultTimeLocale "%Y-%m-%d %T" (decodeUtf8 field)
 
-instance Csv.FromNamedRecord OneWayTransaction where
+instance Csv.FromNamedRecord RevolutTransaction where
   parseNamedRecord nr = do
     trType <- Csv.lookup nr "Type"
     startedDate <- unRevolutDay <$> Csv.lookup nr "Started Date"
@@ -55,7 +56,7 @@ instance Csv.FromNamedRecord OneWayTransaction where
     currency <- Csv.lookup nr "Currency"
     balance <- unMyDecimal <$> Csv.lookup nr "Balance"
     return $
-      OneWayTransaction
+      RevolutTransaction
         trType
         startedDate
         description
@@ -63,10 +64,25 @@ instance Csv.FromNamedRecord OneWayTransaction where
         currency
         balance
 
-decodeCsv :: LByteString -> Either Text [OneWayTransaction]
+decodeCsv :: LByteString -> Either Text [RevolutTransaction]
 decodeCsv csv = toList . snd <$> over _Left toText (Csv.decodeByName csv)
+
+revolutTransactionToLedgerTransaction :: RevolutTransaction -> Transaction
+revolutTransactionToLedgerTransaction (RevolutTransaction _type date description amount currency balance) =
+  transaction
+    date
+    [ post (getAccountName currency) (makeCurrencyAmount currency amount)
+        & L.set
+          pBalanceAssertion
+          (balassert . makeCurrencyAmount currency $ balance)
+    , post "Todo" missingamt
+        & L.set pStatus Pending
+    ]
+    & L.set tDescription description
+      . L.set tStatus Cleared
 
 parseCsvToLedger :: LByteString -> Either Text LedgerReport
 parseCsvToLedger csv = do
   csvTransactions <- decodeCsv csv
-  Left "Processing read CSV data is unimplemented."
+  let ledgerTransactions = revolutTransactionToLedgerTransaction <$> csvTransactions
+  return $ LedgerReport ledgerTransactions []

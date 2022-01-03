@@ -8,6 +8,7 @@ module Hledupt.Wallet (
   expensesOther,
   expensesTransport,
   financialServices,
+  liquidAssets,
   (<:>),
 ) where
 
