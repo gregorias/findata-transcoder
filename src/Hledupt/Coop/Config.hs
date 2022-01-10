@@ -2,6 +2,7 @@
 module Hledupt.Coop.Config (
   SharedExpenseRules,
   Config (..),
+  emptyConfig,
   decodeConfig,
   getDebtors,
 ) where
@@ -43,6 +44,9 @@ instance FromJSON SharedExpenseRules where
 newtype Config = Config
   { shared :: SharedExpenseRules
   }
+
+emptyConfig :: Config
+emptyConfig = Config $ SharedExpenseRules []
 
 instance FromJSON Config where
   parseJSON = Aeson.withObject "Config" $ \v -> Config <$> v .: "shared"
