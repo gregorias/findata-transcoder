@@ -1,7 +1,7 @@
 module Main (main) where
 
 import Console.Options (
-  FlagFrag (FlagLong),
+  FlagFrag (FlagDescription, FlagLong),
   FlagParam,
   FlagParser (FlagOptional),
   OptionDesc,
@@ -23,6 +23,7 @@ import qualified Hledupt.Bcge.Hint as BcgeHint
 import qualified Hledupt.BcgeCC as BcgeCC
 import qualified Hledupt.CharlesSchwab as CharlesSchwab (csvToLedger)
 import qualified Hledupt.Coop as Coop
+import qualified Hledupt.Coop.Config as Coop
 import Hledupt.Data.CsvFile (CsvFile (..))
 import Hledupt.Data.LedgerReport (
   LedgerReport (..),
@@ -132,10 +133,20 @@ parseBcgeCC = do
       exitFailure
     Right output -> putText . showLedgerReport . (`LedgerReport` []) $ output
 
-parseCoop :: IO ()
-parseCoop = do
+parseCoop :: Maybe FilePath -> IO ()
+parseCoop coopConfigFilePath = do
+  config <- case coopConfigFilePath of
+    Nothing -> return Coop.emptyConfig
+    Just filePath -> do
+      eitherErrOrConfig <- Coop.decodeConfig <$> readFileLBS filePath
+      case eitherErrOrConfig of
+        Left err -> do
+          Text.hPutStr stderr err
+          exitFailure
+        Right output -> return output
+
   receipt <- Text.getContents
-  case Coop.receiptToLedger receipt of
+  case Coop.receiptToLedger config receipt of
     Left err -> do
       Text.hPutStr stderr err
       exitFailure
@@ -168,7 +179,10 @@ main = defaultMain $ do
     ignoreAction parseBcgeCC
   command "parse-coop" $ do
     description "Parses a text dump from a Coop receipt and outputs Ledger data"
-    ignoreAction parseCoop
+    coopConfigFlag <- flagParam (FlagDescription "A JSON config" <> FlagLong "config") (FlagOptional Nothing (fmap Just . filenameParser))
+    action $ \toParam -> do
+      (coopConfigFilePath :: Maybe FilePath) <- return $ join (toParam coopConfigFlag)
+      parseCoop coopConfigFilePath
   command "parse-cs" $ do
     description "Parses Charles Schwabs' CSV and outputs Ledger data"
     ignoreAction parseCharlesSchwab

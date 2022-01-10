@@ -4,6 +4,7 @@ module Hledupt.Wallet (
   bcgeCCAccount,
   debtAssets,
   equity,
+  expenses,
   expensesOther,
   expensesTransport,
   financialServices,

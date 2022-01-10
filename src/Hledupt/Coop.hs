@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
+
 module Hledupt.Coop (
   receiptToLedger,
 ) where
@@ -9,14 +11,16 @@ import Control.Lens (
 import qualified Control.Lens as L
 import Control.Lens.Regex.Text (regex)
 import qualified Control.Lens.Regex.Text as LR
-import Data.Decimal (Decimal)
+import Data.Decimal (Decimal, realFracToDecimal)
+import qualified Data.Decimal as D
 import qualified Data.HashMap.Strict as HashMap
 import Data.List.NonEmpty (some1)
 import Data.Time (Day, defaultTimeLocale, parseTimeM)
-import Hledger (Posting, Status (Cleared, Pending, Unmarked), Transaction, transaction)
+import Hledger (AccountName, Posting, Status (Cleared, Pending, Unmarked), Transaction, transaction)
 import qualified Hledger as Ledger
 import qualified Hledger.Data.Extra as HDE
 import Hledger.Data.Lens (pStatus, tDescription, tStatus)
+import Hledupt.Coop.Config (Config (..), getDebtors)
 import Hledupt.Data.Currency (chf)
 import Hledupt.Data.MyDecimal (
   ChunkSepFormat (ChunkSep, NoChunkSep),
@@ -26,7 +30,7 @@ import Hledupt.Data.MyDecimal (
   decimalP,
   defaultDecimalFormat,
  )
-import Hledupt.Wallet (bcgeAccount, bcgeCCAccount, (<:>))
+import Hledupt.Wallet (bcgeAccount, bcgeCCAccount, expenses, (<:>))
 import qualified Hledupt.Wallet as Wallet
 import Relude
 import Relude.Extra (fold1, groupBy)
@@ -53,8 +57,8 @@ data Receipt = Receipt
   }
 
 data Entry = Entry
-  { _entryName :: !Text
-  , _entryTotal :: !Decimal
+  { entryName :: !Text
+  , entryTotal :: !Decimal
   }
 
 data PaymentMethod = TWINT | Mastercard | Supercash
@@ -244,21 +248,30 @@ paymentToPosting Payment{paymentMethod = method, paymentTotal = total} =
   postingStatus TWINT = Pending
   postingStatus Mastercard = Pending
 
-receiptToTransaction :: Receipt -> Transaction
-receiptToTransaction (Receipt day entries rabatt _total payments) =
+-- | Splits a single receipt entry into an expense category and optional debtor accounts.
+entryToPostings :: Config -> Entry -> ((AccountName, Decimal), [(AccountName, Decimal)])
+entryToPostings (Config{shared = rules}) (Entry{entryName = name, entryTotal = total}) =
+  ((expenseCategory, mainAlloc), zip debtors debtAllocs)
+ where
+  expenseCategory = expenses <:> entryNameToExpenseCategory name
+  debtors = getDebtors rules name
+  twoDigitTotal = realFracToDecimal 2 total
+  (mainAlloc : debtAllocs) = D.normalizeDecimal <$> D.allocate twoDigitTotal (replicate (1 + length debtors) 1)
+
+receiptToTransaction :: Config -> Receipt -> Transaction
+receiptToTransaction config (Receipt day entries rabatt _total payments) =
   transaction day postings
     & L.set tDescription "Coop"
       . L.set tStatus Cleared
  where
-  postings = toList paymentPostings <> items <> rabattPosting
+  postings = toList paymentPostings <> catItems <> debtItems <> rabattPosting
   paymentPostings = paymentToPosting <$> payments
-  (catAndTotals :: [(Text, Decimal)]) =
-    map
-      (\(Entry name total') -> ("Expenses:" <> entryNameToExpenseCategory name, total'))
-      entries
-  catToTotals :: HashMap Text (NonEmpty Decimal) = snd <<$>> groupBy fst catAndTotals
-  catToTotal = sum <$> catToTotals
-  items =
+  (myExpenses :: [(AccountName, Decimal)], debtors :: [(AccountName, Decimal)]) =
+    map (entryToPostings config) entries & unzip & fmap concat
+  catToTotals :: HashMap Text (NonEmpty Decimal) = snd <<$>> groupBy fst myExpenses
+  debtToTotals :: HashMap Text (NonEmpty Decimal) = snd <<$>> groupBy fst debtors
+  [catToTotal, debtToTotal] = fmap sum <$> [catToTotals, debtToTotals]
+  catItems =
     map
       ( \(cat, total') ->
           Ledger.post
@@ -266,13 +279,22 @@ receiptToTransaction (Receipt day entries rabatt _total payments) =
             (HDE.makeCurrencyAmount chf total')
       )
       (HashMap.toList catToTotal)
+  debtItems =
+    map
+      ( \(cat, total') ->
+          Ledger.post
+            cat
+            (HDE.makeCurrencyAmount chf total')
+            & L.set pStatus Pending
+      )
+      (HashMap.toList debtToTotal)
   rabattToPosting (Rabatt rabattVal) =
     Ledger.post
       "Expenses:Other"
       (HDE.makeCurrencyAmount chf rabattVal)
   rabattPosting = rabattToPosting <$> maybeToList rabatt
 
-receiptToLedger :: Text -> Either Text Transaction
-receiptToLedger receiptText = do
+receiptToLedger :: Config -> Text -> Either Text Transaction
+receiptToLedger config receiptText = do
   receipt <- parseReceipt receiptText
-  return $ receiptToTransaction receipt
+  return $ receiptToTransaction config receipt
