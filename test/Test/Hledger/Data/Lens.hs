@@ -1,6 +1,5 @@
 module Test.Hledger.Data.Lens (tests) where
 
-import qualified Control.Lens as L
 import Relude
 import Test.Hspec
 
