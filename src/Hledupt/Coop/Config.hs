@@ -53,7 +53,7 @@ instance FromJSON Config where
 
 getDebtorsFromRule :: SharedExpenseRule -> Text -> Maybe [AccountName]
 getDebtorsFromRule (SharedExpenseRule regex debtors) productName = do
-  void $ rightToMaybe $ Regex.execute regex productName
+  void $ join . rightToMaybe $ Regex.execute regex productName
   return ((<:>) debtAssets <$> debtors)
 
 -- | Returns debtor account names sharing the expense.

@@ -32,3 +32,21 @@ tests = do
         `shouldBe` [ "Assets:Debts:John Doe"
                    , "Assets:Debts:Mary Sue"
                    ]
+
+    it "Parses the config and does not apply the rules" $ do
+      let json =
+            [trimming|
+                {
+                  "shared": [
+                    {"product": "Butter",   "debtors": ["John Doe", "Mary Sue"]}
+                  ]
+                }
+            |]
+      let eitherConfig = decodeConfig $ encodeUtf8 json
+      (Config rules) <-
+        either
+          (\e -> assertFailure $ "Could not decode the config. " <> toString e)
+          return
+          eitherConfig
+      getDebtors rules "Margarine 200g"
+        `shouldBe` []
