@@ -75,6 +75,7 @@ ghc-options:
 library:
   source-dirs: src
   dependencies:
+  - aeson
   - Decimal
   - bytestring
   - cassava
@@ -87,6 +88,7 @@ library:
   - megaparsec
   - mtl
   - parser-combinators
+  - regex-tdfa
   - relude
   - safe
   - text
@@ -131,6 +133,7 @@ tests:
     - hledupt
     - hspec
     - hspec-expectations-pretty-diff
+    - HUnit
     - lens
     - megaparsec
     - neat-interpolation

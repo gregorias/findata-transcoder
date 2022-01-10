@@ -1,9 +1,8 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 -- | This module contains data relevant to how I organize my Ledger file.
 module Hledupt.Wallet (
   bcgeAccount,
   bcgeCCAccount,
+  debtAssets,
   equity,
   expensesOther,
   expensesTransport,
@@ -30,6 +29,9 @@ infixl 5 <:>
 
 liquidAssets :: AccountName
 liquidAssets = assets <:> "Liquid"
+
+debtAssets :: AccountName
+debtAssets = assets <:> "Debts"
 
 bcgeAccount :: AccountName
 bcgeAccount = liquidAssets <:> "BCGE"
