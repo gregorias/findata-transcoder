@@ -63,7 +63,7 @@ funds =
       , "World ex CH"
       )
     ,
-      ( "CH0130458182"
+      ( "CH0429081620"
       , "World ex CH"
       )
     ,
