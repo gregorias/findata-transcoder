@@ -37,7 +37,6 @@ import Relude.Extra (fold1, groupBy)
 import Text.Megaparsec (
   MonadParsec (try),
   Parsec,
-  anySingle,
   count,
   errorBundlePretty,
   manyTill,
@@ -47,6 +46,7 @@ import Text.Megaparsec (
   parseMaybe,
  )
 import Text.Megaparsec.Char (char, digitChar, hspace1, newline, string)
+import Text.Megaparsec.Char.Extra (anyLineP)
 
 data Receipt = Receipt
   { _receiptDate :: !Day
@@ -74,9 +74,6 @@ data Payment = Payment
   }
 
 type Parser = Parsec Void Text
-
-anyLineP :: Parsec Void Text Text
-anyLineP = toText <$> manyTill anySingle newline
 
 dateLineP :: Parser Day
 dateLineP = do

@@ -36,7 +36,6 @@ import Relude.Extra.Map (lookup)
 import Text.Megaparsec (
   MonadParsec (try),
   Parsec,
-  anySingle,
   count,
   getParserState,
   label,
@@ -48,6 +47,7 @@ import Text.Megaparsec (
   updateParserState,
  )
 import Text.Megaparsec.Char (char, digitChar, newline, string)
+import Text.Megaparsec.Char.Extra (anyLineP)
 import Text.Megaparsec.Error (errorBundlePretty)
 
 data Rechnung = Rechnung
@@ -66,9 +66,6 @@ data RawRechnungTransaction = RawRechnungTransaction
   }
 
 type BcgeCCParser = Parsec Void Text
-
-anyLineP :: BcgeCCParser Text
-anyLineP = label "an arbitrary line" $ toText <$> manyTill anySingle newline
 
 dateP :: String -> BcgeCCParser Day
 dateP fmt = label ("date (" <> fmt <> ")") $ do

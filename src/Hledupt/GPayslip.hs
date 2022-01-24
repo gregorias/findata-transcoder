@@ -31,7 +31,6 @@ import Hledupt.Data.MyDecimal (
 import Relude
 import Text.Megaparsec (
   Parsec,
-  anySingle,
   choice,
   count,
   errorBundlePretty,
@@ -49,6 +48,7 @@ import Text.Megaparsec.Char (
   space1,
   string,
  )
+import Text.Megaparsec.Char.Extra (anyLineP)
 
 data PayslipLedgerConfig = PayslipLedgerConfig
   { -- | The bank account Google sends the salary to.
@@ -85,9 +85,6 @@ data Deductions = Deductions
   , deductionsTotal :: !Decimal
   }
   deriving stock (Show, Eq)
-
-anyLineP :: Parsec Void Text ()
-anyLineP = void $ manyTill anySingle newline
 
 dateLineP :: Parsec Void Text Day
 dateLineP = do
