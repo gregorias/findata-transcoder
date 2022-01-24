@@ -26,10 +26,12 @@ import Relude
 import Text.Megaparsec (
   Parsec,
   anySingle,
+  eof,
   errorBundlePretty,
-  manyTill,
+  label,
   manyTill_,
   parse,
+  someTill,
  )
 import Text.Megaparsec.Char (char, letterChar, newline, string)
 import Text.Megaparsec.Char.Lexer (decimal)
@@ -41,8 +43,8 @@ data Receipt = Receipt
 
 type Parser = Parsec Void Text
 
-anyLineP :: Parsec Void Text Text
-anyLineP = toText <$> manyTill anySingle newline
+anyLineP :: Parsec Void Text ()
+anyLineP = label "arbitrary line" (void newline <|> void (someTill anySingle (void newline <|> eof)))
 
 germanMonthToMonthOfYear :: Text -> Maybe MonthOfYear
 germanMonthToMonthOfYear "Januar" = return 1
@@ -83,15 +85,16 @@ dateLineP = do
   return $ fromGregorian year month day
 
 totalLineP :: Parser Decimal
-totalLineP = do
-  void $ string "Verrechneter Gesamtbetrag CHF "
+totalLineP = label "total bill line" $ do
+  void $ string "Verrechneter Gesamtbetrag"
+  void $ manyTill_ anySingle (string "CHF ")
   decimalP (DecimalFormat (ChunkSep '\'') (Just TwoDigitDecimalFraction))
 
 receiptP :: Parser Receipt
 receiptP = do
   (_, day) <- manyTill_ anyLineP dateLineP
   (_, total) <- manyTill_ anyLineP totalLineP
-  void anyLineP
+  anyLineP
   return $ Receipt day total
 
 prependErrorMessage :: Text -> Either Text a -> Either Text a
