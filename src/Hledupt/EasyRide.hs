@@ -46,7 +46,9 @@ anyLineP = toText <$> manyTill anySingle newline
 
 germanMonthToMonthOfYear :: Text -> Maybe MonthOfYear
 germanMonthToMonthOfYear "Januar" = return 1
+germanMonthToMonthOfYear "Jan." = return 1
 germanMonthToMonthOfYear "Februar" = return 2
+germanMonthToMonthOfYear "Feb." = return 2
 germanMonthToMonthOfYear "März" = return 3
 germanMonthToMonthOfYear "April" = return 4
 germanMonthToMonthOfYear "Mai" = return 5
