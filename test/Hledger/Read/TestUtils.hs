@@ -37,6 +37,11 @@ import Hledger.Data.Types (
   Status (..),
   Transaction,
  )
+import qualified Hledger.Read.Common as Hledger (
+  descriptionp,
+  statusp,
+ )
+import qualified Hledger.Utils.Parse as Hledger
 import Hledupt.Data.MyDecimal (decimalP, defaultDecimalFormat)
 import Relude
 import Text.Megaparsec (
@@ -60,8 +65,12 @@ import Text.Megaparsec.Char (
   string,
  )
 import Text.Megaparsec.Char.Extra (eolOrEof)
+import qualified Text.Megaparsec.Internal as MP
 
-type Parser = Parsec Void Text
+type Parser = Parsec () Text
+
+toParser :: Hledger.TextParser Identity a -> Parser a
+toParser = MP.withParsecT (const ())
 
 space :: (MonadParsec e s m, Token s ~ Char) => m Char
 space = single ' '
@@ -133,13 +142,11 @@ balanceAssertion = do
   void $ MP.single '=' >> some space
   fmap (fromJust . balassert . whenCurrencyAdjustStyle) commodityP <* many space
 
-statusParser :: (MonadParsec e s m, Token s ~ Char) => m Status
-statusParser =
-  choice
-    [ try (single '*') $> Cleared
-    , try (single '!') $> Pending
-    , pure Unmarked
-    ]
+statusP :: Parser Status
+statusP = toParser Hledger.statusp
+
+descriptionP :: Parser Text
+descriptionP = toParser Hledger.descriptionp
 
 amountPriceParser :: Parser AmountPrice
 amountPriceParser = do
@@ -154,12 +161,12 @@ amountPriceParser = do
 commentP :: Parser Text
 commentP = do
   void $ single ';'
-  toText <$> manyTill anySingle newline
+  toText <$> manyTill anySingle (lookAhead eolOrEof)
 
 -- | A partial Posting parser
 postingP :: Parser Posting
 postingP = do
-  status <- many space *> statusParser <* many space
+  status <- statusP <* many space
   account <- accountParser
   amount <- whenCurrencyAdjustStyle <$> (try commodityP <|> pure missingamt)
   balAssert <- optional (try balanceAssertion)
@@ -187,8 +194,8 @@ transactionP = do
   date <-
     manyTill MP.anySingle (some $ char ' ')
       >>= parseTimeM True defaultTimeLocale "%Y/%m/%d"
-  status <- statusParser <* many space
-  title <- toText <$> manyTill anySingle (try newline)
+  status <- statusP <* many space
+  title <- descriptionP <* newline
   ps <- some postingP
   return $
     Tr.transaction date ps
