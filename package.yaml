@@ -115,6 +115,10 @@ executables:
     - relude
     - text
     - time
+    # Fix https://stackoverflow.com/questions/67519851/multiple-files-use-the-same-module-name
+    when:
+    - condition: false
+      other-modules: Paths_hledupt
 
 tests:
   hledupt-test:

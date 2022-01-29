@@ -93,8 +93,6 @@ library
 
 executable hledupt
   main-is: Main.hs
-  other-modules:
-      Paths_hledupt
   hs-source-dirs:
       app
   default-extensions:
