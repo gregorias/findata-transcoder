@@ -5,7 +5,7 @@ module Hledupt.EasyRide (
 import qualified Control.Lens as L
 import Data.Decimal (Decimal)
 import Data.Time (Day, fromGregorian)
-import Data.Time.Calendar.MonthDay.Compat (MonthOfYear)
+import Data.Time.Calendar.Extra (monthP)
 import Hledger (
   Status (Cleared, Pending),
   Transaction,
@@ -33,7 +33,6 @@ import Text.Megaparsec (
  )
 import Text.Megaparsec.Char (
   char,
-  letterChar,
   string,
  )
 import Text.Megaparsec.Char.Extra (anyLineP)
@@ -46,42 +45,15 @@ data Receipt = Receipt
 
 type Parser = Parsec Void Text
 
-germanMonthToMonthOfYear :: Text -> Maybe MonthOfYear
-germanMonthToMonthOfYear "Januar" = return 1
-germanMonthToMonthOfYear "Jan." = return 1
-germanMonthToMonthOfYear "Februar" = return 2
-germanMonthToMonthOfYear "Feb." = return 2
-germanMonthToMonthOfYear "März" = return 3
-germanMonthToMonthOfYear "April" = return 4
-germanMonthToMonthOfYear "Mai" = return 5
-germanMonthToMonthOfYear "Juni" = return 6
-germanMonthToMonthOfYear "Juli" = return 7
-germanMonthToMonthOfYear "August" = return 8
-germanMonthToMonthOfYear "Aug." = return 8
-germanMonthToMonthOfYear "September" = return 9
-germanMonthToMonthOfYear "Sept." = return 9
-germanMonthToMonthOfYear "Oktober" = return 10
-germanMonthToMonthOfYear "Okt." = return 10
-germanMonthToMonthOfYear "November" = return 11
-germanMonthToMonthOfYear "Nov." = return 11
-germanMonthToMonthOfYear "Dezember" = return 12
-germanMonthToMonthOfYear "Dez." = return 12
-germanMonthToMonthOfYear _ = Nothing
-
 dateLineP :: Parser Day
 dateLineP = do
   void $ string "Zahlungsbeleg – "
   day <- decimal
   void $ char ' '
-  monthString <- toText <$> some (letterChar <|> char '.')
+  month <- monthP
   void $ char ' '
   year <- decimal
   void anyLineP
-  month <-
-    maybe
-      (fail $ "Could not parse the expected month string: " <> toString monthString)
-      return
-      (germanMonthToMonthOfYear monthString)
   return $ fromGregorian year month day
 
 totalLineP :: Parser Decimal

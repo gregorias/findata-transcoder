@@ -34,6 +34,7 @@ import Data.List (isInfixOf)
 import Data.List.Extra (allSame)
 import qualified Data.Map.Strict as Map
 import Data.Time (Day, defaultTimeLocale, fromGregorian, parseTimeM)
+import Data.Time.Calendar.Extra (monthP)
 import qualified Data.Vector as V
 import Hledupt.Data.Currency (Currency, currencyP)
 import Hledupt.Data.MyDecimal (decimalP, defaultDecimalFormat, myDecDec)
@@ -61,29 +62,9 @@ import Text.Megaparsec (
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (alphaNumChar, char, digitChar, letterChar, numberChar, space, string)
 
--- Statement info parsers
-
-monthParser :: Parsec Void String Int
-monthParser = do
-  monthString <- some letterChar
-  case monthString of
-    "January" -> return 1
-    "February" -> return 2
-    "March" -> return 3
-    "April" -> return 4
-    "May" -> return 5
-    "June" -> return 6
-    "July" -> return 7
-    "August" -> return 8
-    "September" -> return 9
-    "October" -> return 10
-    "November" -> return 11
-    "December" -> return 12
-    _ -> mzero
-
-datePhraseParser :: Parsec Void String Day
+datePhraseParser :: Parsec Void Text Day
 datePhraseParser = do
-  month <- monthParser <* space
+  month <- monthP <* space
   day <- some digitChar <* string ", "
   year <- count 4 digitChar
   let date = do
@@ -94,7 +75,7 @@ datePhraseParser = do
     Just d -> return d
     Nothing -> fail "Could not parse date"
 
-periodPhraseParser :: Parsec Void String Day
+periodPhraseParser :: Parsec Void Text Day
 periodPhraseParser = do
   void $ string "Period,\""
   date <-
@@ -103,7 +84,7 @@ periodPhraseParser = do
   void $ single '"'
   return date
 
-statementDateParser :: Parsec Void String Day
+statementDateParser :: Parsec Void Text Day
 statementDateParser = snd <$> someTill_ anySingle (try periodPhraseParser)
 
 -- Positions AKA Status parsers
@@ -499,7 +480,7 @@ parseActivityStatement :: Statement -> Either String ActivityStatement
 parseActivityStatement csvs = do
   date <- do
     stmtCsv <- head . unSection <$> fetchSection "Statement" csvs
-    first errorBundlePretty $ MP.parse statementDateParser "" (unCsv stmtCsv)
+    first errorBundlePretty $ MP.parse statementDateParser "" (toText $ unCsv stmtCsv)
   cashPositions <-
     mapMaybe unCashReportRecord
       <$> parseNamedSection "Cash Report" csvs

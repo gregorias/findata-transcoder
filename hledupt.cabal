@@ -25,6 +25,7 @@ source-repository head
 library
   exposed-modules:
       Data.Csv.Extra
+      Data.Time.Calendar.Extra
       Hledger.Data.Extra
       Hledger.Data.Lens
       Hledger.Data.MarketPrice.Extra
