@@ -2,6 +2,7 @@
 module Hledupt.Wallet (
   bcgeAccount,
   bcgeCCAccount,
+  revolutAccount,
   debtAssets,
   equity,
   expenses,
@@ -39,6 +40,9 @@ bcgeAccount = liquidAssets <:> "BCGE"
 
 bcgeCCAccount :: AccountName
 bcgeCCAccount = liquidAssets <:> "BCGE CC"
+
+revolutAccount :: AccountName
+revolutAccount = liquidAssets <:> "Revolut"
 
 expenses :: AccountName
 expenses = "Expenses"
