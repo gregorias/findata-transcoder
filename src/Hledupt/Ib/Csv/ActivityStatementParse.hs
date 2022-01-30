@@ -1,9 +1,6 @@
 {-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies #-}
 
--- |
--- This module parses IB CSV activity statements.
+-- | This module parses IB CSV activity statements.
 module Hledupt.Ib.Csv.ActivityStatementParse (
   -- * Types
   ActivityStatement (..),
@@ -90,9 +87,9 @@ statementDateParser = snd <$> someTill_ anySingle (try periodPhraseParser)
 -- Positions AKA Status parsers
 
 data StockPosition = StockPosition
-  { spSymbol :: String
-  , spQuantity :: Integer
-  , spPrice :: Decimal
+  { spSymbol :: !Text
+  , spQuantity :: !Integer
+  , spPrice :: !Decimal
   }
   deriving stock (Eq, Show)
 
@@ -111,7 +108,7 @@ newtype QuoteCurrency = QuoteCurrency Currency
 data QuotePair = QuotePair BaseCurrency QuoteCurrency
   deriving stock (Eq, Show)
 
-quotePairParser :: Parsec Void String QuotePair
+quotePairParser :: Parsec Void Text QuotePair
 quotePairParser = do
   base <- currencyP
   void $ single '.'
@@ -123,24 +120,24 @@ instance Csv.FromField QuotePair where
   parseField =
     maybe (fail "Could not parse the quote pair") return
       . MP.parseMaybe quotePairParser
-      . (fmap (chr . fromEnum) . decodeUtf8 @String)
+      . (toText . fmap (chr . fromEnum) . decodeUtf8 @String)
 
 data StockTrade = StockTrade
-  { stockTradeDate :: Day
-  , stockTradeSymbol :: String
-  , stockTradeQuantity :: Integer
-  , stockTradeAmount :: Decimal
-  , stockTradeFee :: Decimal
+  { stockTradeDate :: !Day
+  , stockTradeSymbol :: !Text
+  , stockTradeQuantity :: !Integer
+  , stockTradeAmount :: !Decimal
+  , stockTradeFee :: !Decimal
   }
   deriving stock (Eq, Show)
 
 data ForexTrade = ForexTrade
-  { forexTradeDate :: Day
-  , forexTradeQuotePair :: QuotePair
-  , forexTradeQuantity :: Decimal
-  , forexTradePrice :: Decimal
-  , forexTradeTotalCost :: Decimal
-  , forexTradeFee :: Decimal
+  { forexTradeDate :: !Day
+  , forexTradeQuotePair :: !QuotePair
+  , forexTradeQuantity :: !Decimal
+  , forexTradePrice :: !Decimal
+  , forexTradeTotalCost :: !Decimal
+  , forexTradeFee :: !Decimal
   }
   deriving stock (Eq, Show)
 
@@ -152,9 +149,9 @@ instance Csv.FromField AssetCategory where
   parseField "Stocks" = pure Stocks
   parseField field =
     fail $
-      "Could not parse asset category: " ++ (chr . fromEnum <$> decodeUtf8 @String field)
+      "Could not parse asset category: " <> (chr . fromEnum <$> decodeUtf8 @String field)
 
-tradesDateTimeParser :: Parsec Void String Day
+tradesDateTimeParser :: Parsec Void Text Day
 tradesDateTimeParser =
   MP.manyTill anySingle (single ',')
     >>= parseTimeM True defaultTimeLocale "%Y-%m-%d"
@@ -167,8 +164,8 @@ instance Csv.FromNamedRecord StockTrade where
               let eitherDate = MP.parse tradesDateTimeParser "" dtString
               either
                 ( const $
-                    fail $
-                      "Could not parse Date/Time: " ++ dtString ++ "."
+                    fail . toString $
+                      "Could not parse Date/Time: " <> dtString <> "."
                 )
                 return
                 eitherDate
@@ -178,7 +175,7 @@ instance Csv.FromNamedRecord StockTrade where
       <*> (L.view myDecDec <$> Csv.lookup "Proceeds")
       <*> (L.view myDecDec <$> Csv.lookup "Comm/Fee")
 
-optionalQuotes :: (Ord e) => Parsec e String a -> Parsec e String a
+optionalQuotes :: (Ord e) => Parsec e Text a -> Parsec e Text a
 optionalQuotes = between optionalQuote optionalQuote
  where
   optionalQuote = optional $ single '"'
@@ -187,24 +184,24 @@ newtype Quantity = Quantity
   { unQuantity :: Integer
   }
 
-quantityParser :: Parsec Void String Quantity
+quantityParser :: Parsec Void Text Quantity
 quantityParser = optionalQuotes $ do
   negMod <- MP.try (char '-' >> pure negate) MP.<|> pure id
   quantityString <- catMaybes <$> some numberCharOrComma
   case readMaybe quantityString of
     Just quantity -> return $ Quantity $ negMod quantity
-    Nothing -> fail $ "Could not parse the quantity: " ++ quantityString
+    Nothing -> fail $ "Could not parse the quantity: " <> quantityString
  where
-  numberCharOrComma :: (Ord e) => Parsec e String (Maybe Char)
+  numberCharOrComma :: (Ord e) => Parsec e Text (Maybe Char)
   numberCharOrComma = (Just <$> numberChar) <|> (single ',' $> Nothing)
 
 instance Csv.FromField Quantity where
   parseField field =
-    maybe (fail $ "Could not parse the quantity: " ++ fieldStr) return
+    maybe (fail . toString $ "Could not parse the quantity: " <> fieldStr) return
       . MP.parseMaybe quantityParser
       $ fieldStr
    where
-    fieldStr = fmap (chr . fromEnum) . decodeUtf8 @String $ field
+    fieldStr = toText . fmap (chr . fromEnum) . decodeUtf8 @String $ field
 
 instance Csv.FromNamedRecord ForexTrade where
   parseNamedRecord =
@@ -214,8 +211,8 @@ instance Csv.FromNamedRecord ForexTrade where
               let eitherDate = MP.parse tradesDateTimeParser "" dtString
               either
                 ( const $
-                    fail $
-                      "Could not parse Date/Time: " ++ dtString ++ "."
+                    fail . toString $
+                      "Could not parse Date/Time: " <> dtString <> "."
                 )
                 return
                 eitherDate
@@ -330,7 +327,7 @@ instance Csv.FromNamedRecord DividendRecord where
                 either
                   ( \err ->
                       fail $
-                        "Could not parse (symbol, dps).\n" ++ show err
+                        "Could not parse (symbol, dps).\n" <> show err
                   )
                   return
                   parsed
@@ -367,7 +364,7 @@ instance Csv.FromNamedRecord WithholdingTaxRecord where
                   either
                     ( \err ->
                         fail $
-                          "Could not parse symbol.\n" ++ show err
+                          "Could not parse symbol.\n" <> show err
                     )
                     return
                     parsed
@@ -411,7 +408,7 @@ instance Csv.FromNamedRecord CashReportRecord where
 
 fetchSection :: String -> Statement -> Either String Section
 fetchSection name =
-  maybeToRight ("Could not find " ++ name ++ " among the CSVs.")
+  maybeToRight ("Could not find " <> name <> " among the CSVs.")
     . Map.lookup name
     . unStatement
 
@@ -421,9 +418,9 @@ fetchSectionOrEmpty name (Statement stmt) = Map.findWithDefault emptySection nam
   emptySection = Section [""]
 
 prependErrorMessage :: String -> Either String a -> Either String a
-prependErrorMessage err = L._Left L.%~ (errln ++)
+prependErrorMessage err = L._Left L.%~ (errln <>)
  where
-  errln = err ++ "\n"
+  errln = err <> "\n"
 
 parseCsv :: (Csv.FromNamedRecord a) => Csv -> Either String [a]
 parseCsv (Csv csv) =
@@ -435,7 +432,7 @@ parseNamedSection :: (Csv.FromNamedRecord a) => String -> Statement -> Either St
 parseNamedSection name stmt = do
   let csvs = unSection $ fetchSectionOrEmpty name stmt
   prependErrorMessage
-    ("Could not parse " ++ name ++ " records.")
+    ("Could not parse " <> name <> " records.")
     $ fmap concat . mapM parseCsv $
       csvs
 
@@ -455,7 +452,7 @@ parseTradesSection stmt = do
   let tradesName = "Trades"
       csvs = unSection $ fetchSectionOrEmpty tradesName stmt
   prependErrorMessage
-    ("Could not parse " ++ tradesName ++ " records.")
+    ("Could not parse " <> tradesName <> " records.")
     $ fold
       <$> (mapM parseTradesCsv :: NonEmpty Csv -> Either String (NonEmpty Trades))
         (csvs :: NonEmpty Csv)
