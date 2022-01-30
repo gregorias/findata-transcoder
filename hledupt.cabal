@@ -55,6 +55,7 @@ library
       Hledupt.Ib.Csv.ActivityStatementParse
       Hledupt.Ib.Csv.RawParse
       Hledupt.Mbank
+      Hledupt.Patreon
       Hledupt.Revolut
       Hledupt.Wallet
       Text.Megaparsec.Char.Extra
@@ -74,6 +75,7 @@ library
     , cassava
     , containers
     , currency-codes
+    , either
     , extra
     , hledger-lib >=1.19
     , lens
@@ -157,6 +159,7 @@ test-suite hledupt-test
       Test.Hledupt.Ib.Csv.ActivityStatementParse
       Test.Hledupt.Ib.Csv.RawParse
       Test.Hledupt.Mbank
+      Test.Hledupt.Patreon
       Test.Hledupt.Revolut
       Test.Text.Megaparsec.Char.Extra
       Test.Text.Megaparsec.Match

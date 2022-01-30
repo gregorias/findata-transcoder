@@ -15,6 +15,7 @@ import Control.Monad.Combinators (
  )
 import Data.Char (isDigit)
 import Data.Maybe (fromJust)
+import qualified Data.Text as T
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Hledger (
   AmountPrice (TotalPrice, UnitPrice),
@@ -173,7 +174,7 @@ postingP = do
   void $ many $ single ' '
   amountPrice <- optional amountPriceParser
   void $ many $ single ' '
-  comment <- fromMaybe "" <$> optional commentP
+  comment <- T.strip . fromMaybe "" <$> optional commentP
   let amount' =
         amount
           { aprice = amountPrice

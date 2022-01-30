@@ -40,6 +40,7 @@ import qualified Hledupt.Finpension as Finpension
 import Hledupt.GPayslip (payslipTextToLedger)
 import Hledupt.Ib as Ib (parseActivityCsv)
 import Hledupt.Mbank (mbankCsvToLedger)
+import qualified Hledupt.Patreon as Patreon
 import qualified Hledupt.Revolut as Revolut
 import Relude
 import qualified Text.Megaparsec as MP
@@ -161,6 +162,15 @@ parseEasyRide = do
       exitFailure
     Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
 
+parsePatreon :: IO ()
+parsePatreon = do
+  receipt <- Text.getContents
+  case Patreon.receiptToLedger receipt of
+    Left err -> do
+      Text.hPutStr stderr err
+      exitFailure
+    Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
+
 {- HLINT ignore ignoreAction -}
 ignoreAction :: r -> OptionDesc r ()
 ignoreAction r = action $ \_ -> r
@@ -207,6 +217,9 @@ main = defaultMain $ do
   command "parse-mbank" $ do
     description "Parses mBank's CSV file and outputs ledupt data"
     ignoreAction parseMbank
+  command "parse-patreon" $ do
+    description "Parses a text dump from a Patreon receipt and outputs Ledger data"
+    ignoreAction parsePatreon
   command "parse-revolut" $ do
     description "Parses Revolut's CSV file and outputs ledger data"
     ignoreAction parseRevolut

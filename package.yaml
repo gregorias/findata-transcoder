@@ -81,6 +81,7 @@ library:
   - cassava
   - containers
   - currency-codes
+  - either
   - extra
   - hledger-lib >= 1.19
   - lens

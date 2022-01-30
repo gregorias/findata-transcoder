@@ -172,5 +172,5 @@ tests = do
       it "Parses a posting comment" $ do
         let posting = "  Assets:Bank  ; comment\n"
             expected :: Posting =
-              (post "Assets:Bank" missingamt){pcomment = " comment"}
+              (post "Assets:Bank" missingamt){pcomment = "comment"}
         parseMaybe postingP posting `shouldBe` Just expected
