@@ -14,11 +14,11 @@ import Prelude (lookup)
 
 monthAssocList :: [(Text, MonthOfYear)]
 monthAssocList =
-  [ ("Januar", 1)
-  , ("January", 1)
+  [ ("January", 1)
+  , ("Januar", 1)
   , ("Jan.", 1)
-  , ("Februar", 2)
   , ("February", 2)
+  , ("Februar", 2)
   , ("Feb.", 2)
   , ("März", 3)
   , ("March", 3)

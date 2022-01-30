@@ -32,9 +32,6 @@ import Hledger.Data.Lens (
   tDescription,
   tStatus,
  )
-import Hledger.Data.Posting (
-  nullposting,
- )
 import Hledupt.Data.Currency (
   usd,
  )
@@ -92,14 +89,14 @@ dateP = do
 
 urlP :: Parser Text
 urlP = do
-  single '['
+  void $ single '['
   takeWhile1P (Just "url") (/= ']') <* single ']'
 
 entryP :: Parser Entry
 entryP = do
   try (space >> urlP) >> space
   pupil <- Text.strip <$> takeWhile1P (Just "pupil") (/= '[')
-  space >> urlP >> space >> string "=20\r\n$"
+  void $ space >> urlP >> space >> string "=20\r\n$"
   total' <- decimalP defaultDecimalFormat
   void $ manyTill anySingle (single '$' >> takeWhileP Nothing (\c -> isDigit c || c == '.'))
   return $ Entry{name = pupil, total = total'}
@@ -109,10 +106,10 @@ receiptP = do
   void $ manyTill anySingle (string "Charge date: ")
   day <- dateP
   void $ manyTill anySingle (string "Total $")
-  total <- decimalP defaultDecimalFormat
+  total' <- decimalP defaultDecimalFormat
   void $ manyTill anySingle (string "Charge details")
-  entries <- some entryP
-  return $ Receipt day entries total
+  entries' <- some entryP
+  return $ Receipt day entries' total'
 
 parseReceipt :: Text -> Either Text Receipt
 parseReceipt receipt = prepareErrMsg parsedReceipt
