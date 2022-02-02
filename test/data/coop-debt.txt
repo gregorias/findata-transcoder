@@ -3,6 +3,8 @@ Pfäffikon SZ Etzels.
 Artikel Menge Preis Aktion Total Zusatz
 Bio Landbrötli 90G 1 1.10 1.10 0
 Naturaplan Bio Vollmilch UHT 1lt. 1 1.80 1.80 0
+Naturaplan Bio Mandeln ganz 200G 1 0.00 0.00 A
+0
 Stimorol Peppermint 14g 1 1.50 1.50 0
 Total CHF 4.40
 Mastercard 4.40

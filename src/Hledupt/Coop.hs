@@ -172,7 +172,7 @@ receiptP = do
   void $ manyTill anyLineP headerLineP
   (maybeEntries, (maybeRabatt, total)) <-
     manyTill_
-      ((newline >> return Nothing) <|> (Just <$> entryLineP))
+      ((newline >> return Nothing) <|> (string "0\n" >> return Nothing) <|> (Just <$> entryLineP))
       maybeRabattAndTotalP
   void $ many newline
   Receipt day (catMaybes maybeEntries) maybeRabatt total <$> some1 (paymentP <* many newline)
