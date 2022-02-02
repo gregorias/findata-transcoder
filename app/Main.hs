@@ -85,8 +85,8 @@ parseCharlesSchwab :: IO ()
 parseCharlesSchwab =
   parseBank CharlesSchwab.csvToLedger
 
-parseDegiroAccountStatement :: IO ()
-parseDegiroAccountStatement =
+parseDegiroAccount :: IO ()
+parseDegiroAccount =
   parseBank $
     DegiroAccount.csvStatementToLedger . CsvFile
 
@@ -196,9 +196,9 @@ main = defaultMain $ do
   command "parse-cs" $ do
     description "Parses Charles Schwabs' CSV and outputs Ledger data"
     ignoreAction parseCharlesSchwab
-  command "parse-degiro-account-statement" $ do
+  command "parse-degiro-account" $ do
     description "Parses Degiro's account statement CSV and outputs Ledger data"
-    ignoreAction parseDegiroAccountStatement
+    ignoreAction parseDegiroAccount
   command "parse-degiro-portfolio" $ do
     description "Parses Degiro's portfolio CSV and outputs Ledger data"
     ignoreAction parseDegiroPortfolio
