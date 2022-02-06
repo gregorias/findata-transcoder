@@ -1,11 +1,11 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hledger.Read.TestUtils (
   postingP,
   transactionP,
   parseTransactionUnsafe,
+  transactionQQ,
 ) where
 
 import qualified Control.Lens as L
@@ -18,7 +18,7 @@ import Data.Maybe (fromJust)
 import qualified Data.Text as T
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Hledger (
-  AmountPrice (TotalPrice, UnitPrice),
+  AmountPrice (..),
   amountSetFullPrecision,
   missingamt,
   post,
@@ -44,6 +44,13 @@ import qualified Hledger.Read.Common as Hledger (
  )
 import qualified Hledger.Utils.Parse as Hledger
 import Hledupt.Data.MyDecimal (decimalP, defaultDecimalFormat)
+import Language.Haskell.TH.Quote (
+  QuasiQuoter (..),
+ )
+import Language.Haskell.TH.Syntax (
+  Exp (..),
+  Q (..),
+ )
 import Relude
 import Text.Megaparsec (
   MonadParsec (lookAhead),
@@ -67,6 +74,7 @@ import Text.Megaparsec.Char (
  )
 import Text.Megaparsec.Char.Extra (eolOrEof)
 import qualified Text.Megaparsec.Internal as MP
+import Trimdent (trimdent)
 
 type Parser = Parsec () Text
 
@@ -205,3 +213,14 @@ transactionP = do
 
 parseTransactionUnsafe :: Text -> Transaction
 parseTransactionUnsafe = fromJust . MP.parseMaybe transactionP
+
+transactionQQExp :: String -> Q Exp
+transactionQQExp string = [|parseTransactionUnsafe input|]
+ where
+  input = toText . trimdent $ string
+
+transactionQQ :: QuasiQuoter
+transactionQQ =
+  QuasiQuoter
+    { quoteExp = transactionQQExp
+    }

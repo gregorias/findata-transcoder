@@ -145,8 +145,10 @@ tests:
     - parser-combinators
     - relude
     - replace-megaparsec
+    - template-haskell
     - text
     - time
+    - trimdent
     - vector
 
   doctest:

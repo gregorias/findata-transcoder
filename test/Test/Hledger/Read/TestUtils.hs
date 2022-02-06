@@ -33,6 +33,7 @@ import Hledger.Read.TestUtils (
   parseTransactionUnsafe,
   postingP,
   transactionP,
+  transactionQQ,
  )
 import Hledupt.Data.Currency (usd)
 import Relude
@@ -44,6 +45,27 @@ import Text.Megaparsec (parseMaybe)
 tests :: Hspec.SpecWith ()
 tests = do
   describe "Test.Hledger.Read.TestUtils" $ do
+    describe "transactionQQ" $ do
+      it "Parses a transaction" $ do
+        let tr =
+              [transactionQQ|
+                     2019/10/28 * Title
+                       Assets:Bank With Spaces  SPY -15
+                       Expenses:Other|]
+            expectedTrBase =
+              transaction
+                (fromGregorian 2019 10 28)
+                [ post
+                    "Assets:Bank With Spaces"
+                    (makeCommodityAmount "SPY" (-15))
+                , post "Expenses:Other" missingamt
+                ]
+            expectedTr =
+              expectedTrBase
+                & L.set tDescription "Title"
+                & L.set tStatus Cleared
+        tr `shouldBe` expectedTr
+
     describe "postingP" $ do
       it "Parses a posting transaction" $ do
         let p = "  Expenses:Other"
