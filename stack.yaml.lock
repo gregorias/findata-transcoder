@@ -27,7 +27,7 @@ packages:
     hackage: currency-codes-3.0.0.1
 snapshots:
 - completed:
-    sha256: 9fd3a84e21a00cbd62abe0cfd8e3620d8014272d27b9357dfe27704270d49624
-    size: 631483
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2022/1/27.yaml
-  original: nightly-2022-01-27
+    sha256: 1537414153e2df2b451ace5f89c91fd730f20b6a66e52a726bb629e729d3cb61
+    size: 635150
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2022/2/5.yaml
+  original: nightly-2022-02-05
