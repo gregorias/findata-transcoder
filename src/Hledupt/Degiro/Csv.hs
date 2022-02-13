@@ -14,13 +14,16 @@ import qualified Data.ByteString.Lazy as LBS
 import Data.Csv ((.!))
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
+import Data.Either.Combinators (
+  mapLeft,
+ )
 import Data.Time (
   Day,
   TimeOfDay (TimeOfDay),
   defaultTimeLocale,
   parseTimeM,
  )
-import Data.Vector (Vector)
+import qualified Data.Vector as V
 import Hledupt.Data.Cash (Cash (Cash))
 import Hledupt.Data.CsvFile (CsvFile (CsvFile))
 import Hledupt.Data.Isin (Isin, mkIsin)
@@ -119,5 +122,5 @@ instance Csv.FromRecord DegiroCsvRecord where
 
 -- | Parses a Degiro CSV statement.
 -- The left return value contains an error message.
-parseCsvStatement :: CsvFile LBS.ByteString -> Either String (Vector DegiroCsvRecord)
-parseCsvStatement (CsvFile content) = Csv.decode Csv.HasHeader content
+parseCsvStatement :: CsvFile LBS.ByteString -> Either Text [DegiroCsvRecord]
+parseCsvStatement (CsvFile content) = fmap V.toList . mapLeft toText $ Csv.decode Csv.HasHeader content

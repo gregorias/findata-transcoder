@@ -6,17 +6,17 @@ module Hledupt.Degiro.AccountStatement (
   csvRecordsToLedger,
 ) where
 
-import Control.Lens (over, set, view)
-import qualified Control.Lens as L
+import Control.Lens (set, view)
 import qualified Data.ByteString.Lazy as LBS
 import Data.Decimal (Decimal)
+import Data.Either.Combinators (
+  mapLeft,
+ )
 import Data.Ratio ((%))
 import qualified Data.Set as S
 import qualified Data.Text as T
 import Data.Time (Day)
 import Data.Time.LocalTime (TimeOfDay)
-import Data.Vector (Vector)
-import qualified Data.Vector as V
 import Hledger (
   AmountPrice (UnitPrice),
   Status (Cleared, Pending),
@@ -100,14 +100,14 @@ depositToTransaction (Deposit date _time amount balance) =
   transaction
     date
     [ post "Assets:Liquid:BCGE" (makeCashAmount $ Cash.negate amount)
-        & L.set pStatus Pending
+        & set pStatus Pending
     , post "Assets:Liquid:Degiro" (makeCashAmount amount)
-        & L.set pStatus Cleared
-          . L.set
+        & set pStatus Cleared
+          . set
             pBalanceAssertion
             (balassert $ makeCashAmount balance)
     ]
-    & L.set tDescription "Deposit"
+    & set tDescription "Deposit"
 
 data ConnectionFee = ConnectionFee
   { _cfDate :: Day
@@ -127,13 +127,13 @@ connectionFeeToTransaction (ConnectionFee date amount balance) =
   transaction
     date
     [ post "Assets:Liquid:Degiro" (makeCashAmount amount)
-        & L.set
+        & set
           pBalanceAssertion
           (balassert $ makeCashAmount balance)
     , post "Expenses:Financial Services" (makeCashAmount $ Cash.negate amount)
     ]
-    & L.set tDescription "Exchange Connection Fee"
-      . L.set tStatus Cleared
+    & set tDescription "Exchange Connection Fee"
+      . set tStatus Cleared
 
 data FxType = Credit | Debit
 
@@ -179,7 +179,7 @@ fxPostingToPosting (FxPosting _fx currency change balance) =
     "Assets:Liquid:Degiro"
     ( makeCashAmount (Cash currency change)
     )
-    & L.set pBalanceAssertion (balassert $ makeCashAmount (Cash currency balance))
+    & set pBalanceAssertion (balassert $ makeCashAmount (Cash currency balance))
 
 data Fx = Fx
   { _fxDate :: !Day
@@ -188,7 +188,7 @@ data Fx = Fx
   }
 
 fxP :: FxRow -> FxRow -> Either Text Fx
-fxP fxRowFst fxRowSnd = over L._Left ("Could not merge Fx rows.\n" <>) $
+fxP fxRowFst fxRowSnd = mapLeft ("Could not merge Fx rows.\n" <>) $
   maybeToRight "" $ do
     guard (((==) `on` fxRowDate) fxRowFst fxRowSnd)
     guard (((==) `on` fxRowTime) fxRowFst fxRowSnd)
@@ -214,11 +214,11 @@ fxToTransaction (Fx date fstPost sndPost) =
     , fxPostingToPosting sndPost
         & setPrice fstPost
     ]
-    & L.set tDescription "Degiro Forex"
-      . L.set tStatus Cleared
+    & set tDescription "Degiro Forex"
+      . set tStatus Cleared
  where
   setPrice postArg =
-    L.set
+    set
       (pAmount . aAmountPrice)
       ( UnitPrice . amountSetFullPrecision . makeCashAmount
           . Cash
@@ -293,7 +293,7 @@ stockTradeToTransaction (StockTrade date isin qty price change bal) =
               )
         )
     , post "Assets:Liquid:Degiro" (makeCashAmount change)
-        & L.set
+        & set
           pBalanceAssertion
           (balassert $ makeCashAmount bal)
     ]
@@ -399,8 +399,7 @@ activitiesP = do
 -- | Parses a parsed Degiro CSV statement into stronger types
 csvRecordsToActivities :: [DegiroCsvRecord] -> Either Text [Activity]
 csvRecordsToActivities recs =
-  over
-    L._Left
+  mapLeft
     ( toText
         . parseErrorPretty
         . head
@@ -409,13 +408,13 @@ csvRecordsToActivities recs =
     $ parse activitiesP "" (DegiroCsv (reverse recs))
 
 -- | Transforms a parsed Degiro CSV statement into a Ledger report
-csvRecordsToLedger :: Vector DegiroCsvRecord -> Either Text LedgerReport
+csvRecordsToLedger :: [DegiroCsvRecord] -> Either Text LedgerReport
 csvRecordsToLedger recs = do
-  activities <- csvRecordsToActivities (V.toList recs)
+  activities <- csvRecordsToActivities recs
   return $ LedgerReport (activityToTransaction <$> activities) []
 
 -- | Transforms a Degiro CSV statement into a Ledger report
 csvStatementToLedger :: CsvFile LBS.ByteString -> Either Text LedgerReport
-csvStatementToLedger stmtTxt =
-  over L._Left toText (parseCsvStatement stmtTxt)
-    >>= csvRecordsToLedger
+csvStatementToLedger stmtTxt = do
+  (records :: [DegiroCsvRecord]) <- parseCsvStatement stmtTxt
+  csvRecordsToLedger records
