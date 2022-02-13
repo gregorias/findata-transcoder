@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 -- | Parses Finpension's reports and produces Ledger reports.
 module Hledupt.Finpension (
   funds,
