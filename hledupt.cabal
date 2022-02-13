@@ -86,6 +86,7 @@ library
     , regex-tdfa
     , relude
     , safe
+    , template-haskell
     , text
     , time
     , time-compat

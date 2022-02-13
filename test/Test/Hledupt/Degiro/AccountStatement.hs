@@ -19,7 +19,6 @@ import Hledupt.Degiro.Csv (
   DegiroCsvRecord (..),
   parseCsvStatement,
  )
-import NeatInterpolation (trimming)
 import Relude
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe, shouldMatchList, shouldSatisfy)

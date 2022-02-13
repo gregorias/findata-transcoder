@@ -54,7 +54,6 @@ import Hledupt.Degiro.IsinData (prettyIsin)
 import Relude
 import Text.Megaparsec (
   MonadParsec (eof, label, token),
-  ParseErrorBundle (bundleErrors),
   Parsec,
   Stream,
   VisualStream,
@@ -63,7 +62,6 @@ import Text.Megaparsec (
   customFailure,
   manyTill,
   parse,
-  parseErrorPretty,
   single,
  )
 import qualified Text.Megaparsec as MP
@@ -396,24 +394,26 @@ activitiesP = do
         )
   return as
 
--- | Parses a parsed Degiro CSV statement into stronger types
+-- | Parses a parsed Degiro CSV statement into stronger types.
 csvRecordsToActivities :: [DegiroCsvRecord] -> Either Text [Activity]
 csvRecordsToActivities recs =
-  mapLeft
-    ( toText
-        . parseErrorPretty
-        . head
-        . bundleErrors
-    )
-    $ parse activitiesP "" (DegiroCsv (reverse recs))
+  mapLeft showAnError $
+    parse activitiesP "" (DegiroCsv (reverse recs))
+ where
+  showAnError :: (VisualStream s, MP.ShowErrorComponent e) => MP.ParseErrorBundle s e -> Text
+  showAnError = toText . MP.parseErrorPretty . head . MP.bundleErrors
 
--- | Transforms a parsed Degiro CSV statement into a Ledger report
+-- | Transforms a parsed Degiro CSV statement into a Ledger report.
 csvRecordsToLedger :: [DegiroCsvRecord] -> Either Text LedgerReport
 csvRecordsToLedger recs = do
   activities <- csvRecordsToActivities recs
-  return $ LedgerReport (activityToTransaction <$> activities) []
+  return $
+    LedgerReport
+      { ledgerReportTransactions = activityToTransaction <$> activities
+      , ledgerReportMarketPrices = []
+      }
 
--- | Transforms a Degiro CSV statement into a Ledger report
+-- | Transforms a Degiro CSV statement into a Ledger report.
 csvStatementToLedger :: CsvFile LBS.ByteString -> Either Text LedgerReport
 csvStatementToLedger stmtTxt = do
   (records :: [DegiroCsvRecord]) <- parseCsvStatement stmtTxt

@@ -55,16 +55,16 @@ timeP = do
   return $ TimeOfDay hours minutes 0
 
 data DegiroCsvRecord = DegiroCsvRecord
-  { dcrDate :: Day
-  , dcrTime :: TimeOfDay
-  , dcrValueDate :: Day
-  , dcrProduct :: Text
-  , dcrIsin :: Maybe Isin
-  , dcrDescription :: Text
-  , dcrFx :: Maybe Decimal
-  , dcrChange :: Maybe Cash
-  , dcrBalance :: Cash
-  , dcrOrderId :: Text
+  { dcrDate :: !Day
+  , dcrTime :: !TimeOfDay
+  , dcrValueDate :: !Day
+  , dcrProduct :: !Text
+  , dcrIsin :: !(Maybe Isin)
+  , dcrDescription :: !Text
+  , dcrFx :: !(Maybe Decimal)
+  , dcrChange :: !(Maybe Cash)
+  , dcrBalance :: !Cash
+  , dcrOrderId :: !Text
   }
   deriving stock (Eq, Ord, Show)
 
