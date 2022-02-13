@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Test.Hledupt.Degiro.Csv (
   tests,
@@ -10,7 +9,7 @@ import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
 import Hledupt.Data.Cash (Cash (Cash))
 import Hledupt.Data.CsvFile (CsvFile (CsvFile))
 import Hledupt.Data.Currency (chf, eur)
-import Hledupt.Data.Isin (mkIsin)
+import Hledupt.Data.Isin (isin)
 import Hledupt.Degiro.Csv (
   DegiroCsvRecord (..),
   parseCsvStatement,
@@ -35,7 +34,7 @@ tests = do
               02-09-2020,08:24,01-09-2020,,,FX Debit,,CHF,0.01,CHF,131.72,
               02-09-2020,08:24,01-09-2020,,,FX Debit,0.9241,EUR,-0.01,EUR,-0.00,
               28-01-2020,14:05,27-01-2020,,,Deposit,,CHF,2500.00,CHF,2520.92,|]
-        Just nlIsin <- return $ mkIsin "NL0011280581"
+        let nlIsin = [isin|NL0011280581|]
         parseCsvStatement csv
           `shouldBe` Right
             [ DegiroCsvRecord

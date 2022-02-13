@@ -6,7 +6,7 @@ module Hledupt.Finpension (
   transactionsToLedger,
 ) where
 
-import Control.Lens (each, over, set)
+import Control.Lens (over, set)
 import qualified Control.Lens as L
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Csv as CSV
@@ -31,12 +31,14 @@ import Hledger.Data.Lens (
  )
 import Hledupt.Data.CsvFile (CsvFile (..))
 import Hledupt.Data.Currency (chf)
-import Hledupt.Data.Isin (Isin (unIsin), mkIsin)
+import Hledupt.Data.Isin (
+  Isin (unIsin),
+  isin,
+ )
 import Hledupt.Data.LedgerReport (LedgerReport (..), todoPosting)
 import Hledupt.Data.MyDecimal (MyDecimal (unMyDecimal))
 import Hledupt.Wallet (financialServices)
 import Relude
-import Relude.Unsafe (fromJust)
 
 cashAccount :: Text
 cashAccount = "Assets:Investments:Finpension:Cash"
@@ -52,40 +54,37 @@ data Fund = Fund
   deriving stock (Show)
 
 funds :: [Fund]
-funds =
-  fromJust $
-    fmap (uncurry Fund)
-      <$> L.traverseOf (each . L._1) mkIsin sourcelist
+funds = uncurry Fund <$> sourcelist
  where
   sourcelist =
     [
-      ( "CH0130458182"
+      ( [isin|CH0130458182|]
       , "World ex CH"
       )
     ,
-      ( "CH0429081620"
+      ( [isin|CH0429081620|]
       , "World ex CH"
       )
     ,
-      ( "CH0214967314"
+      ( [isin|CH0214967314|]
       , "World ex CH Small Cap"
       )
     ,
-      ( "CH0017844686"
+      ( [isin|CH0017844686|]
       , "Emerging Markets"
       )
     ,
-      ( "CH0110869143"
+      ( [isin|CH0110869143|]
       , "CH Small & Mid Cap"
       )
     ,
-      ( "CH0033782431"
+      ( [isin|CH0033782431|]
       , "CH Large Cap"
       )
     ]
 
 findFundByIsin :: Isin -> Maybe Fund
-findFundByIsin isin = find ((== isin) . fundIsin) funds
+findFundByIsin fIsin = find ((== fIsin) . fundIsin) funds
 
 data Category = Buy | Deposit | Dividend | Fee | Sell
   deriving stock (Show, Eq)
@@ -128,7 +127,7 @@ instance CSV.FromNamedRecord RawTransaction where
     date <- unFinpensionDay <$> CSV.lookup nr "Date"
     cat <- CSV.lookup nr "Category"
     assetName <- CSV.lookup nr "Asset Name"
-    isin <- CSV.lookup nr "ISIN"
+    trIsin <- CSV.lookup nr "ISIN"
     nShares <- fmap unMyDecimal <$> CSV.lookup nr "Number of Shares"
     assetCurrency <- do
       alphaText <- CSV.lookup nr "Asset Currency"
@@ -145,7 +144,7 @@ instance CSV.FromNamedRecord RawTransaction where
         date
         cat
         assetName
-        isin
+        trIsin
         nShares
         assetCurrency
         currencyRate
@@ -213,7 +212,7 @@ rawTransactionToTransaction
             date
             Buy
             _
-            (Just isin)
+            (Just trIsin)
             (Just nShares)
             _
             _
@@ -226,7 +225,7 @@ rawTransactionToTransaction
         StockTransaction
           date
           (rtAssetName rawTr)
-          isin
+          trIsin
           nShares
           (rtAssetCurrency rawTr)
           (rtCurrencyRate rawTr)
@@ -238,7 +237,7 @@ rawTransactionToTransaction
             date
             Sell
             _
-            (Just isin)
+            (Just trIsin)
             (Just nShares)
             _
             _
@@ -251,7 +250,7 @@ rawTransactionToTransaction
         StockTransaction
           date
           (rtAssetName rawTr)
-          isin
+          trIsin
           nShares
           (rtAssetCurrency rawTr)
           (rtCurrencyRate rawTr)
@@ -268,13 +267,13 @@ rawTransactionToTransaction rawTr@(RawTransaction date Deposit _ _ _ _ _ _ _ _) 
         (rtAssetCurrency rawTr)
         (rtCashFlow rawTr)
         (rtBalance rawTr)
-rawTransactionToTransaction rawTr@(RawTransaction date Dividend _ (Just isin) _ _ _ _ _ _) =
+rawTransactionToTransaction rawTr@(RawTransaction date Dividend _ (Just trIsin) _ _ _ _ _ _) =
   return $
     TrDividend $
       DividendTransaction
         date
         (rtAssetName rawTr)
-        isin
+        trIsin
         (rtAssetCurrency rawTr)
         (rtCashFlow rawTr)
         (rtBalance rawTr)
@@ -340,17 +339,17 @@ finpensionTransactionToLedgerTransaction (TrFee feeTr) =
           & amountSetFullPrecision
       )
 finpensionTransactionToLedgerTransaction (TrStock buyTr) = do
-  let isin = btIsin buyTr
+  let trIsin = btIsin buyTr
   (Fund _ shortName) <-
     maybeToRight
-      ( "Could not find fund " <> show isin <> " in registry."
+      ( "Could not find fund " <> show trIsin <> " in registry."
           <> " You might need to add the fund to the registry."
       )
-      (findFundByIsin isin)
+      (findFundByIsin trIsin)
   let fundPosting =
         Ledger.post
           (fundAccount shortName)
-          ( ( (HDE.makeCommodityAmount (toText $ unIsin isin) . btNumberOfShares $ buyTr)
+          ( ( (HDE.makeCommodityAmount (toText $ unIsin trIsin) . btNumberOfShares $ buyTr)
                 & amountSetFullPrecision
             )
               & L.set

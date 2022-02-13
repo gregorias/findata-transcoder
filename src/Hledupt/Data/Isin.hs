@@ -2,6 +2,7 @@
 
 -- | Module implementing a smart ISIN type.
 module Hledupt.Data.Isin (
+  isin,
   Isin,
   unIsin,
   mkIsin,
@@ -10,7 +11,15 @@ module Hledupt.Data.Isin (
 
 import Control.Applicative.Combinators (count)
 import qualified Data.Csv as CSV
-import Language.Haskell.TH.Syntax (Lift)
+import Language.Haskell.TH.Quote (
+  QuasiQuoter (..),
+ )
+import Language.Haskell.TH.Syntax (
+  Code (..),
+  Lift,
+  Q (..),
+ )
+import qualified Language.Haskell.TH.Syntax as TH
 import Relude
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (alphaNumChar, letterChar, numberChar)
@@ -39,3 +48,18 @@ isinP = do
 -- Just "IE00B4L5Y983"
 mkIsin :: Text -> Maybe Isin
 mkIsin = MP.parseMaybe (isinP <* MP.eof)
+
+parseIsin :: String -> Code Q Isin
+parseIsin str = case mkIsin (toText str) of
+  Nothing -> TH.liftCode . fail $ "Could not parse " <> str <> " as an ISIN.\n"
+  Just validIsin -> TH.liftTyped validIsin
+
+-- ISIN QuasiQuoter
+isin :: QuasiQuoter
+isin =
+  QuasiQuoter
+    { quoteExp = TH.unTypeQ . TH.examineCode . parseIsin
+    , quotePat = error "ISIN QuasiQuoter cannot be used in a pattern."
+    , quoteType = error "ISIN QuasiQuoter cannot be used in a type."
+    , quoteDec = error "ISIN QuasiQuoter cannot be used in a declaration."
+    }

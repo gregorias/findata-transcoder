@@ -40,7 +40,7 @@ import Hledupt.Data.Cash (Cash (Cash), cashAmount, cashCurrency)
 import qualified Hledupt.Data.Cash as Cash
 import Hledupt.Data.CsvFile (CsvFile)
 import Hledupt.Data.Currency (Currency, currencyP)
-import Hledupt.Data.Isin (Isin, mkIsin)
+import Hledupt.Data.Isin (Isin, isin)
 import Hledupt.Data.LedgerReport (LedgerReport (..))
 import Hledupt.Data.MyDecimal (
   decimalP,
@@ -69,8 +69,8 @@ import Text.Megaparsec.Char (letterChar, space)
 import Text.Megaparsec.Char.Lexer (decimal)
 import Text.Megaparsec.Extra.ErrorText (ErrorText (..))
 
-moneyMarketIsin :: Maybe Isin
-moneyMarketIsin = mkIsin "NL0011280581"
+moneyMarketIsin :: Isin
+moneyMarketIsin = [isin|NL0011280581|]
 
 data Deposit = Deposit
   { _depositDate :: Day
@@ -262,7 +262,7 @@ stockTradeDescriptionP = MP.parseMaybe parserP
 
 stockTradeP :: DegiroCsvRecord -> Maybe StockTrade
 stockTradeP rec = do
-  isin <- dcrIsin rec
+  trIsin <- dcrIsin rec
   (StockTradeDescription trType quantity price) <-
     stockTradeDescriptionP $
       dcrDescription rec
@@ -270,10 +270,10 @@ stockTradeP rec = do
         Buy -> id
         Sell -> negate
   change <- dcrChange rec
-  return $ StockTrade (dcrDate rec) isin (qtyChange quantity) price change (dcrBalance rec)
+  return $ StockTrade (dcrDate rec) trIsin (qtyChange quantity) price change (dcrBalance rec)
 
 stockTradeToTransaction :: StockTrade -> Transaction
-stockTradeToTransaction (StockTrade date isin qty price change bal) =
+stockTradeToTransaction (StockTrade date trIsin qty price change bal) =
   transaction
     date
     [ post
@@ -298,7 +298,7 @@ stockTradeToTransaction (StockTrade date isin qty price change bal) =
     & set tStatus Cleared
       . set tDescription "Degiro Stock Transaction"
  where
-  prettyStockName = prettyIsin isin
+  prettyStockName = prettyIsin trIsin
 
 -- | Represents money market records
 --
@@ -308,7 +308,8 @@ data MoneyMarketOp = MoneyMarketOp
 
 moneyMarketFundOpP :: DegiroCsvRecord -> Maybe MoneyMarketOp
 moneyMarketFundOpP rec = do
-  guard $ (== moneyMarketIsin) $ dcrIsin rec
+  recIsin <- dcrIsin rec
+  guard $ recIsin == moneyMarketIsin
   return MoneyMarketOp
 
 moneyMarketFundPriceChangeP :: DegiroCsvRecord -> Maybe MoneyMarketOp

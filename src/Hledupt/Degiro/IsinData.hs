@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hledupt.Degiro.IsinData (
   IsinData (..),
   isinToIsinData,
@@ -7,7 +5,7 @@ module Hledupt.Degiro.IsinData (
 ) where
 
 import Hledupt.Data.Currency (Currency, eur)
-import Hledupt.Data.Isin (Isin, mkIsin)
+import Hledupt.Data.Isin (Isin, isin)
 import Relude
 
 data IsinData = IsinData
@@ -16,13 +14,13 @@ data IsinData = IsinData
   }
 
 isinToIsinData :: Isin -> Maybe IsinData
-isinToIsinData isin =
-  let iwda = mkIsin "IE00B4L5Y983"
-      ibgs = mkIsin "IE00B14X4Q57"
+isinToIsinData isinArg =
+  let iwda = [isin|IE00B4L5Y983|]
+      ibgs = [isin|IE00B14X4Q57|]
    in if
-          | Just isin == iwda -> Just $ IsinData "IWDA" eur
-          | Just isin == ibgs -> Just $ IsinData "IBGS" eur
+          | isinArg == iwda -> Just $ IsinData "IWDA" eur
+          | isinArg == ibgs -> Just $ IsinData "IBGS" eur
           | otherwise -> Nothing
 
 prettyIsin :: Isin -> Text
-prettyIsin isin = maybe (show isin) isinDataName (isinToIsinData isin)
+prettyIsin isinArg = maybe (show isinArg) isinDataName (isinToIsinData isinArg)

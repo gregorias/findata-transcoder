@@ -12,7 +12,7 @@ import Hledger.Read.TestUtils (
  )
 import Hledupt.Data.Cash (Cash (Cash))
 import Hledupt.Data.Currency (chf, eur)
-import Hledupt.Data.Isin (mkIsin)
+import Hledupt.Data.Isin (isin)
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Hledupt.Degiro.AccountStatement (csvRecordsToLedger)
 import Hledupt.Degiro.Csv (
@@ -34,7 +34,7 @@ csvRecordsToLedgerTests = do
     csvRecordsToLedger [] `shouldBe` Right (LedgerReport [] [])
 
   it "Filters out money market ops" $ do
-    Just nlIsin <- return $ mkIsin "NL0011280581"
+    let nlIsin = [isin|NL0011280581|]
     csvRecordsToLedger
       [ DegiroCsvRecord
           (fromGregorian 2020 9 2)
