@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Test.Hledupt.Degiro.AccountStatement (
   tests,
@@ -8,7 +7,9 @@ module Test.Hledupt.Degiro.AccountStatement (
 import qualified Data.Text as T
 import Data.Time (fromGregorian)
 import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
-import Hledger.Read.TestUtils (parseTransactionUnsafe)
+import Hledger.Read.TestUtils (
+  transactionQQ,
+ )
 import Hledupt.Data.Cash (Cash (Cash))
 import Hledupt.Data.Currency (chf, eur)
 import Hledupt.Data.Isin (mkIsin)
@@ -18,6 +19,7 @@ import Hledupt.Degiro.Csv (
   DegiroCsvRecord (..),
   parseCsvStatement,
  )
+import NeatInterpolation (trimming)
 import Relude
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe, shouldMatchList, shouldSatisfy)
@@ -81,10 +83,10 @@ csvRecordsToLedgerTests = do
       ]
       `shouldBe` Right
         ( LedgerReport
-            [ parseTransactionUnsafe
-                "2020/09/02 Deposit\n\
-                \  ! Assets:Liquid:BCGE  -5 CHF\n\
-                \  * Assets:Liquid:Degiro  5 CHF = 5.05 CHF"
+            [ [transactionQQ|
+                2020/09/02 Deposit
+                  ! Assets:Liquid:BCGE  -5 CHF
+                  * Assets:Liquid:Degiro  5 CHF = 5.05 CHF|]
             ]
             []
         )
@@ -105,10 +107,10 @@ csvRecordsToLedgerTests = do
       ]
       `shouldBe` Right
         ( LedgerReport
-            [ parseTransactionUnsafe
-                "2021/06/20 Deposit\n\
-                \  ! Assets:Liquid:BCGE    11.28 CHF\n\
-                \  * Assets:Liquid:Degiro  -11.28 CHF = 246.43 CHF"
+            [ [transactionQQ|
+                2021/06/20 Deposit
+                  ! Assets:Liquid:BCGE    11.28 CHF
+                  * Assets:Liquid:Degiro  -11.28 CHF = 246.43 CHF|]
             ]
             []
         )
@@ -129,10 +131,10 @@ csvRecordsToLedgerTests = do
       ]
       `shouldBe` Right
         ( LedgerReport
-            [ parseTransactionUnsafe
-                "2020/09/02 * Exchange Connection Fee\n\
-                \  Assets:Liquid:Degiro  -2.50 EUR = -2.50 EUR\n\
-                \  Expenses:Financial Services  2.50 EUR"
+            [ [transactionQQ|
+                2020/09/02 * Exchange Connection Fee
+                  Assets:Liquid:Degiro  -2.50 EUR = -2.50 EUR
+                  Expenses:Financial Services  2.50 EUR|]
             ]
             []
         )
@@ -147,10 +149,10 @@ csvRecordsToLedgerTests = do
     csvRecordsToLedger csvRecords
       `shouldBe` Right
         ( LedgerReport
-            [ parseTransactionUnsafe
-                "2020/02/04 * Degiro Forex\n\
-                \  Assets:Liquid:Degiro  2.50 EUR = 0 EUR\n\
-                \  Assets:Liquid:Degiro  -2.67 CHF = 2382.59 CHF @ 0.9351 EUR\n"
+            [ [transactionQQ|
+                2020/02/04 * Degiro Forex
+                  Assets:Liquid:Degiro  2.50 EUR = 0 EUR
+                  Assets:Liquid:Degiro  -2.67 CHF = 2382.59 CHF @ 0.9351 EUR|]
             ]
             []
         )
@@ -165,10 +167,10 @@ csvRecordsToLedgerTests = do
     csvRecordsToLedger csvRecords
       `shouldBe` Right
         ( LedgerReport
-            [ parseTransactionUnsafe
-                "2020/09/02 * Degiro Forex\n\
-                \  Assets:Liquid:Degiro  -0.01 EUR = 0 EUR\n\
-                \  Assets:Liquid:Degiro  0.01 CHF = 131.72 CHF @ 0.9241 EUR\n"
+            [ [transactionQQ|
+                2020/09/02 * Degiro Forex
+                  Assets:Liquid:Degiro  -0.01 EUR = 0 EUR
+                  Assets:Liquid:Degiro  0.01 CHF = 131.72 CHF @ 0.9241 EUR|]
             ]
             []
         )
@@ -187,18 +189,18 @@ csvRecordsToLedgerTests = do
     Right (LedgerReport actualTrs prices) <- return $ csvRecordsToLedger csvRecords
     prices `shouldBe` []
     actualTrs
-      `shouldMatchList` [ parseTransactionUnsafe
-                            "2020/02/03 * Degiro Forex\n\
-                            \  Assets:Liquid:Degiro  -12414.85 CHF = 12791.83 CHF @ 0.9353 EUR\n\
-                            \  Assets:Liquid:Degiro  11611.68 EUR = -9733.32 EUR\n"
-                        , parseTransactionUnsafe
-                            "2020/02/03 * Degiro Forex\n\
-                            \  Assets:Liquid:Degiro  -10406.57 CHF = 2385.26 CHF @ 0.9353 EUR\n\
-                            \  Assets:Liquid:Degiro    9733.32 EUR = 0 EUR\n"
-                        , parseTransactionUnsafe
-                            "2020/02/04 * Degiro Forex\n\
-                            \  Assets:Liquid:Degiro  2.50 EUR = 0 EUR\n\
-                            \  Assets:Liquid:Degiro  -2.67 CHF = 2382.59 CHF @ 0.9351 EUR\n"
+      `shouldMatchList` [ [transactionQQ|
+                            2020/02/03 * Degiro Forex
+                              Assets:Liquid:Degiro  -12414.85 CHF = 12791.83 CHF @ 0.9353 EUR
+                              Assets:Liquid:Degiro  11611.68 EUR = -9733.32 EUR|]
+                        , [transactionQQ|
+                            2020/02/03 * Degiro Forex
+                              Assets:Liquid:Degiro  -10406.57 CHF = 2385.26 CHF @ 0.9353 EUR
+                              Assets:Liquid:Degiro    9733.32 EUR = 0 EUR|]
+                        , [transactionQQ|
+                            2020/02/04 * Degiro Forex
+                              Assets:Liquid:Degiro  2.50 EUR = 0 EUR
+                              Assets:Liquid:Degiro  -2.67 CHF = 2382.59 CHF @ 0.9351 EUR|]
                         ]
 
   it "Parses a stock transaction" $ do
@@ -210,10 +212,10 @@ csvRecordsToLedgerTests = do
     csvRecordsToLedger csvRecords
       `shouldBe` Right
         ( LedgerReport
-            [ parseTransactionUnsafe
-                "2020/03/04 * Degiro Stock Transaction\n\
-                \  Assets:Investments:Degiro:IWDA  659 IWDA @ 52.845 EUR\n\
-                \  Assets:Liquid:Degiro  -34824.86 EUR = -34824.86 EUR"
+            [ [transactionQQ|
+                2020/03/04 * Degiro Stock Transaction
+                  Assets:Investments:Degiro:IWDA  659 IWDA @ 52.845 EUR
+                  Assets:Liquid:Degiro  -34824.86 EUR = -34824.86 EUR|]
             ]
             []
         )
@@ -232,14 +234,14 @@ csvRecordsToLedgerTests = do
     ledgerReport
       `shouldBe` Right
         ( LedgerReport
-            [ parseTransactionUnsafe
-                "2020/02/03 * Degiro Stock Transaction\n\
-                \  Assets:Investments:Degiro:IWDA  171 IWDA @ 56.92 EUR\n\
-                \  Assets:Liquid:Degiro  -9733.32 EUR = -21345.00 EUR"
-            , parseTransactionUnsafe
-                "2020/02/03 * Degiro Forex\n\
-                \  Assets:Liquid:Degiro  -10406.57 CHF = 2385.26 CHF @ 0.9353 EUR\n\
-                \  Assets:Liquid:Degiro    9733.32 EUR = 0 EUR\n"
+            [ [transactionQQ|
+                2020/02/03 * Degiro Stock Transaction
+                  Assets:Investments:Degiro:IWDA  171 IWDA @ 56.92 EUR
+                  Assets:Liquid:Degiro  -9733.32 EUR = -21345.00 EUR|]
+            , [transactionQQ|
+                2020/02/03 * Degiro Forex
+                  Assets:Liquid:Degiro  -10406.57 CHF = 2385.26 CHF @ 0.9353 EUR
+                  Assets:Liquid:Degiro    9733.32 EUR = 0 EUR|]
             ]
             []
         )
