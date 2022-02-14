@@ -72,29 +72,23 @@ import Text.Megaparsec.Extra.ErrorText (ErrorText (..))
 moneyMarketIsin :: Isin
 moneyMarketIsin = [isin|NL0011280581|]
 
+-- | A cash deposit either to or from Degiro.
 data Deposit = Deposit
-  { _depositDate :: !Day
-  , _depositTime :: !TimeOfDay
-  , _depositAmount :: !Cash
-  , _depositBalance :: !Cash
+  { depositDate :: !Day
+  , depositAmount :: !Cash
+  , -- | Final Degiro cash balance.
+    depositBalance :: !Cash
   }
 
-depositP :: DegiroCsvRecord -> Maybe Deposit
-depositP rec
-  | dcrDescription rec /= "Deposit" = Nothing
-  | otherwise = do
+dcrToDeposit :: DegiroCsvRecord -> Maybe Deposit
+dcrToDeposit rec
+  | dcrDescription rec `elem` ["Deposit", "Withdrawal"] = do
     change <- dcrChange rec
-    return $ Deposit (dcrDate rec) (dcrTime rec) change (dcrBalance rec)
-
-withdrawalP :: DegiroCsvRecord -> Maybe Deposit
-withdrawalP rec
-  | dcrDescription rec /= "Withdrawal" = Nothing
-  | otherwise = do
-    change <- dcrChange rec
-    return $ Deposit (dcrDate rec) (dcrTime rec) change (dcrBalance rec)
+    return $ Deposit (dcrDate rec) change (dcrBalance rec)
+  | otherwise = Nothing
 
 depositToTransaction :: Deposit -> Transaction
-depositToTransaction (Deposit date _time amount balance) =
+depositToTransaction (Deposit{depositDate = date, depositAmount = amount, depositBalance = balance}) =
   transaction
     date
     [ post "Assets:Liquid:BCGE" (makeCashAmount $ Cash.negate amount)
@@ -372,8 +366,7 @@ activityP :: Parsec ErrorText DegiroCsv Activity
 activityP = do
   let singleRecordPs :: [DegiroCsvRecord -> Maybe Activity]
       singleRecordPs =
-        [ fmap toActivity . depositP
-        , fmap toActivity . withdrawalP
+        [ fmap toActivity . dcrToDeposit
         , fmap toActivity . connectionFeeP
         , fmap toActivity . stockTradeP
         ]
