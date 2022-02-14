@@ -73,10 +73,10 @@ moneyMarketIsin :: Isin
 moneyMarketIsin = [isin|NL0011280581|]
 
 data Deposit = Deposit
-  { _depositDate :: Day
-  , _depositTime :: TimeOfDay
-  , _depositAmount :: Cash
-  , _depositBalance :: Cash
+  { _depositDate :: !Day
+  , _depositTime :: !TimeOfDay
+  , _depositAmount :: !Cash
+  , _depositBalance :: !Cash
   }
 
 depositP :: DegiroCsvRecord -> Maybe Deposit
