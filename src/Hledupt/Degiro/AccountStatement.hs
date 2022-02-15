@@ -53,7 +53,7 @@ import Hledupt.Degiro.Csv (
 import Hledupt.Degiro.IsinData (prettyIsin)
 import Relude
 import Text.Megaparsec (
-  MonadParsec (eof, label, token),
+  MonadParsec (eof, token),
   Parsec,
   Stream,
   VisualStream,
@@ -102,20 +102,20 @@ depositToTransaction (Deposit{depositDate = date, depositAmount = amount, deposi
     & set tDescription "Deposit"
 
 data ConnectionFee = ConnectionFee
-  { _cfDate :: Day
-  , _cfAmount :: Cash
-  , _cfBalance :: Cash
+  { cfDate :: !Day
+  , cfAmount :: !Cash
+  , cfBalance :: !Cash
   }
 
-connectionFeeP :: DegiroCsvRecord -> Maybe ConnectionFee
-connectionFeeP rec
+dcrToConnectionFee :: DegiroCsvRecord -> Maybe ConnectionFee
+dcrToConnectionFee rec
   | "DEGIRO Exchange Connection Fee" `T.isInfixOf` dcrDescription rec = do
     change <- dcrChange rec
     return $ ConnectionFee (dcrDate rec) change (dcrBalance rec)
   | otherwise = Nothing
 
 connectionFeeToTransaction :: ConnectionFee -> Transaction
-connectionFeeToTransaction (ConnectionFee date amount balance) =
+connectionFeeToTransaction (ConnectionFee{cfDate = date, cfAmount = amount, cfBalance = balance}) =
   transaction
     date
     [ post "Assets:Liquid:Degiro" (makeCashAmount amount)
@@ -130,11 +130,11 @@ connectionFeeToTransaction (ConnectionFee date amount balance) =
 data FxType = Credit | Debit
 
 data FxRow = FxRow
-  { fxRowDate :: Day
-  , fxRowTime :: TimeOfDay
-  , fxRowFx :: Maybe Decimal
-  , fxRowChange :: Cash
-  , fxRowBalance :: Cash
+  { fxRowDate :: !Day
+  , fxRowTime :: !TimeOfDay
+  , fxRowFx :: !(Maybe Decimal)
+  , fxRowChange :: !Cash
+  , fxRowBalance :: !Cash
   }
 
 fxTypeP :: Text -> Maybe FxType
@@ -149,7 +149,7 @@ fxRowP rec = do
   return $ FxRow (dcrDate rec) (dcrTime rec) (dcrFx rec) change (dcrBalance rec)
 
 data FxPosting = FxPosting
-  { fxPostingFx :: Maybe Decimal
+  { fxPostingFx :: !(Maybe Decimal)
   , fxPostingCurrency :: !Currency
   , _fxPostingChange :: !Decimal
   , _fxPostingBalance :: !Decimal
@@ -294,22 +294,18 @@ stockTradeToTransaction (StockTrade date trIsin qty price change bal) =
  where
   prettyStockName = prettyIsin trIsin
 
--- | Represents money market records
+isMoneyMarketFundOp :: DegiroCsvRecord -> Bool
+isMoneyMarketFundOp = (== Just moneyMarketIsin) . dcrIsin
+
+isMoneyMarketFundPriceChange :: DegiroCsvRecord -> Bool
+isMoneyMarketFundPriceChange = (== "Money Market fund price change (CHF)") . dcrDescription
+
+-- | Returns if the record is a money market record
 --
 -- Degiro statements provide information on how the cash fares in their money market fund.
 -- The changes tend to be pennies, so I want to ignore them.
-data MoneyMarketOp = MoneyMarketOp
-
-moneyMarketFundOpP :: DegiroCsvRecord -> Maybe MoneyMarketOp
-moneyMarketFundOpP rec = do
-  recIsin <- dcrIsin rec
-  guard $ recIsin == moneyMarketIsin
-  return MoneyMarketOp
-
-moneyMarketFundPriceChangeP :: DegiroCsvRecord -> Maybe MoneyMarketOp
-moneyMarketFundPriceChangeP rec = do
-  guard $ (== "Money Market fund price change (CHF)") $ dcrDescription rec
-  return MoneyMarketOp
+isMoneyMarketActivity :: DegiroCsvRecord -> Bool
+isMoneyMarketActivity = or . flap [isMoneyMarketFundOp, isMoneyMarketFundPriceChange]
 
 data Activity
   = ActivityDeposit Deposit
@@ -344,16 +340,6 @@ newtype DegiroCsv = DegiroCsv [DegiroCsvRecord]
 instance VisualStream DegiroCsv where
   showTokens _proxy = show
 
-moneyMarketFundOpParsec :: Parsec ErrorText DegiroCsv MoneyMarketOp
-moneyMarketFundOpParsec = label "Money Market Operation" $ token moneyMarketFundOpP S.empty
-
-moneyMarketFundPriceChangeParsec :: Parsec ErrorText DegiroCsv MoneyMarketOp
-moneyMarketFundPriceChangeParsec =
-  label "Money Market Fund Price Change" $ token moneyMarketFundPriceChangeP S.empty
-
-moneyMarketOpP :: Parsec ErrorText DegiroCsv MoneyMarketOp
-moneyMarketOpP = moneyMarketFundPriceChangeParsec <|> moneyMarketFundOpParsec
-
 fxParsec :: Parsec ErrorText DegiroCsv Fx
 fxParsec = do
   fstRow <- token fxRowP S.empty
@@ -367,7 +353,7 @@ activityP = do
   let singleRecordPs :: [DegiroCsvRecord -> Maybe Activity]
       singleRecordPs =
         [ fmap toActivity . dcrToDeposit
-        , fmap toActivity . connectionFeeP
+        , fmap toActivity . dcrToConnectionFee
         , fmap toActivity . stockTradeP
         ]
       singleRecordParsecs = (`token` S.empty) <$> singleRecordPs
@@ -375,8 +361,8 @@ activityP = do
 
 activitiesP :: Parsec ErrorText DegiroCsv [Activity]
 activitiesP = do
-  void $ many moneyMarketOpP
-  as <- many (activityP <* many moneyMarketOpP)
+  void $ many (MP.satisfy isMoneyMarketActivity)
+  as <- many (activityP <* many (MP.satisfy isMoneyMarketActivity))
   eof
     <|> ( do
             row <- anySingle
