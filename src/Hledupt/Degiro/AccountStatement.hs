@@ -51,6 +51,9 @@ import Hledupt.Degiro.Csv (
   parseCsvStatement,
  )
 import Hledupt.Degiro.IsinData (prettyIsin)
+import Hledupt.Wallet (
+  degiroAccount,
+ )
 import Relude
 import Text.Megaparsec (
   MonadParsec (eof, token),
@@ -93,7 +96,7 @@ depositToTransaction (Deposit{depositDate = date, depositAmount = amount, deposi
     date
     [ post "Assets:Liquid:BCGE" (makeCashAmount $ Cash.negate amount)
         & set pStatus Pending
-    , post "Assets:Liquid:Degiro" (makeCashAmount amount)
+    , post degiroAccount (makeCashAmount amount)
         & set pStatus Cleared
           . set
             pBalanceAssertion
@@ -101,6 +104,7 @@ depositToTransaction (Deposit{depositDate = date, depositAmount = amount, deposi
     ]
     & set tDescription "Deposit"
 
+-- | A connection fee paid to Degiro.
 data ConnectionFee = ConnectionFee
   { cfDate :: !Day
   , cfAmount :: !Cash
@@ -118,7 +122,7 @@ connectionFeeToTransaction :: ConnectionFee -> Transaction
 connectionFeeToTransaction (ConnectionFee{cfDate = date, cfAmount = amount, cfBalance = balance}) =
   transaction
     date
-    [ post "Assets:Liquid:Degiro" (makeCashAmount amount)
+    [ post degiroAccount (makeCashAmount amount)
         & set
           pBalanceAssertion
           (balassert $ makeCashAmount balance)
@@ -168,7 +172,7 @@ mkFxPosting maybeFx change balance = do
 fxPostingToPosting :: FxPosting -> Posting
 fxPostingToPosting (FxPosting _fx currency change balance) =
   post
-    "Assets:Liquid:Degiro"
+    degiroAccount
     ( makeCashAmount (Cash currency change)
     )
     & set pBalanceAssertion (balassert $ makeCashAmount (Cash currency balance))
@@ -284,7 +288,7 @@ stockTradeToTransaction (StockTrade date trIsin qty price change bal) =
                   $ price
               )
         )
-    , post "Assets:Liquid:Degiro" (makeCashAmount change)
+    , post degiroAccount (makeCashAmount change)
         & set
           pBalanceAssertion
           (balassert $ makeCashAmount bal)
