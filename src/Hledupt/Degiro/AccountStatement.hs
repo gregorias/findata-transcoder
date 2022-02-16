@@ -52,6 +52,7 @@ import Hledupt.Degiro.Csv (
  )
 import Hledupt.Degiro.IsinData (prettyIsin)
 import Hledupt.Wallet (
+  bcgeAccount,
   degiroAccount,
  )
 import Relude
@@ -94,7 +95,7 @@ depositToTransaction :: Deposit -> Transaction
 depositToTransaction (Deposit{depositDate = date, depositAmount = amount, depositBalance = balance}) =
   transaction
     date
-    [ post "Assets:Liquid:BCGE" (makeCashAmount $ Cash.negate amount)
+    [ post bcgeAccount (makeCashAmount $ Cash.negate amount)
         & set pStatus Pending
     , post degiroAccount (makeCashAmount amount)
         & set pStatus Cleared
