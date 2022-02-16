@@ -1,6 +1,3 @@
-{-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE TypeFamilies #-}
-
 module Hledger.Data.Extra (
   ToPosting (..),
   ToTransaction (..),
