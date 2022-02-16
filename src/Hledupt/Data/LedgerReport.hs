@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Hledupt.Data.LedgerReport (
   LedgerReport (..),
   showLedgerReport,
