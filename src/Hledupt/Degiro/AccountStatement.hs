@@ -100,25 +100,28 @@ instance ToTransaction Deposit where
       ]
 
 -- | A connection fee paid to Degiro.
-data ConnectionFee = ConnectionFee
-  { cfDate :: !Day
-  , cfAmount :: !Cash
-  , cfBalance :: !Cash
+-- https://www.reddit.com/r/BEFire/comments/q0eil0/degiro_flatex_interestswhat_are_they/
+data Fee = Fee
+  { fDate :: !Day
+  , fDescription :: !Text
+  , fAmount :: !Cash
+  , fBalance :: !Cash
   }
 
-dcrToConnectionFee :: DegiroCsvRecord -> Maybe ConnectionFee
-dcrToConnectionFee rec
-  | "DEGIRO Exchange Connection Fee" `T.isInfixOf` dcrDescription rec = do
+dcrToFee :: DegiroCsvRecord -> Maybe Fee
+dcrToFee rec
+  | "DEGIRO Exchange Connection Fee" `T.isInfixOf` dcrDescription rec
+      || "Flatex Interest" `T.isInfixOf` dcrDescription rec = do
     change <- dcrChange rec
-    return $ ConnectionFee (dcrDate rec) change (dcrBalance rec)
+    return $ Fee (dcrDate rec) (dcrDescription rec) change (dcrBalance rec)
   | otherwise = Nothing
 
-connectionFeeToTransaction :: ConnectionFee -> Transaction
-connectionFeeToTransaction (ConnectionFee{cfDate = date, cfAmount = amount, cfBalance = balance}) =
+feeToTransaction :: Fee -> Transaction
+feeToTransaction (Fee{fDate = date, fDescription = description, fAmount = amount, fBalance = balance}) =
   makeTransaction
     date
     (Just Cleared)
-    "Exchange Connection Fee"
+    description
     [ post degiroAccount (makeCashAmount amount)
         & set
           pBalanceAssertion
@@ -307,7 +310,7 @@ isMoneyMarketActivity = or . flap [isMoneyMarketFundOp, isMoneyMarketFundPriceCh
 
 data Activity
   = ActivityDeposit Deposit
-  | ActivityConnectionFee ConnectionFee
+  | ActivityFee Fee
   | ActivityFx Fx
   | ActivityStockTrade StockTrade
 
@@ -317,8 +320,8 @@ class ToActivity a where
 instance ToActivity Deposit where
   toActivity = ActivityDeposit
 
-instance ToActivity ConnectionFee where
-  toActivity = ActivityConnectionFee
+instance ToActivity Fee where
+  toActivity = ActivityFee
 
 instance ToActivity Fx where
   toActivity = ActivityFx
@@ -328,7 +331,7 @@ instance ToActivity StockTrade where
 
 activityToTransaction :: Activity -> Transaction
 activityToTransaction (ActivityDeposit dep) = toTransaction dep
-activityToTransaction (ActivityConnectionFee cf) = connectionFeeToTransaction cf
+activityToTransaction (ActivityFee cf) = feeToTransaction cf
 activityToTransaction (ActivityFx fx) = toTransaction fx
 activityToTransaction (ActivityStockTrade st) = stockTradeToTransaction st
 
@@ -353,7 +356,7 @@ dcrToSingleRowActivity rec =
   msum $
     flap
       [ fmap toActivity . dcrToDeposit
-      , fmap toActivity . dcrToConnectionFee
+      , fmap toActivity . dcrToFee
       , fmap toActivity . dcrToStockTrade
       ]
       rec

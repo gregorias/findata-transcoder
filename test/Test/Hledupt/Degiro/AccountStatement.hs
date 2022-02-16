@@ -11,14 +11,17 @@ import Hledger.Read.TestUtils (
   transactionQQ,
  )
 import Hledupt.Data.Cash (Cash (Cash))
+import Hledupt.Data.CsvFile (CsvFile (..))
 import Hledupt.Data.Currency (chf, eur)
 import Hledupt.Data.Isin (isin)
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Hledupt.Degiro.AccountStatement (csvRecordsToLedger)
+import qualified Hledupt.Degiro.AccountStatement as DegiroAccStmt
 import Hledupt.Degiro.Csv (
   DegiroCsvRecord (..),
   parseCsvStatement,
  )
+import NeatInterpolation (trimming)
 import Relude
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe, shouldMatchList, shouldSatisfy)
@@ -27,6 +30,29 @@ tests :: SpecWith ()
 tests = do
   describe "Hledupt.Degiro.AccountStatement" $ do
     describe "csvRecordsToLedger" csvRecordsToLedgerTests
+
+    it "Parses an account statement" $ do
+      let stmt =
+            CsvFile $
+              encodeUtf8
+                [trimming|
+                    Date,Time,Value date,Product,ISIN,Description,FX,Change,,Balance,,Order ID
+                    02-01-2022,00:10,03-01-2022,,,Flatex Interest Income,,EUR,0.00,EUR,-0.00,
+                    31-12-2021,11:00,31-12-2021,,,Flatex Interest,,CHF,-0.46,CHF,245.29,|]
+      DegiroAccStmt.csvStatementToLedger stmt
+        `shouldBe` Right
+          ( LedgerReport
+              [ [transactionQQ|
+                            2021/12/31 * Flatex Interest
+                              Assets:Liquid:Degiro  -0.46 CHF = 245.29 CHF
+                              Expenses:Financial Services  0.46 CHF|]
+              , [transactionQQ|
+                            2022/01/02 * Flatex Interest Income
+                              Assets:Liquid:Degiro  0.00 EUR = 0 EUR
+                              Expenses:Financial Services  0.00 EUR|]
+              ]
+              []
+          )
 
 csvRecordsToLedgerTests :: SpecWith ()
 csvRecordsToLedgerTests = do
@@ -131,7 +157,7 @@ csvRecordsToLedgerTests = do
       `shouldBe` Right
         ( LedgerReport
             [ [transactionQQ|
-                2020/09/02 * Exchange Connection Fee
+                2020/09/02 * DEGIRO Exchange Connection Fee 2020 (Euronext Amsterdam - EAM)
                   Assets:Liquid:Degiro  -2.50 EUR = -2.50 EUR
                   Expenses:Financial Services  2.50 EUR|]
             ]
