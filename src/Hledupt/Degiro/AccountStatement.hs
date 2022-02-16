@@ -24,17 +24,14 @@ import Hledger (
   amountSetFullPrecision,
   balassert,
   post,
-  transaction,
  )
 import Hledger.Data (Posting)
-import Hledger.Data.Extra (makeCashAmount, makeCommodityAmount)
+import Hledger.Data.Extra (makeCashAmount, makeCommodityAmount, makeTransaction)
 import Hledger.Data.Lens (
   aAmountPrice,
   pAmount,
   pBalanceAssertion,
   pStatus,
-  tDescription,
-  tStatus,
  )
 import Hledupt.Data.Cash (Cash (Cash), cashAmount, cashCurrency)
 import qualified Hledupt.Data.Cash as Cash
@@ -93,8 +90,10 @@ dcrToDeposit rec
 
 depositToTransaction :: Deposit -> Transaction
 depositToTransaction (Deposit{depositDate = date, depositAmount = amount, depositBalance = balance}) =
-  transaction
+  makeTransaction
     date
+    Nothing
+    "Deposit"
     [ post bcgeAccount (makeCashAmount $ Cash.negate amount)
         & set pStatus Pending
     , post degiroAccount (makeCashAmount amount)
@@ -103,7 +102,6 @@ depositToTransaction (Deposit{depositDate = date, depositAmount = amount, deposi
             pBalanceAssertion
             (balassert $ makeCashAmount balance)
     ]
-    & set tDescription "Deposit"
 
 -- | A connection fee paid to Degiro.
 data ConnectionFee = ConnectionFee
@@ -121,16 +119,16 @@ dcrToConnectionFee rec
 
 connectionFeeToTransaction :: ConnectionFee -> Transaction
 connectionFeeToTransaction (ConnectionFee{cfDate = date, cfAmount = amount, cfBalance = balance}) =
-  transaction
+  makeTransaction
     date
+    (Just Cleared)
+    "Exchange Connection Fee"
     [ post degiroAccount (makeCashAmount amount)
         & set
           pBalanceAssertion
           (balassert $ makeCashAmount balance)
     , post "Expenses:Financial Services" (makeCashAmount $ Cash.negate amount)
     ]
-    & set tDescription "Exchange Connection Fee"
-      . set tStatus Cleared
 
 data FxType = Credit | Debit
 
@@ -204,15 +202,15 @@ fxP fxRowFst fxRowSnd = mapLeft ("Could not merge Fx rows.\n" <>) $
 
 fxToTransaction :: Fx -> Transaction
 fxToTransaction (Fx date fstPost sndPost) =
-  transaction
+  makeTransaction
     date
+    (Just Cleared)
+    "Degiro Forex"
     [ fxPostingToPosting fstPost
         & setPrice sndPost
     , fxPostingToPosting sndPost
         & setPrice fstPost
     ]
-    & set tDescription "Degiro Forex"
-      . set tStatus Cleared
  where
   setPrice postArg =
     set
@@ -273,8 +271,10 @@ stockTradeP rec = do
 
 stockTradeToTransaction :: StockTrade -> Transaction
 stockTradeToTransaction (StockTrade date trIsin qty price change bal) =
-  transaction
+  makeTransaction
     date
+    (Just Cleared)
+    "Degiro Stock Transaction"
     [ post
         ("Assets:Investments:Degiro:" <> prettyStockName)
         ( makeCommodityAmount
@@ -294,8 +294,6 @@ stockTradeToTransaction (StockTrade date trIsin qty price change bal) =
           pBalanceAssertion
           (balassert $ makeCashAmount bal)
     ]
-    & set tStatus Cleared
-      . set tDescription "Degiro Stock Transaction"
  where
   prettyStockName = prettyIsin trIsin
 

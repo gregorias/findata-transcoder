@@ -4,17 +4,21 @@ module Hledger.Data.Extra (
   makeCashAmount,
   makeCurrencyAmount,
   makeCommodityAmount,
+  makeTransaction,
   setCurrencyPrecision,
 ) where
 
 import Control.Lens (over, set)
-import Hledger (Posting, Transaction)
+import Data.Time (Day)
+import Hledger (Posting, Status, Transaction, transaction)
 import Hledger.Data.Amount (num)
 import Hledger.Data.Lens (
   aCommodity,
   aStyle,
   asCommoditySpaced,
   asPrecision,
+  tDescription,
+  tStatus,
  )
 import Hledger.Data.Types (
   Amount (..),
@@ -46,6 +50,15 @@ makeCurrencyAmount currency quantity =
 
 makeCashAmount :: Cash -> Amount
 makeCashAmount (Cash currency quantity) = makeCurrencyAmount currency quantity
+
+-- | Makes a Transaction.
+--
+-- This is a helper function that follows the order of definition in a normal transaction.
+makeTransaction :: Day -> Maybe Status -> Text -> [Posting] -> Transaction
+makeTransaction day maybeStatus description ps =
+  transaction day ps
+    & set tDescription description
+      . maybe id (set tStatus) maybeStatus
 
 class ToPosting a where
   toPosting :: a -> Posting
