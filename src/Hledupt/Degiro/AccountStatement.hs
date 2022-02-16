@@ -1,5 +1,3 @@
-{-# LANGUAGE UndecidableInstances #-}
-
 -- | This module parses Degiro's account statement into Ledger.
 module Hledupt.Degiro.AccountStatement (
   csvStatementToLedger,
@@ -7,13 +5,13 @@ module Hledupt.Degiro.AccountStatement (
 ) where
 
 import Control.Lens (set, view)
+import Control.Monad (msum)
 import qualified Data.ByteString.Lazy as LBS
 import Data.Decimal (Decimal)
 import Data.Either.Combinators (
   mapLeft,
  )
 import Data.Ratio ((%))
-import qualified Data.Set as S
 import qualified Data.Text as T
 import Data.Time (Day)
 import Data.Time.LocalTime (TimeOfDay)
@@ -25,8 +23,13 @@ import Hledger (
   balassert,
   post,
  )
-import Hledger.Data (Posting)
-import Hledger.Data.Extra (makeCashAmount, makeCommodityAmount, makeTransaction)
+import Hledger.Data.Extra (
+  ToPosting (toPosting),
+  ToTransaction (toTransaction),
+  makeCashAmount,
+  makeCommodityAmount,
+  makeTransaction,
+ )
 import Hledger.Data.Lens (
   aAmountPrice,
   pAmount,
@@ -54,21 +57,14 @@ import Hledupt.Wallet (
  )
 import Relude
 import Text.Megaparsec (
-  MonadParsec (eof, token),
   Parsec,
-  Stream,
-  VisualStream,
   anySingle,
-  choice,
-  customFailure,
   manyTill,
-  parse,
   single,
  )
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (letterChar, space)
 import Text.Megaparsec.Char.Lexer (decimal)
-import Text.Megaparsec.Extra.ErrorText (ErrorText (..))
 
 moneyMarketIsin :: Isin
 moneyMarketIsin = [isin|NL0011280581|]
@@ -88,20 +84,20 @@ dcrToDeposit rec
     return $ Deposit (dcrDate rec) change (dcrBalance rec)
   | otherwise = Nothing
 
-depositToTransaction :: Deposit -> Transaction
-depositToTransaction (Deposit{depositDate = date, depositAmount = amount, depositBalance = balance}) =
-  makeTransaction
-    date
-    Nothing
-    "Deposit"
-    [ post bcgeAccount (makeCashAmount $ Cash.negate amount)
-        & set pStatus Pending
-    , post degiroAccount (makeCashAmount amount)
-        & set pStatus Cleared
-          . set
-            pBalanceAssertion
-            (balassert $ makeCashAmount balance)
-    ]
+instance ToTransaction Deposit where
+  toTransaction (Deposit{depositDate = date, depositAmount = amount, depositBalance = balance}) =
+    makeTransaction
+      date
+      Nothing
+      "Deposit"
+      [ post bcgeAccount (makeCashAmount $ Cash.negate amount)
+          & set pStatus Pending
+      , post degiroAccount (makeCashAmount amount)
+          & set pStatus Cleared
+            . set
+              pBalanceAssertion
+              (balassert $ makeCashAmount balance)
+      ]
 
 -- | A connection fee paid to Degiro.
 data ConnectionFee = ConnectionFee
@@ -145,8 +141,8 @@ fxTypeP "FX Credit" = Just Credit
 fxTypeP "FX Debit" = Just Debit
 fxTypeP _ = Nothing
 
-fxRowP :: DegiroCsvRecord -> Maybe FxRow
-fxRowP rec = do
+dcrToFxRow :: DegiroCsvRecord -> Maybe FxRow
+dcrToFxRow rec = do
   void $ fxTypeP $ dcrDescription rec
   change <- dcrChange rec
   return $ FxRow (dcrDate rec) (dcrTime rec) (dcrFx rec) change (dcrBalance rec)
@@ -168,13 +164,13 @@ mkFxPosting maybeFx change balance = do
       (view cashAmount change)
       (view cashAmount balance)
 
-fxPostingToPosting :: FxPosting -> Posting
-fxPostingToPosting (FxPosting _fx currency change balance) =
-  post
-    degiroAccount
-    ( makeCashAmount (Cash currency change)
-    )
-    & set pBalanceAssertion (balassert $ makeCashAmount (Cash currency balance))
+instance ToPosting FxPosting where
+  toPosting (FxPosting _fx currency change balance) =
+    post
+      degiroAccount
+      ( makeCashAmount (Cash currency change)
+      )
+      & set pBalanceAssertion (balassert $ makeCashAmount (Cash currency balance))
 
 data Fx = Fx
   { _fxDate :: !Day
@@ -182,8 +178,8 @@ data Fx = Fx
   , _fxSndPosting :: !FxPosting
   }
 
-fxP :: FxRow -> FxRow -> Either Text Fx
-fxP fxRowFst fxRowSnd = mapLeft ("Could not merge Fx rows.\n" <>) $
+mergeFx :: FxRow -> FxRow -> Either Text Fx
+mergeFx fxRowFst fxRowSnd = mapLeft ("Could not merge Fx rows.\n" <>) $
   maybeToRight "" $ do
     guard (((==) `on` fxRowDate) fxRowFst fxRowSnd)
     guard (((==) `on` fxRowTime) fxRowFst fxRowSnd)
@@ -200,26 +196,25 @@ fxP fxRowFst fxRowSnd = mapLeft ("Could not merge Fx rows.\n" <>) $
         (fxRowBalance fxRowSnd)
     return $ Fx (fxRowDate fxRowFst) fstP sndP
 
-fxToTransaction :: Fx -> Transaction
-fxToTransaction (Fx date fstPost sndPost) =
-  makeTransaction
-    date
-    (Just Cleared)
-    "Degiro Forex"
-    [ fxPostingToPosting fstPost
-        & setPrice sndPost
-    , fxPostingToPosting sndPost
-        & setPrice fstPost
-    ]
- where
-  setPrice postArg =
-    set
-      (pAmount . aAmountPrice)
-      ( UnitPrice . amountSetFullPrecision . makeCashAmount
-          . Cash
-            (fxPostingCurrency postArg)
-          <$> fxPostingFx postArg
-      )
+instance ToTransaction Fx where
+  toTransaction :: Fx -> Transaction
+  toTransaction (Fx date fstPost sndPost) =
+    makeTransaction
+      date
+      (Just Cleared)
+      "Degiro Forex"
+      [ toPosting fstPost & setPrice sndPost
+      , toPosting sndPost & setPrice fstPost
+      ]
+   where
+    setPrice postArg =
+      set
+        (pAmount . aAmountPrice)
+        ( UnitPrice . amountSetFullPrecision . makeCashAmount
+            . Cash
+              (fxPostingCurrency postArg)
+            <$> fxPostingFx postArg
+        )
 
 data StockTrade = StockTrade
   { _stDate :: !Day
@@ -257,8 +252,8 @@ stockTradeDescriptionP = MP.parseMaybe parserP
     void $ many anySingle
     return $ StockTradeDescription tradeType quantity (Cash currency price)
 
-stockTradeP :: DegiroCsvRecord -> Maybe StockTrade
-stockTradeP rec = do
+dcrToStockTrade :: DegiroCsvRecord -> Maybe StockTrade
+dcrToStockTrade rec = do
   trIsin <- dcrIsin rec
   (StockTradeDescription trType quantity price) <-
     stockTradeDescriptionP $
@@ -332,59 +327,63 @@ instance ToActivity StockTrade where
   toActivity = ActivityStockTrade
 
 activityToTransaction :: Activity -> Transaction
-activityToTransaction (ActivityDeposit dep) = depositToTransaction dep
+activityToTransaction (ActivityDeposit dep) = toTransaction dep
 activityToTransaction (ActivityConnectionFee cf) = connectionFeeToTransaction cf
-activityToTransaction (ActivityFx fx) = fxToTransaction fx
+activityToTransaction (ActivityFx fx) = toTransaction fx
 activityToTransaction (ActivityStockTrade st) = stockTradeToTransaction st
 
-newtype DegiroCsv = DegiroCsv [DegiroCsvRecord]
-  deriving newtype (Stream)
+dcrsToFx :: DegiroCsvRecord -> DegiroCsvRecord -> Either Text (Maybe Fx)
+dcrsToFx fstRec sndRec
+  | isNothing (dcrToFxRow fstRec) = return Nothing
+  | otherwise =
+    do
+      fstRow <- case dcrToFxRow fstRec of
+        Just r -> return r
+        Nothing -> Left . toText @String $ "Could not parse an FX record: " <> show fstRec
+      sndRow <- case dcrToFxRow sndRec of
+        Just r -> return r
+        Nothing -> Left . toText @String $ "Found an unmatched FX record: " <> show fstRec
+      Just <$> mergeFx fstRow sndRow
 
-instance VisualStream DegiroCsv where
-  showTokens _proxy = show
+dcrsToFxActivity :: DegiroCsvRecord -> DegiroCsvRecord -> Either Text (Maybe Activity)
+dcrsToFxActivity fstRec sndRec = toActivity <<$>> dcrsToFx fstRec sndRec
 
-fxParsec :: Parsec ErrorText DegiroCsv Fx
-fxParsec = do
-  fstRow <- token fxRowP S.empty
-  sndRow <- token fxRowP S.empty <|> customFailure "Found an unmatched fx record."
-  case fxP fstRow sndRow of
-    Left errMsg -> customFailure $ ErrorText errMsg
-    Right res -> return res
+dcrToSingleRowActivity :: DegiroCsvRecord -> Maybe Activity
+dcrToSingleRowActivity rec =
+  msum $
+    flap
+      [ fmap toActivity . dcrToDeposit
+      , fmap toActivity . dcrToConnectionFee
+      , fmap toActivity . dcrToStockTrade
+      ]
+      rec
 
-activityP :: Parsec ErrorText DegiroCsv Activity
-activityP = do
-  let singleRecordPs :: [DegiroCsvRecord -> Maybe Activity]
-      singleRecordPs =
-        [ fmap toActivity . dcrToDeposit
-        , fmap toActivity . dcrToConnectionFee
-        , fmap toActivity . stockTradeP
-        ]
-      singleRecordParsecs = (`token` S.empty) <$> singleRecordPs
-  choice singleRecordParsecs <|> fmap toActivity fxParsec
+parseActivitiesErrorString :: DegiroCsvRecord -> Either Text a
+parseActivitiesErrorString row =
+  Left $
+    "Could not process all elements.\n"
+      <> "One remaining row's description: "
+      <> dcrDescription row
+      <> "\n"
 
-activitiesP :: Parsec ErrorText DegiroCsv [Activity]
-activitiesP = do
-  as <- many activityP
-  eof
-    <|> ( do
-            row <- anySingle
-            customFailure . ErrorText $
-              "Could not process all elements.\n"
-                <> "One remaining row's description: "
-                <> dcrDescription row
-                <> "\n"
-        )
-  return as
+parseActivities :: [DegiroCsvRecord] -> Either Text [Activity]
+parseActivities [] = return []
+parseActivities [x] = case dcrToSingleRowActivity x of
+  Nothing -> parseActivitiesErrorString x
+  Just ac -> return [ac]
+parseActivities (x : xs@(y : ys)) = case dcrToSingleRowActivity x of
+  Nothing -> do
+    maybeFx <- dcrsToFxActivity x y
+    case maybeFx of
+      Nothing -> parseActivitiesErrorString x
+      Just ac -> (ac :) <$> parseActivities ys
+  Just ac -> (ac :) <$> parseActivities xs
 
 -- | Parses a parsed Degiro CSV statement into stronger types.
 csvRecordsToActivities :: [DegiroCsvRecord] -> Either Text [Activity]
 csvRecordsToActivities =
-  mapLeft showAnError
-    . (parse activitiesP "" . DegiroCsv . reverse)
+  (parseActivities . reverse)
     . filter (not . isMoneyMarketActivity)
- where
-  showAnError :: (VisualStream s, MP.ShowErrorComponent e) => MP.ParseErrorBundle s e -> Text
-  showAnError = toText . MP.parseErrorPretty . head . MP.bundleErrors
 
 -- | Transforms a parsed Degiro CSV statement into a Ledger report.
 csvRecordsToLedger :: [DegiroCsvRecord] -> Either Text LedgerReport
