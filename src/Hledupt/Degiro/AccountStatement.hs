@@ -365,8 +365,7 @@ activityP = do
 
 activitiesP :: Parsec ErrorText DegiroCsv [Activity]
 activitiesP = do
-  void $ many (MP.satisfy isMoneyMarketActivity)
-  as <- many (activityP <* many (MP.satisfy isMoneyMarketActivity))
+  as <- many activityP
   eof
     <|> ( do
             row <- anySingle
@@ -380,9 +379,10 @@ activitiesP = do
 
 -- | Parses a parsed Degiro CSV statement into stronger types.
 csvRecordsToActivities :: [DegiroCsvRecord] -> Either Text [Activity]
-csvRecordsToActivities recs =
-  mapLeft showAnError $
-    parse activitiesP "" (DegiroCsv (reverse recs))
+csvRecordsToActivities =
+  mapLeft showAnError
+    . (parse activitiesP "" . DegiroCsv . reverse)
+    . filter (not . isMoneyMarketActivity)
  where
   showAnError :: (VisualStream s, MP.ShowErrorComponent e) => MP.ParseErrorBundle s e -> Text
   showAnError = toText . MP.parseErrorPretty . head . MP.bundleErrors
