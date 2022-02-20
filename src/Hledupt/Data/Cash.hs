@@ -10,7 +10,6 @@ module Hledupt.Data.Cash (
 
 import Control.Lens (makeLenses, over)
 import Data.Decimal (Decimal)
-import qualified Data.Text as T
 import Hledupt.Data.Currency (Currency, currencyP)
 import Hledupt.Data.MyDecimal (decimalP, defaultDecimalFormat)
 import Relude hiding (negate)
