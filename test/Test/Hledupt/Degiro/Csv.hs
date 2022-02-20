@@ -12,6 +12,7 @@ import Hledupt.Data.Currency (chf, eur)
 import Hledupt.Data.Isin (isin)
 import Hledupt.Degiro.Csv (
   DegiroCsvRecord (..),
+  DegiroIsin (..),
   parseCsvStatement,
  )
 import NeatInterpolation (trimming)
@@ -53,7 +54,7 @@ tests = do
                 (TimeOfDay 0 0 0)
                 (fromGregorian 2020 12 17)
                 "FUNDSHARE UCITS CHF CASH FUND"
-                (Just nlIsin)
+                (Just $ DegiroIsin nlIsin)
                 "Cash Market fund price change (CHF)"
                 Nothing
                 (Just $ Cash chf (-0.01))
@@ -64,7 +65,7 @@ tests = do
                 (TimeOfDay 12 02 0)
                 (fromGregorian 2020 9 1)
                 "FUNDSHARE UCITS CHF CASH FUND"
-                (Just nlIsin)
+                (Just $ DegiroIsin nlIsin)
                 "Cash Market fund conversion: Sell 123.5678 at 0.981 CHF"
                 Nothing
                 Nothing
@@ -102,5 +103,25 @@ tests = do
                 Nothing
                 (Just $ Cash chf 2500)
                 (Cash chf 2520.92)
+                ""
+            ]
+      it "Parses an NLFLATEXACNT" $ do
+        let csv =
+              CsvFile . encodeUtf8 $
+                [trimming|
+                  Date,Time,Value date,Product,ISIN,Description,FX,Change,,Balance,,Order ID
+                  07-02-2022,10:17,04-02-2022,FLATEX CHF BANKACCOUNT,NLFLATEXACNT,Degiro Cash Sweep Transfer,,CHF,2.63,CHF,245.29,|]
+        parseCsvStatement csv
+          `shouldBe` Right
+            [ DegiroCsvRecord
+                (fromGregorian 2022 2 7)
+                (TimeOfDay 10 17 0)
+                (fromGregorian 2022 2 4)
+                "FLATEX CHF BANKACCOUNT"
+                (Just Nlflatexacnt)
+                "Degiro Cash Sweep Transfer"
+                Nothing
+                (Just $ Cash chf 2.63)
+                (Cash chf 245.29)
                 ""
             ]

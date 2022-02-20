@@ -17,10 +17,7 @@ import Hledupt.Data.Isin (isin)
 import Hledupt.Data.LedgerReport (LedgerReport (LedgerReport))
 import Hledupt.Degiro.AccountStatement (csvRecordsToLedger)
 import qualified Hledupt.Degiro.AccountStatement as DegiroAccStmt
-import Hledupt.Degiro.Csv (
-  DegiroCsvRecord (..),
-  parseCsvStatement,
- )
+import Hledupt.Degiro.Csv (DegiroCsvRecord (..), DegiroIsin (DegiroIsin), parseCsvStatement)
 import NeatInterpolation (trimming)
 import Relude
 import Test.Hspec (SpecWith, describe, it)
@@ -67,7 +64,7 @@ csvRecordsToLedgerTests = do
           (TimeOfDay 12 02 0)
           (fromGregorian 2020 9 1)
           "FUNDSHARE UCITS CHF CASH FUND"
-          (Just nlIsin)
+          (Just $ DegiroIsin nlIsin)
           "Money Market fund conversion: Sell 123.5678 at 0.981 CHF"
           Nothing
           Nothing

@@ -5,11 +5,12 @@ module Hledupt.Degiro.Csv (
 
   -- * Types
   DegiroCsvRecord (..),
+  DegiroIsin (..),
 ) where
 
 import Control.Applicative.Combinators (count)
 import qualified Data.ByteString.Lazy as LBS
-import Data.Csv ((.!))
+import Data.Csv (parseField, (.!))
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
 import Data.Either.Combinators (
@@ -24,7 +25,7 @@ import Data.Time (
 import qualified Data.Vector as V
 import Hledupt.Data.Cash (Cash (Cash))
 import Hledupt.Data.CsvFile (CsvFile (CsvFile))
-import Hledupt.Data.Isin (Isin, mkIsin)
+import Hledupt.Data.Isin (Isin)
 import Hledupt.Data.MyDecimal (
   ChunkSepFormat (NoChunkSep),
   DecimalFormat (..),
@@ -35,6 +36,17 @@ import Relude
 import Text.Megaparsec (Parsec, single)
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (numberChar)
+
+-- | Type representing possible values of the ISIN field in Degiro reports.
+data DegiroIsin
+  = DegiroIsin !Isin
+  | Nlflatexacnt
+  deriving stock (Eq, Show)
+
+instance Csv.FromField DegiroIsin where
+  parseField field
+    | field == encodeUtf8 @Text "NLFLATEXACNT" = return Nlflatexacnt
+    | otherwise = DegiroIsin <$> parseField field
 
 newtype DegiroDay = DegiroDay
   { unDegiroDay :: Day
@@ -57,14 +69,14 @@ data DegiroCsvRecord = DegiroCsvRecord
   , dcrTime :: !TimeOfDay
   , dcrValueDate :: !Day
   , dcrProduct :: !Text
-  , dcrIsin :: !(Maybe Isin)
+  , dcrIsin :: !(Maybe DegiroIsin)
   , dcrDescription :: !Text
   , dcrFx :: !(Maybe Decimal)
   , dcrChange :: !(Maybe Cash)
   , dcrBalance :: !Cash
   , dcrOrderId :: !Text
   }
-  deriving stock (Eq, Ord, Show)
+  deriving stock (Eq, Show)
 
 degiroCashDecimalFormat :: DecimalFormat
 degiroCashDecimalFormat = DecimalFormat NoChunkSep (Just OptionalUnlimitedDecimalFraction)
@@ -87,13 +99,7 @@ instance Csv.FromRecord DegiroCsvRecord where
     Just time <- MP.parseMaybe timeP <$> rec .! 1
     valueDate <- unDegiroDay <$> rec .! 2
     productStr <- rec .! 3
-    isinStr :: String <- rec .! 4
-    maybeIsin <-
-      if null isinStr
-        then return Nothing
-        else do
-          Just isin <- return $ mkIsin $ toText isinStr
-          return $ Just isin
+    maybeIsin <- rec .! 4
     desc <- rec .! 5
     fxStr :: String <- rec .! 6
     maybeFx <-

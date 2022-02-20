@@ -48,6 +48,7 @@ import Hledupt.Data.MyDecimal (
  )
 import Hledupt.Degiro.Csv (
   DegiroCsvRecord (..),
+  DegiroIsin (DegiroIsin, Nlflatexacnt),
   parseCsvStatement,
  )
 import Hledupt.Degiro.IsinData (prettyIsin)
@@ -257,7 +258,10 @@ stockTradeDescriptionP = MP.parseMaybe parserP
 
 dcrToStockTrade :: DegiroCsvRecord -> Maybe StockTrade
 dcrToStockTrade rec = do
-  trIsin <- dcrIsin rec
+  trDegiroIsin <- dcrIsin rec
+  trIsin <- case trDegiroIsin of
+    DegiroIsin is -> return is
+    Nlflatexacnt -> Nothing
   (StockTradeDescription trType quantity price) <-
     stockTradeDescriptionP $
       dcrDescription rec
@@ -296,7 +300,7 @@ stockTradeToTransaction (StockTrade date trIsin qty price change bal) =
   prettyStockName = prettyIsin trIsin
 
 isMoneyMarketFundOp :: DegiroCsvRecord -> Bool
-isMoneyMarketFundOp = (== Just moneyMarketIsin) . dcrIsin
+isMoneyMarketFundOp = (== Just (DegiroIsin moneyMarketIsin)) . dcrIsin
 
 isMoneyMarketFundPriceChange :: DegiroCsvRecord -> Bool
 isMoneyMarketFundPriceChange = (== "Money Market fund price change (CHF)") . dcrDescription
