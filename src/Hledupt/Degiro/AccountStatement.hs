@@ -111,7 +111,7 @@ data Fee = Fee
 
 dcrToFee :: DegiroCsvRecord -> Maybe Fee
 dcrToFee rec
-  | "DEGIRO Exchange Connection Fee" `T.isInfixOf` dcrDescription rec
+  | "Exchange Connection Fee" `T.isInfixOf` dcrDescription rec
       || "Flatex Interest" `T.isInfixOf` dcrDescription rec = do
     change <- dcrChange rec
     return $ Fee (dcrDate rec) (dcrDescription rec) change (dcrBalance rec)

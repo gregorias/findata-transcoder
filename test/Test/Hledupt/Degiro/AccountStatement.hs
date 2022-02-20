@@ -140,6 +140,17 @@ csvRecordsToLedgerTests = do
   it "Parses connection fees" $ do
     csvRecordsToLedger
       [ DegiroCsvRecord
+          (fromGregorian 2022 2 3)
+          (TimeOfDay 10 05 0)
+          (fromGregorian 2022 1 31)
+          ""
+          Nothing
+          "Giro Exchange Connection Fee 2022"
+          Nothing
+          (Just $ Cash eur $ -2.50)
+          (Cash eur $ -2.50)
+          ""
+      , DegiroCsvRecord
           (fromGregorian 2020 9 2)
           (TimeOfDay 12 02 0)
           (fromGregorian 2020 9 1)
@@ -155,6 +166,10 @@ csvRecordsToLedgerTests = do
         ( LedgerReport
             [ [transactionQQ|
                 2020/09/02 * DEGIRO Exchange Connection Fee 2020 (Euronext Amsterdam - EAM)
+                  Assets:Liquid:Degiro  -2.50 EUR = -2.50 EUR
+                  Expenses:Financial Services  2.50 EUR|]
+            , [transactionQQ|
+                2022/02/03 * Giro Exchange Connection Fee 2022
                   Assets:Liquid:Degiro  -2.50 EUR = -2.50 EUR
                   Expenses:Financial Services  2.50 EUR|]
             ]
