@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 -- | This module parses Degiro CSV statement
 module Hledupt.Degiro.Csv (
   -- * Parsing
