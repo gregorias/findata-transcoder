@@ -46,7 +46,9 @@ data DegiroIsin
 instance Csv.FromField DegiroIsin where
   parseField field
     | field == encodeUtf8 @Text "NLFLATEXACNT" = return Nlflatexacnt
-    | otherwise = DegiroIsin <$> parseField field
+    | otherwise =
+      (DegiroIsin <$> parseField field)
+        <|> fail ("Expected NLFLATEXACNT or an ISIN, but got: " <> decodeUtf8 field <> ".")
 
 newtype DegiroDay = DegiroDay
   { unDegiroDay :: Day

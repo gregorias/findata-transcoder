@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedLists #-}
-
 module Test.Hledupt.Degiro.Csv (
   tests,
 ) where
@@ -18,7 +16,11 @@ import Hledupt.Degiro.Csv (
 import NeatInterpolation (trimming)
 import Relude
 import Test.Hspec (SpecWith, describe, it)
-import Test.Hspec.Expectations.Pretty (shouldBe)
+import Test.Hspec.Expectations.Pretty (
+  expectationFailure,
+  shouldBe,
+  shouldContain,
+ )
 
 tests :: SpecWith ()
 tests = do
@@ -125,3 +127,16 @@ tests = do
                 (Cash chf 245.29)
                 ""
             ]
+      it "Gives an informative error message when the ISIN field is unexpected." $ do
+        let csv =
+              CsvFile . encodeUtf8 $
+                [trimming|
+                  Date,Time,Value date,Product,ISIN,Description,FX,Change,,Balance,,Order ID
+                  07-02-2022,10:17,04-02-2022,FLATEX CHF BANKACCOUNT,WEIRDISIN,Degiro Cash Sweep Transfer,,CHF,2.63,CHF,245.29,|]
+        let containsErrMsg (Right _) =
+              expectationFailure "Expected a readable error message but got Right."
+            containsErrMsg (Left errMsg) =
+              toString errMsg `shouldContain` "Expected NLFLATEXACNT or an ISIN, but got: WEIRDISIN."
+        containsErrMsg (parseCsvStatement csv)
+
+-- "(Expected NLFLATEXACNT or an ISIN, but got: WEIRDISIN.)"
