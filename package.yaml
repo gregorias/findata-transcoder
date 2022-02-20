@@ -1,4 +1,4 @@
-name:                hledupt
+name:                findata-transcoder
 version:             0.1.0.0
 github:              "githubuser/hledupt"
 license:             AGPL-3
@@ -101,7 +101,7 @@ library:
   - vector
 
 executables:
-  hledupt:
+  findata-transcoder:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -111,7 +111,7 @@ executables:
     dependencies:
     - bytestring
     - cli
-    - hledupt
+    - findata-transcoder
     - lens
     - megaparsec
     - relude
@@ -120,10 +120,10 @@ executables:
     # Fix https://stackoverflow.com/questions/67519851/multiple-files-use-the-same-module-name
     when:
     - condition: false
-      other-modules: Paths_hledupt
+      other-modules: Paths_findata_transcoder
 
 tests:
-  hledupt-test:
+  findata-transcoder-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -136,7 +136,7 @@ tests:
     - cassava
     - containers
     - hledger-lib
-    - hledupt
+    - findata-transcoder
     - hspec
     - hspec-expectations-pretty-diff
     - HUnit
@@ -162,5 +162,5 @@ tests:
     - -main-is DocTest
     dependencies:
     - doctest
-    - hledupt
+    - findata-transcoder
     - relude

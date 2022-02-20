@@ -1,16 +1,13 @@
 cradle:
   stack:
     - path: "./src"
-      component: "hledupt:lib"
+      component: "findata-transcoder:lib"
 
     - path: "./app/Main.hs"
-      component: "hledupt:exe:hledupt"
-
-    - path: "./app/Paths_hledupt.hs"
-      component: "hledupt:exe:hledupt"
+      component: "findata-transcoder:exe:findata-transcoder"
 
     - path: "./doctest"
-      component: "hledupt:test:doctest"
+      component: "findata-transcoder:test:doctest"
 
     - path: "./test"
-      component: "hledupt:test:hledupt-test"
+      component: "findata-transcoder:test:findata-transcoder-test"

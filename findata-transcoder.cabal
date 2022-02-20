@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 
-name:           hledupt
+name:           findata-transcoder
 version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/gregorias/hledupt#readme>
 homepage:       https://github.com/githubuser/hledupt#readme
@@ -61,7 +61,7 @@ library
       Text.Megaparsec.Char.Extra
       Text.Megaparsec.Extra.ErrorText
   other-modules:
-      Paths_hledupt
+      Paths_findata_transcoder
   hs-source-dirs:
       src
   default-extensions:
@@ -95,7 +95,7 @@ library
     , vector
   default-language: Haskell2010
 
-executable hledupt
+executable findata-transcoder
   main-is: Main.hs
   hs-source-dirs:
       app
@@ -106,7 +106,7 @@ executable hledupt
       base >=4.7 && <5
     , bytestring
     , cli
-    , hledupt
+    , findata-transcoder
     , lens
     , megaparsec
     , relude
@@ -118,7 +118,7 @@ test-suite doctest
   type: exitcode-stdio-1.0
   main-is: DocTest.hs
   other-modules:
-      Paths_hledupt
+      Paths_findata_transcoder
   hs-source-dirs:
       doctest
   default-extensions:
@@ -127,11 +127,11 @@ test-suite doctest
   build-depends:
       base >=4.7 && <5
     , doctest
-    , hledupt
+    , findata-transcoder
     , relude
   default-language: Haskell2010
 
-test-suite hledupt-test
+test-suite findata-transcoder-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
@@ -165,7 +165,7 @@ test-suite hledupt-test
       Test.Text.Megaparsec.Char.Extra
       Test.Text.Megaparsec.Match
       Text.Megaparsec.Match
-      Paths_hledupt
+      Paths_findata_transcoder
   hs-source-dirs:
       test
   default-extensions:
@@ -177,8 +177,8 @@ test-suite hledupt-test
     , base >=4.7 && <5
     , cassava
     , containers
+    , findata-transcoder
     , hledger-lib
-    , hledupt
     , hspec
     , hspec-expectations-pretty-diff
     , lens
