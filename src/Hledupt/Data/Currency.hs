@@ -1,6 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies #-}
-
 -- | This module extends 'Alpha'.
 module Hledupt.Data.Currency (
   Currency (..),

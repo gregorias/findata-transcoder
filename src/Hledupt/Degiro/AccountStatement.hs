@@ -36,7 +36,7 @@ import Hledger.Data.Lens (
   pBalanceAssertion,
   pStatus,
  )
-import Hledupt.Data.Cash (Cash (Cash), cashAmount, cashCurrency)
+import Hledupt.Data.Cash (Cash (Cash), cashAmount, cashCurrency, cashP)
 import qualified Hledupt.Data.Cash as Cash
 import Hledupt.Data.CsvFile (CsvFile)
 import Hledupt.Data.Currency (Currency, currencyP)
@@ -100,7 +100,7 @@ instance ToTransaction Deposit where
               (balassert $ makeCashAmount balance)
       ]
 
--- | A connection fee paid to Degiro.
+-- | A fee paid to or from Degiro.
 -- https://www.reddit.com/r/BEFire/comments/q0eil0/degiro_flatex_interestswhat_are_they/
 data Fee = Fee
   { fDate :: !Day
@@ -112,9 +112,14 @@ data Fee = Fee
 dcrToFee :: DegiroCsvRecord -> Maybe Fee
 dcrToFee rec
   | "Exchange Connection Fee" `T.isInfixOf` dcrDescription rec
-      || "Flatex Interest" `T.isInfixOf` dcrDescription rec = do
+      || "Flatex Interest" `T.isInfixOf` dcrDescription rec
+      || "Cash Sweep Transfer" `T.isInfixOf` dcrDescription rec = do
     change <- dcrChange rec
     return $ Fee (dcrDate rec) (dcrDescription rec) change (dcrBalance rec)
+  | "Transfer from your Cash Account at flatex Bank: " `T.isInfixOf` dcrDescription rec = do
+    changeStr <- T.stripPrefix "Transfer from your Cash Account at flatex Bank: " $ dcrDescription rec
+    change <- MP.parseMaybe @Void cashP changeStr
+    return $ Fee (dcrDate rec) (dcrDescription rec) (Cash.negate change) (dcrBalance rec)
   | otherwise = Nothing
 
 feeToTransaction :: Fee -> Transaction

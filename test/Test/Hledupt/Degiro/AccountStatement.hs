@@ -176,6 +176,30 @@ csvRecordsToLedgerTests = do
             []
         )
 
+  it "Parses cash account transfer" $ do
+    csvRecordsToLedger
+      [ DegiroCsvRecord
+          (fromGregorian 2022 2 7)
+          (TimeOfDay 10 17 0)
+          (fromGregorian 2022 2 4)
+          ""
+          Nothing
+          "Transfer from your Cash Account at flatex Bank: 2.63 CHF"
+          Nothing
+          Nothing
+          (Cash chf 242.66)
+          ""
+      ]
+      `shouldBe` Right
+        ( LedgerReport
+            [ [transactionQQ|
+                2022/02/07 * Transfer from your Cash Account at flatex Bank: 2.63 CHF
+                  Assets:Liquid:Degiro  -2.63 CHF = 242.66 CHF
+                  Expenses:Financial Services  2.63 CHF|]
+            ]
+            []
+        )
+
   it "Parses an Fx transaction" $ do
     Right csvRecords <-
       return $
