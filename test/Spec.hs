@@ -27,6 +27,7 @@ import qualified Test.Hledupt.Ib.Csv.RawParse
 import Test.Hledupt.Mbank (mbankTests)
 import qualified Test.Hledupt.Patreon
 import qualified Test.Hledupt.Revolut
+import qualified Test.Hledupt.Splitwise
 import Test.Hspec (SpecWith, hspec)
 import qualified Test.Text.Megaparsec.Char.Extra
 import qualified Test.Text.Megaparsec.Match
@@ -62,5 +63,6 @@ tests = do
   Test.Hledupt.Ib.tests
   Test.Hledupt.Patreon.tests
   Test.Hledupt.Revolut.tests
+  Test.Hledupt.Splitwise.tests
   Test.Text.Megaparsec.Char.Extra.tests
   Test.Text.Megaparsec.Match.tests

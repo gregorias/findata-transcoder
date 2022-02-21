@@ -57,6 +57,7 @@ library
       Hledupt.Mbank
       Hledupt.Patreon
       Hledupt.Revolut
+      Hledupt.Splitwise
       Hledupt.Wallet
       Text.Megaparsec.Char.Extra
       Text.Megaparsec.Extra.ErrorText
@@ -72,6 +73,7 @@ library
     , aeson
     , base >=4.7 && <5
     , bytestring
+    , casing
     , cassava
     , containers
     , currency-codes
@@ -162,6 +164,7 @@ test-suite findata-transcoder-test
       Test.Hledupt.Mbank
       Test.Hledupt.Patreon
       Test.Hledupt.Revolut
+      Test.Hledupt.Splitwise
       Test.Text.Megaparsec.Char.Extra
       Test.Text.Megaparsec.Match
       Text.Megaparsec.Match

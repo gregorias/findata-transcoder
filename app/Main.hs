@@ -42,6 +42,7 @@ import Hledupt.Ib as Ib (parseActivityCsv)
 import Hledupt.Mbank (mbankCsvToLedger)
 import qualified Hledupt.Patreon as Patreon
 import qualified Hledupt.Revolut as Revolut
+import qualified Hledupt.Splitwise as Splitwise
 import Relude
 import qualified Text.Megaparsec as MP
 
@@ -115,6 +116,16 @@ parseMbank =
 
 parseRevolut :: IO ()
 parseRevolut = parseBank Revolut.parseCsvToLedger
+
+parseSplitwise :: IO ()
+parseSplitwise = do
+  statement <- LBS.getContents
+  today <- utctDay <$> getCurrentTime
+  case Splitwise.statementToLedger today (CsvFile statement) of
+    Left err -> do
+      Text.hPutStr stderr err
+      exitFailure
+    Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
 
 parseGPayslip :: IO ()
 parseGPayslip = do
@@ -223,3 +234,6 @@ main = defaultMain $ do
   command "parse-revolut" $ do
     description "Parses Revolut's CSV file and outputs ledger data"
     ignoreAction parseRevolut
+  command "parse-splitwise" $ do
+    description "Parses Splitwise's CSV file and outputs ledger data"
+    ignoreAction parseSplitwise

@@ -78,6 +78,7 @@ library:
   - aeson
   - Decimal
   - bytestring
+  - casing
   - cassava
   - containers
   - currency-codes
