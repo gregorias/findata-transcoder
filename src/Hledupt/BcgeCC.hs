@@ -20,7 +20,7 @@ import qualified Hledger.Data.Extra as HDE
 import Hledger.Data.Lens (pBalanceAssertion, tDescription, tStatus)
 import Hledupt.Data.Currency (chf)
 import Hledupt.Data.MyDecimal (
-  ChunkSepFormat (NoChunkSep),
+  ChunkSepFormat (ChunkSep, NoChunkSep),
   DecimalFormat (..),
   DecimalFractionFormat (TwoDigitDecimalFraction),
   decimalP,
@@ -155,7 +155,7 @@ transactionsP = catMaybes <$> manyTill transactionOrExtraP totalCardLineP
 totalOwedAmountP :: BcgeCCParser Decimal
 totalOwedAmountP = label "total owed amount line" $ do
   void $ string "Total balance in our favour "
-  decimalP (DecimalFormat NoChunkSep (Just TwoDigitDecimalFraction)) <* anyLineP
+  decimalP (DecimalFormat (ChunkSep '\'') (Just TwoDigitDecimalFraction)) <* anyLineP
 
 rechnungP :: BcgeCCParser Rechnung
 rechnungP = do
