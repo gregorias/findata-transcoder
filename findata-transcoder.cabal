@@ -58,7 +58,6 @@ library
       Hledupt.Patreon
       Hledupt.Revolut
       Hledupt.Splitwise
-      Hledupt.UberEats
       Hledupt.Wallet
       Text.Megaparsec.Char.Extra
       Text.Megaparsec.Extra.ErrorText
@@ -166,7 +165,6 @@ test-suite findata-transcoder-test
       Test.Hledupt.Patreon
       Test.Hledupt.Revolut
       Test.Hledupt.Splitwise
-      Test.Hledupt.UberEats
       Test.Text.Megaparsec.Char.Extra
       Test.Text.Megaparsec.Match
       Text.Megaparsec.Match

@@ -194,6 +194,7 @@ entryNameToExpenseCategory entry =
     , ([regex|Salmon Poké|], readyMeals)
     , ([regex|ZENBU|], readyMeals)
     , ([regex|Findus Egli|], readyMeals)
+    , ([regex|BeringerFounders|], alcohol)
     , ([regex|Cahors|], alcohol)
     , ([regex|Dôle|], alcohol)
     , ([regex|Gamay|], alcohol)
