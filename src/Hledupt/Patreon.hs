@@ -40,7 +40,7 @@ import Hledupt.Data.MyDecimal (
   defaultDecimalFormat,
  )
 import Hledupt.Wallet (
-  expensesOther,
+  expenses,
   revolutAccount,
   (<:>),
  )
@@ -120,7 +120,7 @@ parseReceipt receipt = prepareErrMsg parsedReceipt
 
 entryToPosting :: Entry -> Posting
 entryToPosting Entry{name = name', total = total'} =
-  post expensesOther (makeCurrencyAmount usd total')
+  post (expenses <:> "Leisure:Patreon") (makeCurrencyAmount usd total')
     & set pComment name'
 
 receiptToTransaction :: Receipt -> Transaction

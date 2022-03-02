@@ -19,6 +19,6 @@ tests = do
               [transactionQQ|
                 2021/09/01 * Patreon
                   ! Assets:Liquid:Revolut:USD  -12.00 USD
-                  Expenses:Other               9.00 USD ; TimeGhost
-                  Expenses:Other               3.00 USD ; Alexander Granin|]
+                  Expenses:Leisure:Patreon      9.00 USD ; TimeGhost
+                  Expenses:Leisure:Patreon      3.00 USD ; Alexander Granin|]
         Patreon.receiptToLedger receipt `shouldBe` Right expectedTr
