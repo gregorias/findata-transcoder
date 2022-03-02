@@ -223,4 +223,7 @@ transactionQQ :: QuasiQuoter
 transactionQQ =
   QuasiQuoter
     { quoteExp = transactionQQExp
+    , quotePat = error "quotePat is unimplemented"
+    , quoteType = error "quoteType is unimplemented"
+    , quoteDec = error "quoteDec is unimplemented"
     }
