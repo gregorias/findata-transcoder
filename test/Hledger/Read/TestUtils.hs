@@ -215,9 +215,9 @@ parseTransactionUnsafe :: Text -> Transaction
 parseTransactionUnsafe = fromJust . MP.parseMaybe transactionP
 
 transactionQQExp :: String -> Q Exp
-transactionQQExp string = [|parseTransactionUnsafe input|]
+transactionQQExp trString = [|parseTransactionUnsafe input|]
  where
-  input = toText . trimdent $ string
+  input = toText . trimdent $ trString
 
 transactionQQ :: QuasiQuoter
 transactionQQ =
