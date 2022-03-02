@@ -18,6 +18,7 @@ import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text.IO as Text
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Data.Version (makeVersion)
+import Hledger (showTransaction)
 import Hledupt.Bcge (bcgeCsvToLedger)
 import qualified Hledupt.Bcge.Hint as BcgeHint
 import qualified Hledupt.BcgeCC as BcgeCC
@@ -43,6 +44,7 @@ import Hledupt.Mbank (mbankCsvToLedger)
 import qualified Hledupt.Patreon as Patreon
 import qualified Hledupt.Revolut as Revolut
 import qualified Hledupt.Splitwise as Splitwise
+import qualified Hledupt.UberEats as UberEats
 import Relude
 import qualified Text.Megaparsec as MP
 
@@ -182,6 +184,15 @@ parsePatreon = do
       exitFailure
     Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
 
+parseUberEats :: IO ()
+parseUberEats = do
+  bill <- Text.getContents
+  case UberEats.parseBill bill of
+    Left err -> do
+      Text.hPutStr stderr err
+      exitFailure
+    Right output -> putText . showTransaction $ output
+
 {- HLINT ignore ignoreAction -}
 ignoreAction :: r -> OptionDesc r ()
 ignoreAction r = action $ \_ -> r
@@ -237,3 +248,6 @@ main = defaultMain $ do
   command "parse-splitwise" $ do
     description "Parses Splitwise's CSV file and outputs ledger data"
     ignoreAction parseSplitwise
+  command "parse-uber-eats" $ do
+    description "Parses Uber Eats' payment line and outputs a Ledger transaction."
+    ignoreAction parseUberEats

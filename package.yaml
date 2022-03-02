@@ -113,6 +113,7 @@ executables:
     - bytestring
     - cli
     - findata-transcoder
+    - hledger-lib
     - lens
     - megaparsec
     - relude

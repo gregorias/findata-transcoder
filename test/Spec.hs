@@ -28,6 +28,7 @@ import Test.Hledupt.Mbank (mbankTests)
 import qualified Test.Hledupt.Patreon
 import qualified Test.Hledupt.Revolut
 import qualified Test.Hledupt.Splitwise
+import qualified Test.Hledupt.UberEats
 import Test.Hspec (SpecWith, hspec)
 import qualified Test.Text.Megaparsec.Char.Extra
 import qualified Test.Text.Megaparsec.Match
@@ -64,5 +65,6 @@ tests = do
   Test.Hledupt.Patreon.tests
   Test.Hledupt.Revolut.tests
   Test.Hledupt.Splitwise.tests
+  Test.Hledupt.UberEats.tests
   Test.Text.Megaparsec.Char.Extra.tests
   Test.Text.Megaparsec.Match.tests
