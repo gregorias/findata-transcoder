@@ -1,5 +1,4 @@
-{-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 
 module Hledger.Read.TestUtils (
   postingP,
@@ -108,7 +107,7 @@ simpleCommoditySymbolP = takeWhile1P Nothing (not . isNonsimpleCommodityChar)
 isNonsimpleCommodityChar :: Char -> Bool
 isNonsimpleCommodityChar = liftA2 (||) isDigit isOther
  where
-  otherChars = "-+.@*;\t\n \"{}="
+  otherChars :: String = "-+.@*;\t\n \"{}="
   isOther c = c `elem` otherChars
 
 commodityP :: Parser Amount
