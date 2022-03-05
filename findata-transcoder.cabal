@@ -49,6 +49,7 @@ library
       Hledupt.Degiro.Portfolio
       Hledupt.EasyRide
       Hledupt.Finpension
+      Hledupt.Galaxus
       Hledupt.GPayslip
       Hledupt.Ib
       Hledupt.Ib.Csv
@@ -160,6 +161,7 @@ test-suite findata-transcoder-test
       Test.Hledupt.Degiro.Portfolio
       Test.Hledupt.EasyRide
       Test.Hledupt.Finpension
+      Test.Hledupt.Galaxus
       Test.Hledupt.GPayslip
       Test.Hledupt.Ib
       Test.Hledupt.Ib.Csv.ActivityStatementParse

@@ -61,8 +61,7 @@ defaultDecimalFormat :: DecimalFormat
 defaultDecimalFormat = DecimalFormat NoChunkSep (Just OptionalUnlimitedDecimalFraction)
 
 -- | The format that has no chunk separation and has a two-digit
--- fractional part.
--- part of arbitrary length.
+-- fractional part of arbitrary length.
 cashDecimalFormat :: ChunkSepFormat -> DecimalFormat
 cashDecimalFormat = flip DecimalFormat (Just TwoDigitDecimalFraction)
 

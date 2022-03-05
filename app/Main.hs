@@ -39,6 +39,7 @@ import qualified Hledupt.Degiro.Portfolio as DegiroPortfolio (
 import qualified Hledupt.EasyRide as EasyRide
 import qualified Hledupt.Finpension as Finpension
 import Hledupt.GPayslip (payslipTextToLedger)
+import qualified Hledupt.Galaxus as Galaxus
 import Hledupt.Ib as Ib (parseActivityCsv)
 import Hledupt.Mbank (mbankCsvToLedger)
 import qualified Hledupt.Patreon as Patreon
@@ -175,6 +176,15 @@ parseEasyRide = do
       exitFailure
     Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
 
+parseGalaxus :: IO ()
+parseGalaxus = do
+  receipt <- Text.getContents
+  case Galaxus.parseReceipt receipt of
+    Left err -> do
+      Text.hPutStr stderr err
+      exitFailure
+    Right output -> putText . showTransaction $ output
+
 parsePatreon :: IO ()
 parsePatreon = do
   receipt <- Text.getContents
@@ -230,6 +240,9 @@ main = defaultMain $ do
   command "parse-finpension-transactions" $ do
     description "Parses Finpensions' transaction CSV and outputs Ledger data"
     ignoreAction parseFinpensionTransactions
+  command "parse-galaxus" $ do
+    description "Parses Galaxus' receipt and outputs a Ledger transaction."
+    ignoreAction parseGalaxus
   command "parse-gpayslip" $ do
     description "Parses a text dump from a Google Payslip and outputs Ledger data"
     ignoreAction parseGPayslip

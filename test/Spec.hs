@@ -21,6 +21,7 @@ import qualified Test.Hledupt.Degiro.Portfolio
 import qualified Test.Hledupt.EasyRide
 import qualified Test.Hledupt.Finpension
 import qualified Test.Hledupt.GPayslip
+import qualified Test.Hledupt.Galaxus
 import qualified Test.Hledupt.Ib
 import qualified Test.Hledupt.Ib.Csv.ActivityStatementParse
 import qualified Test.Hledupt.Ib.Csv.RawParse
@@ -58,6 +59,7 @@ tests = do
   Test.Hledupt.Degiro.Portfolio.tests
   Test.Hledupt.EasyRide.tests
   Test.Hledupt.Finpension.tests
+  Test.Hledupt.Galaxus.tests
   Test.Hledupt.GPayslip.tests
   Test.Hledupt.Ib.Csv.ActivityStatementParse.tests
   Test.Hledupt.Ib.Csv.RawParse.tests
