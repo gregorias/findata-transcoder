@@ -9,7 +9,6 @@ import Control.Lens (
  )
 import Data.Char (isDigit)
 import Data.Decimal (Decimal)
-import Data.Either.Combinators (mapLeft)
 import qualified Data.Text as Text
 import Data.Time.Calendar (
   Day,
@@ -49,9 +48,7 @@ import Relude.Unsafe (fromJust)
 import Text.Megaparsec (
   Parsec,
   anySingle,
-  errorBundlePretty,
   manyTill,
-  parse,
   single,
   takeWhile1P,
   takeWhileP,
@@ -63,6 +60,9 @@ import Text.Megaparsec.Char (
  )
 import Text.Megaparsec.Char.Lexer (
   decimal,
+ )
+import Text.Megaparsec.Extra (
+  parsePretty,
  )
 
 data Entry = Entry
@@ -111,13 +111,6 @@ receiptP = do
   entries' <- some entryP
   return $ Receipt day entries' total'
 
-parseReceipt :: Text -> Either Text Receipt
-parseReceipt receipt = prepareErrMsg parsedReceipt
- where
-  parsedReceipt = parse receiptP "" receipt
-  prepareErrMsg =
-    mapLeft (("Could not parse the Patreon receipt:\n" <>) . toText . errorBundlePretty)
-
 entryToPosting :: Entry -> Posting
 entryToPosting Entry{name = name', total = total'} =
   post (expenses <:> "Leisure:Patreon") (makeCurrencyAmount usd total')
@@ -136,5 +129,5 @@ receiptToTransaction Receipt{date = date', entries = entries', total = total'} =
 
 receiptToLedger :: Text -> Either Text Transaction
 receiptToLedger receiptText = do
-  receipt <- parseReceipt receiptText
+  receipt <- parsePretty receiptP "the Patreon receipt" receiptText
   return $ receiptToTransaction receipt

@@ -61,6 +61,7 @@ library
       Hledupt.UberEats
       Hledupt.Wallet
       Text.Megaparsec.Char.Extra
+      Text.Megaparsec.Extra
       Text.Megaparsec.Extra.ErrorText
   other-modules:
       Paths_findata_transcoder

@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 -- | This module parses Charles Schwab CSV statement
 module Hledupt.CharlesSchwab.Csv (
   -- * Parsing
@@ -10,7 +8,6 @@ module Hledupt.CharlesSchwab.Csv (
   CsCsvRecord (..),
 ) where
 
-import Control.Lens (over)
 import qualified Control.Lens as L
 import Control.Monad.Combinators (manyTill)
 import qualified Data.ByteString.Lazy as LBS
@@ -30,6 +27,9 @@ import Text.Megaparsec (Parsec, anySingle, chunk, single)
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (space)
 import Text.Megaparsec.Char.Lexer (signed)
+import Text.Megaparsec.Extra (
+  parsePretty,
+ )
 import Text.Megaparsec.Stream (tokensToChunk)
 
 csSimpleDayP :: Parsec Void String Day
@@ -146,5 +146,5 @@ parseCsCsv (CsvFile input) =
 
 parseCsStatement :: LBS.ByteString -> Either Text (Vector CsCsvRecord)
 parseCsStatement stmt = do
-  csvContent <- over L._Left (toText . MP.errorBundlePretty) $ MP.parse csStatementToCsvContentP "" stmt
+  csvContent <- parsePretty csStatementToCsvContentP "Charles Schwab Statement" stmt
   parseCsCsv csvContent

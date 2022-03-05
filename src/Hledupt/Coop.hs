@@ -38,15 +38,16 @@ import Text.Megaparsec (
   MonadParsec (try),
   Parsec,
   count,
-  errorBundlePretty,
   manyTill,
   manyTill_,
   match,
-  parse,
   parseMaybe,
  )
 import Text.Megaparsec.Char (char, digitChar, hspace1, newline, string)
 import Text.Megaparsec.Char.Extra (anyLineP)
+import Text.Megaparsec.Extra (
+  parsePretty,
+ )
 
 data Receipt = Receipt
   { _receiptDate :: !Day
@@ -224,17 +225,6 @@ entryNameToExpenseCategory entry =
     , ([regex|Mücken|], haushalt <:> "Mückenschutz")
     ]
 
-prependErrorMessage :: Text -> Either Text a -> Either Text a
-prependErrorMessage err = L._Left L.%~ ((err <> "\n") <>)
-
-parseReceipt :: Text -> Either Text Receipt
-parseReceipt receipt = prepareErrMsg parsedReceipt
- where
-  parsedReceipt = parse receiptP "" receipt
-  prepareErrMsg =
-    prependErrorMessage "Could not parse the payslip."
-      . first (toText . errorBundlePretty)
-
 paymentToPosting :: Payment -> Posting
 paymentToPosting Payment{paymentMethod = method, paymentTotal = total} =
   Ledger.post
@@ -294,5 +284,5 @@ receiptToTransaction config (Receipt day entries rabatt _total payments) =
 
 receiptToLedger :: Config -> Text -> Either Text Transaction
 receiptToLedger config receiptText = do
-  receipt <- parseReceipt receiptText
+  receipt <- parsePretty receiptP "a Coop receipt" receiptText
   return $ receiptToTransaction config receipt

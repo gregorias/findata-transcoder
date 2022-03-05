@@ -10,7 +10,7 @@ module Hledupt.GPayslip (
   PayslipLedgerConfig (..),
 ) where
 
-import Control.Lens ((%~), (^.))
+import Control.Lens ((^.))
 import qualified Control.Lens as L
 import Data.Decimal (Decimal)
 import Data.Time (Day, defaultTimeLocale, parseTimeM)
@@ -33,11 +33,9 @@ import Text.Megaparsec (
   Parsec,
   choice,
   count,
-  errorBundlePretty,
   manyTill,
   manyTill_,
   match,
-  parse,
   skipMany,
   try,
  )
@@ -49,6 +47,9 @@ import Text.Megaparsec.Char (
   string,
  )
 import Text.Megaparsec.Char.Extra (anyLineP)
+import Text.Megaparsec.Extra (
+  parsePretty,
+ )
 
 data PayslipLedgerConfig = PayslipLedgerConfig
   { -- | The bank account Google sends the salary to.
@@ -236,18 +237,8 @@ payslipP = do
   void $ many anyLineP
   return $ Payslip day salaryTotal deductions mainTotal
 
-prependErrorMessage :: Text -> Either Text a -> Either Text a
-prependErrorMessage err = L._Left %~ (errln <>)
- where
-  errln = err <> "\n"
-
 parsePayslip :: Text -> Either Text Payslip
-parsePayslip payslip = prepareErrMsg parsedPayslip
- where
-  parsedPayslip = parse payslipP "" payslip
-  prepareErrMsg =
-    prependErrorMessage "Could not parse the payslip."
-      . first (toText . errorBundlePretty)
+parsePayslip = parsePretty payslipP "the Google payslip"
 
 payslipToLedger :: PayslipLedgerConfig -> Payslip -> Transaction
 payslipToLedger

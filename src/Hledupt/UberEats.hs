@@ -3,7 +3,6 @@ module Hledupt.UberEats (
 ) where
 
 import qualified Control.Lens as L
-import Data.Either.Extra (mapLeft)
 import Data.Time (
   Day,
   fromGregorianValid,
@@ -34,7 +33,9 @@ import Relude
 import qualified Text.Megaparsec as MP
 import qualified Text.Megaparsec.Char as MP
 import qualified Text.Megaparsec.Char.Lexer as MP
-import Text.Megaparsec.Error (errorBundlePretty)
+import Text.Megaparsec.Extra (
+  parsePretty,
+ )
 
 type Parser = MP.Parsec Void Text
 
@@ -99,10 +100,5 @@ billP = do
   hourP
   Bill src parsedDay <$> cashP
 
-parseBill' :: Text -> Either Text Bill
-parseBill' = mapLeft toErrMsg . MP.parse billP ""
- where
-  toErrMsg = ("Could not parse the Uber Eats bill.\n" <>) . (toText . errorBundlePretty)
-
 parseBill :: Text -> Either Text Transaction
-parseBill = parseBill' >=> (return . toTransaction)
+parseBill = parsePretty billP "the Uber Eats bill" >=> (return . toTransaction)

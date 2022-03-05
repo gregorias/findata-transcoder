@@ -42,13 +42,14 @@ import Text.Megaparsec (
   manyTill,
   manyTill_,
   match,
-  parse,
   parseMaybe,
   updateParserState,
  )
 import Text.Megaparsec.Char (char, digitChar, newline, string)
 import Text.Megaparsec.Char.Extra (anyLineP)
-import Text.Megaparsec.Error (errorBundlePretty)
+import Text.Megaparsec.Extra (
+  parsePretty,
+ )
 
 data Rechnung = Rechnung
   { rechnungDay :: !Day
@@ -173,13 +174,6 @@ rechnungP = do
  where
   cardLimitP = void $ string "Card limit CHF" >> anyLineP
 
-parseRechnung :: Text -> Either Text Rechnung
-parseRechnung rechnung = prepareErrMsg parsedReceipt
- where
-  parsedReceipt = parse rechnungP "" rechnung
-  prepareErrMsg =
-    first (("Could not parse the payslip.\n" <>) . (toText . errorBundlePretty))
-
 rawRechnungTransactionToTransaction :: RawRechnungTransaction -> Transaction
 rawRechnungTransactionToTransaction
   RawRechnungTransaction
@@ -217,4 +211,6 @@ rechnungToTransactions
         & L.set pBalanceAssertion (balassert . HDE.makeCurrencyAmount chf $ - owedAmount)
 
 rechnungToLedger :: Text -> Either Text [Transaction]
-rechnungToLedger rechnungTxt = rechnungToTransactions <$> parseRechnung rechnungTxt
+rechnungToLedger rechnungTxt =
+  rechnungToTransactions
+    <$> parsePretty rechnungP "a BCGE CC statement" rechnungTxt

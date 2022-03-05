@@ -26,10 +26,8 @@ import Relude
 import Text.Megaparsec (
   Parsec,
   anySingle,
-  errorBundlePretty,
   label,
   manyTill_,
-  parse,
  )
 import Text.Megaparsec.Char (
   char,
@@ -37,6 +35,9 @@ import Text.Megaparsec.Char (
  )
 import Text.Megaparsec.Char.Extra (anyLineP)
 import Text.Megaparsec.Char.Lexer (decimal)
+import Text.Megaparsec.Extra (
+  parsePretty,
+ )
 
 data Receipt = Receipt
   { _receiptDate :: !Day
@@ -69,17 +70,6 @@ receiptP = do
   void anyLineP
   return $ Receipt day total
 
-prependErrorMessage :: Text -> Either Text a -> Either Text a
-prependErrorMessage err = L._Left L.%~ ((err <> "\n") <>)
-
-parseReceipt :: Text -> Either Text Receipt
-parseReceipt receipt = prepareErrMsg parsedReceipt
- where
-  parsedReceipt = parse receiptP "" receipt
-  prepareErrMsg =
-    prependErrorMessage "Could not parse the receipt."
-      . first (toText . errorBundlePretty)
-
 receiptToTransaction :: Receipt -> Transaction
 receiptToTransaction (Receipt day total) =
   transaction day postings
@@ -99,5 +89,5 @@ receiptToTransaction (Receipt day total) =
 
 receiptToLedger :: Text -> Either Text Transaction
 receiptToLedger receiptText = do
-  receipt <- parseReceipt receiptText
+  receipt <- parsePretty receiptP "EasyRide receipt" receiptText
   return $ receiptToTransaction receipt
