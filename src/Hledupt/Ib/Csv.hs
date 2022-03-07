@@ -1,8 +1,3 @@
-{-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies #-}
-
 module Hledupt.Ib.Csv (
   -- * Types
   ActivityStatement (..),
@@ -19,7 +14,6 @@ module Hledupt.Ib.Csv (
   parseActivity,
 ) where
 
-import qualified Control.Lens as L
 import Hledupt.Ib.Csv.ActivityStatementParse (
   ActivityStatement (..),
   CashMovement (..),
@@ -37,6 +31,6 @@ import Relude
 
 -- | Parses an Activity IB CSV statement into individual data points and records.
 parseActivity :: Text -> Either Text ActivityStatement
-parseActivity csv = L.over L._Left toText $ do
-  csvs <- RawParse.parse (toString csv)
+parseActivity csv = do
+  csvs <- RawParse.parse csv
   parseActivityStatement csvs

@@ -1,9 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Test.Hledupt.Ib.Csv.RawParse (tests) where
 
-import Data.List (isInfixOf)
 import qualified Data.Map.Lazy as Map
+import qualified Data.Text as T
 import Hledupt.Ib.Csv.RawParse (
   Section (..),
   Statement (..),
@@ -17,12 +15,12 @@ tests :: SpecWith ()
 tests = do
   describe "Hledupt.Ib.Csv.RawParse" $ do
     it "Prints a readable message when lines can't be parsed." $ do
-      parse ("mangled Line" :: String) `shouldSatisfy` \case
-        Left errorMsg -> ("Could not parse IB CSV statement into individual structured lines.\n" `isInfixOf` errorMsg)
+      parse "mangled Line" `shouldSatisfy` \case
+        Left errorMsg -> ("Could not parse IB CSV statement:\n" `T.isInfixOf` errorMsg)
         Right _ -> False
     it "When a section doesn't start with a header, fails and gives an error message" $ do
-      parse ("Sec,Data,1" :: String) `shouldSatisfy` \case
-        Left errorMsg -> ("Could not parse the IB CSV statement.\n" `isInfixOf` errorMsg)
+      parse "Sec,Data,1" `shouldSatisfy` \case
+        Left errorMsg -> ("Could not parse the IB CSV statement.\n" `T.isInfixOf` errorMsg)
         Right _ -> False
     it "Parses a statement" $ do
       let stmt =

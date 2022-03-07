@@ -1,9 +1,5 @@
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE TypeFamilies #-}
-
--- |
--- This module does a first-pass parsing of an IB statement CSV
--- into individual CSVs.
+-- | This module does a first-pass parsing of an IB statement CSV into
+-- individual CSVs.
 module Hledupt.Ib.Csv.RawParse (
   Statement (..),
   Section (..),
@@ -11,7 +7,9 @@ module Hledupt.Ib.Csv.RawParse (
   parse,
 ) where
 
+import Control.Lens (over)
 import qualified Control.Lens as L
+import Data.Either.Extra (mapLeft)
 import Data.List.NonEmpty (some1)
 import qualified Data.Map as Map
 import Relude
@@ -22,7 +20,6 @@ import Text.Megaparsec (
   Stream,
   VisualStream,
   anySingle,
-  errorBundlePretty,
   manyTill,
   parseErrorPretty,
   satisfy,
@@ -31,6 +28,7 @@ import Text.Megaparsec (
 import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (newline)
 import Text.Megaparsec.Char.Extra (bom)
+import Text.Megaparsec.Extra (parsePretty)
 
 newtype Statement = Statement
   { unStatement :: Map.Map String Section
@@ -101,15 +99,15 @@ instance Stream IbCsvLines where
   takeN_ n icl@(IbCsvLines s)
     | n <= 0 = Just ([], icl)
     | null s = Nothing
-    | otherwise = Just (L.over L._2 IbCsvLines $ splitAt n s)
-  takeWhile_ f = L.over L._2 IbCsvLines . MP.takeWhile_ f . unIbCsvLines
+    | otherwise = Just (over L._2 IbCsvLines $ splitAt n s)
+  takeWhile_ f = over L._2 IbCsvLines . MP.takeWhile_ f . unIbCsvLines
 
 instance VisualStream IbCsvLines where
   showTokens Proxy (l :| ls) = concatMap showIbCsvHordLine (l : ls)
   tokensLength proxy = length . MP.showTokens proxy
 
-ibCsvLineParser :: Parsec Void String IbCsvLine
-ibCsvLineParser = do
+ibCsvLineP :: Parsec Void String IbCsvLine
+ibCsvLineP = do
   section <- takeWhileP (Just "not a comma") (/= ',')
   void $ single ','
   header <- takeWhileP (Just "not a comma") (/= ',')
@@ -117,10 +115,10 @@ ibCsvLineParser = do
   rest <- manyTill anySingle (void newline <|> eof)
   return $ IbCsvLine section header (rest ++ "\n")
 
-rawStatementParser :: Parsec Void String [IbCsvLine]
-rawStatementParser = do
+rawStatementP :: Parsec Void String [IbCsvLine]
+rawStatementP = do
   void $ optional bom
-  icls <- many ibCsvLineParser
+  icls <- many ibCsvLineP
   eof
   return icls
 
@@ -155,20 +153,17 @@ sectionParser = label "IB statement section" $ do
   csvs <- some1 $ csvParser section
   return (section, Section csvs)
 
-lineParser :: Parsec Void IbCsvLines Statement
-lineParser = (Statement . Map.fromList <$> many (try sectionParser)) <* eof
+lineP :: Parsec Void IbCsvLines Statement
+lineP = (Statement . Map.fromList <$> many (try sectionParser)) <* eof
 
 -- | Parses an IB CSV Statement
-parse :: String -> Either String Statement
+parse :: Text -> Either Text Statement
 parse csv = do
-  ibCsvLines <-
-    prependErrorMessagePretty
-      "Could not parse IB CSV statement into individual structured lines.\n"
-      $ MP.parse rawStatementParser "" csv
+  ibCsvLines <- parsePretty rawStatementP "IB CSV statement" (toString csv)
   let ibCsvHordLines = mapMaybe toMaybeHordLine ibCsvLines
-  prependErrorMessage
-    "Could not parse the IB CSV statement.\n"
-    $ MP.parse lineParser "" (IbCsvLines ibCsvHordLines)
+  mapLeft toText
+    . prependErrorMessage
+      "Could not parse the IB CSV statement.\n"
+    $ MP.parse lineP "" (IbCsvLines ibCsvHordLines)
  where
-  prependErrorMessagePretty errMsg = first ((errMsg ++) . errorBundlePretty)
   prependErrorMessage errMsg = first ((errMsg ++) . parseErrorPretty . head . bundleErrors)

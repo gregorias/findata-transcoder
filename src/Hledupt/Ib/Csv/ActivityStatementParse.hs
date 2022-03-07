@@ -27,6 +27,7 @@ import qualified Data.Csv as Csv hiding (FromNamedRecord, decodeByName, lookup)
 import qualified Data.Csv as CsvLookup (lookup)
 import qualified Data.Csv.Extra as Csv
 import Data.Decimal (Decimal)
+import Data.Either.Extra (mapLeft)
 import Data.List (isInfixOf)
 import Data.List.Extra (allSame)
 import qualified Data.Map.Strict as Map
@@ -459,22 +460,22 @@ parseTradesSection stmt = do
 
 -- | Useful information gleaned directly from IB's CSV activity statement.
 data ActivityStatement = ActivityStatement
-  { asLastStatementDay :: Day
-  , asCashPositions :: [EndingCash]
-  , asStockPositions :: [StockPosition]
-  , asCashMovements :: [CashMovement]
-  , asStockTrades :: [StockTrade]
-  , asForexTrades :: [ForexTrade]
-  , asDividends :: [Dividend]
-  , asTaxes :: [WithholdingTax]
+  { asLastStatementDay :: !Day
+  , asCashPositions :: ![EndingCash]
+  , asStockPositions :: ![StockPosition]
+  , asCashMovements :: ![CashMovement]
+  , asStockTrades :: ![StockTrade]
+  , asForexTrades :: ![ForexTrade]
+  , asDividends :: ![Dividend]
+  , asTaxes :: ![WithholdingTax]
   }
   deriving stock (Eq, Show)
 
 nullActivityStatement :: Day -> ActivityStatement
 nullActivityStatement date = ActivityStatement date [] [] [] [] [] [] []
 
-parseActivityStatement :: Statement -> Either String ActivityStatement
-parseActivityStatement csvs = do
+parseActivityStatement :: Statement -> Either Text ActivityStatement
+parseActivityStatement csvs = mapLeft toText $ do
   date <- do
     stmtCsv <- head . unSection <$> fetchSection "Statement" csvs
     first errorBundlePretty $ MP.parse statementDateParser "" (toText $ unCsv stmtCsv)
