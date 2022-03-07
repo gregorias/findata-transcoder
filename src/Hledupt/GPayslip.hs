@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 -- | This module parses a text dump from a Google Payslip and outputs a ledger.
 module Hledupt.GPayslip (
   parsePayslip,

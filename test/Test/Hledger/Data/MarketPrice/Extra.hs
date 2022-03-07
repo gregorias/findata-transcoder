@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Test.Hledger.Data.MarketPrice.Extra (tests) where
 
 import Data.Ratio ((%))

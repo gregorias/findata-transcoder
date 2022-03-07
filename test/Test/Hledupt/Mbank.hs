@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Test.Hledupt.Mbank (
   mbankTests,
 ) where

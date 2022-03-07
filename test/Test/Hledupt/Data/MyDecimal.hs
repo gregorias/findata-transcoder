@@ -1,5 +1,4 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Test.Hledupt.Data.MyDecimal (tests) where
 

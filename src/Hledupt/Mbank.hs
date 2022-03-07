@@ -1,6 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module Hledupt.Mbank (
   MbankTransaction (..),
   valueParser,

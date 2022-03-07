@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Test.Hledupt.Data.LedgerReport (
   tests,
 ) where

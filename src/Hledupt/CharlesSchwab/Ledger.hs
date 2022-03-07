@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 -- | This module turns a parsed CS CSV statement into ledger format.
 module Hledupt.CharlesSchwab.Ledger (
   csvToLedger,

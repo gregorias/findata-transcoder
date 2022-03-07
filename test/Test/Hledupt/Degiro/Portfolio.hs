@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Test.Hledupt.Degiro.Portfolio (
   tests,
 ) where

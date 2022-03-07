@@ -318,7 +318,7 @@ instance Csv.FromNamedRecord DividendRecord where
       then return TotalDividendsRecord
       else fmap DividendRecord dividend
    where
-    dividendAux date (symbol, dps) total = Dividend date symbol dps total
+    dividendAux date (symbol, dps) = Dividend date symbol dps
     dividend =
       dividendAux
         <$> (Csv.lookup "Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")

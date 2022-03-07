@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 -- | This module parses CharlesSchwab CSV statement
 module Hledupt.CharlesSchwab (
   csvToLedger,

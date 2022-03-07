@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Test.Hledupt.Bcge (tests) where
 
 import Control.Lens (set)

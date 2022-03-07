@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 -- | This module parses Degiro's Portfolio CSV statement into Ledger.
 module Hledupt.Degiro.Portfolio (
   csvStatementToLedger,
