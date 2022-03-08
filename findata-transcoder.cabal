@@ -29,6 +29,7 @@ library
       Hledger.Data.Extra
       Hledger.Data.Lens
       Hledger.Data.MarketPrice.Extra
+      Hledger.Extra
       Hledupt.Bcge
       Hledupt.Bcge.Hint
       Hledupt.BcgeCC
@@ -146,6 +147,7 @@ test-suite findata-transcoder-test
       Test.Hledger.Data.Extra
       Test.Hledger.Data.Lens
       Test.Hledger.Data.MarketPrice.Extra
+      Test.Hledger.Extra
       Test.Hledger.Read.TestUtils
       Test.Hledupt.Bcge
       Test.Hledupt.Bcge.Hint

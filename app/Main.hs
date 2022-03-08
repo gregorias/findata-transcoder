@@ -18,7 +18,7 @@ import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text.IO as Text
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Data.Version (makeVersion)
-import Hledger (showTransaction)
+import Hledger.Extra (showTransaction)
 import Hledupt.Bcge (bcgeCsvToLedger)
 import qualified Hledupt.Bcge.Hint as BcgeHint
 import qualified Hledupt.BcgeCC as BcgeCC

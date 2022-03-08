@@ -5,6 +5,7 @@ import qualified Test.Data.Csv.Extra
 import qualified Test.Hledger.Data.Extra as HDE
 import qualified Test.Hledger.Data.Lens
 import qualified Test.Hledger.Data.MarketPrice.Extra
+import qualified Test.Hledger.Extra
 import qualified Test.Hledger.Read.TestUtils
 import qualified Test.Hledupt.Bcge
 import qualified Test.Hledupt.Bcge.Hint as BcgeHint
@@ -45,6 +46,7 @@ tests = do
   Test.Data.Csv.Extra.tests
   Test.Hledger.Data.Lens.tests
   Test.Hledger.Data.MarketPrice.Extra.tests
+  Test.Hledger.Extra.tests
   Test.Hledger.Read.TestUtils.tests
   Test.Hledupt.Bcge.tests
   Test.Hledupt.BcgeCC.tests
