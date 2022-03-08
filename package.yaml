@@ -33,6 +33,7 @@ default-extensions:
   DeriveTraversable
   DerivingStrategies
   DerivingVia
+  DuplicateRecordFields
   FlexibleContexts
   FlexibleInstances
   FunctionalDependencies
