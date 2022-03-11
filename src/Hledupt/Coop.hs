@@ -186,12 +186,14 @@ entryNameToExpenseCategory entry =
     )
  where
   haushalt = "Haushalt"
+  coffee = "Groceries" <:> "Coffee"
   readyMeals = "Groceries" <:> "Ready Meals"
   alcohol = "Groceries" <:> "Alcohol"
   health = "Gesundheit"
   itemToExpenseCategoryPairs =
     [ ([regex|Stimorol|], "Groceries:Chewing Gum")
-    , ([regex|Emmi Caffè Latte|], "Groceries" <:> "Coffee" <:> "Latte")
+    , ([regex|Acqua Panna|], coffee)
+    , ([regex|Emmi Caffè Latte|], coffee <:> "Latte")
     , ([regex|Salmon Poké|], readyMeals)
     , ([regex|ZENBU|], readyMeals)
     , ([regex|Findus Egli|], readyMeals)
