@@ -193,6 +193,7 @@ entryNameToExpenseCategory entry =
   itemToExpenseCategoryPairs =
     [ ([regex|Stimorol|], "Groceries:Chewing Gum")
     , ([regex|Acqua Panna|], coffee)
+    , ([regex|Naturaplan Espresso Havelaar Bohnen|], coffee)
     , ([regex|Emmi Caffè Latte|], coffee <:> "Latte")
     , ([regex|Salmon Poké|], readyMeals)
     , ([regex|ZENBU|], readyMeals)
