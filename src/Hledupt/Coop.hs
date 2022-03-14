@@ -213,6 +213,7 @@ entryNameToExpenseCategory entry =
     , ([regex|^À Table!|], haushalt)
     , ([regex|^Persil|], haushalt)
     , ([regex|^Flup|], haushalt)
+    , ([regex|^Dr.Beckmann|], haushalt)
     , ([regex|^Sun|], haushalt)
     , ([regex|^Palmolive Ultra|], haushalt)
     , ([regex|Reinigung|], haushalt)
