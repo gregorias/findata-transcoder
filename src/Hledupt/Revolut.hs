@@ -43,9 +43,9 @@ newtype RevolutDay = RevolutDay
   }
 
 instance Csv.FromField RevolutDay where
-  parseField field =
-    RevolutDay
-      <$> parseTimeM True defaultTimeLocale "%Y-%m-%d %T" (decodeUtf8 field)
+  parseField field = RevolutDay <$> (parseTime "%Y-%m-%d %T" <|> parseTime "%Y-%m-%d %-k:%M:%S")
+   where
+    parseTime fmt = parseTimeM True defaultTimeLocale fmt (decodeUtf8 field)
 
 instance Csv.FromNamedRecord RevolutTransaction where
   parseNamedRecord nr = do
