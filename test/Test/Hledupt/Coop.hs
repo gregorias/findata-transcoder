@@ -92,6 +92,17 @@ tests = do
                     Expenses:Groceries:Ready Meals  14.95 CHF|]
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
+      it "correctly handles multiple payment methods with super points" $ do
+        coop <- readFileText "test/data/coop-superpunkte.txt"
+        let expectedTr =
+              parseTransactionUnsafe
+                [trimming|
+                  2022/04/16 * Coop
+                    Expenses:Other                -0.50 CHF
+                    ! Assets:Liquid:BCGE CC         -1.00 CHF
+                    Expenses:Groceries:Chewing Gum  1.50 CHF|]
+        Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
+
       it "correctly applies debtor postings" $ do
         config <-
           readCoopConfig

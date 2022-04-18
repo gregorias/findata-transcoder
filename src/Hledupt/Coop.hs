@@ -62,12 +62,13 @@ data Entry = Entry
   , entryTotal :: !Decimal
   }
 
-data PaymentMethod = TWINT | Mastercard | Supercash
+data PaymentMethod = TWINT | Mastercard | Supercash | Superpunkte
 
 paymentMethodToAccount :: PaymentMethod -> Text
 paymentMethodToAccount TWINT = bcgeAccount
 paymentMethodToAccount Mastercard = bcgeCCAccount
 paymentMethodToAccount Supercash = Wallet.expensesOther
+paymentMethodToAccount Superpunkte = Wallet.expensesOther
 
 data Payment = Payment
   { paymentMethod :: !PaymentMethod
@@ -150,6 +151,7 @@ paymentMethodP =
   (string "TWINT" >> return TWINT)
     <|> (string "Mastercard" >> return Mastercard)
     <|> (string "Supercash" >> return Supercash)
+    <|> (string "Superpunkte" >> return Superpunkte)
 
 paymentP :: Parser Payment
 paymentP = do
@@ -233,10 +235,11 @@ paymentToPosting :: Payment -> Posting
 paymentToPosting Payment{paymentMethod = method, paymentTotal = total} =
   Ledger.post
     (paymentMethodToAccount method)
-    (HDE.makeCurrencyAmount chf (- total))
+    (HDE.makeCurrencyAmount chf (-total))
     & L.set pStatus (postingStatus method)
  where
   postingStatus Supercash = Unmarked
+  postingStatus Superpunkte = Unmarked
   postingStatus TWINT = Pending
   postingStatus Mastercard = Pending
 
