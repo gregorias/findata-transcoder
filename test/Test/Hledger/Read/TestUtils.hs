@@ -33,12 +33,12 @@ import Hledger.Read.TestUtils (
   transactionP,
   transactionQQ,
  )
-import Hledupt.Data.Currency (usd)
 import Relude
 import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
 import Test.Hspec.Expectations.Pretty (shouldBe)
 import Text.Megaparsec (parseMaybe)
+import Transcoder.Data.Currency (usd)
 
 tests :: Hspec.SpecWith ()
 tests = do

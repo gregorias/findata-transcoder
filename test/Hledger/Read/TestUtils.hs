@@ -42,7 +42,6 @@ import qualified Hledger.Read.Common as Hledger (
   statusp,
  )
 import qualified Hledger.Utils.Parse as Hledger
-import Hledupt.Data.MyDecimal (decimalP, defaultDecimalFormat)
 import Language.Haskell.TH.Quote (
   QuasiQuoter (..),
  )
@@ -73,6 +72,7 @@ import Text.Megaparsec.Char (
  )
 import Text.Megaparsec.Char.Extra (eolOrEof)
 import qualified Text.Megaparsec.Internal as MP
+import Transcoder.Data.MyDecimal (decimalP, defaultDecimalFormat)
 import Trimdent (trimdent)
 
 type Parser = Parsec () Text

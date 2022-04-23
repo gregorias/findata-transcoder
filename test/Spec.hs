@@ -7,33 +7,33 @@ import qualified Test.Hledger.Data.Lens
 import qualified Test.Hledger.Data.MarketPrice.Extra
 import qualified Test.Hledger.Extra
 import qualified Test.Hledger.Read.TestUtils
-import qualified Test.Hledupt.Bcge
-import qualified Test.Hledupt.Bcge.Hint as BcgeHint
-import qualified Test.Hledupt.BcgeCC
-import qualified Test.Hledupt.CharlesSchwab.Csv
-import qualified Test.Hledupt.CharlesSchwab.Ledger
-import qualified Test.Hledupt.Coop
-import qualified Test.Hledupt.Coop.Config
-import qualified Test.Hledupt.Data.LedgerReport
-import qualified Test.Hledupt.Data.MyDecimal
-import qualified Test.Hledupt.Degiro.AccountStatement
-import qualified Test.Hledupt.Degiro.Csv
-import qualified Test.Hledupt.Degiro.Portfolio
-import qualified Test.Hledupt.EasyRide
-import qualified Test.Hledupt.Finpension
-import qualified Test.Hledupt.GPayslip
-import qualified Test.Hledupt.Galaxus
-import qualified Test.Hledupt.Ib
-import qualified Test.Hledupt.Ib.Csv.ActivityStatementParse
-import qualified Test.Hledupt.Ib.Csv.RawParse
-import Test.Hledupt.Mbank (mbankTests)
-import qualified Test.Hledupt.Patreon
-import qualified Test.Hledupt.Revolut
-import qualified Test.Hledupt.Splitwise
-import qualified Test.Hledupt.UberEats
 import Test.Hspec (SpecWith, hspec)
 import qualified Test.Text.Megaparsec.Char.Extra
 import qualified Test.Text.Megaparsec.Match
+import qualified Test.Transcoder.Bcge
+import qualified Test.Transcoder.Bcge.Hint as BcgeHint
+import qualified Test.Transcoder.BcgeCC
+import qualified Test.Transcoder.CharlesSchwab.Csv
+import qualified Test.Transcoder.CharlesSchwab.Ledger
+import qualified Test.Transcoder.Coop
+import qualified Test.Transcoder.Coop.Config
+import qualified Test.Transcoder.Data.LedgerReport
+import qualified Test.Transcoder.Data.MyDecimal
+import qualified Test.Transcoder.Degiro.AccountStatement
+import qualified Test.Transcoder.Degiro.Csv
+import qualified Test.Transcoder.Degiro.Portfolio
+import qualified Test.Transcoder.EasyRide
+import qualified Test.Transcoder.Finpension
+import qualified Test.Transcoder.GPayslip
+import qualified Test.Transcoder.Galaxus
+import qualified Test.Transcoder.Ib
+import qualified Test.Transcoder.Ib.Csv.ActivityStatementParse
+import qualified Test.Transcoder.Ib.Csv.RawParse
+import Test.Transcoder.Mbank (mbankTests)
+import qualified Test.Transcoder.Patreon
+import qualified Test.Transcoder.Revolut
+import qualified Test.Transcoder.Splitwise
+import qualified Test.Transcoder.UberEats
 
 main :: IO ()
 main = hspec tests
@@ -48,27 +48,27 @@ tests = do
   Test.Hledger.Data.MarketPrice.Extra.tests
   Test.Hledger.Extra.tests
   Test.Hledger.Read.TestUtils.tests
-  Test.Hledupt.Bcge.tests
-  Test.Hledupt.BcgeCC.tests
-  Test.Hledupt.CharlesSchwab.Csv.tests
-  Test.Hledupt.CharlesSchwab.Ledger.tests
-  Test.Hledupt.Coop.tests
-  Test.Hledupt.Coop.Config.tests
-  Test.Hledupt.Data.LedgerReport.tests
-  Test.Hledupt.Data.MyDecimal.tests
-  Test.Hledupt.Degiro.AccountStatement.tests
-  Test.Hledupt.Degiro.Csv.tests
-  Test.Hledupt.Degiro.Portfolio.tests
-  Test.Hledupt.EasyRide.tests
-  Test.Hledupt.Finpension.tests
-  Test.Hledupt.Galaxus.tests
-  Test.Hledupt.GPayslip.tests
-  Test.Hledupt.Ib.Csv.ActivityStatementParse.tests
-  Test.Hledupt.Ib.Csv.RawParse.tests
-  Test.Hledupt.Ib.tests
-  Test.Hledupt.Patreon.tests
-  Test.Hledupt.Revolut.tests
-  Test.Hledupt.Splitwise.tests
-  Test.Hledupt.UberEats.tests
+  Test.Transcoder.Bcge.tests
+  Test.Transcoder.BcgeCC.tests
+  Test.Transcoder.CharlesSchwab.Csv.tests
+  Test.Transcoder.CharlesSchwab.Ledger.tests
+  Test.Transcoder.Coop.tests
+  Test.Transcoder.Coop.Config.tests
+  Test.Transcoder.Data.LedgerReport.tests
+  Test.Transcoder.Data.MyDecimal.tests
+  Test.Transcoder.Degiro.AccountStatement.tests
+  Test.Transcoder.Degiro.Csv.tests
+  Test.Transcoder.Degiro.Portfolio.tests
+  Test.Transcoder.EasyRide.tests
+  Test.Transcoder.Finpension.tests
+  Test.Transcoder.Galaxus.tests
+  Test.Transcoder.GPayslip.tests
+  Test.Transcoder.Ib.Csv.ActivityStatementParse.tests
+  Test.Transcoder.Ib.Csv.RawParse.tests
+  Test.Transcoder.Ib.tests
+  Test.Transcoder.Patreon.tests
+  Test.Transcoder.Revolut.tests
+  Test.Transcoder.Splitwise.tests
+  Test.Transcoder.UberEats.tests
   Test.Text.Megaparsec.Char.Extra.tests
   Test.Text.Megaparsec.Match.tests

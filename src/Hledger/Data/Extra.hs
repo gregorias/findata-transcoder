@@ -30,9 +30,9 @@ import Hledger.Data.Types (
   AmountPrecision (..),
   Quantity,
  )
-import Hledupt.Data.Cash (Cash (Cash))
-import Hledupt.Data.Currency (Currency)
 import Relude
+import Transcoder.Data.Cash (Cash (Cash))
+import Transcoder.Data.Currency (Currency)
 
 makeCommodityAmount :: Text -> Quantity -> Amount
 makeCommodityAmount commodity quantity =

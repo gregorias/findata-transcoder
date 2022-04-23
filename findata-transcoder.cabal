@@ -5,13 +5,13 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           findata-transcoder
-version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/gregorias/hledupt#readme>
-homepage:       https://github.com/githubuser/hledupt#readme
-bug-reports:    https://github.com/githubuser/hledupt/issues
+version:        0.2.0.0
+description:    Please see the README on GitHub at <https://github.com/gregorias/findata-transcoder#readme>
+homepage:       https://github.com/gregorias/findata-transcoder#readme
+bug-reports:    https://github.com/gregorias/findata-transcoder/issues
 author:         Grzegorz Milka
 maintainer:     grzegorzmilka@gmail.com
-copyright:      2020-2021 Grzegorz Milka
+copyright:      2020-2022 Grzegorz Milka
 license:        AGPL-3
 license-file:   LICENSE
 build-type:     Simple
@@ -20,7 +20,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/hledupt
+  location: https://github.com/gregorias/findata-transcoder
 
 library
   exposed-modules:
@@ -30,41 +30,41 @@ library
       Hledger.Data.Lens
       Hledger.Data.MarketPrice.Extra
       Hledger.Extra
-      Hledupt.Bcge
-      Hledupt.Bcge.Hint
-      Hledupt.BcgeCC
-      Hledupt.CharlesSchwab
-      Hledupt.CharlesSchwab.Csv
-      Hledupt.CharlesSchwab.Ledger
-      Hledupt.Coop
-      Hledupt.Coop.Config
-      Hledupt.Data.Cash
-      Hledupt.Data.CsvFile
-      Hledupt.Data.Currency
-      Hledupt.Data.Isin
-      Hledupt.Data.LedgerReport
-      Hledupt.Data.MyDecimal
-      Hledupt.Degiro.AccountStatement
-      Hledupt.Degiro.Csv
-      Hledupt.Degiro.IsinData
-      Hledupt.Degiro.Portfolio
-      Hledupt.EasyRide
-      Hledupt.Finpension
-      Hledupt.Galaxus
-      Hledupt.GPayslip
-      Hledupt.Ib
-      Hledupt.Ib.Csv
-      Hledupt.Ib.Csv.ActivityStatementParse
-      Hledupt.Ib.Csv.RawParse
-      Hledupt.Mbank
-      Hledupt.Patreon
-      Hledupt.Revolut
-      Hledupt.Splitwise
-      Hledupt.UberEats
-      Hledupt.Wallet
       Text.Megaparsec.Char.Extra
       Text.Megaparsec.Extra
       Text.Megaparsec.Extra.ErrorText
+      Transcoder.Bcge
+      Transcoder.Bcge.Hint
+      Transcoder.BcgeCC
+      Transcoder.CharlesSchwab
+      Transcoder.CharlesSchwab.Csv
+      Transcoder.CharlesSchwab.Ledger
+      Transcoder.Coop
+      Transcoder.Coop.Config
+      Transcoder.Data.Cash
+      Transcoder.Data.CsvFile
+      Transcoder.Data.Currency
+      Transcoder.Data.Isin
+      Transcoder.Data.LedgerReport
+      Transcoder.Data.MyDecimal
+      Transcoder.Degiro.AccountStatement
+      Transcoder.Degiro.Csv
+      Transcoder.Degiro.IsinData
+      Transcoder.Degiro.Portfolio
+      Transcoder.EasyRide
+      Transcoder.Finpension
+      Transcoder.Galaxus
+      Transcoder.GPayslip
+      Transcoder.Ib
+      Transcoder.Ib.Csv
+      Transcoder.Ib.Csv.ActivityStatementParse
+      Transcoder.Ib.Csv.RawParse
+      Transcoder.Mbank
+      Transcoder.Patreon
+      Transcoder.Revolut
+      Transcoder.Splitwise
+      Transcoder.UberEats
+      Transcoder.Wallet
   other-modules:
       Paths_findata_transcoder
   hs-source-dirs:
@@ -149,32 +149,32 @@ test-suite findata-transcoder-test
       Test.Hledger.Data.MarketPrice.Extra
       Test.Hledger.Extra
       Test.Hledger.Read.TestUtils
-      Test.Hledupt.Bcge
-      Test.Hledupt.Bcge.Hint
-      Test.Hledupt.BcgeCC
-      Test.Hledupt.CharlesSchwab.Csv
-      Test.Hledupt.CharlesSchwab.Ledger
-      Test.Hledupt.Coop
-      Test.Hledupt.Coop.Config
-      Test.Hledupt.Data.LedgerReport
-      Test.Hledupt.Data.MyDecimal
-      Test.Hledupt.Degiro.AccountStatement
-      Test.Hledupt.Degiro.Csv
-      Test.Hledupt.Degiro.Portfolio
-      Test.Hledupt.EasyRide
-      Test.Hledupt.Finpension
-      Test.Hledupt.Galaxus
-      Test.Hledupt.GPayslip
-      Test.Hledupt.Ib
-      Test.Hledupt.Ib.Csv.ActivityStatementParse
-      Test.Hledupt.Ib.Csv.RawParse
-      Test.Hledupt.Mbank
-      Test.Hledupt.Patreon
-      Test.Hledupt.Revolut
-      Test.Hledupt.Splitwise
-      Test.Hledupt.UberEats
       Test.Text.Megaparsec.Char.Extra
       Test.Text.Megaparsec.Match
+      Test.Transcoder.Bcge
+      Test.Transcoder.Bcge.Hint
+      Test.Transcoder.BcgeCC
+      Test.Transcoder.CharlesSchwab.Csv
+      Test.Transcoder.CharlesSchwab.Ledger
+      Test.Transcoder.Coop
+      Test.Transcoder.Coop.Config
+      Test.Transcoder.Data.LedgerReport
+      Test.Transcoder.Data.MyDecimal
+      Test.Transcoder.Degiro.AccountStatement
+      Test.Transcoder.Degiro.Csv
+      Test.Transcoder.Degiro.Portfolio
+      Test.Transcoder.EasyRide
+      Test.Transcoder.Finpension
+      Test.Transcoder.Galaxus
+      Test.Transcoder.GPayslip
+      Test.Transcoder.Ib
+      Test.Transcoder.Ib.Csv.ActivityStatementParse
+      Test.Transcoder.Ib.Csv.RawParse
+      Test.Transcoder.Mbank
+      Test.Transcoder.Patreon
+      Test.Transcoder.Revolut
+      Test.Transcoder.Splitwise
+      Test.Transcoder.UberEats
       Text.Megaparsec.Match
       Paths_findata_transcoder
   hs-source-dirs:

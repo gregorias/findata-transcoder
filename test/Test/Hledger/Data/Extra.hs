@@ -2,11 +2,11 @@ module Test.Hledger.Data.Extra (tests) where
 
 import Hledger.Data.Amount (num, showAmount)
 import qualified Hledger.Data.Extra as HDE
-import Hledupt.Data.Currency (chf)
-import Hledupt.Data.MyDecimal (fromUnitsAndCents)
 import Relude
 import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
+import Transcoder.Data.Currency (chf)
+import Transcoder.Data.MyDecimal (fromUnitsAndCents)
 
 tests :: Hspec.SpecWith ()
 tests = do

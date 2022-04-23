@@ -19,35 +19,35 @@ import qualified Data.Text.IO as Text
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Data.Version (makeVersion)
 import Hledger.Extra (showTransaction)
-import Hledupt.Bcge (bcgeCsvToLedger)
-import qualified Hledupt.Bcge.Hint as BcgeHint
-import qualified Hledupt.BcgeCC as BcgeCC
-import qualified Hledupt.CharlesSchwab as CharlesSchwab (csvToLedger)
-import qualified Hledupt.Coop as Coop
-import qualified Hledupt.Coop.Config as Coop
-import Hledupt.Data.CsvFile (CsvFile (..))
-import Hledupt.Data.LedgerReport (
+import Relude
+import qualified Text.Megaparsec as MP
+import Transcoder.Bcge (bcgeCsvToLedger)
+import qualified Transcoder.Bcge.Hint as BcgeHint
+import qualified Transcoder.BcgeCC as BcgeCC
+import qualified Transcoder.CharlesSchwab as CharlesSchwab (csvToLedger)
+import qualified Transcoder.Coop as Coop
+import qualified Transcoder.Coop.Config as Coop
+import Transcoder.Data.CsvFile (CsvFile (..))
+import Transcoder.Data.LedgerReport (
   LedgerReport (..),
   showLedgerReport,
  )
-import qualified Hledupt.Degiro.AccountStatement as DegiroAccount (
+import qualified Transcoder.Degiro.AccountStatement as DegiroAccount (
   csvStatementToLedger,
  )
-import qualified Hledupt.Degiro.Portfolio as DegiroPortfolio (
+import qualified Transcoder.Degiro.Portfolio as DegiroPortfolio (
   csvStatementToLedger,
  )
-import qualified Hledupt.EasyRide as EasyRide
-import qualified Hledupt.Finpension as Finpension
-import Hledupt.GPayslip (payslipTextToLedger)
-import qualified Hledupt.Galaxus as Galaxus
-import Hledupt.Ib as Ib (parseActivityCsv)
-import Hledupt.Mbank (mbankCsvToLedger)
-import qualified Hledupt.Patreon as Patreon
-import qualified Hledupt.Revolut as Revolut
-import qualified Hledupt.Splitwise as Splitwise
-import qualified Hledupt.UberEats as UberEats
-import Relude
-import qualified Text.Megaparsec as MP
+import qualified Transcoder.EasyRide as EasyRide
+import qualified Transcoder.Finpension as Finpension
+import Transcoder.GPayslip (payslipTextToLedger)
+import qualified Transcoder.Galaxus as Galaxus
+import Transcoder.Ib as Ib (parseActivityCsv)
+import Transcoder.Mbank (mbankCsvToLedger)
+import qualified Transcoder.Patreon as Patreon
+import qualified Transcoder.Revolut as Revolut
+import qualified Transcoder.Splitwise as Splitwise
+import qualified Transcoder.UberEats as UberEats
 
 filenameParser :: String -> Either String String
 filenameParser "" = Left "The provided output filename is empty."
@@ -209,8 +209,8 @@ ignoreAction r = action $ \_ -> r
 
 main :: IO ()
 main = defaultMain $ do
-  programName "hledupt"
-  programVersion $ makeVersion [0, 1, 0, 0]
+  programName "findata-transcoder"
+  programVersion $ makeVersion [0, 2, 0, 0]
   programDescription "A program to parse financial data into a ledger-like text file"
   command "parse-bcge" $ do
     description "Parses BCGE's CSV file and outputs ledupt data"
