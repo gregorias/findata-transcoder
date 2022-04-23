@@ -1,6 +1,5 @@
 -- | Parses Finpension's CSV transaction report into a Ledger report.
 module Transcoder.Finpension.Transactions (
-  funds,
   transactionsToLedger,
 ) where
 

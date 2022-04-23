@@ -10,19 +10,15 @@ import NeatInterpolation (trimming)
 import Relude
 import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
-import Test.Hspec.Expectations.Pretty (shouldBe, shouldSatisfy)
+import Test.Hspec.Expectations.Pretty (shouldBe)
 import Transcoder.Data.CsvFile (CsvFile (CsvFile))
 import Transcoder.Data.LedgerReport (LedgerReport (LedgerReport))
-import Transcoder.Finpension.Transactions (funds, transactionsToLedger)
+import Transcoder.Finpension.Transactions (transactionsToLedger)
 
 tests :: Hspec.SpecWith ()
 tests = do
-  describe "Transcoder.Finpension" $ do
-    describe "transactionsToLedger" $ do
-      it "convertsTransactions" convertsTransactionsTest
-    describe "funds" $ do
-      it "areCorrectlyConstructedAndNotUndefined" $ do
-        funds `shouldSatisfy` (not . null)
+  describe "Transcoder.Finpension.Transactions" $ do
+    it "convertsTransactions" convertsTransactionsTest
 
 convertsTransactionsTest :: IO ()
 convertsTransactionsTest = do
