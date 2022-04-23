@@ -39,7 +39,7 @@ import qualified Transcoder.Degiro.Portfolio as DegiroPortfolio (
   csvStatementToLedger,
  )
 import qualified Transcoder.EasyRide as EasyRide
-import qualified Transcoder.Finpension as Finpension
+import qualified Transcoder.Finpension.Transactions as Finpension
 import Transcoder.GPayslip (payslipTextToLedger)
 import qualified Transcoder.Galaxus as Galaxus
 import Transcoder.Ib as Ib (parseActivityCsv)

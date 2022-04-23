@@ -1,5 +1,5 @@
--- | Parses Finpension's reports and produces Ledger reports.
-module Transcoder.Finpension (
+-- | Parses Finpension's CSV transaction report into a Ledger report.
+module Transcoder.Finpension.Transactions (
   funds,
   transactionsToLedger,
 ) where
@@ -27,6 +27,7 @@ import Hledger.Data.Lens (
   tDescription,
   tStatus,
  )
+import Relude
 import Transcoder.Data.CsvFile (CsvFile (..))
 import Transcoder.Data.Currency (chf)
 import Transcoder.Data.Isin (
@@ -36,7 +37,6 @@ import Transcoder.Data.Isin (
 import Transcoder.Data.LedgerReport (LedgerReport (..), todoPosting)
 import Transcoder.Data.MyDecimal (MyDecimal (unMyDecimal))
 import Transcoder.Wallet (financialServices)
-import Relude
 
 cashAccount :: Text
 cashAccount = "Assets:Investments:Finpension:Cash"

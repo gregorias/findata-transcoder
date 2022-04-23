@@ -1,4 +1,4 @@
-module Test.Transcoder.Finpension (
+module Test.Transcoder.Finpension.Transactions (
   tests,
 ) where
 
@@ -13,7 +13,7 @@ import qualified Test.Hspec as Hspec
 import Test.Hspec.Expectations.Pretty (shouldBe, shouldSatisfy)
 import Transcoder.Data.CsvFile (CsvFile (CsvFile))
 import Transcoder.Data.LedgerReport (LedgerReport (LedgerReport))
-import Transcoder.Finpension (funds, transactionsToLedger)
+import Transcoder.Finpension.Transactions (funds, transactionsToLedger)
 
 tests :: Hspec.SpecWith ()
 tests = do

@@ -23,7 +23,7 @@ import qualified Test.Transcoder.Degiro.AccountStatement
 import qualified Test.Transcoder.Degiro.Csv
 import qualified Test.Transcoder.Degiro.Portfolio
 import qualified Test.Transcoder.EasyRide
-import qualified Test.Transcoder.Finpension
+import qualified Test.Transcoder.Finpension.Transactions
 import qualified Test.Transcoder.GPayslip
 import qualified Test.Transcoder.Galaxus
 import qualified Test.Transcoder.Ib
@@ -60,7 +60,7 @@ tests = do
   Test.Transcoder.Degiro.Csv.tests
   Test.Transcoder.Degiro.Portfolio.tests
   Test.Transcoder.EasyRide.tests
-  Test.Transcoder.Finpension.tests
+  Test.Transcoder.Finpension.Transactions.tests
   Test.Transcoder.Galaxus.tests
   Test.Transcoder.GPayslip.tests
   Test.Transcoder.Ib.Csv.ActivityStatementParse.tests
