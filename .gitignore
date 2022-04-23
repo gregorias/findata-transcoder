@@ -1,3 +1,7 @@
 .stack-work/
 *~
 *.hie
+
+# NPM/Yarn files
+yarn-lock.json
+node_modules

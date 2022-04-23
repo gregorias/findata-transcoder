@@ -1,0 +1,11 @@
+pre-commit:
+  scripts:
+    "format-changed-hs-files.bash":
+      runner: bash
+  commands:
+    unit-tests:
+      run: "stack test --ghc-options '-Werror'"
+commit-msg:
+  commands:
+    commitlint:
+      run: "commitlint --edit={1}"
