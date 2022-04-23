@@ -10,6 +10,7 @@ module Transcoder.Degiro.Csv (
 
 import Control.Applicative.Combinators (count)
 import qualified Data.ByteString.Lazy as LBS
+import Data.Cash (Cash (Cash))
 import Data.Csv (parseField, (.!))
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
@@ -23,7 +24,10 @@ import Data.Time (
   parseTimeM,
  )
 import qualified Data.Vector as V
-import Transcoder.Data.Cash (Cash (Cash))
+import Relude
+import Text.Megaparsec (Parsec, single)
+import qualified Text.Megaparsec as MP
+import Text.Megaparsec.Char (numberChar)
 import Transcoder.Data.CsvFile (CsvFile (CsvFile))
 import Transcoder.Data.Isin (Isin)
 import Transcoder.Data.MyDecimal (
@@ -32,10 +36,6 @@ import Transcoder.Data.MyDecimal (
   DecimalFractionFormat (OptionalUnlimitedDecimalFraction),
   decimalP,
  )
-import Relude
-import Text.Megaparsec (Parsec, single)
-import qualified Text.Megaparsec as MP
-import Text.Megaparsec.Char (numberChar)
 
 -- | Type representing possible values of the ISIN field in Degiro reports.
 data DegiroIsin

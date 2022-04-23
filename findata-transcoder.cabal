@@ -24,6 +24,7 @@ source-repository head
 
 library
   exposed-modules:
+      Data.Cash
       Data.Csv.Extra
       Data.Time.Calendar.Extra
       Hledger.Data.Extra
@@ -41,7 +42,6 @@ library
       Transcoder.CharlesSchwab.Ledger
       Transcoder.Coop
       Transcoder.Coop.Config
-      Transcoder.Data.Cash
       Transcoder.Data.CsvFile
       Transcoder.Data.Currency
       Transcoder.Data.Isin

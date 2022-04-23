@@ -4,6 +4,7 @@ module Test.Transcoder.Degiro.AccountStatement (
   tests,
 ) where
 
+import Data.Cash (Cash (Cash))
 import qualified Data.Text as T
 import Data.Time (fromGregorian)
 import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
@@ -14,7 +15,6 @@ import NeatInterpolation (trimming)
 import Relude
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe, shouldMatchList, shouldSatisfy)
-import Transcoder.Data.Cash (Cash (Cash))
 import Transcoder.Data.CsvFile (CsvFile (..))
 import Transcoder.Data.Currency (chf, eur)
 import Transcoder.Data.Isin (isin)

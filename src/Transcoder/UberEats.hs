@@ -3,6 +3,11 @@ module Transcoder.UberEats (
 ) where
 
 import qualified Control.Lens as L
+import Data.Cash (
+  Cash,
+  cashP,
+ )
+import qualified Data.Cash as Cash
 import Data.Time (
   Day,
   fromGregorianValid,
@@ -19,22 +24,17 @@ import Hledger.Data.Extra (
   makeTransaction,
  )
 import Hledger.Data.Lens (pStatus)
-import Transcoder.Data.Cash (
-  Cash,
-  cashP,
- )
-import qualified Transcoder.Data.Cash as Cash
-import Transcoder.Wallet (
-  bcgeCCAccount,
-  expenses,
-  (<:>),
- )
 import Relude
 import qualified Text.Megaparsec as MP
 import qualified Text.Megaparsec.Char as MP
 import qualified Text.Megaparsec.Char.Lexer as MP
 import Text.Megaparsec.Extra (
   parsePretty,
+ )
+import Transcoder.Wallet (
+  bcgeCCAccount,
+  expenses,
+  (<:>),
  )
 
 type Parser = MP.Parsec Void Text

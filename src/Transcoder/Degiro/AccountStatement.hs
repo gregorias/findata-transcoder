@@ -7,6 +7,8 @@ module Transcoder.Degiro.AccountStatement (
 import Control.Lens (set, view)
 import Control.Monad (msum)
 import qualified Data.ByteString.Lazy as LBS
+import Data.Cash (Cash (Cash), cashAmount, cashCurrency, cashP)
+import qualified Data.Cash as Cash
 import Data.Decimal (Decimal)
 import Data.Either.Combinators (
   mapLeft,
@@ -36,8 +38,16 @@ import Hledger.Data.Lens (
   pBalanceAssertion,
   pStatus,
  )
-import Transcoder.Data.Cash (Cash (Cash), cashAmount, cashCurrency, cashP)
-import qualified Transcoder.Data.Cash as Cash
+import Relude
+import Text.Megaparsec (
+  Parsec,
+  anySingle,
+  manyTill,
+  single,
+ )
+import qualified Text.Megaparsec as MP
+import Text.Megaparsec.Char (letterChar, space)
+import Text.Megaparsec.Char.Lexer (decimal)
 import Transcoder.Data.CsvFile (CsvFile)
 import Transcoder.Data.Currency (Currency, currencyP)
 import Transcoder.Data.Isin (Isin, isin)
@@ -56,16 +66,6 @@ import Transcoder.Wallet (
   bcgeAccount,
   degiroAccount,
  )
-import Relude
-import Text.Megaparsec (
-  Parsec,
-  anySingle,
-  manyTill,
-  single,
- )
-import qualified Text.Megaparsec as MP
-import Text.Megaparsec.Char (letterChar, space)
-import Text.Megaparsec.Char.Lexer (decimal)
 
 moneyMarketIsin :: Isin
 moneyMarketIsin = [isin|NL0011280581|]

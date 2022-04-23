@@ -8,6 +8,7 @@ import qualified Control.Lens as L
 import qualified Data.ByteString as BS
 import Data.ByteString.Internal (c2w)
 import qualified Data.ByteString.Lazy as LBS
+import Data.Cash (Cash (..))
 import qualified Data.Csv as Csv
 import Data.Decimal (Decimal)
 import Data.Time (Day)
@@ -16,13 +17,12 @@ import Hledger (MarketPrice (MarketPrice), Status (Cleared), balassert, post, tr
 import Hledger.Data (Transaction)
 import Hledger.Data.Extra (ToPosting (..), makeCashAmount, makeCommodityAmount)
 import Hledger.Data.Lens (pBalanceAssertion, tDescription, tStatus)
-import Transcoder.Data.Cash (Cash (..))
+import Relude
 import Transcoder.Data.CsvFile (CsvFile (..))
 import Transcoder.Data.Isin (Isin, mkIsin)
 import Transcoder.Data.LedgerReport (LedgerReport (..))
 import Transcoder.Data.MyDecimal (myDecDec)
 import Transcoder.Degiro.IsinData (IsinData (IsinData), isinToIsinData, prettyIsin)
-import Relude
 
 data IsinOrEmpty = IsinOrEmptyIsin Isin | IsinOrEmptyEmpty
   deriving stock (Show)

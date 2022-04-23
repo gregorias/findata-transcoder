@@ -12,6 +12,7 @@ main =
     , "-XDerivingStrategies"
     , "-XGeneralizedNewtypeDeriving"
     , "-XOverloadedStrings"
+    , "-XTemplateHaskell"
     , "-XTypeApplications"
     , "-XScopedTypeVariables"
     , "-isrc"

@@ -2,6 +2,7 @@ module Test.Transcoder.Degiro.Csv (
   tests,
 ) where
 
+import Data.Cash (Cash (Cash))
 import Data.Time (fromGregorian)
 import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
 import NeatInterpolation (trimming)
@@ -12,7 +13,6 @@ import Test.Hspec.Expectations.Pretty (
   shouldBe,
   shouldContain,
  )
-import Transcoder.Data.Cash (Cash (Cash))
 import Transcoder.Data.CsvFile (CsvFile (CsvFile))
 import Transcoder.Data.Currency (chf, eur)
 import Transcoder.Data.Isin (isin)

@@ -17,6 +17,7 @@ import Control.Lens (
  )
 import qualified Control.Lens as L
 import Control.Monad.Writer.Lazy (execWriter, tell)
+import Data.Cash (Cash (Cash), cashAmount)
 import Data.Decimal (Decimal)
 import Data.List (elemIndex)
 import Data.Time.Calendar (Day)
@@ -35,11 +36,6 @@ import Hledger.Data.Types (
   Status (..),
   Transaction (..),
  )
-import qualified Transcoder.Bcge.Hint as Hint
-import Transcoder.Data.Cash (Cash (Cash), cashAmount)
-import Transcoder.Data.Currency (chf)
-import Transcoder.Data.LedgerReport (LedgerReport (LedgerReport))
-import Transcoder.Data.MyDecimal (ChunkSepFormat (NoChunkSep), cashDecimalFormat, decimalP)
 import Relude
 import Safe (headMay)
 import Text.Megaparsec (
@@ -50,6 +46,10 @@ import Text.Megaparsec (
  )
 import Text.Megaparsec.Char (char, string)
 import Text.Megaparsec.Char.Extra (eolOrEof)
+import qualified Transcoder.Bcge.Hint as Hint
+import Transcoder.Data.Currency (chf)
+import Transcoder.Data.LedgerReport (LedgerReport (LedgerReport))
+import Transcoder.Data.MyDecimal (ChunkSepFormat (NoChunkSep), cashDecimalFormat, decimalP)
 
 bcgeAccount :: String
 bcgeAccount = "Assets:Liquid:BCGE"

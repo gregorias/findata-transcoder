@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Transcoder.Data.Cash (
+module Data.Cash (
   Cash (..),
   cashP,
   cashCurrency,
@@ -10,12 +10,12 @@ module Transcoder.Data.Cash (
 
 import Control.Lens (makeLenses, over)
 import Data.Decimal (Decimal)
-import Transcoder.Data.Currency (Currency, currencyP)
-import Transcoder.Data.MyDecimal (decimalP, defaultDecimalFormat)
 import Relude hiding (negate)
 import qualified Relude
 import qualified Text.Megaparsec as MP
 import qualified Text.Megaparsec.Char as MP
+import Transcoder.Data.Currency (Currency, currencyP)
+import Transcoder.Data.MyDecimal (decimalP, defaultDecimalFormat)
 
 data Cash = Cash
   { _cashCurrency :: !Currency
@@ -25,6 +25,13 @@ data Cash = Cash
 
 makeLenses ''Cash
 
+-- | Parses cash strings
+--
+-- >>> MP.parseMaybe cashP "CHF 100.00"
+-- Just (Cash {_cashCurrency = CHF, _cashAmount = 100})
+--
+-- >>> MP.parseMaybe cashP "3.50 USD"
+-- Just (Cash {_cashCurrency = USD, _cashAmount = 3.50})
 cashP ::
   ( MonadFail m
   , MP.MonadParsec e s m

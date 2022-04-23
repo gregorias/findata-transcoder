@@ -2,6 +2,8 @@ module Transcoder.Galaxus (
   parseReceipt,
 ) where
 
+import Data.Cash (Cash (Cash))
+import qualified Data.Cash as Cash
 import qualified Data.Text as T
 import Data.Time (
   Day,
@@ -16,8 +18,12 @@ import Hledger.Data.Extra (
   makePosting,
   makeTransaction,
  )
-import Transcoder.Data.Cash (Cash (Cash))
-import qualified Transcoder.Data.Cash as Cash
+import Relude
+import qualified Text.Megaparsec as MP
+import qualified Text.Megaparsec.Char as MP
+import qualified Text.Megaparsec.Char.Extra as MP
+import qualified Text.Megaparsec.Char.Lexer as MP
+import qualified Text.Megaparsec.Extra as MP
 import Transcoder.Data.Currency (chf)
 import Transcoder.Data.MyDecimal (
   ChunkSepFormat (..),
@@ -25,12 +31,6 @@ import Transcoder.Data.MyDecimal (
   decimalP,
  )
 import Transcoder.Wallet (bcgeAccount, bcgeCCAccount)
-import Relude
-import qualified Text.Megaparsec as MP
-import qualified Text.Megaparsec.Char as MP
-import qualified Text.Megaparsec.Char.Extra as MP
-import qualified Text.Megaparsec.Char.Lexer as MP
-import qualified Text.Megaparsec.Extra as MP
 
 data Item = Item
   { _count :: !Natural

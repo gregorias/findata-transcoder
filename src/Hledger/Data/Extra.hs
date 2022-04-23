@@ -11,6 +11,7 @@ module Hledger.Data.Extra (
 ) where
 
 import Control.Lens (over, set)
+import Data.Cash (Cash (Cash))
 import Data.Time (Day)
 import Hledger (AccountName, Posting, Status, Transaction, missingamt, post, transaction)
 import Hledger.Data.Amount (num)
@@ -31,7 +32,6 @@ import Hledger.Data.Types (
   Quantity,
  )
 import Relude
-import Transcoder.Data.Cash (Cash (Cash))
 import Transcoder.Data.Currency (Currency)
 
 makeCommodityAmount :: Text -> Quantity -> Amount
