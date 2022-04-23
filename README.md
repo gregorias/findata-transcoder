@@ -11,7 +11,7 @@ orchestrating.
 
 ## Development
 
-This section is intended for developrs.
+This section is intended for developers.
 
 ### Dev environment setup
 
