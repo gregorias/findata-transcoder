@@ -32,6 +32,7 @@ import Hledger.Read.TestUtils (
   postingP,
   transactionP,
   transactionQQ,
+  transactionsQQ,
  )
 import Relude
 import Test.Hspec (describe, it)
@@ -63,6 +64,30 @@ tests = do
                 & L.set tDescription "Title"
                 & L.set tStatus Cleared
         tr `shouldBe` expectedTr
+    describe "transactionsQQ" $ do
+      it "Parses transactions" $ do
+        let trs =
+              [transactionsQQ|
+                     2019/10/28 * Title
+                       Assets:Bank With Spaces  SPY -15
+                       Expenses:Other
+                     2019/10/28 * Title
+                       Assets:Bank With Spaces  SPY -15
+                       Expenses:Other
+                       |]
+            expectedTrBase =
+              transaction
+                (fromGregorian 2019 10 28)
+                [ post
+                    "Assets:Bank With Spaces"
+                    (makeCommodityAmount "SPY" (-15))
+                , post "Expenses:Other" missingamt
+                ]
+            expectedTr =
+              expectedTrBase
+                & L.set tDescription "Title"
+                & L.set tStatus Cleared
+        trs `shouldBe` [expectedTr, expectedTr]
 
     describe "postingP" $ do
       it "Parses a posting transaction" $ do
@@ -81,7 +106,7 @@ tests = do
                 }
         parseMaybe postingP p `shouldBe` Just expectedP
       it "Parses a posting with a quoted commodity" $ do
-        let p = "Bank  2 \"ISINNUM123\""
+        let p = "  Bank  2 \"ISINNUM123\""
             expectedP = post "Bank" (makeCommodityAmount "ISINNUM123" 2)
         parseMaybe postingP p `shouldBe` Just expectedP
 

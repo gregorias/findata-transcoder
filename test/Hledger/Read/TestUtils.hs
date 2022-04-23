@@ -5,6 +5,7 @@ module Hledger.Read.TestUtils (
   transactionP,
   parseTransactionUnsafe,
   transactionQQ,
+  transactionsQQ,
 ) where
 
 import qualified Control.Lens as L
@@ -70,6 +71,7 @@ import Text.Megaparsec.Char (
   spaceChar,
   string,
  )
+import qualified Text.Megaparsec.Char as MP
 import Text.Megaparsec.Char.Extra (eolOrEof)
 import qualified Text.Megaparsec.Internal as MP
 import Transcoder.Data.MyDecimal (decimalP, defaultDecimalFormat)
@@ -174,7 +176,15 @@ commentP = do
 -- | A partial Posting parser
 postingP :: Parser Posting
 postingP = do
-  status <- statusP <* many space
+  status <-
+    ( do
+        status <- statusP
+        case status of
+          Unmarked -> MP.hspace1
+          Pending -> MP.hspace
+          Cleared -> MP.hspace
+        return status
+      )
   account <- accountParser
   amount <- whenCurrencyAdjustStyle <$> (try commodityP <|> pure missingamt)
   balAssert <- optional (try balanceAssertion)
@@ -210,11 +220,22 @@ transactionP = do
       & L.set tStatus status
         . L.set tDescription title
 
+transactionsP :: Parser [Transaction]
+transactionsP = MP.many transactionP
+
 parseTransactionUnsafe :: Text -> Transaction
 parseTransactionUnsafe = fromJust . MP.parseMaybe transactionP
 
+parseTransactionsUnsafe :: Text -> [Transaction]
+parseTransactionsUnsafe = fromJust . MP.parseMaybe transactionsP
+
 transactionQQExp :: String -> Q Exp
 transactionQQExp trString = [|parseTransactionUnsafe input|]
+ where
+  input = toText . trimdent $ trString
+
+transactionsQQExp :: String -> Q Exp
+transactionsQQExp trString = [|parseTransactionsUnsafe input|]
  where
   input = toText . trimdent $ trString
 
@@ -222,6 +243,15 @@ transactionQQ :: QuasiQuoter
 transactionQQ =
   QuasiQuoter
     { quoteExp = transactionQQExp
+    , quotePat = error "quotePat is unimplemented"
+    , quoteType = error "quoteType is unimplemented"
+    , quoteDec = error "quoteDec is unimplemented"
+    }
+
+transactionsQQ :: QuasiQuoter
+transactionsQQ =
+  QuasiQuoter
+    { quoteExp = transactionsQQExp
     , quotePat = error "quotePat is unimplemented"
     , quoteType = error "quoteType is unimplemented"
     , quoteDec = error "quoteDec is unimplemented"
