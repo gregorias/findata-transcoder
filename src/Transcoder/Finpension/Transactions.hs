@@ -33,7 +33,7 @@ import Transcoder.Data.Isin (
   Isin (unIsin),
   isin,
  )
-import Transcoder.Data.LedgerReport (LedgerReport (..), todoPosting)
+import Transcoder.Data.LedgerReport (todoPosting)
 import Transcoder.Data.MyDecimal (MyDecimal (unMyDecimal))
 import Transcoder.Wallet (financialServices)
 
@@ -388,12 +388,11 @@ rawTransactionToLedgerTransaction rawTr = do
       (rawTransactionToTransaction rawTr)
   finpensionTransactionToLedgerTransaction finpensionTr
 
-transactionsToLedger :: CsvFile LByteString -> Either Text LedgerReport
+transactionsToLedger :: CsvFile LByteString -> Either Text [Ledger.Transaction]
 transactionsToLedger csv = do
   let bomLessCsv = dropBom <$> csv
   rawTrs <- sortChronologically <$> rawTransactionsP bomLessCsv
-  trs <- sequence $ rawTransactionToLedgerTransaction <$> rawTrs
-  return $ LedgerReport trs []
+  sequence $ rawTransactionToLedgerTransaction <$> rawTrs
  where
   sortChronologically = reverse
   dropBom :: LByteString -> LByteString

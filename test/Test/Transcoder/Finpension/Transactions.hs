@@ -11,7 +11,6 @@ import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
 import Test.Hspec.Expectations.Pretty (shouldBe)
 import Transcoder.Data.CsvFile (CsvFile (CsvFile))
-import Transcoder.Data.LedgerReport (LedgerReport (LedgerReport))
 import Transcoder.Finpension.Transactions (transactionsToLedger)
 
 tests :: Hspec.SpecWith ()
@@ -62,7 +61,4 @@ convertsTransactionsTest = do
             Income:Capital Gains
           |]
           & L.over (L.each . tPostings . L.mapped . pAmounts) amountSetFullPrecision
-  transactionsToLedger csv
-    `shouldBe` Right
-      ( LedgerReport expectedTrs []
-      )
+  transactionsToLedger csv `shouldBe` Right expectedTrs

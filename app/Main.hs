@@ -18,6 +18,7 @@ import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text.IO as Text
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Data.Version (makeVersion)
+import Hledger (Transaction)
 import Hledger.Extra (showTransaction)
 import Relude
 import qualified Text.Megaparsec as MP
@@ -55,6 +56,9 @@ filenameParser s = Right s
 
 hintsFileFlagName :: String
 hintsFileFlagName = "hints_file"
+
+ledgerTrsToReport :: [Transaction] -> LedgerReport
+ledgerTrsToReport = flip LedgerReport []
 
 type HintsFileFlag = FlagParam (Maybe FilePath)
 
@@ -102,8 +106,7 @@ parseDegiroPortfolio = do
 
 parseFinpensionTransactions :: IO ()
 parseFinpensionTransactions =
-  parseBank $
-    Finpension.transactionsToLedger . CsvFile
+  parseBank $ fmap ledgerTrsToReport . Finpension.transactionsToLedger . CsvFile
 
 parseIbActivity :: IO ()
 parseIbActivity =
@@ -128,7 +131,7 @@ parseSplitwise = do
     Left err -> do
       Text.hPutStr stderr err
       exitFailure
-    Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
+    Right output -> putText . showLedgerReport . (ledgerTrsToReport . one) $ output
 
 parseGPayslip :: IO ()
 parseGPayslip = do
@@ -137,7 +140,7 @@ parseGPayslip = do
     Left err -> do
       Text.hPutStr stderr err
       exitFailure
-    Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
+    Right output -> putText . showLedgerReport . (ledgerTrsToReport . one) $ output
 
 parseBcgeCC :: IO ()
 parseBcgeCC = do
@@ -146,7 +149,7 @@ parseBcgeCC = do
     Left err -> do
       Text.hPutStr stderr err
       exitFailure
-    Right output -> putText . showLedgerReport . (`LedgerReport` []) $ output
+    Right output -> putText . showLedgerReport . ledgerTrsToReport $ output
 
 parseCoop :: Maybe FilePath -> IO ()
 parseCoop coopConfigFilePath = do
