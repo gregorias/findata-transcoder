@@ -55,6 +55,8 @@ library
       Transcoder.Finpension.Transactions
       Transcoder.Galaxus
       Transcoder.GPayslip
+      Transcoder.GPayslip.Data
+      Transcoder.GPayslip.Pdf2Txt
       Transcoder.Ib
       Transcoder.Ib.Csv
       Transcoder.Ib.Csv.ActivityStatementParse
