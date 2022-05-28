@@ -16,16 +16,6 @@ import Data.Time.Calendar (toGregorian)
 import Hledger (Status (Cleared, Pending), Transaction, missingamt, post, transaction)
 import Hledger.Data.Extra (makeCurrencyAmount)
 import Hledger.Data.Lens (pMaybeAmount, pStatus, tDescription)
-import Transcoder.Data.Currency (chf)
-import Transcoder.Data.MyDecimal (
-  ChunkSepFormat (ChunkSep, NoChunkSep),
-  DecimalFormat (..),
-  DecimalFractionFormat (
-    OptionalUnlimitedDecimalFraction,
-    TwoDigitDecimalFraction
-  ),
-  decimalP,
- )
 import Relude
 import Text.Megaparsec (
   Parsec,
@@ -47,6 +37,16 @@ import Text.Megaparsec.Char (
 import Text.Megaparsec.Char.Extra (anyLineP)
 import Text.Megaparsec.Extra (
   parsePretty,
+ )
+import Transcoder.Data.Currency (chf)
+import Transcoder.Data.MyDecimal (
+  ChunkSepFormat (ChunkSep, NoChunkSep),
+  DecimalFormat (..),
+  DecimalFractionFormat (
+    OptionalUnlimitedDecimalFraction,
+    TwoDigitDecimalFraction
+  ),
+  decimalP,
  )
 
 data PayslipLedgerConfig = PayslipLedgerConfig
@@ -264,7 +264,7 @@ payslipToLedger
               . L.set pMaybeAmount (Just $ makeCurrencyAmount chf mainTotal)
         , post "Income:Google" missingamt
             & L.set pStatus Cleared
-              . L.set pMaybeAmount (Just $ makeCurrencyAmount chf (- salaryTotal))
+              . L.set pMaybeAmount (Just $ makeCurrencyAmount chf (-salaryTotal))
         , post (statePrefix <> "Mandatory Contributions:Social Security") missingamt
             & L.set pStatus Cleared
               . L.set pMaybeAmount (Just $ makeCurrencyAmount chf socialSecurity)
