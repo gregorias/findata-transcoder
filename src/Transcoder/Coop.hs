@@ -15,11 +15,26 @@ import Data.Decimal (Decimal, realFracToDecimal)
 import qualified Data.Decimal as D
 import qualified Data.HashMap.Strict as HashMap
 import Data.List.NonEmpty (some1)
-import Data.Time (Day, defaultTimeLocale, parseTimeM)
+import Data.Time (Day)
+import Data.Time.Extra (dayP)
 import Hledger (AccountName, Posting, Status (Cleared, Pending, Unmarked), Transaction, transaction)
 import qualified Hledger as Ledger
 import qualified Hledger.Data.Extra as HDE
 import Hledger.Data.Lens (pStatus, tDescription, tStatus)
+import Relude
+import Relude.Extra (fold1, groupBy)
+import Text.Megaparsec (
+  MonadParsec (try),
+  Parsec,
+  manyTill,
+  manyTill_,
+  parseMaybe,
+ )
+import Text.Megaparsec.Char (hspace1, newline, string)
+import Text.Megaparsec.Char.Extra (anyLineP)
+import Text.Megaparsec.Extra (
+  parsePretty,
+ )
 import Transcoder.Coop.Config (Config (..), getDebtors)
 import Transcoder.Data.Currency (chf)
 import Transcoder.Data.MyDecimal (
@@ -32,22 +47,6 @@ import Transcoder.Data.MyDecimal (
  )
 import Transcoder.Wallet (bcgeAccount, bcgeCCAccount, expenses, (<:>))
 import qualified Transcoder.Wallet as Wallet
-import Relude
-import Relude.Extra (fold1, groupBy)
-import Text.Megaparsec (
-  MonadParsec (try),
-  Parsec,
-  count,
-  manyTill,
-  manyTill_,
-  match,
-  parseMaybe,
- )
-import Text.Megaparsec.Char (char, digitChar, hspace1, newline, string)
-import Text.Megaparsec.Char.Extra (anyLineP)
-import Text.Megaparsec.Extra (
-  parsePretty,
- )
 
 data Receipt = Receipt
   { _receiptDate :: !Day
@@ -78,13 +77,7 @@ data Payment = Payment
 type Parser = Parsec Void Text
 
 dateLineP :: Parser Day
-dateLineP = do
-  (dateString, _) <-
-    try $
-      match
-        (count 2 digitChar >> char '.' >> count 2 digitChar >> char '.' >> many digitChar)
-  void anyLineP
-  parseTimeM False defaultTimeLocale "%d.%m.%y" (toString dateString)
+dateLineP = dayP "%d.%m.%y" <* anyLineP
 
 headerLineP :: Parser ()
 headerLineP = void $ string "Artikel Menge Preis Aktion Total Zusatz\n"

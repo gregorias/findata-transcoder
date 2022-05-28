@@ -27,6 +27,7 @@ library
       Data.Cash
       Data.Csv.Extra
       Data.Time.Calendar.Extra
+      Data.Time.Extra
       Hledger.Data.Extra
       Hledger.Data.Lens
       Hledger.Data.MarketPrice.Extra
@@ -146,6 +147,7 @@ test-suite findata-transcoder-test
   other-modules:
       Hledger.Read.TestUtils
       Test.Data.Csv.Extra
+      Test.Data.Time.Extra
       Test.Hledger.Data.Extra
       Test.Hledger.Data.Lens
       Test.Hledger.Data.MarketPrice.Extra

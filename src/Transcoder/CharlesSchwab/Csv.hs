@@ -17,11 +17,6 @@ import Data.Decimal (Decimal)
 import Data.Time (Day, defaultTimeLocale)
 import Data.Time.Format (parseTimeM)
 import Data.Vector (Vector)
-import Transcoder.Data.CsvFile (CsvFile (CsvFile))
-import Transcoder.Data.MyDecimal (
-  decimalP,
-  defaultDecimalFormat,
- )
 import Relude
 import Text.Megaparsec (Parsec, anySingle, chunk, single)
 import qualified Text.Megaparsec as MP
@@ -31,6 +26,11 @@ import Text.Megaparsec.Extra (
   parsePretty,
  )
 import Text.Megaparsec.Stream (tokensToChunk)
+import Transcoder.Data.CsvFile (CsvFile (CsvFile))
+import Transcoder.Data.MyDecimal (
+  decimalP,
+  defaultDecimalFormat,
+ )
 
 csSimpleDayP :: Parsec Void String Day
 csSimpleDayP = do

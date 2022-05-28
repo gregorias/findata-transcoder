@@ -4,21 +4,18 @@ module Transcoder.GPayslip.Pdf2Txt (
 ) where
 
 import Data.Decimal (Decimal)
-import Data.Time (Day, defaultTimeLocale, parseTimeM)
+import Data.Time (Day)
+import Data.Time.Extra (dayP)
 import Relude
 import Text.Megaparsec (
   Parsec,
   choice,
-  count,
   manyTill,
   manyTill_,
-  match,
   skipMany,
   try,
  )
 import Text.Megaparsec.Char (
-  char,
-  digitChar,
   newline,
   space1,
   string,
@@ -36,22 +33,7 @@ import Transcoder.Data.MyDecimal (
 import Transcoder.GPayslip.Data (Deductions (..), Payslip (..))
 
 dateLineP :: Parsec Void Text Day
-dateLineP = do
-  (dateString, _) <-
-    try $
-      match
-        ( count 2 digitChar
-            >> char '.'
-            >> count 2 digitChar
-            >> char '.'
-            >> many digitChar
-        )
-  void newline
-  parseTimeM
-    False
-    defaultTimeLocale
-    "%d.%m.%Y"
-    (toString dateString)
+dateLineP = dayP "%d.%m.%Y" <* newline
 
 nameAndAmountLineP :: Text -> Parsec Void Text Decimal
 nameAndAmountLineP name = do

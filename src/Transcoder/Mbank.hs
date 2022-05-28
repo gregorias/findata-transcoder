@@ -22,9 +22,6 @@ import Hledger.Data.Types (
   Quantity,
   Transaction (..),
  )
-import qualified Transcoder.Data.Currency as Currency
-import Transcoder.Data.LedgerReport (LedgerReport (LedgerReport))
-import Transcoder.Data.MyDecimal (fromUnitsAndCents)
 import Relude
 import Text.Megaparsec (
   Parsec,
@@ -35,6 +32,9 @@ import Text.Megaparsec (
  )
 import Text.Megaparsec.Char (char, string)
 import Text.Megaparsec.Char.Extra (eolOrEof)
+import qualified Transcoder.Data.Currency as Currency
+import Transcoder.Data.LedgerReport (LedgerReport (LedgerReport))
+import Transcoder.Data.MyDecimal (fromUnitsAndCents)
 
 pln :: Quantity -> Amount
 pln = makeCurrencyAmount Currency.pln

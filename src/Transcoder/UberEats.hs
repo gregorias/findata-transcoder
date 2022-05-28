@@ -10,8 +10,8 @@ import Data.Cash (
 import qualified Data.Cash as Cash
 import Data.Time (
   Day,
-  fromGregorianValid,
  )
+import Data.Time.Extra (dayP)
 import Hledger (
   AccountName,
   Status (Cleared, Pending),
@@ -27,7 +27,6 @@ import Hledger.Data.Lens (pStatus)
 import Relude
 import qualified Text.Megaparsec as MP
 import qualified Text.Megaparsec.Char as MP
-import qualified Text.Megaparsec.Char.Lexer as MP
 import Text.Megaparsec.Extra (
   parsePretty,
  )
@@ -65,21 +64,7 @@ sourceP :: Parser Source
 sourceP = MP.string "Mastercard ••••" >> replicateM_ 4 MP.digitChar >> return SourceBcgeCc
 
 dateP :: Parser Day
-dateP = do
-  (dateText, (month, day, year)) <-
-    MP.match
-      ( do
-          month <- MP.decimal
-          void $ MP.single '/'
-          day <- MP.decimal
-          void $ MP.single '/'
-          year <- MP.decimal
-          return (month, day, year)
-      )
-  maybe
-    (fail . toString $ "Could not parse " <> dateText <> " as a date.\n")
-    return
-    (fromGregorianValid (2000 + year) month day)
+dateP = dayP "%-m/%d/%y"
 
 hourP :: Parser ()
 hourP =

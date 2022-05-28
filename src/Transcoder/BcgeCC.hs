@@ -8,7 +8,8 @@ import qualified Control.Lens as L
 import Control.Lens.Regex.Text (regex)
 import qualified Control.Lens.Regex.Text as LR
 import Data.Decimal (Decimal)
-import Data.Time (Day, defaultTimeLocale, parseTimeM)
+import Data.Time (Day)
+import Data.Time.Extra (dayP)
 import Hledger (
   Status (Cleared),
   Transaction,
@@ -18,6 +19,23 @@ import Hledger (
  )
 import qualified Hledger.Data.Extra as HDE
 import Hledger.Data.Lens (pBalanceAssertion, tDescription, tStatus)
+import Relude
+import Relude.Extra.Map (lookup)
+import Text.Megaparsec (
+  MonadParsec (try),
+  Parsec,
+  getParserState,
+  label,
+  manyTill,
+  manyTill_,
+  parseMaybe,
+  updateParserState,
+ )
+import Text.Megaparsec.Char (char, newline, string)
+import Text.Megaparsec.Char.Extra (anyLineP)
+import Text.Megaparsec.Extra (
+  parsePretty,
+ )
 import Transcoder.Data.Currency (chf)
 import Transcoder.Data.MyDecimal (
   ChunkSepFormat (ChunkSep, NoChunkSep),
@@ -30,25 +48,6 @@ import Transcoder.Wallet (
   bcgeCCAccount,
   expensesOther,
   financialServices,
- )
-import Relude
-import Relude.Extra.Map (lookup)
-import Text.Megaparsec (
-  MonadParsec (try),
-  Parsec,
-  count,
-  getParserState,
-  label,
-  manyTill,
-  manyTill_,
-  match,
-  parseMaybe,
-  updateParserState,
- )
-import Text.Megaparsec.Char (char, digitChar, newline, string)
-import Text.Megaparsec.Char.Extra (anyLineP)
-import Text.Megaparsec.Extra (
-  parsePretty,
  )
 
 data Rechnung = Rechnung
@@ -68,25 +67,17 @@ data RawRechnungTransaction = RawRechnungTransaction
 
 type BcgeCCParser = Parsec Void Text
 
-dateP :: String -> BcgeCCParser Day
-dateP fmt = label ("date (" <> fmt <> ")") $ do
-  (dateString, _) <-
-    try $
-      match
-        (count 2 digitChar >> char '.' >> count 2 digitChar >> char '.' >> many digitChar)
-  parseTimeM False defaultTimeLocale fmt (toString dateString)
-
 dateLineP :: BcgeCCParser Day
 dateLineP = label "invoice date line" $ do
   void $ string "Invoice of "
-  dateP "%d.%m.%Y" <* newline
+  dayP "%d.%m.%Y" <* newline
 
 transactionP :: BcgeCCParser RawRechnungTransaction
 transactionP = label "transaction" $ do
   (fstDay, sndDay) <- try $ do
-    fstDay <- dateP "%d.%m.%y"
+    fstDay <- dayP "%d.%m.%y"
     void $ char ' '
-    sndDay <- dateP "%d.%m.%y"
+    sndDay <- dayP "%d.%m.%y"
     return (fstDay, sndDay)
   void $ char ' '
   (title, amt) <- titleAndAmountP
@@ -119,7 +110,7 @@ transactionP = label "transaction" $ do
     namedGroups <- maybeNamedGroups
     title <- lookup "title" namedGroups
     amt <- lookup "amountchf" namedGroups
-    return $ (title, amt, isCredit)
+    return (title, amt, isCredit)
    where
     regexes =
       [ [regex|(?<title>.*) (?<countrycode>[A-Z]{2}) (?<currency>[A-Z]{3}) (?<amount>\d+\.\d\d) (?<amountchf>\d+\.\d\d)|]
@@ -138,7 +129,7 @@ transactionP = label "transaction" $ do
       let (maybeTitleAndAmount :: Maybe (Text, Decimal)) = do
             (title, amtText, sign) <- toTitleAndAmount rol
             amt <- amtP amtText
-            return (title, if sign then - amt else amt)
+            return (title, if sign then -amt else amt)
       maybe
         (updateParserState (const before) >> empty)
         return
@@ -189,7 +180,7 @@ rawRechnungTransactionToTransaction
     makeAFeePosting fee = post financialServices (HDE.makeCurrencyAmount chf fee)
     feeOrZero = fromMaybe 0 processingFeeInChf
     postings =
-      [post bcgeCCAccount (HDE.makeCurrencyAmount chf (- amtInChf))]
+      [post bcgeCCAccount (HDE.makeCurrencyAmount chf (-amtInChf))]
         <> maybeToList (makeAFeePosting <$> processingFeeInChf)
         <> [post expensesOther (HDE.makeCurrencyAmount chf (amtInChf - feeOrZero))]
 
@@ -208,7 +199,7 @@ rechnungToTransactions
    where
     balancePosting =
       post bcgeCCAccount (HDE.makeCurrencyAmount chf 0)
-        & L.set pBalanceAssertion (balassert . HDE.makeCurrencyAmount chf $ - owedAmount)
+        & L.set pBalanceAssertion (balassert . HDE.makeCurrencyAmount chf $ -owedAmount)
 
 rechnungToLedger :: Text -> Either Text [Transaction]
 rechnungToLedger rechnungTxt =

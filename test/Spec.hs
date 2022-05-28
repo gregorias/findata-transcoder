@@ -2,6 +2,7 @@ module Spec (main) where
 
 import Relude
 import qualified Test.Data.Csv.Extra
+import qualified Test.Data.Time.Extra
 import qualified Test.Hledger.Data.Extra as HDE
 import qualified Test.Hledger.Data.Lens
 import qualified Test.Hledger.Data.MarketPrice.Extra
@@ -44,6 +45,7 @@ tests = do
   mbankTests
   HDE.tests
   Test.Data.Csv.Extra.tests
+  Test.Data.Time.Extra.tests
   Test.Hledger.Data.Lens.tests
   Test.Hledger.Data.MarketPrice.Extra.tests
   Test.Hledger.Extra.tests
