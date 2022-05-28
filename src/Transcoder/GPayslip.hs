@@ -10,10 +10,12 @@ module Transcoder.GPayslip (
 
 import Control.Lens ((^.))
 import qualified Control.Lens as L
+import Data.Cash (Cash (Cash))
+import Data.Decimal (Decimal)
 import Data.Time.Calendar (toGregorian)
-import Hledger (Status (Cleared, Pending), Transaction, missingamt, post, transaction)
-import Hledger.Data.Extra (makeCurrencyAmount)
-import Hledger.Data.Lens (pMaybeAmount, pStatus, tDescription)
+import Hledger (AccountName, Posting, Status (Cleared, Pending), Transaction, transaction)
+import Hledger.Data.Extra (Comment (NoComment), makePosting)
+import Hledger.Data.Lens (tDescription)
 import Relude
 import Text.Megaparsec.Extra (
   parsePretty,
@@ -63,72 +65,32 @@ payslipToLedger
     ) =
     transaction
       day
-      ( [ post bankAccount missingamt
-            & L.set pStatus Pending
-              . L.set pMaybeAmount (Just $ makeCurrencyAmount chf mainTotal)
-        , post "Income:Google" missingamt
-            & L.set pStatus Cleared
-              . L.set pMaybeAmount (Just $ makeCurrencyAmount chf (-salaryTotal))
-        , post (statePrefix <> "Mandatory Contributions:Social Security") missingamt
-            & L.set pStatus Cleared
-              . L.set pMaybeAmount (Just $ makeCurrencyAmount chf socialSecurity)
-        , post (statePrefix <> "Mandatory Contributions:Unemployment Insurance") missingamt
-            & L.set pStatus Cleared
-              . L.set pMaybeAmount (Just $ makeCurrencyAmount chf unemploymentInsurance)
-        , post (statePrefix <> "Withholding Tax:Total") missingamt
-            & L.set pStatus Cleared
-              . L.set pMaybeAmount (Just $ makeCurrencyAmount chf taxAtSource)
+      ( [ makePosting (Just Pending) bankAccount (Just $ Cash chf mainTotal) NoComment
+        , mkPosting "Income:Google" (-salaryTotal)
+        , mkPosting (statePrefix <> "Mandatory Contributions:Social Security") socialSecurity
+        , mkPosting (statePrefix <> "Mandatory Contributions:Unemployment Insurance") unemploymentInsurance
+        , mkPosting (statePrefix <> "Withholding Tax:Total") taxAtSource
         ]
-          ++ maybe
-            []
-            ( \pensionFund ->
-                [ post secondPillarAccount missingamt
-                    & L.set pStatus Cleared
-                      . L.set pMaybeAmount (Just $ makeCurrencyAmount chf pensionFund)
-                ]
-            )
-            maybePensionFund
-          ++ maybe
-            []
-            ( \deductionNetAmount ->
-                [ post "Equity:Google Deduction Net Amount" missingamt
-                    & L.set pStatus Cleared
-                      . L.set pMaybeAmount (Just $ makeCurrencyAmount chf deductionNetAmount)
-                ]
-            )
-            maybeDeductionNetAmount
-          ++ maybe
-            []
-            ( \mssbCs ->
-                [ post "Equity:MssbCs Withholding" missingamt
-                    & L.set pStatus Cleared
-                      . L.set pMaybeAmount (Just $ makeCurrencyAmount chf mssbCs)
-                ]
-            )
-            maybeMssbCsWithholding
-          ++ maybe
-            []
-            ( \ggive ->
-                [ post "Expenses:Other" missingamt
-                    & L.set pStatus Cleared
-                      . L.set pMaybeAmount (Just $ makeCurrencyAmount chf ggive)
-                ]
-            )
-            maybeGgive
-          ++ maybe
-            []
-            ( \gcard ->
-                [ post "Assets:Debts:Google" missingamt
-                    & L.set pStatus Cleared
-                      . L.set pMaybeAmount (Just $ makeCurrencyAmount chf gcard)
-                ]
-            )
-            maybeGcard
+          <> catMaybes
+            [ mkPosting secondPillarAccount <$> maybePensionFund
+            , mkPosting "Equity:Google Deduction Net Amount" <$> maybeDeductionNetAmount
+            , mkPosting "Equity:MssbCs Withholding" <$> maybeMssbCsWithholding
+            , mkPosting "Expenses:Other" <$> maybeGgive
+            , mkPosting "Assets:Debts:Google" <$> maybeGcard
+            ]
       )
       & L.set tDescription "Google Salary"
    where
     year :: Integer = toGregorian day ^. L._1
     statePrefix = "State:" <> show year <> ":"
+
+    mkPosting :: AccountName -> Decimal -> Posting
+    mkPosting accountName amount =
+      makePosting
+        (Just Cleared)
+        accountName
+        (Just $ Cash chf amount)
+        NoComment
 
 -- | Transforms text extracted from a Google payslip's PDF into a
 -- 'LedgerReport'.
