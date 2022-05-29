@@ -1,0 +1,48 @@
+                                                                            PERSONAL / CONFIDENTIAL
+                                                                            Mr.
+                                                                            John Doe
+                                                                            Strasse 11
+                                                                            0001 Zürich
+
+
+
+
+Payslip Number                      123456_12_1234_123                      Tax canton                         ZH
+Period                          01.05.2022 - 31.05.2022                     Percentage type                 100 %
+Date of payment                              25.05.2022
+
+
+
+
+SALARY ELEMENTS                                                                               Rate (%)    Amount
+
+Monthly Salary                                                                                           14'461.50
+Health Insurance Contribution                                                                               375.00
+
+Total                                                                                                    14'836.50
+
+
+DEDUCTIONS                                                            Reference               Rate (%)
+
+Swiss Social Security (AHV/IV/EO)                                     14'836.50                5.3000       786.35
+Unemployment Insurance                                                12'350.00                1.1000       135.85
+Unemployment Insurance compl.                                          2'486.50                0.5000        12.45
+Pension Fund                                                                                                810.75
+Tax at Source                                                         14'836.50               11.9100     1'767.05
+
+Total                                                                                                     3'512.45
+
+
+
+NET INCOME
+
+
+TOTAL                                                                                            CHF     11'324.05
+
+Net salary credited to your account IBAN CH00 1234 1234 1234 1234 1
+
+
+
+
+                      Google Switzerland GmbH - Brandschenkestrasse 110 - 8002 Zürich - SWITZERLAND
+

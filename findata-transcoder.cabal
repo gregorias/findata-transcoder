@@ -57,7 +57,7 @@ library
       Transcoder.Galaxus
       Transcoder.GPayslip
       Transcoder.GPayslip.Data
-      Transcoder.GPayslip.Pdf2Txt
+      Transcoder.GPayslip.PdfToText
       Transcoder.Ib
       Transcoder.Ib.Csv
       Transcoder.Ib.Csv.ActivityStatementParse
@@ -171,6 +171,7 @@ test-suite findata-transcoder-test
       Test.Transcoder.Finpension.Transactions
       Test.Transcoder.Galaxus
       Test.Transcoder.GPayslip
+      Test.Transcoder.GPayslip.PdfToText
       Test.Transcoder.Ib
       Test.Transcoder.Ib.Csv.ActivityStatementParse
       Test.Transcoder.Ib.Csv.RawParse

@@ -26,6 +26,7 @@ import qualified Test.Transcoder.Degiro.Portfolio
 import qualified Test.Transcoder.EasyRide
 import qualified Test.Transcoder.Finpension.Transactions
 import qualified Test.Transcoder.GPayslip
+import qualified Test.Transcoder.GPayslip.PdfToText
 import qualified Test.Transcoder.Galaxus
 import qualified Test.Transcoder.Ib
 import qualified Test.Transcoder.Ib.Csv.ActivityStatementParse
@@ -64,6 +65,7 @@ tests = do
   Test.Transcoder.EasyRide.tests
   Test.Transcoder.Finpension.Transactions.tests
   Test.Transcoder.Galaxus.tests
+  Test.Transcoder.GPayslip.PdfToText.tests
   Test.Transcoder.GPayslip.tests
   Test.Transcoder.Ib.Csv.ActivityStatementParse.tests
   Test.Transcoder.Ib.Csv.RawParse.tests

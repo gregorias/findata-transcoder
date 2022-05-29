@@ -22,7 +22,7 @@ import Text.Megaparsec.Extra (
  )
 import Transcoder.Data.Currency (chf)
 import Transcoder.GPayslip.Data (Deductions (..), Payslip (..))
-import Transcoder.GPayslip.Pdf2Txt (
+import Transcoder.GPayslip.PdfToText (
   payslipP,
  )
 
