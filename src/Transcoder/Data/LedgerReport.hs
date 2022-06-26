@@ -4,16 +4,17 @@ module Transcoder.Data.LedgerReport (
   todoPosting,
 ) where
 
+import qualified Data.Text as T
 import Hledger (
   Status (Pending),
   Transaction (tdate),
   missingamt,
-  showTransaction,
  )
 import qualified Hledger as Ledger
 import Hledger.Data (MarketPrice)
 import Hledger.Data.Lens (pStatus)
 import Hledger.Data.MarketPrice.Extra (showMarketPrice)
+import Hledger.Extra (showTransaction)
 import Relude
 import Relude.Extra.Lens (set)
 
@@ -35,8 +36,17 @@ instance Monoid LedgerReport where
 -- | Shows 'LedgerReport' in Ledger format
 showLedgerReport :: LedgerReport -> Text
 showLedgerReport (LedgerReport trs mps) =
-  fold (showTransaction <$> sortBy (compare `on` tdate) trs)
-    <> fold (toText . showMarketPrice <$> mps)
+  fold [trText, trToMpJoin, mpText]
+ where
+  trText :: Text
+  trText = fold $ intersperse "\n" $ showTransaction <$> sortBy (compare `on` tdate) trs
+  mpText :: Text
+  mpText = fold $ toText . showMarketPrice <$> mps
+
+  trToMpJoin :: Text
+  trToMpJoin = if notNull trText && notNull mpText then "\n" else ""
+   where
+    notNull = not . T.null
 
 -- | A posting that symbolizes an unknown pending transactions to be resolved.
 todoPosting :: Ledger.Posting
