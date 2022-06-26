@@ -9,6 +9,6 @@ import Relude
 
 -- | Formats a Transaction into Ledger format.
 --
--- Unlike 'showTransaction' from Hledger, this show avoid unnecessary newlines.
+-- Unlike 'showTransaction' from Hledger, this function avoids unnecessary newlines.
 showTransaction :: Transaction -> Text
 showTransaction = (<> "\n") . T.strip . H.showTransaction
