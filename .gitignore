@@ -5,3 +5,6 @@
 # NPM/Yarn files
 yarn-lock.json
 node_modules
+
+# macOS
+.DS_Store
