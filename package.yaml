@@ -111,14 +111,11 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - bytestring
-    - cli
     - findata-transcoder
     - hledger-lib
-    - lens
     - megaparsec
+    - optparse-applicative
     - relude
-    - text
     - time
     # Fix https://stackoverflow.com/questions/67519851/multiple-files-use-the-same-module-name
     when:

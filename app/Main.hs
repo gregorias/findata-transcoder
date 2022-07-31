@@ -1,38 +1,35 @@
 module Main (main) where
 
-import Console.Options (
-  FlagFrag (FlagDescription, FlagLong),
-  FlagParam,
-  FlagParser (FlagOptional),
-  OptionDesc,
-  action,
-  command,
-  defaultMain,
-  description,
-  flagParam,
-  programDescription,
-  programName,
-  programVersion,
- )
 import qualified Data.ByteString.Lazy as LBS
-import qualified Data.Text.IO as Text
+import qualified Data.Text.IO as T
 import Data.Time.Clock (getCurrentTime, utctDay)
-import Data.Version (makeVersion)
 import Hledger (Transaction)
 import Hledger.Extra (showTransaction)
+import Options.Applicative (
+  Parser,
+  ParserInfo,
+  command,
+  execParser,
+  fullDesc,
+  header,
+  helper,
+  info,
+  long,
+  metavar,
+  progDesc,
+  strOption,
+  subparser,
+ )
 import Relude
 import qualified Text.Megaparsec as MP
 import Transcoder.Bcge (bcgeCsvToLedger)
 import qualified Transcoder.Bcge.Hint as BcgeHint
 import qualified Transcoder.BcgeCC as BcgeCC
-import qualified Transcoder.CharlesSchwab as CharlesSchwab (csvToLedger)
+import qualified Transcoder.CharlesSchwab as CharlesSchwab
 import qualified Transcoder.Coop as Coop
 import qualified Transcoder.Coop.Config as Coop
 import Transcoder.Data.CsvFile (CsvFile (..))
-import Transcoder.Data.LedgerReport (
-  LedgerReport (..),
-  showLedgerReport,
- )
+import Transcoder.Data.LedgerReport (LedgerReport (..), showLedgerReport)
 import qualified Transcoder.Degiro.AccountStatement as DegiroAccount (
   csvStatementToLedger,
  )
@@ -50,37 +47,23 @@ import qualified Transcoder.Revolut as Revolut
 import qualified Transcoder.Splitwise as Splitwise
 import qualified Transcoder.UberEats as UberEats
 
-filenameParser :: String -> Either String String
-filenameParser "" = Left "The provided output filename is empty."
-filenameParser s = Right s
-
-hintsFileFlagName :: String
-hintsFileFlagName = "hints_file"
-
 ledgerTrsToReport :: [Transaction] -> LedgerReport
 ledgerTrsToReport = flip LedgerReport []
 
-type HintsFileFlag = FlagParam (Maybe FilePath)
-
-parseBcgeHints :: FilePath -> IO (Maybe BcgeHint.Config)
-parseBcgeHints hintsFilePath = do
-  contents <- readFile hintsFilePath
-  return $ MP.parseMaybe BcgeHint.configParser contents
-
-parseBcgeAction :: HintsFileFlag -> OptionDesc (IO ()) ()
-parseBcgeAction hintsFileFlag = action $
-  \toParam -> do
-    (hintsFilePath :: Maybe FilePath) <- return $ join (toParam hintsFileFlag)
-    liftIO $ parseBcge hintsFilePath
-
+-- | Reads from stdin and runs the provided parser.
 parseBank :: (LBS.ByteString -> Either Text LedgerReport) -> IO ()
 parseBank parser = do
   input <- LBS.getContents
   case parser input of
     Left err -> do
-      Text.hPutStr stderr err
+      T.hPutStr stderr err
       exitFailure
-    Right output -> Text.putStr . showLedgerReport $ output
+    Right output -> T.putStr . showLedgerReport $ output
+
+parseBcgeHints :: FilePath -> IO (Maybe BcgeHint.Config)
+parseBcgeHints hintsFilePath = do
+  contents <- readFile hintsFilePath
+  return $ MP.parseMaybe BcgeHint.configParser contents
 
 parseBcge :: Maybe FilePath -> IO ()
 parseBcge maybeHintsFilePath = do
@@ -89,181 +72,232 @@ parseBcge maybeHintsFilePath = do
       <$> mapM parseBcgeHints maybeHintsFilePath
   parseBank $ bcgeCsvToLedger hints . decodeUtf8
 
-parseCharlesSchwab :: IO ()
-parseCharlesSchwab =
-  parseBank CharlesSchwab.csvToLedger
-
-parseDegiroAccount :: IO ()
-parseDegiroAccount =
-  parseBank $
-    DegiroAccount.csvStatementToLedger . CsvFile
-
-parseDegiroPortfolio :: IO ()
-parseDegiroPortfolio = do
-  today <- utctDay <$> getCurrentTime
-  parseBank $
-    DegiroPortfolio.csvStatementToLedger today . CsvFile
-
-parseFinpensionTransactions :: IO ()
-parseFinpensionTransactions =
-  parseBank $ fmap ledgerTrsToReport . Finpension.transactionsToLedger . CsvFile
-
-parseIbActivity :: IO ()
-parseIbActivity =
-  parseBank
-    ( Ib.parseActivityCsv
-        . decodeUtf8
-    )
-
-parseMbank :: IO ()
-parseMbank =
-  parseBank $
-    mbankCsvToLedger . decodeUtf8
-
-parseRevolut :: IO ()
-parseRevolut = parseBank Revolut.parseCsvToLedger
-
-parseSplitwise :: IO ()
-parseSplitwise = do
-  statement <- LBS.getContents
-  today <- utctDay <$> getCurrentTime
-  case Splitwise.statementToLedger today (CsvFile statement) of
-    Left err -> do
-      Text.hPutStr stderr err
-      exitFailure
-    Right output -> putText . showLedgerReport . (ledgerTrsToReport . one) $ output
-
-parseGPayslip :: IO ()
-parseGPayslip = do
-  payslip <- Text.getContents
-  case payslipTextToLedger payslip of
-    Left err -> do
-      Text.hPutStr stderr err
-      exitFailure
-    Right output -> putText . showLedgerReport . (ledgerTrsToReport . one) $ output
+bcgeCommand :: ParserInfo (IO ())
+bcgeCommand =
+  info
+    ((parseBcge <$> hintsFileOption) <**> helper)
+    (progDesc "Parses BCGE's CSV file and outputs ledupt data")
+ where
+  hintsFileOption = optional $ strOption (long "hints-file" <> metavar "FILE")
 
 parseBcgeCC :: IO ()
 parseBcgeCC = do
-  rechnung <- Text.getContents
+  rechnung <- T.getContents
   case BcgeCC.rechnungToLedger rechnung of
     Left err -> do
-      Text.hPutStr stderr err
+      T.hPutStr stderr err
       exitFailure
     Right output -> putText . showLedgerReport . ledgerTrsToReport $ output
 
-parseCoop :: Maybe FilePath -> IO ()
-parseCoop coopConfigFilePath = do
-  config <- case coopConfigFilePath of
-    Nothing -> return Coop.emptyConfig
-    Just filePath -> do
-      eitherErrOrConfig <- Coop.decodeConfig <$> readFileLBS filePath
-      case eitherErrOrConfig of
-        Left err -> do
-          Text.hPutStr stderr err
-          exitFailure
-        Right output -> return output
+bcgeCcCommand :: ParserInfo (IO ())
+bcgeCcCommand =
+  info
+    (pure parseBcgeCC <**> helper)
+    (progDesc "Parses a text dump from a BCGE CC bill and outputs Ledger data.")
 
-  receipt <- Text.getContents
-  case Coop.receiptToLedger config receipt of
-    Left err -> do
-      Text.hPutStr stderr err
-      exitFailure
-    Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
+coopCommand :: ParserInfo (IO ())
+coopCommand =
+  info
+    ((parse <$> configFileOption) <**> helper)
+    (progDesc "Parses a text dump from a Coop receipt and outputs Ledger data.")
+ where
+  configFileOption = optional $ strOption (long "config" <> metavar "FILE")
+  parse coopConfigFilePath = do
+    config <- case coopConfigFilePath of
+      Nothing -> return Coop.emptyConfig
+      Just filePath -> do
+        eitherErrOrConfig <- Coop.decodeConfig <$> readFileLBS filePath
+        case eitherErrOrConfig of
+          Left err -> do
+            T.hPutStr stderr err
+            exitFailure
+          Right output -> return output
 
-parseEasyRide :: IO ()
-parseEasyRide = do
-  receipt <- Text.getContents
-  case EasyRide.receiptToLedger receipt of
-    Left err -> do
-      Text.hPutStr stderr err
-      exitFailure
-    Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
+    receipt <- T.getContents
+    case Coop.receiptToLedger config receipt of
+      Left err -> do
+        T.hPutStr stderr err
+        exitFailure
+      Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
 
-parseGalaxus :: IO ()
-parseGalaxus = do
-  receipt <- Text.getContents
-  case Galaxus.parseReceipt receipt of
-    Left err -> do
-      Text.hPutStr stderr err
-      exitFailure
-    Right output -> putText . showTransaction $ output
+charlesSchwabCommand :: ParserInfo (IO ())
+charlesSchwabCommand =
+  info
+    (pure parse <**> helper)
+    (progDesc "Parses Charles Schwabs' CSV and outputs Ledger data.")
+ where
+  parse = parseBank CharlesSchwab.csvToLedger
 
-parsePatreon :: IO ()
-parsePatreon = do
-  receipt <- Text.getContents
-  case Patreon.receiptToLedger receipt of
-    Left err -> do
-      Text.hPutStr stderr err
-      exitFailure
-    Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
+degiroAccountCommand :: ParserInfo (IO ())
+degiroAccountCommand =
+  info
+    (pure parse <**> helper)
+    (progDesc "Parses Degiro's account statement CSV and outputs Ledger data.")
+ where
+  parse = parseBank $ DegiroAccount.csvStatementToLedger . CsvFile
 
-parseUberEats :: IO ()
-parseUberEats = do
-  bill <- Text.getContents
-  case UberEats.parseBill bill of
-    Left err -> do
-      Text.hPutStr stderr err
-      exitFailure
-    Right output -> putText . showTransaction $ output
+degiroPortfolioCommand :: ParserInfo (IO ())
+degiroPortfolioCommand =
+  info
+    (pure parse <**> helper)
+    (progDesc "Parses Degiro's portfolio CSV and outputs Ledger data")
+ where
+  parse = do
+    today <- utctDay <$> getCurrentTime
+    parseBank $ DegiroPortfolio.csvStatementToLedger today . CsvFile
 
-{- HLINT ignore ignoreAction -}
-ignoreAction :: r -> OptionDesc r ()
-ignoreAction r = action $ \_ -> r
+easyRideCommand :: ParserInfo (IO ())
+easyRideCommand =
+  info
+    (pure parse <**> helper)
+    (progDesc "Parses a text dump from an EasyRide receipt and outputs Ledger data.")
+ where
+  parse = do
+    receipt <- T.getContents
+    case EasyRide.receiptToLedger receipt of
+      Left err -> do
+        T.hPutStr stderr err
+        exitFailure
+      Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
+
+finpensionTransactionsCommand :: ParserInfo (IO ())
+finpensionTransactionsCommand =
+  info
+    (pure parse <**> helper)
+    (progDesc "Parses Finpension's transaction CSV and outputs Ledger data.")
+ where
+  parse = parseBank $ fmap ledgerTrsToReport . Finpension.transactionsToLedger . CsvFile
+
+galaxusCommand :: ParserInfo (IO ())
+galaxusCommand =
+  info
+    (pure parseGalaxus <**> helper)
+    (progDesc "Parses Galaxus' receipt and outputs a Ledger transaction.")
+ where
+  parseGalaxus = do
+    receipt <- T.getContents
+    case Galaxus.parseReceipt receipt of
+      Left err -> do
+        T.hPutStr stderr err
+        exitFailure
+      Right output -> putText . showTransaction $ output
+
+gpayslipCommand :: ParserInfo (IO ())
+gpayslipCommand =
+  info
+    (pure parse <**> helper)
+    (progDesc "Parses a text dump from a Google Payslip and outputs Ledger data.")
+ where
+  parse = do
+    payslip <- T.getContents
+    case payslipTextToLedger payslip of
+      Left err -> do
+        T.hPutStr stderr err
+        exitFailure
+      Right output -> putText . showLedgerReport . (ledgerTrsToReport . one) $ output
+
+ibActivityCommand :: ParserInfo (IO ())
+ibActivityCommand =
+  info
+    (pure parse <**> helper)
+    (progDesc "Parses IB's Activity Statement file and outputs a ledger.")
+ where
+  parse = parseBank (Ib.parseActivityCsv . decodeUtf8)
+
+mBankCommand :: ParserInfo (IO ())
+mBankCommand =
+  info
+    (pure parseMBank <**> helper)
+    (progDesc "Parses mBank's CSV file and outputs ledupt data.")
+ where
+  parseMBank :: IO ()
+  parseMBank = parseBank $ mbankCsvToLedger . decodeUtf8
+
+patreonCommand :: ParserInfo (IO ())
+patreonCommand =
+  info
+    (pure parsePatreon <**> helper)
+    (progDesc "Parses a text dump from a Patreon receipt and outputs Ledger data.")
+ where
+  parsePatreon :: IO ()
+  parsePatreon = do
+    receipt <- T.getContents
+    case Patreon.receiptToLedger receipt of
+      Left err -> do
+        T.hPutStr stderr err
+        exitFailure
+      Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
+
+revolutCommand :: ParserInfo (IO ())
+revolutCommand =
+  info
+    (pure parseRevolut <**> helper)
+    (progDesc "Parses Revolut's CSV file and outputs ledger data.")
+ where
+  parseRevolut :: IO ()
+  parseRevolut =
+    parseBank Revolut.parseCsvToLedger
+
+splitwiseCommand :: ParserInfo (IO ())
+splitwiseCommand =
+  info
+    (pure parseSplitwise <**> helper)
+    (progDesc "Parses Splitwise's CSV file and outputs ledger data.")
+ where
+  parseSplitwise :: IO ()
+  parseSplitwise = do
+    statement <- LBS.getContents
+    today <- utctDay <$> getCurrentTime
+    case Splitwise.statementToLedger today (CsvFile statement) of
+      Left err -> do
+        T.hPutStr stderr err
+        exitFailure
+      Right output -> putText . showLedgerReport . (ledgerTrsToReport . one) $ output
+
+uberEatsCommand :: ParserInfo (IO ())
+uberEatsCommand =
+  info
+    (pure parseUberEats <**> helper)
+    (progDesc "Parses Uber Eats' payment line and outputs a Ledger transaction.")
+ where
+  parseUberEats :: IO ()
+  parseUberEats = do
+    bill <- T.getContents
+    case UberEats.parseBill bill of
+      Left err -> do
+        T.hPutStr stderr err
+        exitFailure
+      Right output -> putText . showTransaction $ output
+
+commands :: Parser (IO ())
+commands =
+  subparser
+    ( command "parse-bcge" bcgeCommand
+        <> command "parse-bcge-cc" bcgeCcCommand
+        <> command "parse-coop" coopCommand
+        <> command "parse-cs" charlesSchwabCommand
+        <> command "parse-degiro-account" degiroAccountCommand
+        <> command "parse-degiro-portfolio" degiroPortfolioCommand
+        <> command "parse-easy-ride" easyRideCommand
+        <> command "parse-finpension-transactions" finpensionTransactionsCommand
+        <> command "parse-galaxus" galaxusCommand
+        <> command "parse-gpayslip" gpayslipCommand
+        <> command "parse-ib-activity" ibActivityCommand
+        <> command "parse-mbank" mBankCommand
+        <> command "parse-patreon" patreonCommand
+        <> command "parse-revolut" revolutCommand
+        <> command "parse-splitwise" splitwiseCommand
+        <> command "parse-uber-eats" uberEatsCommand
+    )
 
 main :: IO ()
-main = defaultMain $ do
-  programName "findata-transcoder"
-  programVersion $ makeVersion [0, 2, 0, 0]
-  programDescription "A program to parse financial data into a ledger-like text file"
-  command "parse-bcge" $ do
-    description "Parses BCGE's CSV file and outputs ledupt data"
-    hintsFileFlag <- flagParam (FlagLong hintsFileFlagName) (FlagOptional Nothing (fmap Just . filenameParser))
-    parseBcgeAction hintsFileFlag
-  command "parse-bcge-cc" $ do
-    description "Parses a text dump from a BCGE CC bill and outputs Ledger data"
-    ignoreAction parseBcgeCC
-  command "parse-coop" $ do
-    description "Parses a text dump from a Coop receipt and outputs Ledger data"
-    coopConfigFlag <- flagParam (FlagDescription "A JSON config" <> FlagLong "config") (FlagOptional Nothing (fmap Just . filenameParser))
-    action $ \toParam -> do
-      (coopConfigFilePath :: Maybe FilePath) <- return $ join (toParam coopConfigFlag)
-      parseCoop coopConfigFilePath
-  command "parse-cs" $ do
-    description "Parses Charles Schwabs' CSV and outputs Ledger data"
-    ignoreAction parseCharlesSchwab
-  command "parse-degiro-account" $ do
-    description "Parses Degiro's account statement CSV and outputs Ledger data"
-    ignoreAction parseDegiroAccount
-  command "parse-degiro-portfolio" $ do
-    description "Parses Degiro's portfolio CSV and outputs Ledger data"
-    ignoreAction parseDegiroPortfolio
-  command "parse-easy-ride" $ do
-    description "Parses a text dump from an EasyRide receipt and outputs Ledger data"
-    ignoreAction parseEasyRide
-  command "parse-finpension-transactions" $ do
-    description "Parses Finpensions' transaction CSV and outputs Ledger data"
-    ignoreAction parseFinpensionTransactions
-  command "parse-galaxus" $ do
-    description "Parses Galaxus' receipt and outputs a Ledger transaction."
-    ignoreAction parseGalaxus
-  command "parse-gpayslip" $ do
-    description "Parses a text dump from a Google Payslip and outputs Ledger data"
-    ignoreAction parseGPayslip
-  command "parse-ib-activity" $ do
-    description "Parses IB's Activity Statement file and outputs a ledger"
-    ignoreAction parseIbActivity
-  command "parse-mbank" $ do
-    description "Parses mBank's CSV file and outputs ledupt data"
-    ignoreAction parseMbank
-  command "parse-patreon" $ do
-    description "Parses a text dump from a Patreon receipt and outputs Ledger data"
-    ignoreAction parsePatreon
-  command "parse-revolut" $ do
-    description "Parses Revolut's CSV file and outputs ledger data"
-    ignoreAction parseRevolut
-  command "parse-splitwise" $ do
-    description "Parses Splitwise's CSV file and outputs ledger data"
-    ignoreAction parseSplitwise
-  command "parse-uber-eats" $ do
-    description "Parses Uber Eats' payment line and outputs a Ledger transaction."
-    ignoreAction parseUberEats
+main = join $ execParser programInfo
+ where
+  programInfo :: ParserInfo (IO ())
+  programInfo =
+    info
+      (commands <**> helper)
+      ( fullDesc
+          <> header "findata-transcoder"
+          <> progDesc "Parses financial data into a ledger-like text file."
+      )
