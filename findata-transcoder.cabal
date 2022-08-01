@@ -53,6 +53,7 @@ library
       Transcoder.Degiro.IsinData
       Transcoder.Degiro.Portfolio
       Transcoder.EasyRide
+      Transcoder.Finpension.PortfolioTotals
       Transcoder.Finpension.Transactions
       Transcoder.Galaxus
       Transcoder.GPayslip
@@ -165,6 +166,7 @@ test-suite findata-transcoder-test
       Test.Transcoder.Degiro.Csv
       Test.Transcoder.Degiro.Portfolio
       Test.Transcoder.EasyRide
+      Test.Transcoder.Finpension.PortfolioTotals
       Test.Transcoder.Finpension.Transactions
       Test.Transcoder.Galaxus
       Test.Transcoder.GPayslip

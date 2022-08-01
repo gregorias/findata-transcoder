@@ -1,5 +1,6 @@
 -- | This module contains data relevant to how I organize my Ledger file.
 module Transcoder.Wallet (
+  assets,
   bcgeAccount,
   bcgeCCAccount,
   degiroAccount,

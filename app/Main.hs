@@ -37,6 +37,7 @@ import qualified Transcoder.Degiro.Portfolio as DegiroPortfolio (
   csvStatementToLedger,
  )
 import qualified Transcoder.EasyRide as EasyRide
+import qualified Transcoder.Finpension.PortfolioTotals as Finpension
 import qualified Transcoder.Finpension.Transactions as Finpension
 import Transcoder.GPayslip (payslipTextToLedger)
 import qualified Transcoder.Galaxus as Galaxus
@@ -157,6 +158,13 @@ finpensionTransactionsCommand = bankCommand (pure parse) "Parses Finpension's tr
  where
   parse = parseBank $ fmap ledgerTrsToReport . Finpension.transactionsToLedger . CsvFile
 
+finpensionPortfolioTotalCommand :: ParserInfo (IO ())
+finpensionPortfolioTotalCommand = bankCommand (pure parse) "Parses Finpension's portoflio total values and outputs Ledger data."
+ where
+  parse = do
+    today <- utctDay <$> getCurrentTime
+    parseBank $ Finpension.portfolioTotalsToStatusTransaction today . decodeUtf8
+
 galaxusCommand :: ParserInfo (IO ())
 galaxusCommand =
   bankCommand
@@ -223,6 +231,7 @@ commands =
         <> command "parse-degiro-portfolio" degiroPortfolioCommand
         <> command "parse-easy-ride" easyRideCommand
         <> command "parse-finpension-transactions" finpensionTransactionsCommand
+        <> command "parse-finpension-portfolio-total" finpensionPortfolioTotalCommand
         <> command "parse-galaxus" galaxusCommand
         <> command "parse-gpayslip" gpayslipCommand
         <> command "parse-ib-activity" ibActivityCommand
