@@ -20,3 +20,11 @@ tests = do
                 ! Assets:Liquid:BCGE CC  -34 CHF
                 Expenses:Take Away        34 CHF|]
       UberEats.parseBill bill `shouldBe` Right expectedTr
+    it "Parses a serialized bill with single digit date fields" $ do
+      let bill = "Payments Mastercard ••••12348/7/22 8:44 PMCHF 34.00"
+      let expectedTr =
+            [transactionQQ|
+              2022/08/07 * Uber Eats
+                ! Assets:Liquid:BCGE CC  -34 CHF
+                Expenses:Take Away        34 CHF|]
+      UberEats.parseBill bill `shouldBe` Right expectedTr

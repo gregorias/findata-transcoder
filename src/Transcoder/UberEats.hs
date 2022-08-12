@@ -64,7 +64,7 @@ sourceP :: Parser Source
 sourceP = MP.string "Mastercard ••••" >> replicateM_ 4 MP.digitChar >> return SourceBcgeCc
 
 dateP :: Parser Day
-dateP = dayP "%-m/%d/%y"
+dateP = dayP "%-m/%-d/%y"
 
 hourP :: Parser ()
 hourP =
