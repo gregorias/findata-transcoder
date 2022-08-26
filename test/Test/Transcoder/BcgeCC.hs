@@ -15,6 +15,7 @@ tests = do
     describe "rechnungToLedger" $ do
       it "convertBCGECCRechnung-01" convertsBcgeCCRechnungTest01
       it "convertBCGECCRechnung-02" convertsBcgeCCRechnungTest02
+      it "convertBCGECCRechnung-03" convertsBcgeCCRechnungTest03
 
 convertsBcgeCCRechnungTest01 :: IO ()
 convertsBcgeCCRechnungTest01 = do
@@ -75,6 +76,29 @@ convertsBcgeCCRechnungTest02 = do
         , [transactionQQ|
           2022/02/23 * BCGE CC Status
             Assets:Liquid:BCGE CC  0.0 CHF = -1234.56 CHF|]
+        ]
+  BcgeCC.rechnungToLedger rechnung
+    `shouldBe` Right expectedTrs
+
+convertsBcgeCCRechnungTest03 :: IO ()
+convertsBcgeCCRechnungTest03 = do
+  rechnung <- readFileText "test/data/bcgecc-03.txt"
+  let expectedTrs =
+        [ [transactionQQ|
+          2022/07/24 * APPLE.COM/CHDE, 0844-000-079
+            Assets:Liquid:BCGE CC  -69.95 CHF
+            Expenses:Other  69.95 CHF|]
+        , [transactionQQ|
+          2022/07/29 * APPLE.COM/CHDE, 0844-000-079
+            Assets:Liquid:BCGE CC  -2044.15 CHF
+            Expenses:Other  2044.15 CHF|]
+        , [transactionQQ|
+          2022/08/01 * LIQPAY*NBU. Zbir kosht, Dnepr
+            Assets:Liquid:BCGE CC  -51.10 CHF
+            Expenses:Other  51.10 CHF|]
+        , [transactionQQ|
+          2022/08/23 * BCGE CC Status
+            Assets:Liquid:BCGE CC  0.0 CHF = -3812.45 CHF|]
         ]
   BcgeCC.rechnungToLedger rechnung
     `shouldBe` Right expectedTrs

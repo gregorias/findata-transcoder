@@ -42,7 +42,6 @@ import Transcoder.Data.MyDecimal (
   DecimalFormat (..),
   DecimalFractionFormat (TwoDigitDecimalFraction),
   decimalP,
-  defaultDecimalFormat,
  )
 import Transcoder.Wallet (
   bcgeCCAccount,
@@ -113,14 +112,22 @@ transactionP = label "transaction" $ do
     return (title, amt, isCredit)
    where
     regexes =
-      [ [regex|(?<title>.*) (?<countrycode>[A-Z]{2}) (?<currency>[A-Z]{3}) (?<amount>\d+\.\d\d) (?<amountchf>\d+\.\d\d)|]
-      , [regex|(?<title>.*) (?<currency>[A-Z]{3}) (?<amount>\d+\.\d\d) (?<amountchf>\d+\.\d\d)|]
-      , [regex|(?<title>.*) (?<countrycode>[A-Z]{2}) (?<amountchf>\d+\.\d\d)|]
+      [ [regex|(?<title>.*) (?<countrycode>[A-Z]{2}) (?<currency>[A-Z]{3}) (?<amount>[0-9']+\.\d\d) (?<amountchf>[0-9']+\.\d\d)|]
+      , [regex|(?<title>.*) (?<currency>[A-Z]{3}) (?<amount>[0-9']+\.\d\d) (?<amountchf>[0-9']+\.\d\d)|]
+      , [regex|(?<title>.*) (?<countrycode>[A-Z]{2}) (?<amountchf>[0-9']+\.\d\d)|]
       ]
     maybeNamedGroups :: (Maybe (Map Text Text)) = asum $ flip L.preview rol <$> fmap (. LR.namedGroups) regexes
     isCredit = isJust $ L.preview [regex| -$|] rol
   amtP :: Text -> Maybe Decimal
-  amtP = parseMaybe @Void (decimalP defaultDecimalFormat)
+  amtP =
+    parseMaybe @Void
+      ( decimalP
+          ( DecimalFormat
+              { decimalFormatChunkSep = ChunkSep '\''
+              , decimalFormatFractionFormat = Just TwoDigitDecimalFraction
+              }
+          )
+      )
   titleAndAmountP :: BcgeCCParser (Text, Decimal)
   titleAndAmountP = label "transaction title and amount" $
     try $ do
