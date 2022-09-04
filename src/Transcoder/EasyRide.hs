@@ -14,14 +14,6 @@ import Hledger (
 import qualified Hledger as Ledger
 import qualified Hledger.Data.Extra as HDE
 import Hledger.Data.Lens (pStatus, tDescription, tStatus)
-import Transcoder.Data.Currency (chf)
-import Transcoder.Data.MyDecimal (
-  ChunkSepFormat (ChunkSep),
-  DecimalFormat (..),
-  DecimalFractionFormat (TwoDigitDecimalFraction),
-  decimalP,
- )
-import Transcoder.Wallet (bcgeCCAccount, expensesTransport)
 import Relude
 import Text.Megaparsec (
   Parsec,
@@ -38,6 +30,14 @@ import Text.Megaparsec.Char.Lexer (decimal)
 import Text.Megaparsec.Extra (
   parsePretty,
  )
+import Transcoder.Data.Currency (chf)
+import Transcoder.Data.MyDecimal (
+  ChunkSepFormat (ChunkSep),
+  DecimalFormat (..),
+  DecimalFractionFormat (TwoDigitDecimalFraction),
+  decimalP,
+ )
+import Transcoder.Wallet (bcgeCCAccount, expensesTransport)
 
 data Receipt = Receipt
   { _receiptDate :: !Day
@@ -47,8 +47,8 @@ data Receipt = Receipt
 type Parser = Parsec Void Text
 
 dateLineP :: Parser Day
-dateLineP = do
-  void $ string "Zahlungsbeleg – "
+dateLineP = label "date line" $ do
+  void $ string "Zahlungsbeleg – " <|> string "Rechnungsdatum: "
   day <- decimal
   void $ char ' '
   month <- monthP
@@ -80,7 +80,7 @@ receiptToTransaction (Receipt day total) =
   bcgePosting =
     Ledger.post
       bcgeCCAccount
-      (HDE.makeCurrencyAmount chf (- total))
+      (HDE.makeCurrencyAmount chf (-total))
       & L.set pStatus Pending
   transportPosting =
     Ledger.post
