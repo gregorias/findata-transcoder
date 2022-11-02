@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -156,6 +156,7 @@ test-suite findata-transcoder-test
       Test.Transcoder.Bcge
       Test.Transcoder.Bcge.Hint
       Test.Transcoder.BcgeCC
+      Test.Transcoder.CharlesSchwab
       Test.Transcoder.CharlesSchwab.Csv
       Test.Transcoder.CharlesSchwab.Ledger
       Test.Transcoder.Coop

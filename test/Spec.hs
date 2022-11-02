@@ -14,6 +14,7 @@ import qualified Test.Text.Megaparsec.Match
 import qualified Test.Transcoder.Bcge
 import qualified Test.Transcoder.Bcge.Hint as BcgeHint
 import qualified Test.Transcoder.BcgeCC
+import qualified Test.Transcoder.CharlesSchwab
 import qualified Test.Transcoder.CharlesSchwab.Csv
 import qualified Test.Transcoder.CharlesSchwab.Ledger
 import qualified Test.Transcoder.Coop
@@ -54,6 +55,7 @@ tests = do
   Test.Hledger.Read.TestUtils.tests
   Test.Transcoder.Bcge.tests
   Test.Transcoder.BcgeCC.tests
+  Test.Transcoder.CharlesSchwab.tests
   Test.Transcoder.CharlesSchwab.Csv.tests
   Test.Transcoder.CharlesSchwab.Ledger.tests
   Test.Transcoder.Coop.tests

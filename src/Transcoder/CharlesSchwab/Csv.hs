@@ -126,7 +126,7 @@ dropFirstLine = do
 
 lastLine :: Parsec Void LBS.ByteString ()
 lastLine = do
-  void $ chunk "Transactions Total"
+  void $ chunk "Transactions Total" <|> chunk "\"Transactions Total\""
   void MP.takeRest
 
 csStatementToCsvContentP :: Parsec Void LBS.ByteString (CsvFile LBS.ByteString)
