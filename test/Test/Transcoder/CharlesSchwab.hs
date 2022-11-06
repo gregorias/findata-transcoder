@@ -26,6 +26,10 @@ tests = do
                          Assets:Liquid:Charles Schwab:USD                        USD 1538.33
                          Equity:Charles Schwab:Unvested GOOG Withholding Tax|]
                 , [transactionQQ|
+                     2022/09/30 Wire Sent
+                         * Assets:Liquid:Charles Schwab:USD                        USD -10818.38
+                         ! ToDo|]
+                , [transactionQQ|
                      2022/10/28 * Credit Interest
                          Assets:Liquid:Charles Schwab:USD        USD 0.07
                          Income:Google|]

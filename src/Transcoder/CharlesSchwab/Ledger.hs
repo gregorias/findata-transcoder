@@ -4,21 +4,23 @@ module Transcoder.CharlesSchwab.Ledger (
 ) where
 
 import qualified Control.Lens as L
+import Data.Cash (Cash (Cash))
 import Data.Time (Day)
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Hledger (
   AccountName,
   AmountPrice (UnitPrice),
-  Status (Cleared),
+  Status (Cleared, Pending),
   Transaction,
   amountSetFullPrecision,
   missingamt,
   post,
   transaction,
  )
-import Hledger.Data.Extra (makeCommodityAmount, makeCurrencyAmount)
+import Hledger.Data.Extra (Comment (NoComment), makeCommodityAmount, makeCurrencyAmount, makePosting, makeTransaction)
 import Hledger.Data.Lens (aAmountPrice, pMaybeAmount, pStatus, tDescription, tStatus)
+import Relude
 import Transcoder.CharlesSchwab.Csv (
   CsCsvRecord (csAmount, csDate, csDescription, csFees, csPrice, csQuantity, csSymbol),
   DollarAmount (..),
@@ -30,7 +32,6 @@ import Transcoder.Wallet (
   equity,
   (<:>),
  )
-import Relude
 
 -- "Wire Fund", "Sell" & "Journal", "Credit Interest"
 
@@ -107,11 +108,28 @@ vestingToLedgerTransaction :: Vesting -> Transaction
 vestingToLedgerTransaction (Vesting day symbol q) =
   transaction
     day
-    [ post unvestedGoog (makeCommodityAmount symbol (fromInteger $ - q))
+    [ post unvestedGoog (makeCommodityAmount symbol (fromInteger $ -q))
     , post (vestedStockAccount symbol) (makeCommodityAmount symbol (fromInteger q))
     ]
     & L.set tDescription (symbol <> " Vesting")
       . L.set tStatus Cleared
+
+wireSentToLedgerTransaction :: CsCsvRecord -> Maybe Transaction
+wireSentToLedgerTransaction rec = do
+  guard $ csAction rec == "Wire Sent"
+  (DollarAmount amount) <- csAmount rec
+  return $
+    makeTransaction
+      (csDate rec)
+      Nothing
+      (csAction rec)
+      [ makePosting
+          (Just Cleared)
+          usdAccount
+          (Just $ Cash usd amount)
+          NoComment
+      , makePosting (Just Pending) "ToDo" Nothing NoComment
+      ]
 
 saleToLedgerTransaction :: CsCsvRecord -> Maybe Transaction
 saleToLedgerTransaction rec = do
@@ -126,7 +144,7 @@ saleToLedgerTransaction rec = do
       (csDate rec)
       [ post
           (vestedStockAccount symbol)
-          ( makeCommodityAmount symbol (fromInteger $ - q)
+          ( makeCommodityAmount symbol (fromInteger $ -q)
               & L.set
                 aAmountPrice
                 ( Just . UnitPrice $
@@ -152,7 +170,7 @@ taxToLedgerTransaction rec = do
       (csDate rec)
       [ post
           usdAccount
-          ( makeCurrencyAmount usd (- amount)
+          ( makeCurrencyAmount usd (-amount)
           )
       , post (equityCs <:> "Unvested GOOG Withholding Tax") missingamt
       ]
@@ -169,6 +187,7 @@ csvRecordToLedgerTransaction rec =
           , creditInterestToLedgerTransaction
           , saleToLedgerTransaction
           , taxToLedgerTransaction
+          , wireSentToLedgerTransaction
           ]
             <*> [rec]
         )
