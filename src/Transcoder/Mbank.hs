@@ -8,6 +8,7 @@ module Transcoder.Mbank (
 ) where
 
 import Data.Decimal (Decimal)
+import qualified Data.Text as T
 import Data.Time.Calendar (Day)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Hledger (missingamt, post)
@@ -42,7 +43,7 @@ pln = makeCurrencyAmount Currency.pln
 -- | mBank's transaction data fetched from their website.
 data MbankTransaction = MbankTransaction
   { mTrDate :: Day
-  , mTrTitle :: String
+  , mTrTitle :: !Text
   , mTrAmount :: Decimal
   , mTrEndBalance :: Decimal
   }
@@ -84,7 +85,7 @@ mbankCsvTransactionParser = do
   value <- valueParser <* char ';'
   balance <- valueParser <* char ';'
   void eolOrEof
-  return $ MbankTransaction date title value balance
+  return $ MbankTransaction date (toText title) value balance
 
 mbankCsvParser :: MbankParser [MbankTransaction]
 mbankCsvParser = do
@@ -93,13 +94,8 @@ mbankCsvParser = do
 
 -- MbankTransaction to Ledger transformers
 
-sanitizeTitle :: String -> String
-sanitizeTitle = beforeTheGap
- where
-  beforeTheGap title@(s : ss)
-    | take 3 title == "   " = ""
-    | otherwise = s : beforeTheGap ss
-  beforeTheGap _ = ""
+sanitizeTitle :: Text -> Text
+sanitizeTitle = fst . T.breakOn "   "
 
 mTrToLedger :: MbankTransaction -> Transaction
 mTrToLedger mTr = tr{tdescription = toText $ sanitizeTitle $ mTrTitle mTr}
