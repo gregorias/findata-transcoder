@@ -42,10 +42,10 @@ pln = makeCurrencyAmount Currency.pln
 
 -- | mBank's transaction data fetched from their website.
 data MbankTransaction = MbankTransaction
-  { mTrDate :: Day
+  { mTrDate :: !Day
   , mTrTitle :: !Text
-  , mTrAmount :: Decimal
-  , mTrEndBalance :: Decimal
+  , mTrAmount :: !Decimal
+  , mTrEndBalance :: !Decimal
   }
   deriving stock (Eq, Show)
 
