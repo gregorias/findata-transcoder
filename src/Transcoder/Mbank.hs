@@ -51,7 +51,7 @@ data MbankTransaction = MbankTransaction
 
 -- Parser functionality (CSV String → [MbankTransaction])
 
-type Parser = Parsec () String
+type Parser = Parsec () Text
 
 headerParser :: Parser ()
 headerParser = void (string "#Data operacji;#Opis operacji;#Rachunek;#Kategoria;#Kwota;#Saldo po operacji;\n")
@@ -107,7 +107,7 @@ mTrToLedger mTr = tr{tdescription = toText $ sanitizeTitle $ mTrTitle mTr}
       , post "Expenses:Other" missingamt
       ]
 
-mbankCsvToLedger :: String -> Either Text LedgerReport
+mbankCsvToLedger :: Text -> Either Text LedgerReport
 mbankCsvToLedger inputCsv = do
   let parserErrorToString err =
         "Could not parse mBank's CSV.\n" <> show err

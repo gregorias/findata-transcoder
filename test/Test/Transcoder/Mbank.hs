@@ -27,7 +27,7 @@ mbankTests = do
       it "parses a valid CSV" $ do
         let mbankCsv =
               "#Data operacji;#Opis operacji;#Rachunek;#Kategoria;#Kwota;#Saldo po operacji;\n"
-                ++ "2020-10-28;\"Title\";\"eKonto 1111 ... 1111\";\"category\";-15,00 PLN;10 100,10 PLN;"
+                <> "2020-10-28;\"Title\";\"eKonto 1111 ... 1111\";\"category\";-15,00 PLN;10 100,10 PLN;"
         let expectedMbankTransaction =
               MbankTransaction
                 (fromGregorian 2020 10 28)
