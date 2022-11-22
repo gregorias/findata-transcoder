@@ -51,17 +51,17 @@ data MbankTransaction = MbankTransaction
 
 -- Parser functionality (CSV String → [MbankTransaction])
 
-type MbankParser = Parsec () String
+type Parser = Parsec () String
 
-headerParser :: MbankParser ()
+headerParser :: Parser ()
 headerParser = void (string "#Data operacji;#Opis operacji;#Rachunek;#Kategoria;#Kwota;#Saldo po operacji;\n")
 
-dateParser :: MbankParser Day
+dateParser :: Parser Day
 dateParser = do
   dateString <- many $ oneOf ("-0123456789" :: [Char])
   parseTimeM True defaultTimeLocale "%Y-%m-%d" dateString
 
-valueParser :: MbankParser Decimal
+valueParser :: Parser Decimal
 valueParser = do
   zloteString <- removeSpaces <$> many (oneOf ("-0123456789 " :: [Char]))
   zlote :: Integer <- case readMaybe zloteString of
@@ -76,7 +76,7 @@ valueParser = do
  where
   removeSpaces = filter (' ' /=)
 
-mbankCsvTransactionParser :: MbankParser MbankTransaction
+mbankCsvTransactionParser :: Parser MbankTransaction
 mbankCsvTransactionParser = do
   date <- dateParser <* char ';'
   title <- char '"' *> many (noneOf ['"', ';']) <* char '"' <* char ';'
@@ -87,7 +87,7 @@ mbankCsvTransactionParser = do
   void eolOrEof
   return $ MbankTransaction date (toText title) value balance
 
-mbankCsvParser :: MbankParser [MbankTransaction]
+mbankCsvParser :: Parser [MbankTransaction]
 mbankCsvParser = do
   headerParser
   many mbankCsvTransactionParser <* eof
