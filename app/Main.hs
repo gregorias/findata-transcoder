@@ -188,7 +188,7 @@ ibActivityCommand =
 mBankCommand :: ParserInfo (IO ())
 mBankCommand =
   bankCommand
-    (pure (parseBank $ mbankCsvToLedger . decodeUtf8))
+    (pure (parseBank mbankCsvToLedger))
     "Parses mBank's CSV file and outputs ledupt data."
 
 patreonCommand :: ParserInfo (IO ())

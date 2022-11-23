@@ -1,16 +1,20 @@
 module Transcoder.Mbank (
   MbankTransaction (..),
-  valueParser,
-  mbankCsvParser,
   mTrToLedger,
   mbankCsvToLedger,
+  valueP,
+  decodeMbankCsv,
   pln,
 ) where
 
+import Data.ByteString.Lazy as LBS
+import Data.Csv (DecodeOptions (DecodeOptions), FromNamedRecord (..), decodeByNameWith, lookup)
+import qualified Data.Csv as CSV
 import Data.Decimal (Decimal)
 import qualified Data.Text as T
 import Data.Time.Calendar (Day)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
+import Data.Vector (Vector)
 import Hledger (missingamt, post)
 import Hledger.Data.Extra (makeCurrencyAmount)
 import Hledger.Data.Posting (
@@ -26,13 +30,10 @@ import Hledger.Data.Types (
 import Relude
 import Text.Megaparsec (
   Parsec,
-  eof,
-  noneOf,
   oneOf,
-  parse,
+  parseMaybe,
  )
 import Text.Megaparsec.Char (char, string)
-import Text.Megaparsec.Char.Extra (eolOrEof)
 import qualified Transcoder.Data.Currency as Currency
 import Transcoder.Data.LedgerReport (LedgerReport (LedgerReport))
 import Transcoder.Data.MyDecimal (fromUnitsAndCents)
@@ -49,20 +50,43 @@ data MbankTransaction = MbankTransaction
   }
   deriving stock (Eq, Show)
 
+instance FromNamedRecord MbankTransaction where
+  parseNamedRecord r = do
+    dayText :: Text <- lookup r "#Data operacji"
+    day <-
+      maybe
+        (fail $ "Could not parse " <> toString dayText <> " as a day.")
+        return
+        (parseMaybe dayP dayText)
+    title <- lookup r "#Opis operacji"
+    amount <- parseAmount =<< lookup r "#Kwota"
+    endBalance <- parseAmount =<< lookup r "#Saldo po operacji"
+    return
+      MbankTransaction
+        { mTrDate = day
+        , mTrTitle = title
+        , mTrAmount = amount
+        , mTrEndBalance = endBalance
+        }
+   where
+    parseAmount :: Text -> CSV.Parser Decimal
+    parseAmount amountText =
+      maybe
+        (fail $ "Could not parse " <> toString amountText <> " as an amount.")
+        return
+        (parseMaybe valueP amountText)
+
 -- Parser functionality (CSV String → [MbankTransaction])
 
 type Parser = Parsec () Text
 
-headerParser :: Parser ()
-headerParser = void (string "#Data operacji;#Opis operacji;#Rachunek;#Kategoria;#Kwota;#Saldo po operacji;\n")
-
-dateParser :: Parser Day
-dateParser = do
+dayP :: Parser Day
+dayP = do
   dateString <- many $ oneOf ("-0123456789" :: [Char])
   parseTimeM True defaultTimeLocale "%Y-%m-%d" dateString
 
-valueParser :: Parser Decimal
-valueParser = do
+valueP :: Parser Decimal
+valueP = do
   zloteString <- removeSpaces <$> many (oneOf ("-0123456789 " :: [Char]))
   zlote :: Integer <- case readMaybe zloteString of
     Just z -> return z
@@ -74,23 +98,15 @@ valueParser = do
   void $ string "PLN"
   return $ fromUnitsAndCents zlote grosze
  where
-  removeSpaces = filter (' ' /=)
+  removeSpaces = Relude.filter (' ' /=)
 
-mbankCsvTransactionParser :: Parser MbankTransaction
-mbankCsvTransactionParser = do
-  date <- dateParser <* char ';'
-  title <- char '"' *> many (noneOf ['"', ';']) <* char '"' <* char ';'
-  void $ many (noneOf [';']) >> char ';'
-  void $ many (noneOf [';']) >> char ';'
-  value <- valueParser <* char ';'
-  balance <- valueParser <* char ';'
-  void eolOrEof
-  return $ MbankTransaction date (toText title) value balance
-
-mbankCsvParser :: Parser [MbankTransaction]
-mbankCsvParser = do
-  headerParser
-  many mbankCsvTransactionParser <* eof
+-- | Decodes transactions from an mBank CSV.
+decodeMbankCsv ::
+  LBS.ByteString ->
+  Either String (Vector MbankTransaction)
+decodeMbankCsv =
+  fmap snd
+    . decodeByNameWith (DecodeOptions (fromIntegral (ord ';')))
 
 -- MbankTransaction to Ledger transformers
 
@@ -107,11 +123,16 @@ mTrToLedger mTr = tr{tdescription = toText $ sanitizeTitle $ mTrTitle mTr}
       , post "Expenses:Other" missingamt
       ]
 
-mbankCsvToLedger :: Text -> Either Text LedgerReport
+mbankCsvToLedger :: LBS.ByteString -> Either Text LedgerReport
 mbankCsvToLedger inputCsv = do
   let parserErrorToString err =
         "Could not parse mBank's CSV.\n" <> show err
-  mtransactions <- first parserErrorToString $ parse mbankCsvParser "" inputCsv
-  let sortedMTransactions = sortOn mTrDate mtransactions
+  mtransactions <-
+    first (parserErrorToString . toText) $
+      ( fmap snd
+          . decodeByNameWith (DecodeOptions (fromIntegral (ord ';')))
+      )
+        inputCsv
+  let sortedMTransactions = sortOn mTrDate (toList mtransactions)
       ltransactions = fmap mTrToLedger sortedMTransactions
   return $ LedgerReport ltransactions []

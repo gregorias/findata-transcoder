@@ -111,6 +111,7 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - bytestring
     - findata-transcoder
     - hledger-lib
     - megaparsec

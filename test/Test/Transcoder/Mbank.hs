@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedLists #-}
+
 module Test.Transcoder.Mbank (
   mbankTests,
 ) where
@@ -11,19 +13,19 @@ import Text.Megaparsec (parseMaybe)
 import Transcoder.Data.MyDecimal (fromUnitsAndCents)
 import Transcoder.Mbank (
   MbankTransaction (..),
+  decodeMbankCsv,
   mTrToLedger,
-  mbankCsvParser,
-  valueParser,
+  valueP,
  )
 
 mbankTests :: Hspec.SpecWith ()
 mbankTests = do
   describe "Mbank tests" $ do
-    describe "valueParser" $ do
+    describe "valueP" $ do
       it "parses a valid monetary amount" $ do
-        parseMaybe valueParser "10 100,10 PLN" `shouldBe` Just (fromUnitsAndCents 10100 10)
+        parseMaybe valueP "10 100,10 PLN" `shouldBe` Just (fromUnitsAndCents 10100 10)
 
-    describe "mbankCsvParser" $ do
+    describe "decodeMbankCsv" $ do
       it "parses a valid CSV" $ do
         let mbankCsv =
               "#Data operacji;#Opis operacji;#Rachunek;#Kategoria;#Kwota;#Saldo po operacji;\n"
@@ -34,7 +36,7 @@ mbankTests = do
                 "Title"
                 (fromUnitsAndCents (-15) 0)
                 (fromUnitsAndCents 10100 10)
-        parseMaybe mbankCsvParser mbankCsv `shouldBe` Just [expectedMbankTransaction]
+        decodeMbankCsv mbankCsv `shouldBe` Right [expectedMbankTransaction]
 
     describe "mTrToLedger" $ do
       it "transforms an mbank transaction" $ do
