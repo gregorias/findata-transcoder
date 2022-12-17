@@ -43,6 +43,7 @@ library
       Transcoder.CharlesSchwab.Ledger
       Transcoder.Coop
       Transcoder.Coop.Config
+      Transcoder.Coop.Receipt
       Transcoder.Data.CsvFile
       Transcoder.Data.Currency
       Transcoder.Data.Isin
