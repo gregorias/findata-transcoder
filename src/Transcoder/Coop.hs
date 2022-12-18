@@ -25,9 +25,10 @@ import Hledger.Data.Lens (pStatus, tDescription, tStatus)
 import Relude
 import Relude.Extra (groupBy)
 import Text.Megaparsec.Extra (parsePretty)
-import Transcoder.Coop.Config (Config (..), getDebtors)
+import Transcoder.Coop.Config (Config (..), PaymentCard, assignAccount, getDebtors)
 import Transcoder.Coop.Receipt (
   Entry (..),
+  MastercardPaymentMethod (MastercardPaymentMethod),
   Payment (..),
   PaymentMethod (..),
   Rabatt (..),
@@ -38,11 +39,15 @@ import Transcoder.Data.Currency (chf)
 import Transcoder.Wallet (bcgeAccount, bcgeCCAccount, expenses, (<:>))
 import qualified Transcoder.Wallet as Wallet
 
-paymentMethodToAccount :: PaymentMethod -> Text
-paymentMethodToAccount TWINT = bcgeAccount
-paymentMethodToAccount (Mastercard _) = bcgeCCAccount
-paymentMethodToAccount Supercash = Wallet.expensesOther
-paymentMethodToAccount Superpunkte = Wallet.expensesOther
+paymentMethodToAccount :: [PaymentCard] -> PaymentMethod -> Text
+paymentMethodToAccount _ TWINT = bcgeAccount
+paymentMethodToAccount
+  cards
+  (Mastercard (MastercardPaymentMethod accountNumber)) = fromMaybe bcgeCCAccount targetAccount
+   where
+    targetAccount = assignAccount cards accountNumber
+paymentMethodToAccount _ Supercash = Wallet.expensesOther
+paymentMethodToAccount _ Superpunkte = Wallet.expensesOther
 
 entryNameToExpenseCategory :: Text -> Text
 entryNameToExpenseCategory entry =
@@ -95,10 +100,10 @@ entryNameToExpenseCategory entry =
     , ([regex|Mücken|], haushalt <:> "Mückenschutz")
     ]
 
-paymentToPosting :: Payment -> Posting
-paymentToPosting Payment{paymentMethod = method, paymentTotal = total} =
+paymentToPosting :: [PaymentCard] -> Payment -> Posting
+paymentToPosting cards Payment{paymentMethod = method, paymentTotal = total} =
   Ledger.post
-    (paymentMethodToAccount method)
+    (paymentMethodToAccount cards method)
     (HDE.makeCurrencyAmount chf (-total))
     & L.set pStatus (postingStatus method)
  where
@@ -124,7 +129,7 @@ receiptToTransaction config (Receipt day entries rabatt _total payments) =
       . L.set tStatus Cleared
  where
   postings = toList paymentPostings <> catItems <> debtItems <> rabattPosting
-  paymentPostings = paymentToPosting <$> payments
+  paymentPostings = paymentToPosting (paymentCards config) <$> payments
   (myExpenses :: [(AccountName, Decimal)], debtors :: [(AccountName, Decimal)]) =
     map (entryToPostings config) entries & unzip & fmap concat
   catToTotals :: HashMap Text (NonEmpty Decimal) = snd <<$>> groupBy fst myExpenses

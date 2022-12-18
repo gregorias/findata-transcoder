@@ -123,3 +123,19 @@ tests = do
                     Expenses:Groceries:Chewing Gum  0.75 CHF
                     ! Assets:Debts:John Doe           0.75 CHF|]
         Coop.receiptToLedger config coop `shouldBe` Right expectedTr
+
+      it "correctly assigns account number for a card" $ do
+        config <-
+          readCoopConfig
+            [trimming|
+                    { "paymentCards": [
+                      {"lastFourDigits": "1123",
+                       "account": "Assets:Liquid:Foo"}]}|]
+        coop <- readFileText "test/data/coop-bcge-debit.txt"
+        let expectedTr =
+              parseTransactionUnsafe
+                [trimming|
+                  2022/12/08 * Coop
+                    ! Assets:Liquid:Foo  -3.75 CHF
+                    Expenses:Groceries  3.75 CHF|]
+        Coop.receiptToLedger config coop `shouldBe` Right expectedTr

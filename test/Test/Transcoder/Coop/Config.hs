@@ -23,7 +23,7 @@ tests = do
                 }
             |]
       let eitherConfig = decodeConfig $ encodeUtf8 json
-      (Config rules) <-
+      (Config rules []) <-
         either
           (\e -> assertFailure $ "Could not decode the config. " <> toString e)
           return
@@ -43,7 +43,7 @@ tests = do
                 }
             |]
       let eitherConfig = decodeConfig $ encodeUtf8 json
-      (Config rules) <-
+      (Config rules []) <-
         either
           (\e -> assertFailure $ "Could not decode the config. " <> toString e)
           return
