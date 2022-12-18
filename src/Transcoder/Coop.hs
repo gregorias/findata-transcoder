@@ -40,7 +40,7 @@ import qualified Transcoder.Wallet as Wallet
 
 paymentMethodToAccount :: PaymentMethod -> Text
 paymentMethodToAccount TWINT = bcgeAccount
-paymentMethodToAccount Mastercard = bcgeCCAccount
+paymentMethodToAccount (Mastercard _) = bcgeCCAccount
 paymentMethodToAccount Supercash = Wallet.expensesOther
 paymentMethodToAccount Superpunkte = Wallet.expensesOther
 
@@ -105,7 +105,7 @@ paymentToPosting Payment{paymentMethod = method, paymentTotal = total} =
   postingStatus Supercash = Unmarked
   postingStatus Superpunkte = Unmarked
   postingStatus TWINT = Pending
-  postingStatus Mastercard = Pending
+  postingStatus (Mastercard _) = Pending
 
 -- | Splits a single receipt entry into an expense category and optional debtor accounts.
 entryToPostings :: Config -> Entry -> ((AccountName, Decimal), [(AccountName, Decimal)])

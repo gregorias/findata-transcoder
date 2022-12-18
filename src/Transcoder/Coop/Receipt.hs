@@ -4,6 +4,7 @@ module Transcoder.Coop.Receipt (
   Entry (..),
   Payment (..),
   PaymentMethod (..),
+  MastercardPaymentMethod (..),
   Rabatt (..),
   receiptP,
 ) where
@@ -17,10 +18,17 @@ import Data.Time (Day)
 import Data.Time.Extra (dayP)
 import Relude
 import Relude.Extra
-import Text.Megaparsec (Parsec, manyTill_, parseMaybe, try)
-import Text.Megaparsec.Char (hspace1, newline, string)
+import Text.Megaparsec (Parsec, manyTill, manyTill_, parseMaybe, try)
+import Text.Megaparsec.Char (hspace1, newline, printChar, string)
 import Text.Megaparsec.Char.Extra (anyLineP)
-import Transcoder.Data.MyDecimal (ChunkSepFormat (..), DecimalFormat (..), DecimalFractionFormat (..), cashDecimalFormat, decimalP, defaultDecimalFormat)
+import Transcoder.Data.MyDecimal (
+  ChunkSepFormat (..),
+  DecimalFormat (..),
+  DecimalFractionFormat (..),
+  cashDecimalFormat,
+  decimalP,
+  defaultDecimalFormat,
+ )
 
 type Parser = Parsec Void Text
 
@@ -85,6 +93,9 @@ entryLineP = do
       [entryName', _menge, _preAktionTotal, _preis, total, _zusatz] -> Just (entryName', total)
       _ -> Nothing
 
+cashP :: Parser Decimal
+cashP = decimalP (DecimalFormat (ChunkSep '\'') (Just TwoDigitDecimalFraction))
+
 data Payment = Payment
   { paymentMethod :: !PaymentMethod
   , paymentTotal :: !Decimal
@@ -92,28 +103,37 @@ data Payment = Payment
 
 paymentP :: Parser Payment
 paymentP = do
-  method <- paymentMethodP
-  total <- case method of
-    Supercash -> do
-      hspace1
-      void $ decimalP defaultDecimalFormat
-      hspace1
-      void $ decimalP (cashDecimalFormat NoChunkSep)
-      hspace1
-      decimalP (DecimalFormat (ChunkSep '\'') (Just TwoDigitDecimalFraction))
-    _ -> do
-      hspace1
-      decimalP (DecimalFormat (ChunkSep '\'') (Just TwoDigitDecimalFraction))
-  return $ Payment method total
+  supercashP <|> mastercardP
+    <|> ( do
+            method <- (string "TWINT" >> return TWINT) <|> (string "Superpunkte" >> return Superpunkte)
+            total <- hspace1 >> cashP
+            return $ Payment method total
+        )
+ where
+  supercashP :: Parser Payment
+  supercashP = do
+    Payment Supercash <$> (string "Supercash" >> hspace1 >> decimalP defaultDecimalFormat >> hspace1 >> decimalP (cashDecimalFormat NoChunkSep) >> hspace1 >> cashP)
 
-data PaymentMethod = TWINT | Mastercard | Supercash | Superpunkte
+  mastercardP :: Parser Payment
+  mastercardP = do
+    total <- (string "Mastercard" >> hspace1 >> cashP) <* newline
+    void $ many newline
+    void $ string "Buchung" >> anyLineP
+    void $ many newline
+    cardnumber <- toText <$> manyTill printChar newline
+    return $ Payment (Mastercard $ MastercardPaymentMethod cardnumber) total
 
-paymentMethodP :: Parser PaymentMethod
-paymentMethodP =
-  (string "TWINT" >> return TWINT)
-    <|> (string "Mastercard" >> return Mastercard)
-    <|> (string "Supercash" >> return Supercash)
-    <|> (string "Superpunkte" >> return Superpunkte)
+newtype MastercardPaymentMethod = MastercardPaymentMethod
+  { -- | An obscured card number that appears in the receipt, e.g.,
+    -- 'XXXXXX******1144'
+    mastercardPaymentMethodObscuredCardNumber :: Text
+  }
+
+data PaymentMethod
+  = TWINT
+  | Mastercard MastercardPaymentMethod
+  | Supercash
+  | Superpunkte
 
 headerLineP :: Parser ()
 headerLineP = void $ string "Artikel Menge Preis Aktion Total Zusatz\n"
