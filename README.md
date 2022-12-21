@@ -32,15 +32,12 @@ This section is intended for developers.
 
 ### Dev environment setup
 
+This project requires [Lefthook](https://github.com/evilmartians/lefthook) and
+[Commitlint](https://github.com/conventional-changelog/commitlint).
+
 #### Install Git hook tools
 
-1. Set up yarn packages:
-
-   ```shell
-   yarn install
-   ```
-
-2. Install lefthook:
+1. Install lefthook:
 
    ```shell
    lefthook install
