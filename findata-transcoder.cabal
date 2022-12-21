@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.0.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -54,8 +54,7 @@ library
       Transcoder.Degiro.IsinData
       Transcoder.Degiro.Portfolio
       Transcoder.EasyRide
-      Transcoder.Finpension.PortfolioTotals
-      Transcoder.Finpension.Transactions
+      Transcoder.Finpension
       Transcoder.Galaxus
       Transcoder.GPayslip
       Transcoder.GPayslip.Data
@@ -169,8 +168,7 @@ test-suite findata-transcoder-test
       Test.Transcoder.Degiro.Csv
       Test.Transcoder.Degiro.Portfolio
       Test.Transcoder.EasyRide
-      Test.Transcoder.Finpension.PortfolioTotals
-      Test.Transcoder.Finpension.Transactions
+      Test.Transcoder.Finpension
       Test.Transcoder.Galaxus
       Test.Transcoder.GPayslip
       Test.Transcoder.GPayslip.PdfToText

@@ -37,8 +37,7 @@ import qualified Transcoder.Degiro.Portfolio as DegiroPortfolio (
   csvStatementToLedger,
  )
 import qualified Transcoder.EasyRide as EasyRide
-import qualified Transcoder.Finpension.PortfolioTotals as Finpension
-import qualified Transcoder.Finpension.Transactions as Finpension
+import qualified Transcoder.Finpension as Finpension
 import Transcoder.GPayslip (payslipTextToLedger)
 import qualified Transcoder.Galaxus as Galaxus
 import Transcoder.Ib as Ib (parseActivityCsv)
@@ -153,17 +152,12 @@ easyRideCommand =
     (pure $ parseBank $ EasyRide.receiptToLedger . decodeUtf8)
     "Parses a text dump from an EasyRide receipt and outputs Ledger data."
 
-finpensionTransactionsCommand :: ParserInfo (IO ())
-finpensionTransactionsCommand = bankCommand (pure parse) "Parses Finpension's transaction CSV and outputs Ledger data."
- where
-  parse = parseBank $ fmap ledgerTrsToReport . Finpension.transactionsToLedger . CsvFile
-
-finpensionPortfolioTotalCommand :: ParserInfo (IO ())
-finpensionPortfolioTotalCommand = bankCommand (pure parse) "Parses Finpension's portoflio total values and outputs Ledger data."
+finpensionPortfoliosTotalCommand :: ParserInfo (IO ())
+finpensionPortfoliosTotalCommand = bankCommand (pure parse) "Parses Finpension's portoflio total and outputs a Ledger transaction."
  where
   parse = do
     today <- utctDay <$> getCurrentTime
-    parseBank $ Finpension.portfolioTotalsToStatusTransaction today . decodeUtf8
+    parseBank $ Finpension.parsePortfoliosTotal today . decodeUtf8
 
 galaxusCommand :: ParserInfo (IO ())
 galaxusCommand =
@@ -230,8 +224,7 @@ commands =
         <> command "parse-degiro-account" degiroAccountCommand
         <> command "parse-degiro-portfolio" degiroPortfolioCommand
         <> command "parse-easy-ride" easyRideCommand
-        <> command "parse-finpension-transactions" finpensionTransactionsCommand
-        <> command "parse-finpension-portfolio-total" finpensionPortfolioTotalCommand
+        <> command "parse-finpension" finpensionPortfoliosTotalCommand
         <> command "parse-galaxus" galaxusCommand
         <> command "parse-gpayslip" gpayslipCommand
         <> command "parse-ib-activity" ibActivityCommand
