@@ -71,7 +71,7 @@ galaxusCashP = Cash chf <$> (noRappenP <|> rappenP)
 itemP :: Parser Item
 itemP = do
   count <- fromInteger <$> (MP.decimal <* MP.single 'x')
-  (description, itemCost) <- MP.manyTill_ MP.anySingle galaxusCashP <* MP.eol
+  (description, itemCost) <- MP.manyTill_ MP.anySingle galaxusCashP <* (MP.many MP.separatorChar >> MP.eol)
   void $ MP.manyTill MP.anyLineP MP.eol
   return $ Item count (T.strip $ toText description) itemCost
 

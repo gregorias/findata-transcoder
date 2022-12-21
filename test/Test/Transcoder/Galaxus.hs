@@ -13,7 +13,7 @@ tests :: Hspec.SpecWith ()
 tests = do
   describe "Transcoder.Galaxus" $ do
     describe "parseReceipt" $ do
-      it "converts to a transaction" $ do
+      it "converts a receipt to a transaction" $ do
         receipt <- readFileText "test/data/galaxus0.txt"
         let expectedTr =
               [transactionQQ|
@@ -23,4 +23,14 @@ tests = do
                   ! Todo                  31.40 CHF ; Onyx Eingabestift Boox Pen Plus Blau
                   ! Todo                   9.00 CHF ; Mindermengenzuschlag
                   |]
+        Galaxus.parseReceipt receipt `shouldBe` Right expectedTr
+
+      it "converts a receipt with carriage returns to a transaction" $ do
+        receipt <- readFileText "test/data/galaxus1.txt"
+        let expectedTr =
+              [transactionQQ|
+                2022/12/16 * Digitec/Galaxus
+                  ! Assets:Liquid:BCGE CC  -202.00 CHF
+                  ! Todo                     43.00 CHF ; Miocar Motorrad Abdeckung L
+                  ! Todo                    159.00 CHF ; Swaytronic All in One Jump Starter 2.0 mit Autobahnvignette 2023 (18000 mAh, 600 A)|]
         Galaxus.parseReceipt receipt `shouldBe` Right expectedTr
