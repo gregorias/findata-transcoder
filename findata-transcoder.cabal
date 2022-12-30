@@ -191,6 +191,7 @@ test-suite findata-transcoder-test
       Decimal
     , HUnit
     , base >=4.7 && <5
+    , bytestring
     , cassava
     , containers
     , findata-transcoder

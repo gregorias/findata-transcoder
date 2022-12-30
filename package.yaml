@@ -134,6 +134,7 @@ tests:
     - -main-is Spec
     dependencies:
     - Decimal
+    - bytestring
     - cassava
     - containers
     - hledger-lib

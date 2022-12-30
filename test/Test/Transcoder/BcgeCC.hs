@@ -2,12 +2,14 @@ module Test.Transcoder.BcgeCC (
   tests,
 ) where
 
+import qualified Data.ByteString as BS
+import Data.Text.Encoding (decodeUtf8)
 import Hledger.Read.TestUtils (transactionQQ)
-import Relude
 import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
 import Test.Hspec.Expectations.Pretty (shouldBe)
 import qualified Transcoder.BcgeCC as BcgeCC
+import Prelude
 
 tests :: Hspec.SpecWith ()
 tests = do
@@ -19,7 +21,7 @@ tests = do
 
 convertsBcgeCCRechnungTest01 :: IO ()
 convertsBcgeCCRechnungTest01 = do
-  rechnung <- readFileText "test/data/bcgecc-01.txt"
+  rechnung <- decodeUtf8 <$> BS.readFile "test/data/bcgecc-01.txt"
   let expectedTrs =
         [ [transactionQQ|
           2021/03/01 * LASTPASS.COM
@@ -63,7 +65,7 @@ convertsBcgeCCRechnungTest01 = do
 
 convertsBcgeCCRechnungTest02 :: IO ()
 convertsBcgeCCRechnungTest02 = do
-  rechnung <- readFileText "test/data/bcgecc-02.txt"
+  rechnung <- decodeUtf8 <$> BS.readFile "test/data/bcgecc-02.txt"
   let expectedTrs =
         [ [transactionQQ|
           2022/01/23 * UBER *EATS, HELP.UBER.COM
@@ -82,7 +84,7 @@ convertsBcgeCCRechnungTest02 = do
 
 convertsBcgeCCRechnungTest03 :: IO ()
 convertsBcgeCCRechnungTest03 = do
-  rechnung <- readFileText "test/data/bcgecc-03.txt"
+  rechnung <- decodeUtf8 <$> BS.readFile "test/data/bcgecc-03.txt"
   let expectedTrs =
         [ [transactionQQ|
           2022/07/24 * APPLE.COM/CHDE, 0844-000-079

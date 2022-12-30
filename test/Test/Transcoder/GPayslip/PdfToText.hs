@@ -1,12 +1,15 @@
 module Test.Transcoder.GPayslip.PdfToText (tests) where
 
+import qualified Data.ByteString as BS
+import qualified Data.Text as T
+import Data.Text.Encoding (decodeUtf8)
 import Data.Time (fromGregorian)
-import Relude
 import Test.Hspec (Spec, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe)
 import Text.Megaparsec.Extra (parsePretty)
 import Transcoder.GPayslip (Deductions (..), Payslip (Payslip))
 import qualified Transcoder.GPayslip.PdfToText as PdfToText
+import Prelude
 
 tests :: Spec
 tests = do
@@ -15,8 +18,8 @@ tests = do
       describe "Parses valid payslips from 'pdftotext -layout'" $ do
         it "Test 0" $ do
           let source = "test/data/gpayslip-pdftotext-layout-0.txt"
-          payslipTxt <- readFileText source
-          let payslip = parsePretty PdfToText.payslipP (toText source) payslipTxt
+          payslipTxt <- decodeUtf8 <$> BS.readFile source
+          let payslip = parsePretty PdfToText.payslipP (T.pack source) payslipTxt
           payslip
             `shouldBe` Right
               ( Payslip
@@ -38,8 +41,8 @@ tests = do
               )
         it "Test 1" $ do
           let source = "test/data/gpayslip-pdftotext-layout-1.txt"
-          payslipTxt <- readFileText source
-          let payslip = parsePretty PdfToText.payslipP (toText source) payslipTxt
+          payslipTxt <- decodeUtf8 <$> BS.readFile source
+          let payslip = parsePretty PdfToText.payslipP (T.pack source) payslipTxt
           payslip
             `shouldBe` Right
               ( Payslip

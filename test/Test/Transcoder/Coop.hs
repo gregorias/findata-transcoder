@@ -2,29 +2,34 @@ module Test.Transcoder.Coop (
   tests,
 ) where
 
+import Data.ByteString (fromStrict)
+import qualified Data.ByteString as BS
+import Data.Text (Text)
+import qualified Data.Text as T
+import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Hledger.Read.TestUtils (parseTransactionUnsafe)
 import NeatInterpolation (trimming)
-import Relude
 import Test.HUnit (assertFailure)
 import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
 import Test.Hspec.Expectations.Pretty (shouldBe)
 import qualified Transcoder.Coop as Coop
 import qualified Transcoder.Coop.Config as Coop
+import Prelude
 
 readCoopConfig :: Text -> IO Coop.Config
 readCoopConfig json =
   either
-    (\e -> assertFailure $ "Could not decode the config. " <> toString e)
+    (\e -> assertFailure $ "Could not decode the config. " <> T.unpack e)
     return
-    (Coop.decodeConfig $ encodeUtf8 json)
+    (Coop.decodeConfig . fromStrict $ encodeUtf8 json)
 
 tests :: Hspec.SpecWith ()
 tests = do
   describe "Transcoder.Coop" $ do
     describe "receiptToLedger Coop.emptyConfig" $ do
       it "convertsToATransaction" $ do
-        coop <- readFileText "test/data/coop.txt"
+        coop <- decodeUtf8 <$> BS.readFile "test/data/coop.txt"
         let expectedTr =
               parseTransactionUnsafe
                 [trimming|
@@ -35,7 +40,7 @@ tests = do
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
       it "correctlyAssignsCategories" $ do
-        coop <- readFileText "test/data/coop-cat.txt"
+        coop <- decodeUtf8 <$> BS.readFile "test/data/coop-cat.txt"
         let expectedTr =
               parseTransactionUnsafe
                 [trimming|
@@ -49,7 +54,7 @@ tests = do
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
       it "correctlyHandlesARabatt" $ do
-        coop <- readFileText "test/data/coop-rabatt.txt"
+        coop <- decodeUtf8 <$> BS.readFile "test/data/coop-rabatt.txt"
         let expectedTr =
               parseTransactionUnsafe
                 [trimming|
@@ -61,7 +66,7 @@ tests = do
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
       it "correctlyCountsAUnnotatedRabatt" $ do
-        coop <- readFileText "test/data/coop-spargel-rabatt.txt"
+        coop <- decodeUtf8 <$> BS.readFile "test/data/coop-spargel-rabatt.txt"
         let expectedTr =
               parseTransactionUnsafe
                 [trimming|
@@ -72,7 +77,7 @@ tests = do
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
       it "correctlyRecognizesMyCC" $ do
-        coop <- readFileText "test/data/coop-card.txt"
+        coop <- decodeUtf8 <$> BS.readFile "test/data/coop-card.txt"
         let expectedTr =
               parseTransactionUnsafe
                 [trimming|
@@ -82,7 +87,7 @@ tests = do
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
       it "correctly handles multiple payment methods with supercash" $ do
-        coop <- readFileText "test/data/coop-supercash.txt"
+        coop <- decodeUtf8 <$> BS.readFile "test/data/coop-supercash.txt"
         let expectedTr =
               parseTransactionUnsafe
                 [trimming|
@@ -93,7 +98,7 @@ tests = do
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
       it "correctly handles multiple payment methods with super points" $ do
-        coop <- readFileText "test/data/coop-superpunkte.txt"
+        coop <- decodeUtf8 <$> BS.readFile "test/data/coop-superpunkte.txt"
         let expectedTr =
               parseTransactionUnsafe
                 [trimming|
@@ -113,7 +118,7 @@ tests = do
                       ]
                     }
                 |]
-        coop <- readFileText "test/data/coop-debt.txt"
+        coop <- decodeUtf8 <$> BS.readFile "test/data/coop-debt.txt"
         let expectedTr =
               parseTransactionUnsafe
                 [trimming|
@@ -131,7 +136,7 @@ tests = do
                     { "paymentCards": [
                       {"lastFourDigits": "1123",
                        "account": "Assets:Liquid:Foo"}]}|]
-        coop <- readFileText "test/data/coop-bcge-debit.txt"
+        coop <- decodeUtf8 <$> BS.readFile "test/data/coop-bcge-debit.txt"
         let expectedTr =
               parseTransactionUnsafe
                 [trimming|

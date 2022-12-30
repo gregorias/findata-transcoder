@@ -2,19 +2,21 @@ module Test.Transcoder.Galaxus (
   tests,
 ) where
 
+import qualified Data.ByteString as BS
+import Data.Text.Encoding (decodeUtf8)
 import Hledger.Read.TestUtils (transactionQQ)
-import Relude
 import Test.Hspec (describe, it)
 import qualified Test.Hspec as Hspec
 import Test.Hspec.Expectations.Pretty (shouldBe)
 import qualified Transcoder.Galaxus as Galaxus
+import Prelude
 
 tests :: Hspec.SpecWith ()
 tests = do
   describe "Transcoder.Galaxus" $ do
     describe "parseReceipt" $ do
       it "converts a receipt to a transaction" $ do
-        receipt <- readFileText "test/data/galaxus0.txt"
+        receipt <- decodeUtf8 <$> BS.readFile "test/data/galaxus0.txt"
         let expectedTr =
               [transactionQQ|
                 2022/02/09 * Digitec/Galaxus
@@ -26,7 +28,7 @@ tests = do
         Galaxus.parseReceipt receipt `shouldBe` Right expectedTr
 
       it "converts a receipt with carriage returns to a transaction" $ do
-        receipt <- readFileText "test/data/galaxus1.txt"
+        receipt <- decodeUtf8 <$> BS.readFile "test/data/galaxus1.txt"
         let expectedTr =
               [transactionQQ|
                 2022/12/16 * Digitec/Galaxus
