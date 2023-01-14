@@ -48,7 +48,7 @@ type Parser = Parsec Void Text
 
 dateLineP :: Parser Day
 dateLineP = label "date line" $ do
-  void $ string "Zahlungsbeleg – " <|> string "Rechnungsdatum: "
+  void $ string "Zahlungsbeleg – " <|> string "Rechnungsdatum: " <|> "Invoicing date: "
   day <- decimal
   void $ char ' '
   month <- monthP
@@ -59,7 +59,7 @@ dateLineP = label "date line" $ do
 
 totalLineP :: Parser Decimal
 totalLineP = label "total bill line" $ do
-  void $ string "Verrechneter Gesamtbetrag"
+  void $ string "Verrechneter Gesamtbetrag" <|> string "Total amount charged"
   void $ manyTill_ anySingle (string "CHF ")
   decimalP (DecimalFormat (ChunkSep '\'') (Just TwoDigitDecimalFraction))
 

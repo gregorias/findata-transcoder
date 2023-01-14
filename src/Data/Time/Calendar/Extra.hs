@@ -17,6 +17,7 @@ monthAssocList =
   [ ("January", 1)
   , ("Januar", 1)
   , ("Jan.", 1)
+  , ("Jan", 1)
   , ("February", 2)
   , ("Februar", 2)
   , ("Feb.", 2)

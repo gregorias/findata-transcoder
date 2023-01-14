@@ -36,3 +36,13 @@ tests = do
                     Expenses:Transport        10.50 CHF
                     |]
         EasyRide.receiptToLedger receipt `shouldBe` Right expectedTr
+      it "converts a transaction (03)" $ do
+        receipt <- decodeUtf8 <$> BS.readFile "test/data/easyride-03.txt"
+        let expectedTr =
+              parseTransactionUnsafe
+                [trimming|
+                  2023/01/01 * EasyRide
+                    ! Assets:Liquid:BCGE CC  -5.20 CHF
+                    Expenses:Transport        5.20 CHF
+                    |]
+        EasyRide.receiptToLedger receipt `shouldBe` Right expectedTr
