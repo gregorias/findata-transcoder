@@ -86,7 +86,7 @@ bcgeCommand = bankCommand (parseBcge <$> hintsFileOption) "Parses BCGE's CSV fil
 
   parseBcgeHints :: FilePath -> IO (Maybe BcgeHint.Config)
   parseBcgeHints hintsFilePath = do
-    contents <- readFile hintsFilePath
+    contents <- decodeUtf8 <$> readFileLBS hintsFilePath
     return $ MP.parseMaybe BcgeHint.configParser contents
 
   parseBcge :: Maybe FilePath -> IO ()

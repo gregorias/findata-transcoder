@@ -4,7 +4,7 @@ module Transcoder.Coop.Receipt (
   Entry (..),
   Payment (..),
   PaymentMethod (..),
-  MastercardPaymentMethod (..),
+  CreditCardPaymentMethod (..),
   Rabatt (..),
   receiptP,
 ) where
@@ -103,7 +103,7 @@ data Payment = Payment
 
 paymentP :: Parser Payment
 paymentP = do
-  supercashP <|> mastercardP
+  supercashP <|> creditCardP
     <|> ( do
             method <- (string "TWINT" >> return TWINT) <|> (string "Superpunkte" >> return Superpunkte)
             total <- hspace1 >> cashP
@@ -114,24 +114,24 @@ paymentP = do
   supercashP = do
     Payment Supercash <$> (string "Supercash" >> hspace1 >> decimalP defaultDecimalFormat >> hspace1 >> decimalP (cashDecimalFormat NoChunkSep) >> hspace1 >> cashP)
 
-  mastercardP :: Parser Payment
-  mastercardP = do
-    total <- (string "Mastercard" >> hspace1 >> cashP) <* newline
+  creditCardP :: Parser Payment
+  creditCardP = do
+    total <- ((string "Mastercard" <|> string "VISA") >> hspace1 >> cashP) <* newline
     void $ many newline
     void $ string "Buchung" >> anyLineP
     void $ many newline
     cardnumber <- toText <$> manyTill printChar newline
-    return $ Payment (Mastercard $ MastercardPaymentMethod cardnumber) total
+    return $ Payment (CreditCard $ CreditCardPaymentMethod cardnumber) total
 
-newtype MastercardPaymentMethod = MastercardPaymentMethod
+newtype CreditCardPaymentMethod = CreditCardPaymentMethod
   { -- | An obscured card number that appears in the receipt, e.g.,
     -- 'XXXXXX******1144'
-    mastercardPaymentMethodObscuredCardNumber :: Text
+    creditCardPaymentMethodObscuredCardNumber :: Text
   }
 
 data PaymentMethod
   = TWINT
-  | Mastercard MastercardPaymentMethod
+  | CreditCard CreditCardPaymentMethod
   | Supercash
   | Superpunkte
 

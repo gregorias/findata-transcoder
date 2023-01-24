@@ -27,8 +27,8 @@ import Relude.Extra (groupBy)
 import Text.Megaparsec.Extra (parsePretty)
 import Transcoder.Coop.Config (Config (..), PaymentCard, assignAccount, getDebtors)
 import Transcoder.Coop.Receipt (
+  CreditCardPaymentMethod (CreditCardPaymentMethod),
   Entry (..),
-  MastercardPaymentMethod (MastercardPaymentMethod),
   Payment (..),
   PaymentMethod (..),
   Rabatt (..),
@@ -43,7 +43,7 @@ paymentMethodToAccount :: [PaymentCard] -> PaymentMethod -> Text
 paymentMethodToAccount _ TWINT = bcgeAccount
 paymentMethodToAccount
   cards
-  (Mastercard (MastercardPaymentMethod accountNumber)) = fromMaybe bcgeCCAccount targetAccount
+  (CreditCard (CreditCardPaymentMethod accountNumber)) = fromMaybe bcgeCCAccount targetAccount
    where
     targetAccount = assignAccount cards accountNumber
 paymentMethodToAccount _ Supercash = Wallet.expensesOther
@@ -110,7 +110,7 @@ paymentToPosting cards Payment{paymentMethod = method, paymentTotal = total} =
   postingStatus Supercash = Unmarked
   postingStatus Superpunkte = Unmarked
   postingStatus TWINT = Pending
-  postingStatus (Mastercard _) = Pending
+  postingStatus (CreditCard _) = Pending
 
 -- | Splits a single receipt entry into an expense category and optional debtor accounts.
 entryToPostings :: Config -> Entry -> ((AccountName, Decimal), [(AccountName, Decimal)])
