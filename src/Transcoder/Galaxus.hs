@@ -63,15 +63,16 @@ instance ToTransaction Receipt where
 type Parser = MP.Parsec Void Text
 
 galaxusCashP :: Parser Cash
-galaxusCashP = Cash chf <$> (noRappenP <|> rappenP)
+galaxusCashP = Cash chf <$> MP.try ((noRappenP <|> rappenP) <* itemEnd)
  where
   noRappenP = MP.try $ MP.decimal <* MP.string ".–"
   rappenP = MP.try $ decimalP (cashDecimalFormat NoChunkSep)
+  itemEnd = MP.many MP.separatorChar >> MP.eol
 
 itemP :: Parser Item
 itemP = do
   count <- fromInteger <$> (MP.decimal <* MP.single 'x')
-  (description, itemCost) <- MP.manyTill_ MP.anySingle galaxusCashP <* (MP.many MP.separatorChar >> MP.eol)
+  (description, itemCost) <- MP.manyTill_ MP.anySingle galaxusCashP
   void $ MP.manyTill MP.anyLineP MP.eol
   return $ Item count (T.strip $ toText description) itemCost
 

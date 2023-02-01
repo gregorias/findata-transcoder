@@ -32,7 +32,8 @@ tests = do
         let expectedTr =
               [transactionQQ|
                 2022/12/16 * Digitec/Galaxus
-                  ! Assets:Liquid:BCGE CC  -202.00 CHF
+                  ! Assets:Liquid:BCGE CC  -226.00 CHF
                   ! Todo                     43.00 CHF ; Miocar Motorrad Abdeckung L
-                  ! Todo                    159.00 CHF ; Swaytronic All in One Jump Starter 2.0 mit Autobahnvignette 2023 (18000 mAh, 600 A)|]
+                  ! Todo                    159.00 CHF ; Swaytronic All in One Jump Starter 2.0 mit Autobahnvignette 2023 (18000 mAh, 600 A)
+                  ! Todo                     24.00 CHF ; Delock USB-C Stecker auf USB-A Buchse Adapter (0.15 m)|]
         Galaxus.parseReceipt receipt `shouldBe` Right expectedTr
