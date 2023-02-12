@@ -89,6 +89,7 @@ zahlungsmittelP = do
   void $ MP.string "Zahlungsmittel" >> MP.eol
   (MP.string "TWINT" >> return bcgeAccount)
     <|> (MP.string "MasterCard" >> return bcgeCCAccount)
+    <|> (MP.string "PayPal" >> return bcgeCCAccount)
 
 receiptP :: Parser Receipt
 receiptP = do
