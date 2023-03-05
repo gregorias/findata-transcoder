@@ -3,7 +3,13 @@ pre-commit:
     "format-changed-hs-files.bash":
       runner: bash
   commands:
+    markdownlint:
+      tags: documentation style
+      files: git diff --name-only --cached --diff-filter=AM
+      glob: '*.md'
+      run: markdownlint {files}
     unit-tests:
+      tags: test
       run: "stack test --ghc-options '-Werror'"
 commit-msg:
   commands:

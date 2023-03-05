@@ -18,10 +18,17 @@ stack install
 
 ### \[Optional\] Shell completion
 
-To provide [fish][fish] shell completion run
+To provide [fish] shell completion run
 
 ```sh
-findata-transcoder --fish-completion-script (which findata-transcoder) > ~/.config/fish/completions/findata-transcoder.fish
+findata-transcoder --fish-completion-script (which findata-transcoder) \
+  > ~/.config/fish/completions/findata-transcoder.fish
 ```
 
-For other shells, check out [optparse-applicative's documentation](https://hackage.haskell.org/package/optparse-applicative#:~:text=revoir%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20Say%20goodbye-,Bash%2C%20Zsh%2C%20and%20Fish%20Completions,-optparse%2Dapplicative%20has) and adapt accordingly. findata-transcoder uses [optparse-applicative][optparse-applicative] as the CLI framework.
+For other shells, check out [optparse-applicative's
+documentation](https://hackage.haskell.org/package/optparse-applicative#:~:text=revoir%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20Say%20goodbye-,Bash%2C%20Zsh%2C%20and%20Fish%20Completions,-optparse%2Dapplicative%20has)
+and adapt accordingly. findata-transcoder uses
+[optparse-applicative] as the CLI framework.
+
+[fish]: https://fishshell.com
+[optparse-applicative]: https://github.com/pcapriotti/optparse-applicative
