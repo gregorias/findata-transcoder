@@ -23,6 +23,8 @@ monthAssocList =
   , ("Feb.", 2)
   , ("März", 3)
   , ("March", 3)
+  , ("Mar", 3)
+  , ("Mar.", 3)
   , ("April", 4)
   , ("Apr.", 4)
   , ("Mai", 5)
