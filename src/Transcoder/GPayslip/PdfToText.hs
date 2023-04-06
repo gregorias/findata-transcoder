@@ -1,17 +1,30 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 -- | This module parses a pdftotext text dump of a Google Payslip.
 module Transcoder.GPayslip.PdfToText (
-  payslipP,
+  -- * Data types
   Payslip (..),
-  Deductions (..),
+  Item (..),
+  PayslipSummary (..),
+  Earnings (..),
+  NotionalPay (..),
+  StatutoryDeductions (..),
+  OtherPaymentsAndDeductions (..),
+  PaymentDetails (..),
+
+  -- * The parser
+  payslipP,
 ) where
 
+import Data.Char
 import Data.Decimal (Decimal)
-import Data.Time (Day)
-import Data.Time.Extra (dayP)
+import Data.Time (Day, fromGregorian)
+import Data.Time.Calendar.Extra
 import Relude
-import Text.Megaparsec (Parsec, choice, skipMany, skipManyTill)
-import Text.Megaparsec.Char (newline, space, space1, string)
+import Text.Megaparsec (Parsec, anySingle, label, satisfy, single, skipManyTill, try)
+import Text.Megaparsec.Char (char, newline, space1, string)
 import Text.Megaparsec.Char.Extra (anyLineP)
+import Text.Megaparsec.Char.Lexer
 import Transcoder.Data.MyDecimal (
   ChunkSepFormat (..),
   DecimalFormat (..),
@@ -19,129 +32,295 @@ import Transcoder.Data.MyDecimal (
   decimalP,
  )
 
-data Payslip = Payslip
-  { payslipDate :: !Day
-  , payslipMonthlySalaryTotal :: !Decimal
-  , payslipDeductions :: !Deductions
-  , payslipTotal :: !Decimal
+-- | A single item (row) in a payslip.
+data Item = Item
+  { itemPriorPeriod :: !Decimal
+  , itemCurrent :: !Decimal
   }
   deriving stock (Show, Eq)
 
-data Deductions = Deductions
-  { deductionsSwissSocialSecurity :: !Decimal
-  , deductionsUnemploymentInsurance :: !Decimal
-  , deductionsPensionFund :: !(Maybe Decimal)
-  , deductionsTaxAtSource :: !Decimal
-  , deductionsDeductionNetAmount :: !(Maybe Decimal)
-  , deductionsMssbCsWithholding :: !(Maybe Decimal)
-  , deductionsGgive :: !(Maybe Decimal)
-  , deductionsGcard :: !(Maybe Decimal)
-  , deductionsTotal :: !Decimal
+-- | The Payslip data as represented on the PDF.
+data Payslip = Payslip
+  { -- | The day of payment.
+    payslipDay :: !Day
+  , payslipSummary :: !PayslipSummary
+  , payslipEarnings :: !Earnings
+  , payslipNotionalPay :: !NotionalPay
+  , payslipStatutoryDeductions :: !StatutoryDeductions
+  , payslipOtherPaymentsAndDeductions :: !OtherPaymentsAndDeductions
+  , payslipNetPay :: !Decimal
+  , payslipPaymentDetails :: !PaymentDetails
+  }
+  deriving stock (Show, Eq)
+
+-- | The summary equation of the payslip.
+data PayslipSummary = PayslipSummary
+  { payslipSummaryEarnings :: !Decimal
+  , payslipSummaryStatutoryDeductions :: !Decimal
+  , payslipSummaryOtherPaymentsAndDeductions :: !Decimal
+  , payslipSummaryNetPay :: !Decimal
+  }
+  deriving stock (Show, Eq)
+
+-- | All items under the earnings section.
+data Earnings = Earnings
+  { earningsMonthlySalary :: !Item
+  , earningsErHealthInsurance :: !Item
+  , earningsAnnualBonusGross :: !(Maybe Item)
+  , earningsBonusGross :: !(Maybe Item)
+  , earningsPeerBonus :: !(Maybe Item)
+  , earningsEducationSubsidyGross :: !(Maybe Item)
+  , earningsMealAllowanceGrossUp :: !Item
+  , earningsTotal :: !Item
+  }
+  deriving stock (Show, Eq)
+
+-- | All notional pay items.
+data NotionalPay = NotionalPay
+  { notionalPayMealAllowanceNet :: !Item
+  , notionalPayTotal :: !Item
+  }
+  deriving stock (Show, Eq)
+
+-- | All statutory deductions.
+data StatutoryDeductions = StatutoryDeductions
+  { statutoryDeductionsWht :: !Item
+  , statutoryDeductionsSwissSocialSecurity :: !Item
+  , statutoryDeductionsUnemploymentInsurance :: !Item
+  , statutoryDeductionsTotal :: !Item
+  }
+  deriving stock (Show, Eq)
+
+-- | All items under the "Other Payments and Deductions" section.
+data OtherPaymentsAndDeductions = OtherPaymentsAndDeductions
+  { otherPaymentsAndDeductionsPensionContributionEe :: !Item
+  , otherPaymentsAndDeductionsGcardRepayment :: !(Maybe Item)
+  , otherPaymentsAndDeductionsGgiveDeductions :: !(Maybe Item)
+  , otherPaymentsAndDeductionsTotal :: !Item
+  }
+  deriving stock (Show, Eq)
+
+-- | Payment details provided on the payslip.
+data PaymentDetails = PaymentDetails
+  { paymentDetailsBankAccountIban :: !Text
+  , paymentDetailsBankName :: !Text
+  , paymentDetailsAmount :: !Decimal
   }
   deriving stock (Show, Eq)
 
 type Parser = Parsec Void Text
 
+-- Parses a decimal amount, e.g., "1,234.56".
 cashAmountP :: Parser Decimal
-cashAmountP = decimalP (DecimalFormat (ChunkSep '\'') (Just TwoDigitDecimalFraction))
+cashAmountP = decimalP (DecimalFormat (ChunkSep ',') (Just TwoDigitDecimalFraction))
 
-dateLineP :: Parser Day
-dateLineP = do
-  void $ string "Date of payment"
-  space
-  dayP "%d.%m.%Y" <* newline
+-- Parses a decimal amount with CHF at the end, e.g., "1,234.56 CHF".
+cashAmountWithChfP :: Parser Decimal
+cashAmountWithChfP = cashAmountP <* (single ' ' >> string "CHF")
 
-nameAndAmountLineP :: Text -> Parser Decimal
-nameAndAmountLineP name = do
+itemP ::
+  -- | The name of the item
+  Text ->
+  Parser Item
+itemP name = do
   void $ string name
   space1
-  amount <- cashAmountP
-  void newline
-  return amount
-
--- | Parses a payslip line that in addition to an amount contains the reference and rate.
--- Returns the amount.
-nameReferenceRateAmountLineP :: Parser a -> Parser Decimal
-nameReferenceRateAmountLineP nameP = do
-  void nameP
+  priorPeriod <- cashAmountP
   space1
-  _reference <- cashAmountP
-  space1
-  _rate <- decimalP (DecimalFormat NoChunkSep (Just OptionalUnlimitedDecimalFraction))
-  space1
-  amount <- cashAmountP
+  current <- cashAmountP
   void newline
-  return amount
+  return $ Item priorPeriod current
 
-subTotalP :: Parser Decimal
-subTotalP = nameAndAmountLineP "Total"
+-- | Parses a payslip date, e.g., "24 March 2023".
+dateP :: Parser Day
+dateP = label "date" $ do
+  day <- decimal
+  void $ char ' '
+  month <- monthP
+  void $ char ' '
+  year <- decimal
+  return $ fromGregorian year month day
 
-salaryP :: Parser Decimal
-salaryP = do
-  void $ string "SALARY ELEMENTS" >> anyLineP
-  skipManyTill anyLineP subTotalP
+-- | Parses the payslip's header and extracts the date of payment.
+payslipHeaderP :: Parser Day
+payslipHeaderP = label "payslip header" $ do
+  void $ skipManyTill anySingle (string "Date of payment: ")
+  dateP <* newline
 
-unemploymentInsuranceP :: Parser Decimal
-unemploymentInsuranceP = do
-  contribution0 <- nameReferenceRateAmountLineP unemploymentInsuranceNameP
-  maybeContribution1 <- optional $ do
-    void $ optional newline
-    nameReferenceRateAmountLineP unemploymentInsuranceNameP
-  return $ contribution0 + fromMaybe 0 maybeContribution1
- where
-  unemploymentInsuranceNameP = do
-    choice
-      [ string "Unemployment Insurance compl."
-      , string "Unemployment Insurance"
-      ]
-
-taxAtSourceP :: Parser Decimal
-taxAtSourceP = do
-  tax <- some taxLineP
-  return $ sum tax
- where
-  taxLineP = nameReferenceRateAmountLineP (string "Tax at Source")
-
-deductionsP :: Parser Deductions
-deductionsP = do
-  void $ string "DEDUCTIONS" >> anyLineP
-  void newline
-  ss <- nameReferenceRateAmountLineP (string "Swiss Social Security (AHV/IV/EO)")
-  unemploymentInsurance <- unemploymentInsuranceP
-  pensionFund <- optional $ nameAndAmountLineP "Pension Fund"
-  taxAtSource <- taxAtSourceP
-  deductionNetAmount <- optional $ nameAndAmountLineP "Deduction Net Amount"
-  mssbCsWithholding <- optional $ nameAndAmountLineP "MSSB/CS Withholding"
-  ggive <- optional $ nameAndAmountLineP "G Give charitable donation"
-  gcard <- optional $ nameAndAmountLineP "Gcard Repayment"
-  void newline
-  total <- subTotalP
-  return $
-    Deductions
-      { deductionsSwissSocialSecurity = ss
-      , deductionsUnemploymentInsurance = unemploymentInsurance
-      , deductionsPensionFund = pensionFund
-      , deductionsTaxAtSource = taxAtSource
-      , deductionsDeductionNetAmount = deductionNetAmount
-      , deductionsMssbCsWithholding = mssbCsWithholding
-      , deductionsGgive = ggive
-      , deductionsGcard = gcard
-      , deductionsTotal = total
+payslipSummaryP :: Parser PayslipSummary
+payslipSummaryP = label "payslip summary" $ do
+  void $ try (space1 >> string "Payslip summary" >> newline)
+  replicateM_ 5 anyLineP
+  earnings <- void space1 *> cashAmountP <* space1
+  deductions <- cashAmountP <* space1
+  otherPaymentsAndDeductions <- cashAmountP <* space1
+  netPay <- cashAmountP <* newline
+  return
+    PayslipSummary
+      { payslipSummaryEarnings = earnings
+      , payslipSummaryStatutoryDeductions = deductions
+      , payslipSummaryOtherPaymentsAndDeductions = otherPaymentsAndDeductions
+      , payslipSummaryNetPay = netPay
       }
 
-netIncomeP :: Parser Decimal
-netIncomeP = do
-  void $ string "NET INCOME" >> newline
-  skipMany newline
-  string "TOTAL" >> space1 >> string "CHF" >> space1
-  cashAmountP <* newline
+earningsP :: Parser Earnings
+earningsP = label "earnings" $ do
+  void $ try (space1 >> string "Earnings" >> newline)
+  void $
+    string "Taxable Earnings"
+      >> space1
+      >> string "Earning type"
+      >> space1
+      >> string "Prior Period"
+      >> space1
+      >> string "Unit"
+      >> space1
+      >> string "Rate of Pay"
+      >> space1
+      >> string "Current"
+      >> newline
+  monthlySalary <- earningsItemP "Monthly Salary"
+  erHealthInsurance <- earningsItemP "ER Health Insurance"
+  annualBonusGross <- optional $ earningsItemP "Annual Bonus Gross"
+  bonusGross <- optional $ earningsItemP "Bonus Gross"
+  peerBonus <- optional $ earningsItemP "Peer Bonus"
+  educationSubsidyGross <- optional $ earningsItemP "Education Subsidy Gross"
+  mealAllowanceGrossUp <- earningsItemP "Meal Allowance Gross Up"
+  void $ itemP "Total Taxable Earnings"
+  total <- itemP "Total Earnings"
+  return $
+    Earnings
+      { earningsMonthlySalary = monthlySalary
+      , earningsErHealthInsurance = erHealthInsurance
+      , earningsAnnualBonusGross = annualBonusGross
+      , earningsBonusGross = bonusGross
+      , earningsPeerBonus = peerBonus
+      , earningsEducationSubsidyGross = educationSubsidyGross
+      , earningsMealAllowanceGrossUp = mealAllowanceGrossUp
+      , earningsTotal = total
+      }
+ where
+  earningsItemP ::
+    Text ->
+    Parser Item
+  earningsItemP name = do
+    void $ string name >> space1 >> string "Cash" >> space1
+    priorPeriod <- cashAmountP
+    space1
+    current <- cashAmountP
+    void newline
+    return $ Item priorPeriod current
 
+notionalPayP :: Parser NotionalPay
+notionalPayP = label "notional pay" $ do
+  void $ string "Notional Pay" >> space1 >> string "Earning type" >> space1 >> string "Prior period" >> anyLineP
+  mealAllowanceNet <- do
+    void $ string "Meal Allowance Net" >> space1 >> string "BIK" >> space1
+    priorPeriod <- cashAmountP <* space1
+    current <- cashAmountP <* newline
+    return Item{itemPriorPeriod = priorPeriod, itemCurrent = current}
+  total <- do
+    void $ string "Total Notional Pay" >> space1
+    priorPeriod <- cashAmountP <* space1
+    current <- cashAmountP <* newline
+    return Item{itemPriorPeriod = priorPeriod, itemCurrent = current}
+  return $
+    NotionalPay
+      { notionalPayMealAllowanceNet = mealAllowanceNet
+      , notionalPayTotal = total
+      }
+
+statutoryDeductionsP :: Parser StatutoryDeductions
+statutoryDeductionsP = label "statutory deductions" $ do
+  void $ try (space1 >> string "Statutory Deductions" >> newline)
+  void $
+    string "Statutory Deductions:"
+      >> space1
+      >> string "Prior Period"
+      >> space1
+      >> string "Current rate %"
+      >> space1
+      >> string "Current"
+      >> newline
+  wht <- itemWithCurrentRateP "WHT"
+  swissSocialSecurity <- itemWithCurrentRateP "Swiss Social Security"
+  unemploymentInsurance <- itemWithCurrentRateP "Unemployment Insurance"
+  total <- itemP "Total Statutory Deductions"
+  return $
+    StatutoryDeductions
+      { statutoryDeductionsWht = wht
+      , statutoryDeductionsSwissSocialSecurity = swissSocialSecurity
+      , statutoryDeductionsUnemploymentInsurance = unemploymentInsurance
+      , statutoryDeductionsTotal = total
+      }
+ where
+  itemWithCurrentRateP ::
+    -- \| The name of the item
+    Text ->
+    Parser Item
+  itemWithCurrentRateP name = do
+    void $ string name >> space1
+    priorPeriod <- cashAmountP <* space1
+    _currentRate <- cashAmountP <* space1
+    current <- cashAmountP <* newline
+    return $ Item priorPeriod current
+
+otherPaymentsAndDeductionsP :: Parser OtherPaymentsAndDeductions
+otherPaymentsAndDeductionsP = label "other payments and deductions" $ do
+  void $ try (space1 >> string "Other Payments and Deductions" >> newline)
+  void $
+    string "Other Payments and Deductions"
+      >> space1
+      >> string "Prior Period"
+      >> space1
+      >> string "Current"
+      >> newline
+  gGiveDeductions <- optional (itemP "gGive Deductions")
+  pensionContributionEe <- itemP "Pension Contribution EE"
+  gcardRepayment <- optional (itemP "Gcard Repayment")
+  total <- itemP "Total Other Payments and Deductions"
+  return $ OtherPaymentsAndDeductions pensionContributionEe gcardRepayment gGiveDeductions total
+
+netPayP :: Parser Decimal
+netPayP = label "net pay" $ do
+  void $ string "Net Pay"
+  space1
+  cashAmountWithChfP
+
+paymentDetailsP :: Parser PaymentDetails
+paymentDetailsP = label "payment details" $ do
+  void $ try (space1 >> string "Payment Details" >> newline)
+  void
+    ( string "Payment Method"
+        >> space1
+        >> string "Bank name"
+        >> space1
+        >> string "IBAN"
+        >> space1
+        >> string "Amount"
+        >> newline
+    )
+  void $ string "Payroll ACH" >> space1
+  bankName <- string "Banque Cantonale de Geneve"
+  void space1
+  -- Get a string of ascii characters representing IBAN without whitespace.
+  bankIban <- label "IBAN" $ toText <$> some (satisfy (\x -> isAscii x && not (isSpace x)))
+  amount <- label "cash amount" $ space1 >> cashAmountP
+  void newline
+  return $ PaymentDetails bankIban bankName amount
+
+{-# HLINT ignore "Use <$>" #-}
+
+-- | Parses a payslip PDF that was run through `pdftotext -layout`.
 payslipP :: Parser Payslip
 payslipP = do
-  day <- skipManyTill anyLineP dateLineP
-  skipMany newline
-  salary <- salaryP
-  skipMany newline
-  deductions <- deductionsP
-  netIncome <- skipManyTill anyLineP netIncomeP
-  return $ Payslip day salary deductions netIncome
+  day <- payslipHeaderP
+  summary <- payslipSummaryP
+  earnings <- earningsP
+  notionalPay <- notionalPayP
+  statutoryDeductions <- skipManyTill newline statutoryDeductionsP
+  otherPaymentsAndDeductions <- skipManyTill newline otherPaymentsAndDeductionsP
+  netPay <- skipManyTill newline netPayP
+  paymentDetails <- skipManyTill newline paymentDetailsP
+  void $ many anyLineP
+  return $ Payslip day summary earnings notionalPay statutoryDeductions otherPaymentsAndDeductions netPay paymentDetails

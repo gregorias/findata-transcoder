@@ -1,0 +1,60 @@
+                                                PAYSLIP / CONFIDENTIAL
+
+
+Employee Name: Doe John                                                   Google Switzerland GmbH
+Strasse 11                                                                Gustav-Gull-Platz 1
+0001 Zurich                                                               8004 Zurich
+Employee ID:        000000                                                Pay Period:           February 2023
+Tax Canton:         AA0000                                                Date of payment: 24 February 2023
+                                                             Payslip summary
+                                                 Statutory                         Other Payments and
+                 Earnings                                                                                               Net Pay
+                                                Deductions                             Deductions
+                    +                                                                                                      =
+                                                     -                                      +
+                 15,008.45                       2,662.40                                -968.15                        11,377.90
+
+
+                                                                 Earnings
+Taxable Earnings                      Earning type                     Prior Period       Unit            Rate of Pay                Current
+Monthly Salary                           Cash                                    0.00                                               14,461.55
+ER Health Insurance                      Cash                                    0.00                                                 375.00
+Education Subsidy Gross                  Cash                                    0.00                                                  49.00
+Meal Allowance Gross Up                  Cash                                  122.90                                                    0.00
+Total Taxable Earnings                                                         122.90                                               14,885.55
+Total Earnings                                                                 122.90                                               14,885.55
+Notional Pay                          Earning type                       Prior period     Unit            Rate of Pay                Current
+Meal Allowance Net                        BIK                                  322.50                                                    0.00
+Total Notional Pay                                                             322.50                                                    0.00
+
+                                                            Statutory Deductions
+Statutory Deductions:                                                  Prior Period                    Current rate %                Current
+WHT                                                                              0.00                           11.18                1,714.00
+Swiss Social Security                                                           23.60                            5.30                 788.95
+Unemployment Insurance                                                           0.00                            1.10                 135.85
+Total Statutory Deductions                                                      23.60                                                2,638.80
+
+                                                     Other Payments and Deductions
+Other Payments and Deductions                                          Prior Period                                                  Current
+Pension Contribution EE                                                          0.00                                                 -810.75
+Gcard Repayment                                                                  0.00                                                 -157.40
+Total Other Payments and Deductions                                              0.00                                                 -968.15
+
+Net Pay                                                                                                                      11,377.90 CHF
+
+
+                                                              Payment Details
+Payment Method                    Bank name                       IBAN                                                               Amount
+Payroll ACH                       Banque Cantonale de Geneve XXXXXXXX0000                                                           11,377.90
+                                                         Additional Information
+Details                                                                                                                              Current
+BVG Pensionable Base                                                                                                                15,666.68
+AHV Basis                                                                                                                           14,885.55
+Withholding tax basis                                                                                                               15,330.95
+UI basis                                                                                                                            12,350.00
+
+
+
+
+                                                            Page 1 of 1
+
