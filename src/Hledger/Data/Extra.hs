@@ -72,7 +72,7 @@ makePosting maybeStatus accountName maybeCash comment =
   post accountName missingamt
     & setComment comment
       . maybe id (set pStatus) maybeStatus
-      . maybe id (set pAmount) (makeCashAmount <$> maybeCash)
+      . maybe id (set pAmount . makeCashAmount) maybeCash
 
 -- | Makes a Transaction.
 --
