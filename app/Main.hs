@@ -38,7 +38,6 @@ import qualified Transcoder.Degiro.Portfolio as DegiroPortfolio (
  )
 import qualified Transcoder.EasyRide as EasyRide
 import qualified Transcoder.Finpension as Finpension
-import Transcoder.GPayslip (payslipTextToLedger)
 import qualified Transcoder.Galaxus as Galaxus
 import Transcoder.Ib as Ib (parseActivityCsv)
 import Transcoder.Mbank (mbankCsvToLedger)
@@ -165,14 +164,6 @@ galaxusCommand =
     (pure $ parseBank $ Galaxus.parseReceipt . decodeUtf8)
     "Parses Galaxus' receipt and outputs a Ledger transaction."
 
-gpayslipCommand :: ParserInfo (IO ())
-gpayslipCommand =
-  info
-    (pure parse <**> helper)
-    (progDesc "Parses a text dump from a Google Payslip and outputs Ledger data.")
- where
-  parse = parseBank (payslipTextToLedger . decodeUtf8)
-
 ibActivityCommand :: ParserInfo (IO ())
 ibActivityCommand =
   bankCommand
@@ -226,7 +217,6 @@ commands =
         <> command "parse-easy-ride" easyRideCommand
         <> command "parse-finpension" finpensionPortfoliosTotalCommand
         <> command "parse-galaxus" galaxusCommand
-        <> command "parse-gpayslip" gpayslipCommand
         <> command "parse-ib-activity" ibActivityCommand
         <> command "parse-mbank" mBankCommand
         <> command "parse-patreon" patreonCommand

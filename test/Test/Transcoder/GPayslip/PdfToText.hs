@@ -7,7 +7,7 @@ import Data.Time (fromGregorian)
 import Test.Hspec (Spec, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe)
 import Text.Megaparsec.Extra (parsePretty)
-import Transcoder.GPayslip (Deductions (..), Payslip (Payslip))
+import Transcoder.GPayslip.PdfToText (Deductions (..), Payslip (Payslip))
 import qualified Transcoder.GPayslip.PdfToText as PdfToText
 import Prelude
 

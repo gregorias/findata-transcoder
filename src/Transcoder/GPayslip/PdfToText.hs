@@ -1,5 +1,9 @@
 -- | This module parses a pdftotext text dump of a Google Payslip.
-module Transcoder.GPayslip.PdfToText (payslipP) where
+module Transcoder.GPayslip.PdfToText (
+  payslipP,
+  Payslip (..),
+  Deductions (..),
+) where
 
 import Data.Decimal (Decimal)
 import Data.Time (Day)
@@ -14,7 +18,27 @@ import Transcoder.Data.MyDecimal (
   DecimalFractionFormat (..),
   decimalP,
  )
-import Transcoder.GPayslip.Data (Deductions (..), Payslip (..))
+
+data Payslip = Payslip
+  { payslipDate :: !Day
+  , payslipMonthlySalaryTotal :: !Decimal
+  , payslipDeductions :: !Deductions
+  , payslipTotal :: !Decimal
+  }
+  deriving stock (Show, Eq)
+
+data Deductions = Deductions
+  { deductionsSwissSocialSecurity :: !Decimal
+  , deductionsUnemploymentInsurance :: !Decimal
+  , deductionsPensionFund :: !(Maybe Decimal)
+  , deductionsTaxAtSource :: !Decimal
+  , deductionsDeductionNetAmount :: !(Maybe Decimal)
+  , deductionsMssbCsWithholding :: !(Maybe Decimal)
+  , deductionsGgive :: !(Maybe Decimal)
+  , deductionsGcard :: !(Maybe Decimal)
+  , deductionsTotal :: !Decimal
+  }
+  deriving stock (Show, Eq)
 
 type Parser = Parsec Void Text
 
