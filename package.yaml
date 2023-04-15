@@ -39,6 +39,7 @@ default-extensions:
   FunctionalDependencies
   GADTs
   GeneralisedNewtypeDeriving
+  ImportQualifiedPost
   InstanceSigs
   LambdaCase
   MultiParamTypeClasses
