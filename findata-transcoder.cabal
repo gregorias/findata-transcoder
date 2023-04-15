@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.2.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -73,7 +73,7 @@ library
   hs-source-dirs:
       src
   default-extensions:
-      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
+      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
   ghc-options: -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures
   build-depends:
       Decimal
@@ -109,7 +109,7 @@ executable findata-transcoder
   hs-source-dirs:
       app
   default-extensions:
-      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
+      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
   ghc-options: -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
@@ -130,7 +130,7 @@ test-suite doctest
   hs-source-dirs:
       doctest
   default-extensions:
-      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
+      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
   ghc-options: -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -main-is DocTest
   build-depends:
       base >=4.7 && <5
@@ -184,7 +184,7 @@ test-suite findata-transcoder-test
   hs-source-dirs:
       test
   default-extensions:
-      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
+      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
   ghc-options: -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -main-is Spec
   build-depends:
       Decimal

@@ -9,7 +9,7 @@ import Text.Megaparsec (
   Parsec,
   choice,
  )
-import qualified Text.Megaparsec.Char as MP
+import Text.Megaparsec.Char qualified as MP
 import Prelude (lookup)
 
 monthAssocList :: [(Text, MonthOfYear)]
@@ -26,9 +26,11 @@ monthAssocList =
   , ("Mar", 3)
   , ("Mar.", 3)
   , ("April", 4)
+  , ("Apr", 4)
   , ("Apr.", 4)
   , ("Mai", 5)
   , ("May", 5)
+  , ("Jun", 6)
   , ("Juni", 6)
   , ("June", 6)
   , ("Jun.", 6)
