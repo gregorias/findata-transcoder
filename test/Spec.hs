@@ -10,6 +10,7 @@ import qualified Test.Hledger.Data.MarketPrice.Extra
 import qualified Test.Hledger.Extra
 import qualified Test.Hledger.Read.TestUtils
 import Test.Hspec (SpecWith, hspec)
+import qualified Test.Numeric.PositiveNatural
 import qualified Test.Text.Megaparsec.Char.Extra
 import qualified Test.Text.Megaparsec.Match
 import qualified Test.Transcoder.Bcge
@@ -54,6 +55,7 @@ tests = do
   Test.Hledger.Data.MarketPrice.Extra.tests
   Test.Hledger.Extra.tests
   Test.Hledger.Read.TestUtils.tests
+  Test.Numeric.PositiveNatural.tests
   Test.Transcoder.Bcge.tests
   Test.Transcoder.BcgeCC.tests
   Test.Transcoder.CharlesSchwab.tests

@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.2.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -33,6 +33,7 @@ library
       Hledger.Data.Lens
       Hledger.Data.MarketPrice.Extra
       Hledger.Extra
+      Numeric.PositiveNatural
       Text.Megaparsec.Char.Extra
       Text.Megaparsec.Extra
       Text.Megaparsec.Extra.ErrorText
@@ -153,6 +154,7 @@ test-suite findata-transcoder-test
       Test.Hledger.Data.MarketPrice.Extra
       Test.Hledger.Extra
       Test.Hledger.Read.TestUtils
+      Test.Numeric.PositiveNatural
       Test.Text.Megaparsec.Char.Extra
       Test.Text.Megaparsec.Match
       Test.Transcoder.Bcge
