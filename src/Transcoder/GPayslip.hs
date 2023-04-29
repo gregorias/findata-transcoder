@@ -59,6 +59,7 @@ payslipToLedger
       ( OtherPaymentsAndDeductions
           { otherPaymentsAndDeductionsTotal = _
           , otherPaymentsAndDeductionsPensionContributionEe = pensionContributionEe
+          , otherPaymentsAndDeductionsMssbWitholdingCredit = mssbWitholdingCredit
           , otherPaymentsAndDeductionsGgiveDeductions = gGive
           , otherPaymentsAndDeductionsGcardRepayment = gCardRepayment
           }
@@ -78,6 +79,7 @@ payslipToLedger
           <> catMaybes
             [ mkPosting "Expenses:gGive" . negate . itemToTotal <$> gGive
             , mkPosting "Assets:Debts:Google" . negate . itemToTotal <$> gCardRepayment
+            , mkPosting "Equity:MssbCs Withholding" . negate . itemToTotal <$> mssbWitholdingCredit
             ]
       )
       & L.set tDescription "Google Salary"

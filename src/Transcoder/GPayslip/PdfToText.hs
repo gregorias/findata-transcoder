@@ -70,14 +70,16 @@ data Earnings = Earnings
   , earningsBonusGross :: !(Maybe Item)
   , earningsPeerBonus :: !(Maybe Item)
   , earningsEducationSubsidyGross :: !(Maybe Item)
-  , earningsMealAllowanceGrossUp :: !Item
+  , earningsMealAllowanceGrossUp :: !(Maybe Item)
   , earningsTotal :: !Item
   }
   deriving stock (Show, Eq)
 
 -- | All notional pay items.
 data NotionalPay = NotionalPay
-  { notionalPayMealAllowanceNet :: !Item
+  { notionalPayMealAllowanceNet :: !(Maybe Item)
+  , notionalPayGsuGainIncomeTaxes :: !(Maybe Item)
+  , notionalPayGsuGainSocialSecurity :: !(Maybe Item)
   , notionalPayTotal :: !Item
   }
   deriving stock (Show, Eq)
@@ -94,6 +96,7 @@ data StatutoryDeductions = StatutoryDeductions
 -- | All items under the "Other Payments and Deductions" section.
 data OtherPaymentsAndDeductions = OtherPaymentsAndDeductions
   { otherPaymentsAndDeductionsPensionContributionEe :: !Item
+  , otherPaymentsAndDeductionsMssbWitholdingCredit :: !(Maybe Item)
   , otherPaymentsAndDeductionsGcardRepayment :: !(Maybe Item)
   , otherPaymentsAndDeductionsGgiveDeductions :: !(Maybe Item)
   , otherPaymentsAndDeductionsTotal :: !Item
@@ -185,7 +188,7 @@ earningsP = label "earnings" $ do
   bonusGross <- optional $ earningsItemP "Bonus Gross"
   peerBonus <- optional $ earningsItemP "Peer Bonus"
   educationSubsidyGross <- optional $ earningsItemP "Education Subsidy Gross"
-  mealAllowanceGrossUp <- earningsItemP "Meal Allowance Gross Up"
+  mealAllowanceGrossUp <- optional $ earningsItemP "Meal Allowance Gross Up"
   void $ itemP "Total Taxable Earnings"
   total <- itemP "Total Earnings"
   return $
@@ -214,8 +217,18 @@ earningsP = label "earnings" $ do
 notionalPayP :: Parser NotionalPay
 notionalPayP = label "notional pay" $ do
   void $ string "Notional Pay" >> space1 >> string "Earning type" >> space1 >> string "Prior period" >> anyLineP
-  mealAllowanceNet <- do
+  mealAllowanceNet <- optional $ do
     void $ string "Meal Allowance Net" >> space1 >> string "BIK" >> space1
+    priorPeriod <- cashAmountP <* space1
+    current <- cashAmountP <* newline
+    return Item{itemPriorPeriod = priorPeriod, itemCurrent = current}
+  gsuGainIncomeTaxes <- optional $ do
+    void $ string "GSU gain (Income Taxes)" >> space1 >> string "GSU" >> space1
+    priorPeriod <- cashAmountP <* space1
+    current <- cashAmountP <* newline
+    return Item{itemPriorPeriod = priorPeriod, itemCurrent = current}
+  gsuGainSocialSecurity <- optional $ do
+    void $ string "GSU gain (Social Secur.)" >> space1 >> string "GSU" >> space1
     priorPeriod <- cashAmountP <* space1
     current <- cashAmountP <* newline
     return Item{itemPriorPeriod = priorPeriod, itemCurrent = current}
@@ -227,6 +240,8 @@ notionalPayP = label "notional pay" $ do
   return $
     NotionalPay
       { notionalPayMealAllowanceNet = mealAllowanceNet
+      , notionalPayGsuGainIncomeTaxes = gsuGainIncomeTaxes
+      , notionalPayGsuGainSocialSecurity = gsuGainSocialSecurity
       , notionalPayTotal = total
       }
 
@@ -277,9 +292,10 @@ otherPaymentsAndDeductionsP = label "other payments and deductions" $ do
       >> newline
   gGiveDeductions <- optional (itemP "gGive Deductions")
   pensionContributionEe <- itemP "Pension Contribution EE"
+  mssbWitholdingCredit <- optional (itemP "MSSB Withholding Credit")
   gcardRepayment <- optional (itemP "Gcard Repayment")
   total <- itemP "Total Other Payments and Deductions"
-  return $ OtherPaymentsAndDeductions pensionContributionEe gcardRepayment gGiveDeductions total
+  return $ OtherPaymentsAndDeductions pensionContributionEe mssbWitholdingCredit gcardRepayment gGiveDeductions total
 
 netPayP :: Parser Decimal
 netPayP = label "net pay" $ do

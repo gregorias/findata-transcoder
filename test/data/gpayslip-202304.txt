@@ -1,0 +1,84 @@
+                                                PAYSLIP / CONFIDENTIAL
+
+
+Employee Name: Doe John                                                   Google Switzerland GmbH
+Strasse 11                                                                Gustav-Gull-Platz 1
+1111 Stadt                                                                8004 Zurich
+Employee ID:        000000                                                Pay Period:           April 2023
+Tax Canton:         AA0000                                                Date of payment: 25 April 2023
+                                                             Payslip summary
+                                                 Statutory                         Other Payments and
+                 Earnings                                                                                                  Net Pay
+                                                Deductions                             Deductions
+                    +                                                                                                         =
+                                                     -                                      +
+                 16,082.70                       5,453.35                                2,957.76                          13,587.11
+
+
+                                                                 Earnings
+Taxable Earnings                      Earning type                     Prior Period       Unit               Rate of Pay                Current
+Monthly Salary                           Cash                                    0.00                                                  15,307.70
+ER Health Insurance                      Cash                                    0.00                                                    375.00
+Peer Bonus                               Cash                                  200.00                                                    200.00
+Total Taxable Earnings                                                         200.00                                                  15,882.70
+Total Earnings                                                                 200.00                                                  15,882.70
+Notional Pay                          Earning type                       Prior period     Unit               Rate of Pay                Current
+GSU gain (Income Taxes)                  GSU                                 9,856.10                                                       0.00
+GSU gain (Social Secur.)                 GSU                                 9,856.10                                                       0.00
+Total Notional Pay                                                          19,712.20                                                       0.00
+
+                                                            Statutory Deductions
+Statutory Deductions:                                                  Prior Period                     Current rate %                  Current
+WHT                                                                              0.00                             15.20                 3,942.70
+Swiss Social Security                                                          533.00                               5.30                 841.80
+Unemployment Insurance                                                           0.00                               1.10                 135.85
+Total Statutory Deductions                                                     533.00                                                   4,920.35
+
+                                                     Other Payments and Deductions
+Other Payments and Deductions                                          Prior Period                                                     Current
+Pension Contribution EE                                                          0.00                                                    -858.19
+MSSB Withholding Credit                                                      3,822.20                                                       0.00
+Gcard Repayment                                                                  0.00                                                      -6.25
+Total Other Payments and Deductions                                          3,822.20                                                    -864.44
+
+Net Pay                                                                                                                         13,587.11 CHF
+
+
+                                                              Payment Details
+Payment Method                    Bank name                       IBAN                                                                  Amount
+Payroll ACH                       Banque Cantonale de Geneve XXXXXXXX0000                                                              13,587.11
+                                                         Additional Information
+Details                                                                                                                                 Current
+BVG Pensionable Base                                                                                                                   14,372.20
+AHV Basis                                                                                                                              15,882.70
+Withholding tax basis                                                                                                                  25,938.80
+
+
+
+
+                                                            Page 1 of 2
+                                PAYSLIP / CONFIDENTIAL
+
+
+Employee Name: John Doe                                   Google Switzerland GmbH
+Strasse 11                                                Gustav-Gull-Platz 1
+1111 Stadt                                                8004 Zurich
+Employee ID:        000000                                Pay Period:           April 2023
+Tax Canton:         AA0000                                Date of payment: 25 April 2023
+                                             Payslip summary
+                                 Statutory                        Other Payments and
+                 Earnings                                                                    Net Pay
+                                Deductions                            Deductions
+                    +                                                                           =
+                                     -                                     +
+                 16,082.70       5,453.35                                2,957.76            13,587.11
+
+
+Details                                                                                                   Current
+UI basis                                                                                                 12,350.00
+
+
+
+
+                                            Page 2 of 2
+

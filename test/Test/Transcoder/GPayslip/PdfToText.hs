@@ -51,7 +51,7 @@ tests = do
                       , earningsErHealthInsurance = Item 0 375.00
                       , earningsAnnualBonusGross = Just (Item 0 23000.00)
                       , earningsBonusGross = Nothing
-                      , earningsMealAllowanceGrossUp = Item 0 96.30
+                      , earningsMealAllowanceGrossUp = Just (Item 0 96.30)
                       , earningsPeerBonus = Nothing
                       , earningsEducationSubsidyGross = Nothing
                       , earningsTotal = Item 0 37932.85
@@ -59,7 +59,9 @@ tests = do
                   )
                   ( NotionalPay
                       { notionalPayTotal = Item 0 236.50
-                      , notionalPayMealAllowanceNet = Item 0 236.50
+                      , notionalPayMealAllowanceNet = Just (Item 0 236.50)
+                      , notionalPayGsuGainIncomeTaxes = Nothing
+                      , notionalPayGsuGainSocialSecurity = Nothing
                       }
                   )
                   ( StatutoryDeductions
@@ -72,6 +74,7 @@ tests = do
                   ( OtherPaymentsAndDeductions
                       { otherPaymentsAndDeductionsTotal = Item 0 (-1010.75)
                       , otherPaymentsAndDeductionsPensionContributionEe = Item 0 (-810.75)
+                      , otherPaymentsAndDeductionsMssbWitholdingCredit = Nothing
                       , otherPaymentsAndDeductionsGcardRepayment = Nothing
                       , otherPaymentsAndDeductionsGgiveDeductions = Just (Item 0 (-200.00))
                       }
@@ -103,7 +106,7 @@ tests = do
                       { earningsMonthlySalary = Item 0 14461.55
                       , earningsErHealthInsurance = Item 0 375.00
                       , earningsEducationSubsidyGross = Just (Item 0 49.00)
-                      , earningsMealAllowanceGrossUp = Item 122.90 0
+                      , earningsMealAllowanceGrossUp = Just (Item 122.90 0)
                       , earningsPeerBonus = Nothing
                       , earningsBonusGross = Nothing
                       , earningsAnnualBonusGross = Nothing
@@ -111,7 +114,9 @@ tests = do
                       }
                   )
                   ( NotionalPay
-                      { notionalPayMealAllowanceNet = Item 322.50 0
+                      { notionalPayMealAllowanceNet = Just (Item 322.50 0)
+                      , notionalPayGsuGainIncomeTaxes = Nothing
+                      , notionalPayGsuGainSocialSecurity = Nothing
                       , notionalPayTotal = Item 322.50 0
                       }
                   )
@@ -124,6 +129,7 @@ tests = do
                   )
                   ( OtherPaymentsAndDeductions
                       { otherPaymentsAndDeductionsPensionContributionEe = Item 0 (-810.75)
+                      , otherPaymentsAndDeductionsMssbWitholdingCredit = Nothing
                       , otherPaymentsAndDeductionsGcardRepayment = Just (Item 0 (-157.40))
                       , otherPaymentsAndDeductionsGgiveDeductions = Nothing
                       , otherPaymentsAndDeductionsTotal = Item 0 (-968.15)
@@ -159,12 +165,14 @@ tests = do
                       , earningsBonusGross = Just (Item 0 1833.00)
                       , earningsPeerBonus = Just (Item 200.00 0.00)
                       , earningsEducationSubsidyGross = Nothing
-                      , earningsMealAllowanceGrossUp = Item 0 158.90
+                      , earningsMealAllowanceGrossUp = Just (Item 0 158.90)
                       , earningsTotal = Item 200.00 28174.60
                       }
                   )
                   ( NotionalPay
-                      { notionalPayMealAllowanceNet = Item 0 387
+                      { notionalPayMealAllowanceNet = Just (Item 0 387)
+                      , notionalPayGsuGainIncomeTaxes = Nothing
+                      , notionalPayGsuGainSocialSecurity = Nothing
                       , notionalPayTotal = Item 0 387
                       }
                   )
@@ -177,6 +185,7 @@ tests = do
                   )
                   ( OtherPaymentsAndDeductions
                       { otherPaymentsAndDeductionsPensionContributionEe = Item 0 (-858.19)
+                      , otherPaymentsAndDeductionsMssbWitholdingCredit = Nothing
                       , otherPaymentsAndDeductionsGcardRepayment = Nothing
                       , otherPaymentsAndDeductionsGgiveDeductions = Nothing
                       , otherPaymentsAndDeductionsTotal = Item 0 (-858.19)

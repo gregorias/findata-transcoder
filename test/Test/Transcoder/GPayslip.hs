@@ -56,3 +56,17 @@ tests = do
                * State:2023:Mandatory Contributions:Unemployment Insurance  135.85 CHF
                * State:2023:Withholding Tax:Total  4616.25 CHF
                * Assets:Illiquid:AXA Wintherthur Pension Fund  858.19 CHF|]
+      it "Test April 2023" $ do
+        payslip <- T.readFile "./test/data/gpayslip-202304.txt"
+        payslipTextToLedger payslip
+          `shouldBe` Right
+            [transactionQQ|
+             2023/04/25 Google Salary
+               ! Assets:Liquid:BCGE  13587.11 CHF
+               * Income:Google      -16082.70 CHF
+               * State:2023:Mandatory Contributions:Social Security  1374.80 CHF
+               * State:2023:Mandatory Contributions:Unemployment Insurance  135.85 CHF
+               * State:2023:Withholding Tax:Total  3942.70 CHF
+               * Assets:Illiquid:AXA Wintherthur Pension Fund  858.19 CHF
+               * Assets:Debts:Google  6.25 CHF
+               * Equity:MssbCs Withholding  -3822.20 CHF|]
