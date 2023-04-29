@@ -1,6 +1,7 @@
 module Spec (main) where
 
 import Relude
+import qualified Test.Control.Applicative.Combinators.Extra
 import qualified Test.Data.Csv.Extra
 import qualified Test.Data.Time.Extra
 import qualified Test.Hledger.Data.Extra as HDE
@@ -46,6 +47,7 @@ tests = do
   BcgeHint.tests
   mbankTests
   HDE.tests
+  Test.Control.Applicative.Combinators.Extra.tests
   Test.Data.Csv.Extra.tests
   Test.Data.Time.Extra.tests
   Test.Hledger.Data.Lens.tests

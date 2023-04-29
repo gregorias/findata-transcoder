@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.1.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -24,6 +24,7 @@ source-repository head
 
 library
   exposed-modules:
+      Control.Applicative.Combinators.Extra
       Data.Cash
       Data.Csv.Extra
       Data.Time.Calendar.Extra
@@ -144,6 +145,7 @@ test-suite findata-transcoder-test
   main-is: Spec.hs
   other-modules:
       Hledger.Read.TestUtils
+      Test.Control.Applicative.Combinators.Extra
       Test.Data.Csv.Extra
       Test.Data.Time.Extra
       Test.Hledger.Data.Extra
