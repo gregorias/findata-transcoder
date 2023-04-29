@@ -2,28 +2,32 @@ module Transcoder.Galaxus (
   parseReceipt,
 ) where
 
+import Control.Applicative.Combinators.Extra (some1Till_)
 import Data.Cash (Cash (Cash))
-import qualified Data.Cash as Cash
-import qualified Data.Text as T
+import Data.Cash qualified as Cash
+import Data.Text qualified as T
 import Data.Time (
   Day,
   defaultTimeLocale,
   parseTimeM,
  )
-import Hledger (AccountName, Status (Cleared, Pending), Transaction)
+import Hledger (AccountName, Posting, Status (Cleared, Pending), Transaction)
 import Hledger.Data.Extra (
   Comment (..),
-  ToPosting (..),
   ToTransaction (..),
   makePosting,
   makeTransaction,
  )
+import Numeric.PositiveNatural (PositiveNatural, positiveNaturalP)
+import Numeric.PositiveNatural qualified as PN
 import Relude
-import qualified Text.Megaparsec as MP
-import qualified Text.Megaparsec.Char as MP
-import qualified Text.Megaparsec.Char.Extra as MP
-import qualified Text.Megaparsec.Char.Lexer as MP
-import qualified Text.Megaparsec.Extra as MP
+import Text.Megaparsec (single)
+import Text.Megaparsec qualified as MP
+import Text.Megaparsec.Char
+import Text.Megaparsec.Char qualified as MP
+import Text.Megaparsec.Char.Extra qualified as MP
+import Text.Megaparsec.Char.Lexer qualified as MP
+import Text.Megaparsec.Extra (parsePretty)
 import Transcoder.Data.Currency (chf)
 import Transcoder.Data.MyDecimal (
   ChunkSepFormat (..),
@@ -33,20 +37,39 @@ import Transcoder.Data.MyDecimal (
 import Transcoder.Wallet (bcgeAccount, bcgeCCAccount)
 
 data Item = Item
-  { _count :: !Natural
-  , _description :: !Text
-  , _itemCost :: !Cash
+  { itemCount :: !PositiveNatural
+  , itemDescription :: !Text
+  , itemCost :: !Cash
   }
 
-instance ToPosting Item where
-  toPosting (Item _ description cost) =
-    makePosting (Just Pending) "Todo" (Just cost) (Comment description)
+data ItemType = Co2Compensation | UnknownItemType
+
+detectItemType :: Text -> ItemType
+detectItemType "CO2-Kompensation" = Co2Compensation
+detectItemType _ = UnknownItemType
+
+itemToPosting :: Item -> Posting
+itemToPosting item =
+  let optionalItemCount = if itemCount item == PN.one then "" else " (" <> show (itemCount item) <> "x)"
+   in makePosting
+        status
+        postingCategory
+        (Just $ itemCost item)
+        (Comment $ itemDescription item <> optionalItemCount)
+ where
+  itemType = detectItemType $ itemDescription item
+  status = case itemType of
+    Co2Compensation -> Nothing
+    UnknownItemType -> Just Pending
+  postingCategory = case itemType of
+    Co2Compensation -> "Expenses:Other:CO2"
+    UnknownItemType -> "Expenses:Todo"
 
 data Receipt = Receipt
-  { _date :: !Day
-  , _items :: !(NonEmpty Item)
-  , _paymentSource :: !AccountName
-  , _total :: !Cash
+  { receiptDate :: !Day
+  , receiptItems :: !(NonEmpty Item)
+  , receiptPaymentSource :: !AccountName
+  , receiptTotal :: !Cash -- The total amount of the receipt (a positive number).
   }
 
 instance ToTransaction Receipt where
@@ -55,10 +78,10 @@ instance ToTransaction Receipt where
       date
       (Just Cleared)
       "Digitec/Galaxus"
-      ( [paymentPosting] <> toList (toPosting <$> items)
+      ( [paymentPosting] <> toList (itemToPosting <$> items)
       )
    where
-    paymentPosting = makePosting (Just Pending) paymentSource (Just total) NoComment
+    paymentPosting = makePosting (Just Pending) paymentSource (Just $ Cash.negate total) NoComment
 
 type Parser = MP.Parsec Void Text
 
@@ -71,10 +94,11 @@ galaxusCashP = Cash chf <$> MP.try ((noRappenP <|> rappenP) <* itemEnd)
 
 itemP :: Parser Item
 itemP = do
-  count <- fromInteger <$> (MP.decimal <* MP.single 'x')
-  (description, itemCost) <- MP.manyTill_ MP.anySingle galaxusCashP
-  void $ MP.manyTill MP.anyLineP MP.eol
-  return $ Item count (T.strip $ toText description) itemCost
+  count <- positiveNaturalP <* single '×'
+  (description, cost) <- MP.manyTill_ MP.anySingle galaxusCashP
+  return $ Item count (T.strip . replaceNewline $ toText description) cost
+ where
+  replaceNewline = T.replace "\n" " "
 
 dateP :: Parser Day
 dateP = do
@@ -82,31 +106,30 @@ dateP = do
   parseTimeM True defaultTimeLocale "%a, %d %b %Y %H:%M:%S +0000 (UTC)" (toString dateText)
 
 gesamtbetragP :: Parser Cash
-gesamtbetragP = MP.string "Gesamtbetrag: " >> galaxusCashP <* MP.eol
+gesamtbetragP = string "Gesamtbetrag" >> newline >> galaxusCashP
 
 zahlungsmittelP :: Parser AccountName
 zahlungsmittelP = do
-  void $ MP.string "Zahlungsmittel" >> MP.eol
-  (MP.string "TWINT" >> return bcgeAccount)
-    <|> (MP.string "MasterCard" >> return bcgeCCAccount)
-    <|> (MP.string "PayPal" >> return bcgeCCAccount)
+  void $ string "Zahlungsmittel:"
+  (string "TWINT" >> return bcgeAccount)
+    <|> (string "MasterCard" >> return bcgeCCAccount)
+    <|> (string "PayPal" >> return bcgeCCAccount)
 
 receiptP :: Parser Receipt
 receiptP = do
   date <- dateP
-  (_, firstItem) <- MP.manyTill_ MP.anyLineP itemP
-  otherItems <- many itemP
-  total <- gesamtbetragP
-  (_, paymentSource) <- MP.manyTill_ MP.anyLineP zahlungsmittelP
+  (items, total) <- some1Till_ itemP gesamtbetragP
+  void newline
+  paymentSource <- zahlungsmittelP
   return $
     Receipt
-      { _date = date
-      , _items = firstItem :| otherItems
-      , _paymentSource = paymentSource
-      , _total = Cash.negate total
+      { receiptDate = date
+      , receiptItems = items
+      , receiptPaymentSource = paymentSource
+      , receiptTotal = total
       }
 
 parseReceipt :: Text -> Either Text Transaction
 parseReceipt receiptTxt = do
-  receipt <- MP.parsePretty receiptP "a Digitec/Galaxus receipt" receiptTxt
+  receipt <- parsePretty receiptP "Digitec/Galaxus receipt" receiptTxt
   return $ toTransaction receipt
