@@ -170,7 +170,7 @@ taxToLedgerTransaction rec = do
       (csDate rec)
       [ post
           usdAccount
-          ( makeCurrencyAmount usd (-amount)
+          ( makeCurrencyAmount usd amount
           )
       , post (equityCs <:> "Unvested GOOG Withholding Tax") missingamt
       ]

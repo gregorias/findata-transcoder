@@ -120,7 +120,7 @@ tests = do
                   Nothing
                   Nothing
                   Nothing
-                  (Just $ DollarAmount (fromRational $ 123 % 100))
+                  (Just $ DollarAmount (fromRational $ -123 % 100))
               ]
         csvToLedger entries
           `shouldBe` Right

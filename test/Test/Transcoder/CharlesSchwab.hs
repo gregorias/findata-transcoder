@@ -23,7 +23,7 @@ tests = do
                        Expenses:Financial Services                             USD 0.09|]
                 , [transactionQQ|
                      2022/09/29 * Withholding Tax
-                         Assets:Liquid:Charles Schwab:USD                        USD 1538.33
+                         Assets:Liquid:Charles Schwab:USD                        USD -1538.33
                          Equity:Charles Schwab:Unvested GOOG Withholding Tax|]
                 , [transactionQQ|
                      2022/09/30 Wire Sent
