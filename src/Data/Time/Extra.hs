@@ -1,14 +1,19 @@
 module Data.Time.Extra (
   dayP,
+  usFullDayP,
 ) where
 
 import Control.Applicative (some, (<|>))
 import Control.Monad (void)
 import Data.Text (Text)
 import Data.Time (Day, defaultTimeLocale, parseTimeM)
+import Data.Time.Calendar (fromGregorianValid)
+import Data.Time.Calendar.Extra (monthP)
 import Relude (ToString (toString))
-import Text.Megaparsec (MonadParsec (label, try), Parsec, match)
+import Text.Megaparsec (MonadParsec (label, try), Parsec, match, single)
+import qualified Text.Megaparsec as MP
 import Text.Megaparsec.Char (digitChar, string)
+import Text.Megaparsec.Char.Lexer (decimal)
 import Prelude
 
 -- | Parses strings like "DD/MM/YYYY" or "YY-MM-DD" into a day.
@@ -29,3 +34,20 @@ dayP fmt = label "date" $ do
  where
   sepP :: (Ord e) => Parsec e Text ()
   sepP = void $ string "-" <|> string "/" <|> string "."
+
+-- | Parsers strings like "May 4, 2023" into a day.
+usFullDayP :: (Ord e) => Parsec e Text Day
+usFullDayP = label "date in US format" $ do
+  (dateString, (month, day, year)) <- MP.match $
+    try $ do
+      month <- monthP
+      void $ single ' '
+      day <- decimal
+      void $ single ',' >> single ' '
+      year <- decimal
+      return (month, day, year)
+  let maybeDay = fromGregorianValid year month day
+  maybe
+    (fail $ "Could not parse " <> toString dateString <> " as a valid date.")
+    return
+    maybeDay

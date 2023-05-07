@@ -5,13 +5,13 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           findata-transcoder
-version:        0.2.0.0
+version:        1.0.0.0
 description:    Please see the README on GitHub at <https://github.com/gregorias/findata-transcoder#readme>
 homepage:       https://github.com/gregorias/findata-transcoder#readme
 bug-reports:    https://github.com/gregorias/findata-transcoder/issues
 author:         Grzegorz Milka
 maintainer:     grzegorzmilka@gmail.com
-copyright:      2020-2022 Grzegorz Milka
+copyright:      2020-2023 Grzegorz Milka
 license:        AGPL-3
 license-file:   LICENSE
 build-type:     Simple
@@ -27,6 +27,7 @@ library
       Control.Applicative.Combinators.Extra
       Data.Cash
       Data.Csv.Extra
+      Data.Text.IO.Extra
       Data.Time.Calendar.Extra
       Data.Time.Extra
       Hledger.Data.Extra
@@ -58,6 +59,7 @@ library
       Transcoder.EasyRide
       Transcoder.Finpension
       Transcoder.Galaxus
+      Transcoder.GooglePlay
       Transcoder.GPayslip
       Transcoder.GPayslip.PdfToText
       Transcoder.Ib
@@ -173,6 +175,7 @@ test-suite findata-transcoder-test
       Test.Transcoder.EasyRide
       Test.Transcoder.Finpension
       Test.Transcoder.Galaxus
+      Test.Transcoder.GooglePlay
       Test.Transcoder.GPayslip
       Test.Transcoder.GPayslip.PdfToText
       Test.Transcoder.Ib

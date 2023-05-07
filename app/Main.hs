@@ -40,6 +40,7 @@ import qualified Transcoder.EasyRide as EasyRide
 import qualified Transcoder.Finpension as Finpension
 import Transcoder.GPayslip (payslipTextToLedger)
 import qualified Transcoder.Galaxus as Galaxus
+import qualified Transcoder.GooglePlay as GooglePlay
 import Transcoder.Ib as Ib (parseActivityCsv)
 import Transcoder.Mbank (mbankCsvToLedger)
 import qualified Transcoder.Patreon as Patreon
@@ -173,6 +174,12 @@ gpayslipCommand =
  where
   parse = parseBank (payslipTextToLedger . decodeUtf8)
 
+googlePlayCommand :: ParserInfo (IO ())
+googlePlayCommand =
+  bankCommand
+    (pure $ parseBank $ GooglePlay.parseReceipt . decodeUtf8)
+    "Parses Google Play's receipt and outputs a Ledger transaction."
+
 ibActivityCommand :: ParserInfo (IO ())
 ibActivityCommand =
   bankCommand
@@ -227,6 +234,7 @@ commands =
         <> command "parse-finpension" finpensionPortfoliosTotalCommand
         <> command "parse-galaxus" galaxusCommand
         <> command "parse-gpayslip" gpayslipCommand
+        <> command "parse-google-play" googlePlayCommand
         <> command "parse-ib-activity" ibActivityCommand
         <> command "parse-mbank" mBankCommand
         <> command "parse-patreon" patreonCommand

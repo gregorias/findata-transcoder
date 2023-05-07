@@ -31,6 +31,7 @@ import qualified Test.Transcoder.Finpension
 import qualified Test.Transcoder.GPayslip
 import qualified Test.Transcoder.GPayslip.PdfToText
 import qualified Test.Transcoder.Galaxus
+import qualified Test.Transcoder.GooglePlay
 import qualified Test.Transcoder.Ib
 import qualified Test.Transcoder.Ib.Csv.ActivityStatementParse
 import qualified Test.Transcoder.Ib.Csv.RawParse
@@ -73,6 +74,7 @@ tests = do
   Test.Transcoder.Galaxus.tests
   Test.Transcoder.GPayslip.PdfToText.tests
   Test.Transcoder.GPayslip.tests
+  Test.Transcoder.GooglePlay.tests
   Test.Transcoder.Ib.Csv.ActivityStatementParse.tests
   Test.Transcoder.Ib.Csv.RawParse.tests
   Test.Transcoder.Ib.tests
