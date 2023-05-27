@@ -51,6 +51,7 @@ tests = do
                       , earningsErHealthInsurance = Item 0 375.00
                       , earningsAnnualBonusGross = Just (Item 0 23000.00)
                       , earningsBonusGross = Nothing
+                      , earningsNonCashSpotBonusGrossUp = Nothing
                       , earningsMealAllowanceGrossUp = Just (Item 0 96.30)
                       , earningsPeerBonus = Nothing
                       , earningsEducationSubsidyGross = Nothing
@@ -59,6 +60,7 @@ tests = do
                   )
                   ( NotionalPay
                       { notionalPayTotal = Item 0 236.50
+                      , notionalPayNonCashSpotBonus = Nothing
                       , notionalPayMealAllowanceNet = Just (Item 0 236.50)
                       , notionalPayGsuGainIncomeTaxes = Nothing
                       , notionalPayGsuGainSocialSecurity = Nothing
@@ -106,6 +108,7 @@ tests = do
                       { earningsMonthlySalary = Item 0 14461.55
                       , earningsErHealthInsurance = Item 0 375.00
                       , earningsEducationSubsidyGross = Just (Item 0 49.00)
+                      , earningsNonCashSpotBonusGrossUp = Nothing
                       , earningsMealAllowanceGrossUp = Just (Item 122.90 0)
                       , earningsPeerBonus = Nothing
                       , earningsBonusGross = Nothing
@@ -115,6 +118,7 @@ tests = do
                   )
                   ( NotionalPay
                       { notionalPayMealAllowanceNet = Just (Item 322.50 0)
+                      , notionalPayNonCashSpotBonus = Nothing
                       , notionalPayGsuGainIncomeTaxes = Nothing
                       , notionalPayGsuGainSocialSecurity = Nothing
                       , notionalPayTotal = Item 322.50 0
@@ -165,12 +169,14 @@ tests = do
                       , earningsBonusGross = Just (Item 0 1833.00)
                       , earningsPeerBonus = Just (Item 200.00 0.00)
                       , earningsEducationSubsidyGross = Nothing
+                      , earningsNonCashSpotBonusGrossUp = Nothing
                       , earningsMealAllowanceGrossUp = Just (Item 0 158.90)
                       , earningsTotal = Item 200.00 28174.60
                       }
                   )
                   ( NotionalPay
-                      { notionalPayMealAllowanceNet = Just (Item 0 387)
+                      { notionalPayNonCashSpotBonus = Nothing
+                      , notionalPayMealAllowanceNet = Just (Item 0 387)
                       , notionalPayGsuGainIncomeTaxes = Nothing
                       , notionalPayGsuGainSocialSecurity = Nothing
                       , notionalPayTotal = Item 0 387

@@ -70,3 +70,18 @@ tests = do
                * Assets:Illiquid:AXA Wintherthur Pension Fund  858.19 CHF
                * Assets:Debts:Google  6.25 CHF
                * Equity:MssbCs Withholding  -3822.20 CHF|]
+      it "Test May 2023" $ do
+        payslip <- T.readFile "./test/data/gpayslip-202305.txt"
+        payslipTextToLedger payslip
+          `shouldBe` Right
+            [transactionQQ|
+             2023/05/25 Google Salary
+               ! Assets:Liquid:BCGE  12286.91 CHF
+               * Income:Google      -15837.50 CHF
+               * State:2023:Mandatory Contributions:Social Security  975.00 CHF
+               * State:2023:Mandatory Contributions:Unemployment Insurance  135.85 CHF
+               * State:2023:Withholding Tax:Total  2297.75 CHF
+               * Assets:Illiquid:AXA Wintherthur Pension Fund  858.19 CHF
+               * Assets:Debts:Google  95.80 CHF
+               * Equity:MssbCs Withholding  -812.00 CHF
+              |]

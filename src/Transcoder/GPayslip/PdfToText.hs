@@ -16,6 +16,7 @@ module Transcoder.GPayslip.PdfToText (
   payslipP,
 ) where
 
+import Control.Monad.Permutations (runPermutation, toPermutation, toPermutationWithDefault)
 import Data.Char
 import Data.Decimal (Decimal)
 import Data.Time (Day, fromGregorian)
@@ -70,6 +71,7 @@ data Earnings = Earnings
   , earningsBonusGross :: !(Maybe Item)
   , earningsPeerBonus :: !(Maybe Item)
   , earningsEducationSubsidyGross :: !(Maybe Item)
+  , earningsNonCashSpotBonusGrossUp :: !(Maybe Item)
   , earningsMealAllowanceGrossUp :: !(Maybe Item)
   , earningsTotal :: !Item
   }
@@ -77,7 +79,8 @@ data Earnings = Earnings
 
 -- | All notional pay items.
 data NotionalPay = NotionalPay
-  { notionalPayMealAllowanceNet :: !(Maybe Item)
+  { notionalPayNonCashSpotBonus :: !(Maybe Item)
+  , notionalPayMealAllowanceNet :: !(Maybe Item)
   , notionalPayGsuGainIncomeTaxes :: !(Maybe Item)
   , notionalPayGsuGainSocialSecurity :: !(Maybe Item)
   , notionalPayTotal :: !Item
@@ -188,6 +191,7 @@ earningsP = label "earnings" $ do
   bonusGross <- optional $ earningsItemP "Bonus Gross"
   peerBonus <- optional $ earningsItemP "Peer Bonus"
   educationSubsidyGross <- optional $ earningsItemP "Education Subsidy Gross"
+  nonCashSpotBonusGrossUp <- optional $ earningsItemP "NonCash Spot Bonus GrosUp"
   mealAllowanceGrossUp <- optional $ earningsItemP "Meal Allowance Gross Up"
   void $ itemP "Total Taxable Earnings"
   total <- itemP "Total Earnings"
@@ -199,6 +203,7 @@ earningsP = label "earnings" $ do
       , earningsBonusGross = bonusGross
       , earningsPeerBonus = peerBonus
       , earningsEducationSubsidyGross = educationSubsidyGross
+      , earningsNonCashSpotBonusGrossUp = nonCashSpotBonusGrossUp
       , earningsMealAllowanceGrossUp = mealAllowanceGrossUp
       , earningsTotal = total
       }
@@ -217,6 +222,11 @@ earningsP = label "earnings" $ do
 notionalPayP :: Parser NotionalPay
 notionalPayP = label "notional pay" $ do
   void $ string "Notional Pay" >> space1 >> string "Earning type" >> space1 >> string "Prior period" >> anyLineP
+  nonCashSpotBonus <- optional $ do
+    void $ string "Non Cash Spot Bonus" >> space1 >> string "BIK" >> space1
+    priorPeriod <- cashAmountP <* space1
+    current <- cashAmountP <* newline
+    return Item{itemPriorPeriod = priorPeriod, itemCurrent = current}
   mealAllowanceNet <- optional $ do
     void $ string "Meal Allowance Net" >> space1 >> string "BIK" >> space1
     priorPeriod <- cashAmountP <* space1
@@ -239,7 +249,8 @@ notionalPayP = label "notional pay" $ do
     return Item{itemPriorPeriod = priorPeriod, itemCurrent = current}
   return $
     NotionalPay
-      { notionalPayMealAllowanceNet = mealAllowanceNet
+      { notionalPayNonCashSpotBonus = nonCashSpotBonus
+      , notionalPayMealAllowanceNet = mealAllowanceNet
       , notionalPayGsuGainIncomeTaxes = gsuGainIncomeTaxes
       , notionalPayGsuGainSocialSecurity = gsuGainSocialSecurity
       , notionalPayTotal = total
@@ -290,10 +301,17 @@ otherPaymentsAndDeductionsP = label "other payments and deductions" $ do
       >> space1
       >> string "Current"
       >> newline
-  gGiveDeductions <- optional (itemP "gGive Deductions")
-  pensionContributionEe <- itemP "Pension Contribution EE"
-  mssbWitholdingCredit <- optional (itemP "MSSB Withholding Credit")
-  gcardRepayment <- optional (itemP "Gcard Repayment")
+  ( gGiveDeductions
+    , pensionContributionEe
+    , mssbWitholdingCredit
+    , gcardRepayment
+    ) <-
+    runPermutation $
+      (,,,)
+        <$> toPermutationWithDefault Nothing (Just <$> itemP "gGive Deductions")
+        <*> toPermutation (itemP "Pension Contribution EE")
+        <*> toPermutationWithDefault Nothing (Just <$> itemP "MSSB Withholding Credit")
+        <*> toPermutationWithDefault Nothing (Just <$> itemP "Gcard Repayment")
   total <- itemP "Total Other Payments and Deductions"
   return $ OtherPaymentsAndDeductions pensionContributionEe mssbWitholdingCredit gcardRepayment gGiveDeductions total
 
