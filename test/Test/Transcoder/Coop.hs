@@ -46,8 +46,8 @@ tests = do
                 [trimming|
                 2021/04/09 * Coop
                   ! Assets:Liquid:BCGE  -0.17 CHF
+                  Expenses:Household              0.11 CHF
                   Expenses:Groceries:Ready Meals  0.03 CHF
-                  Expenses:Haushalt               0.11 CHF
                   Expenses:Gesundheit             0.02 CHF
                   Expenses:Groceries:Chewing Gum  0.01 CHF|]
 
@@ -60,7 +60,7 @@ tests = do
                 [trimming|
                 2021/04/09 * Coop
                   ! Assets:Liquid:BCGE  -44.35 CHF
-                  Expenses:Haushalt       9.40 CHF
+                  Expenses:Household      9.40 CHF
                   Expenses:Groceries     37.35 CHF
                   Expenses:Other         -2.40 CHF|]
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr

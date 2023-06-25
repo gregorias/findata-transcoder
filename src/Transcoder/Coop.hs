@@ -56,7 +56,7 @@ entryNameToExpenseCategory entry =
     ( listToMaybe (mapMaybe (\(rgx, cat) -> if has rgx entry then Just cat else Nothing) itemToExpenseCategoryPairs)
     )
  where
-  haushalt = "Haushalt"
+  household = "Household"
   coffee = "Groceries" <:> "Coffee"
   readyMeals = "Groceries" <:> "Ready Meals"
   alcohol = "Groceries" <:> "Alcohol"
@@ -76,28 +76,28 @@ entryNameToExpenseCategory entry =
     , ([regex|Moscato|], alcohol)
     , ([regex|Nero|], alcohol)
     , ([regex|Wein|], alcohol)
-    , ([regex|[tT]eelicht|], haushalt)
-    , ([regex|WC Frisch|], haushalt)
-    , ([regex|Haushalt|], haushalt)
-    , ([regex|Schwamm|], haushalt)
-    , ([regex|Desinfektionstücher|], haushalt)
-    , ([regex|^À Table!|], haushalt)
-    , ([regex|^Persil|], haushalt)
-    , ([regex|^Flup|], haushalt)
-    , ([regex|^Dr.Beckmann|], haushalt)
-    , ([regex|^Sun|], haushalt)
-    , ([regex|^Palmolive Ultra|], haushalt)
-    , ([regex|Reinigung|], haushalt)
-    , ([regex|Compo-Bag|], haushalt)
-    , ([regex|Brita|], haushalt)
-    , ([regex|ZEISS|], haushalt)
-    , ([regex|Finish|], haushalt)
-    , ([regex|Tesa|], haushalt)
-    , ([regex|CR2032|], haushalt)
-    , ([regex|Dübel|], haushalt)
+    , ([regex|[tT]eelicht|], household)
+    , ([regex|WC Frisch|], household)
+    , ([regex|Haushalt|], household)
+    , ([regex|Schwamm|], household)
+    , ([regex|Desinfektionstücher|], household)
+    , ([regex|^À Table!|], household)
+    , ([regex|^Persil|], household)
+    , ([regex|^Flup|], household)
+    , ([regex|^Dr.Beckmann|], household)
+    , ([regex|^Sun|], household)
+    , ([regex|^Palmolive Ultra|], household)
+    , ([regex|Reinigung|], household)
+    , ([regex|Compo-Bag|], household)
+    , ([regex|Brita|], household)
+    , ([regex|ZEISS|], household)
+    , ([regex|Finish|], household)
+    , ([regex|Tesa|], household)
+    , ([regex|CR2032|], household)
+    , ([regex|Dübel|], household)
     , ([regex|Listerine|], health)
     , ([regex|Nivea|], health)
-    , ([regex|Mücken|], haushalt <:> "Mückenschutz")
+    , ([regex|Mücken|], household <:> "Mückenschutz")
     ]
 
 paymentToPosting :: [PaymentCard] -> Payment -> Posting
