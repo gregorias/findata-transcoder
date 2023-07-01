@@ -51,8 +51,11 @@ monthAssocList =
   , ("Dez.", 12)
   ]
 
+-- Use a reverse-sorted list to make sure that the longest match is found first. In other words,
+-- "June" is matched before "Jun".
+-- More future-proof to do it this way than to keep that in mind in monthAssocList.
 months :: [Text]
-months = fst <$> monthAssocList
+months = sortOn Down $ fst <$> monthAssocList
 
 parseMonth :: Text -> Maybe MonthOfYear
 parseMonth = flip lookup monthAssocList
