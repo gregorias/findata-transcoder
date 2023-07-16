@@ -78,7 +78,7 @@ library
       src
   default-extensions:
       BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
-  ghc-options: -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures
+  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures
   build-depends:
       Decimal
     , aeson
@@ -114,7 +114,7 @@ executable findata-transcoder
       app
   default-extensions:
       BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
-  ghc-options: -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , bytestring
@@ -135,7 +135,7 @@ test-suite doctest
       doctest
   default-extensions:
       BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
-  ghc-options: -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -main-is DocTest
+  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -main-is DocTest
   build-depends:
       base >=4.7 && <5
     , doctest
@@ -193,7 +193,7 @@ test-suite findata-transcoder-test
       test
   default-extensions:
       BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
-  ghc-options: -Wall -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -main-is Spec
+  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -main-is Spec
   build-depends:
       Decimal
     , HUnit

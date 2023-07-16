@@ -63,6 +63,7 @@ default-extensions:
 # useful to use ExtendedDefaultRules that I keep it.
 ghc-options:
   - -Wall
+  - -Werror
   - -Wcompat
   - -Wmissing-deriving-strategies
   - -Widentities

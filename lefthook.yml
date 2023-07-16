@@ -3,7 +3,7 @@ pre-commit:
     hlint:
       tags: lint
       glob: "*.hs"
-      run: stack exec hlint {staged_files}
+      run: stack exec hlint {staged_files} -- -X QuasiQuotes
     fourmolu:
       tags: style
       glob: "*.hs"
