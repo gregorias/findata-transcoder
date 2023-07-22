@@ -13,6 +13,7 @@ import Hledger.Read.TestUtils (
  )
 import NeatInterpolation (trimming)
 import Relude
+import Test.HUnit (assertFailure)
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe, shouldMatchList, shouldSatisfy)
 import Transcoder.Data.CsvFile (CsvFile (..))
@@ -21,6 +22,10 @@ import Transcoder.Data.Isin (isin)
 import Transcoder.Degiro.AccountStatement (csvRecordsToLedger)
 import Transcoder.Degiro.AccountStatement qualified as DegiroAccStmt
 import Transcoder.Degiro.Csv (DegiroCsvRecord (..), DegiroIsin (DegiroIsin), parseCsvStatement)
+
+assertLeft :: (Show r) => Either l r -> IO l
+assertLeft (Left l) = return l
+assertLeft (Right r) = assertFailure $ "Expected Left, got " <> show r
 
 tests :: SpecWith ()
 tests = do
@@ -278,25 +283,27 @@ csvRecordsToLedgerTests = do
                   Assets:Liquid:Degiro    9733.32 EUR = 0 EUR|]
         ]
 
-  it "Returns a readable error when a record can't be processed." $ do
-    csvRecordsToLedger
-      [ DegiroCsvRecord
-          (fromGregorian 2020 9 2)
-          (TimeOfDay 12 02 0)
-          (fromGregorian 2020 9 1)
-          "Bogus commodity"
-          Nothing
-          "Bogus description"
-          Nothing
-          Nothing
-          (Cash chf 0)
-          ""
-      ]
-      `shouldSatisfy` \case
-        Right _ -> False
-        Left errMsg ->
-          ( "Could not process all elements.\n"
-              `T.isInfixOf` errMsg
-              && "One remaining row's description: Bogus description"
-              `T.isInfixOf` errMsg
-          )
+  it "Returns a readable error when a record can't be processed."
+    $ do
+      let eitherLedger =
+            csvRecordsToLedger
+              [ DegiroCsvRecord
+                  (fromGregorian 2020 9 2)
+                  (TimeOfDay 12 02 0)
+                  (fromGregorian 2020 9 1)
+                  "Bogus commodity"
+                  Nothing
+                  "Bogus description"
+                  Nothing
+                  Nothing
+                  (Cash chf 0)
+                  ""
+              ]
+      errorMsg <- assertLeft eitherLedger
+      errorMsg
+        `shouldSatisfy` ( \errMsg ->
+                            "Could not process all elements.\n"
+                              `T.isInfixOf` errMsg
+                              && "One remaining row's description: Bogus description"
+                              `T.isInfixOf` errMsg
+                        )
