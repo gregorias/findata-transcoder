@@ -9,11 +9,13 @@ module Data.Cash (
 ) where
 
 import Control.Lens (makeLenses, over)
+import Control.Monad.Permutations (toPermutation)
+import Control.Monad.Permutations qualified as Permutations
 import Data.Decimal (Decimal)
 import Relude hiding (negate)
-import qualified Relude
-import qualified Text.Megaparsec as MP
-import qualified Text.Megaparsec.Char as MP
+import Relude qualified
+import Text.Megaparsec qualified as MP
+import Text.Megaparsec.Char qualified as MP
 import Transcoder.Data.Currency (Currency, currencyP)
 import Transcoder.Data.MyDecimal (decimalP, defaultDecimalFormat)
 
@@ -38,18 +40,11 @@ cashP ::
   , MP.Token s ~ Char
   ) =>
   m Cash
-cashP = currencyFirstP <|> currencySecondP
- where
-  currencyFirstP = do
-    currency <- currencyP
-    MP.space1
-    amount <- decimalP defaultDecimalFormat
-    return $ Cash currency amount
-  currencySecondP = do
-    amount <- decimalP defaultDecimalFormat
-    MP.space1
-    currency <- currencyP
-    return $ Cash currency amount
+cashP =
+  Permutations.intercalateEffect MP.space1
+    $ Cash
+    <$> toPermutation currencyP
+    <*> toPermutation (decimalP defaultDecimalFormat)
 
 negate :: Cash -> Cash
 negate = over cashAmount Relude.negate
