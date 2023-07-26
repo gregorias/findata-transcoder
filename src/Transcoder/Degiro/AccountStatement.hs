@@ -322,6 +322,9 @@ isMoneyMarketFundPriceChange = (== "Money Market fund price change (CHF)") . dcr
 isMoneyMarketActivity :: DegiroCsvRecord -> Bool
 isMoneyMarketActivity = or . flap [isMoneyMarketFundOp, isMoneyMarketFundPriceChange]
 
+-- | Activity is any kind of logical transaction on Degiro.
+--
+-- An activity is represented by one or more CSV records and corresponds to one Ledger transaction.
 data Activity
   = ActivityDeposit Deposit
   | ActivityFee Fee
