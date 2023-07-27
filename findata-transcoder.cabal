@@ -157,6 +157,7 @@ test-suite findata-transcoder-test
       Test.Hledger.Data.MarketPrice.Extra
       Test.Hledger.Extra
       Test.Hledger.Read.TestUtils
+      Test.HUnit.Extra
       Test.Numeric.PositiveNatural
       Test.Text.Megaparsec.Char.Extra
       Test.Text.Megaparsec.Match

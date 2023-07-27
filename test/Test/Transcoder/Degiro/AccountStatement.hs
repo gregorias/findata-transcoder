@@ -13,7 +13,7 @@ import Hledger.Read.TestUtils (
  )
 import NeatInterpolation (trimming)
 import Relude
-import Test.HUnit (assertFailure)
+import Test.HUnit.Extra (assertLeft, assertRight)
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe, shouldMatchList, shouldSatisfy)
 import Transcoder.Data.CsvFile (CsvFile (..))
@@ -22,14 +22,6 @@ import Transcoder.Data.Isin (isin)
 import Transcoder.Degiro.AccountStatement (csvRecordsToLedger)
 import Transcoder.Degiro.AccountStatement qualified as DegiroAccStmt
 import Transcoder.Degiro.Csv (DegiroCsvRecord (..), DegiroIsin (DegiroIsin), parseCsvStatement)
-
-assertLeft :: (Show r) => Either l r -> IO l
-assertLeft (Left l) = return l
-assertLeft (Right r) = assertFailure $ "Expected Left, got " <> show r
-
-assertRight :: (Show l) => Either l r -> IO r
-assertRight (Left l) = assertFailure $ "Expected Right, got " <> show l
-assertRight (Right r) = return r
 
 tests :: SpecWith ()
 tests = do
