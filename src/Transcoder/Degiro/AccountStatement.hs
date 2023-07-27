@@ -26,17 +26,18 @@ import Hledger (
   post,
  )
 import Hledger.Data.Extra (
+  Comment (NoComment),
   ToPosting (toPosting),
   ToTransaction (toTransaction),
   makeCashAmount,
   makeCommodityAmount,
+  makePosting,
   makeTransaction,
  )
 import Hledger.Data.Lens (
   aAmountPrice,
   pAmount,
   pBalanceAssertion,
-  pStatus,
  )
 import Relude
 import Text.Megaparsec (
@@ -81,7 +82,7 @@ dcrToDeposit :: DegiroCsvRecord -> Maybe Deposit
 dcrToDeposit rec
   | dcrDescription rec `elem` ["Deposit", "Withdrawal"] = do
       change <- dcrChange rec
-      return $ Deposit (dcrDate rec) change (dcrBalance rec)
+      return Deposit{depositDate = dcrDate rec, depositAmount = change, depositBalance = dcrBalance rec}
   | otherwise = Nothing
 
 instance ToTransaction Deposit where
@@ -90,13 +91,9 @@ instance ToTransaction Deposit where
       date
       Nothing
       "Deposit"
-      [ post bcgeAccount (makeCashAmount $ Cash.negate amount)
-          & set pStatus Pending
-      , post degiroAccount (makeCashAmount amount)
-          & set pStatus Cleared
-          . set
-            pBalanceAssertion
-            (balassert $ makeCashAmount balance)
+      [ makePosting (Just Pending) bcgeAccount (Just $ Cash.negate amount) NoComment
+      , makePosting (Just Cleared) degiroAccount (Just amount) NoComment
+          & set pBalanceAssertion (balassert $ makeCashAmount balance)
       ]
 
 -- | A fee paid to or from Degiro.
