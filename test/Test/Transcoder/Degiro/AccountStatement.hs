@@ -28,7 +28,7 @@ tests = do
   describe "Transcoder.Degiro.AccountStatement" $ do
     describe "csvRecordsToLedger" csvRecordsToLedgerTests
 
-    it "Parses an account statement" $ do
+    it "Parses a Flatex Interest statement" $ do
       let stmt =
             CsvFile
               $ encodeUtf8
@@ -39,13 +39,13 @@ tests = do
       DegiroAccStmt.csvStatementToLedger stmt
         `shouldBe` Right
           [ [transactionQQ|
-                            2021/12/31 * Flatex Interest
-                              Assets:Liquid:Degiro  -0.46 CHF = 245.29 CHF
-                              Expenses:Financial Services  0.46 CHF|]
+              2021/12/31 * Flatex Interest
+                Assets:Liquid:Degiro        -0.46 CHF = 245.29 CHF
+                Expenses:Financial Services  0.46 CHF|]
           , [transactionQQ|
-                            2022/01/02 * Flatex Interest Income
-                              Assets:Liquid:Degiro  0.00 EUR = 0 EUR
-                              Expenses:Financial Services  0.00 EUR|]
+              2022/01/02 * Flatex Interest Income
+                Assets:Liquid:Degiro         0.00 EUR = 0 EUR
+                Expenses:Financial Services  0.00 EUR|]
           ]
 
 csvRecordsToLedgerTests :: SpecWith ()
