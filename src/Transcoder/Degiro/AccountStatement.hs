@@ -96,6 +96,100 @@ instance ToTransaction Deposit where
           & set pBalanceAssertion (balassert $ makeCashAmount balance)
       ]
 
+-- | A single stock trade, i.e., a buy or sell transaction without any additional fees etc.
+data StockTrade = StockTrade
+  { stDate :: !Day
+  , stIsin :: !Isin
+  , stQuantity :: !Int
+  , stPrice :: !Cash
+  , stChange :: !Cash
+  , stBalance :: !Cash
+  }
+
+data StockTradeType = Buy | Sell
+  deriving stock (Bounded, Enum, Eq, Show)
+
+stockTradeTypeP :: Text -> Maybe StockTradeType
+stockTradeTypeP = inverseMap show
+
+data StockTradeDescription = StockTradeDescription
+  { stdType :: !StockTradeType
+  , stdQuantity :: !Int
+  , stdPrice :: !Cash
+  }
+
+stockTradeDescriptionP :: Text -> Maybe StockTradeDescription
+stockTradeDescriptionP = MP.parseMaybe parserP
+ where
+  parserP :: Parsec Void Text StockTradeDescription
+  parserP = do
+    tradeTypeStr <- toText <$> some letterChar
+    tradeType <- maybe (fail "Expected stock trade type") return (stockTradeTypeP tradeTypeStr)
+    space
+    quantity <- decimal
+    void $ manyTill anySingle (single '@')
+    price <- decimalP defaultDecimalFormat
+    space
+    currency <- currencyP
+    void $ many anySingle
+    return
+      StockTradeDescription
+        { stdType = tradeType
+        , stdQuantity = quantity
+        , stdPrice = Cash currency price
+        }
+
+dcrToStockTrade :: DegiroCsvRecord -> Maybe StockTrade
+dcrToStockTrade rec = do
+  trDegiroIsin <- dcrIsin rec
+  trIsin <- case trDegiroIsin of
+    DegiroIsin is -> return is
+    Nlflatexacnt -> Nothing
+  (StockTradeDescription trType quantity price) <-
+    stockTradeDescriptionP
+      $ dcrDescription rec
+  let qtyChange = case trType of
+        Buy -> id
+        Sell -> negate
+  change <- dcrChange rec
+  return
+    StockTrade
+      { stDate = dcrDate rec
+      , stIsin = trIsin
+      , stQuantity = qtyChange quantity
+      , stPrice = price
+      , stChange = change
+      , stBalance = dcrBalance rec
+      }
+
+instance ToTransaction StockTrade where
+  toTransaction (StockTrade date trIsin qty price change bal) =
+    makeTransaction
+      date
+      (Just Cleared)
+      "Degiro Stock Transaction"
+      [ post
+          ("Assets:Investments:Degiro:" <> prettyStockName)
+          ( makeCommodityAmount
+              prettyStockName
+              (fromRational $ toInteger qty % 1)
+              & set
+                aAmountPrice
+                ( Just
+                    . UnitPrice
+                    . amountSetFullPrecision
+                    . makeCashAmount
+                    $ price
+                )
+          )
+      , makePosting Nothing degiroAccount (Just change) NoComment
+          & set
+            pBalanceAssertion
+            (balassert $ makeCashAmount bal)
+      ]
+   where
+    prettyStockName = prettyIsin trIsin
+
 -- | A fee paid to or from Degiro.
 -- https://www.reddit.com/r/BEFire/comments/q0eil0/degiro_flatex_interestswhat_are_they/
 data Fee = Fee
@@ -227,85 +321,6 @@ instance ToTransaction Fx where
             <$> fxPostingFx postArg
         )
 
-data StockTrade = StockTrade
-  { _stDate :: !Day
-  , _stIsin :: !Isin
-  , _stQuantity :: !Int
-  , _stPrice :: !Cash
-  , _stChange :: !Cash
-  , _stBalance :: !Cash
-  }
-
-data StockTradeType = Buy | Sell
-  deriving stock (Bounded, Enum, Eq, Show)
-
-stockTradeTypeP :: Text -> Maybe StockTradeType
-stockTradeTypeP = inverseMap show
-
-data StockTradeDescription = StockTradeDescription
-  { _stdType :: !StockTradeType
-  , _stdQuantity :: !Int
-  , _stdPrice :: !Cash
-  }
-
-stockTradeDescriptionP :: Text -> Maybe StockTradeDescription
-stockTradeDescriptionP = MP.parseMaybe parserP
- where
-  parserP :: Parsec Void Text StockTradeDescription
-  parserP = do
-    Just tradeType <- stockTradeTypeP . toText <$> some letterChar
-    space
-    quantity <- decimal
-    void $ manyTill anySingle (single '@')
-    price <- decimalP defaultDecimalFormat
-    space
-    currency <- currencyP
-    void $ many anySingle
-    return $ StockTradeDescription tradeType quantity (Cash currency price)
-
-dcrToStockTrade :: DegiroCsvRecord -> Maybe StockTrade
-dcrToStockTrade rec = do
-  trDegiroIsin <- dcrIsin rec
-  trIsin <- case trDegiroIsin of
-    DegiroIsin is -> return is
-    Nlflatexacnt -> Nothing
-  (StockTradeDescription trType quantity price) <-
-    stockTradeDescriptionP
-      $ dcrDescription rec
-  let qtyChange = case trType of
-        Buy -> id
-        Sell -> negate
-  change <- dcrChange rec
-  return $ StockTrade (dcrDate rec) trIsin (qtyChange quantity) price change (dcrBalance rec)
-
-stockTradeToTransaction :: StockTrade -> Transaction
-stockTradeToTransaction (StockTrade date trIsin qty price change bal) =
-  makeTransaction
-    date
-    (Just Cleared)
-    "Degiro Stock Transaction"
-    [ post
-        ("Assets:Investments:Degiro:" <> prettyStockName)
-        ( makeCommodityAmount
-            prettyStockName
-            (fromRational $ toInteger qty % 1)
-            & set
-              aAmountPrice
-              ( Just
-                  . UnitPrice
-                  . amountSetFullPrecision
-                  . makeCashAmount
-                  $ price
-              )
-        )
-    , post degiroAccount (makeCashAmount change)
-        & set
-          pBalanceAssertion
-          (balassert $ makeCashAmount bal)
-    ]
- where
-  prettyStockName = prettyIsin trIsin
-
 isMoneyMarketFundOp :: DegiroCsvRecord -> Bool
 isMoneyMarketFundOp = (== Just (DegiroIsin moneyMarketIsin)) . dcrIsin
 
@@ -347,7 +362,7 @@ activityToTransaction :: Activity -> Transaction
 activityToTransaction (ActivityDeposit dep) = toTransaction dep
 activityToTransaction (ActivityFee cf) = feeToTransaction cf
 activityToTransaction (ActivityFx fx) = toTransaction fx
-activityToTransaction (ActivityStockTrade st) = stockTradeToTransaction st
+activityToTransaction (ActivityStockTrade st) = toTransaction st
 
 dcrsToFx :: DegiroCsvRecord -> DegiroCsvRecord -> Either Text (Maybe Fx)
 dcrsToFx fstRec sndRec
