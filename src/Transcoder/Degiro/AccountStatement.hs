@@ -236,15 +236,9 @@ dcrToFee rec
   | "Exchange Connection Fee"
       `T.isInfixOf` dcrDescription rec
       || "Flatex Interest"
-      `T.isInfixOf` dcrDescription rec
-      || "Cash Sweep Transfer"
       `T.isInfixOf` dcrDescription rec = do
       change <- dcrChange rec
       return $ Fee (dcrDate rec) (dcrDescription rec) change (dcrBalance rec)
-  | "Transfer from your Cash Account at flatex Bank: " `T.isInfixOf` dcrDescription rec = do
-      changeStr <- T.stripPrefix "Transfer from your Cash Account at flatex Bank: " $ dcrDescription rec
-      change <- MP.parseMaybe @Void cashP changeStr
-      return $ Fee (dcrDate rec) (dcrDescription rec) (Cash.negate change) (dcrBalance rec)
   | otherwise = Nothing
 
 instance ToTransaction Fee where
@@ -267,6 +261,70 @@ instance ToTransaction Fee where
         , post "Expenses:Financial Services" (makeCashAmount $ Cash.negate amount)
         ]
 
+-- A transfer between the cash account and the investment account.
+data CashAccountTransfer = CashAccountTransfer
+  { cashAccountTransferDate :: !Day
+  , cashAccountTransferTime :: !TimeOfDay
+  , cashAccountTransferDescription :: !Text
+  , cashAccountTransferAmount :: !Cash
+  , cashAccountTransferBalance :: !Cash
+  }
+  deriving stock (Eq, Show)
+
+cashAccountTransferFromPrefix :: Text
+cashAccountTransferFromPrefix = "Transfer from your Cash Account at flatex Bank: "
+
+cashAccountTransferToPrefix :: Text
+cashAccountTransferToPrefix = "Transfer to your Cash Account at flatex Bank: "
+
+dcrToCashAccountTransfer :: DegiroCsvRecord -> Maybe CashAccountTransfer
+dcrToCashAccountTransfer rec
+  | cashAccountTransferFromPrefix `T.isInfixOf` dcrDescription rec = do
+      changeStr <- T.stripPrefix cashAccountTransferFromPrefix $ dcrDescription rec
+      change <- MP.parseMaybe @Void cashP changeStr
+      return
+        CashAccountTransfer
+          { cashAccountTransferDate = dcrDate rec
+          , cashAccountTransferTime = dcrTime rec
+          , cashAccountTransferDescription = dcrDescription rec
+          , cashAccountTransferAmount = Cash.negate change
+          , cashAccountTransferBalance = dcrBalance rec
+          }
+  | cashAccountTransferToPrefix `T.isInfixOf` dcrDescription rec = do
+      changeStr <- T.stripPrefix cashAccountTransferToPrefix $ dcrDescription rec
+      change <- MP.parseMaybe @Void cashP changeStr
+      return
+        CashAccountTransfer
+          { cashAccountTransferDate = dcrDate rec
+          , cashAccountTransferTime = dcrTime rec
+          , cashAccountTransferDescription = dcrDescription rec
+          , cashAccountTransferAmount = change
+          , cashAccountTransferBalance = dcrBalance rec
+          }
+  | otherwise = Nothing
+
+-- | A single CSV row described as a cash sweep transfer.
+data CashSweepTransfer = CashSweepTransfer
+  { cashSweepTransferDate :: !Day
+  , cashSweepTransferTime :: !TimeOfDay
+  , cashSweepTransferAmount :: !Cash
+  , cashSweepTransferBalance :: !Cash
+  }
+  deriving stock (Eq, Show)
+
+dcrToCashSweepTransfer :: DegiroCsvRecord -> Maybe CashSweepTransfer
+dcrToCashSweepTransfer dcr = do
+  guard $ dcrDescription dcr == "Degiro Cash Sweep Transfer"
+  change <- dcrChange dcr
+
+  return
+    CashSweepTransfer
+      { cashSweepTransferDate = dcrDate dcr
+      , cashSweepTransferTime = dcrTime dcr
+      , cashSweepTransferAmount = change
+      , cashSweepTransferBalance = dcrBalance dcr
+      }
+
 -- | A semantic elaboration on DegiroCsvRecord.
 --
 -- Each instance of this type corresponds to one CSV record but semantically distilled.
@@ -275,6 +333,8 @@ data DegiroCsvSmartRecord
   | DCSRStockTrade !StockTrade
   | DCSRFxRow !FxRow
   | DCSRFee !Fee
+  | DCSRCashAccountTransfer !CashAccountTransfer
+  | DCSRCashSweepTransfer !CashSweepTransfer
   deriving stock (Eq, Show)
 
 csvRecordToSmartRecord :: DegiroCsvRecord -> Maybe DegiroCsvSmartRecord
@@ -285,7 +345,33 @@ csvRecordToSmartRecord dcr = flip runCont id $ callCC $ \exit -> do
   exitOnJust $ DCSRStockTrade <$> dcrToStockTrade dcr
   exitOnJust $ DCSRFxRow <$> dcrToFxRow dcr
   exitOnJust $ DCSRFee <$> dcrToFee dcr
+  exitOnJust $ DCSRCashAccountTransfer <$> dcrToCashAccountTransfer dcr
+  exitOnJust $ DCSRCashSweepTransfer <$> dcrToCashSweepTransfer dcr
   return Nothing
+
+-- | A cash sweep activity consists of a CashSweepTransfer and a
+-- CashAccountTransfer that nullify each other.
+data CashSweepActivity = CashSweepActivity
+  { cashSweepActivityDate :: !Day
+  , cashSweepActivityTime :: !TimeOfDay
+  }
+
+cashSweepActivityFromCashTransfers :: CashSweepTransfer -> CashAccountTransfer -> Either Text CashSweepActivity
+cashSweepActivityFromCashTransfers
+  CashSweepTransfer
+    { cashSweepTransferDate = sweepDate
+    , cashSweepTransferTime = sweepTime
+    , cashSweepTransferAmount = sweepAmount
+    }
+  CashAccountTransfer
+    { cashAccountTransferDate = accountDate
+    , cashAccountTransferTime = accountTime
+    , cashAccountTransferAmount = accountAmount
+    } = do
+    unless (sweepDate == accountDate) $ Left ("Cash sweep dates do not match: " <> show sweepDate <> " vs " <> show accountDate)
+    unless (sweepTime == accountTime) $ Left ("Cash sweep times do not match: " <> show sweepTime <> " vs " <> show accountTime)
+    unless (sweepAmount == Cash.negate accountAmount) $ Left ("Cash sweep amounts do not match: " <> show sweepAmount <> " vs " <> show accountAmount)
+    return CashSweepActivity{cashSweepActivityDate = sweepDate, cashSweepActivityTime = sweepTime}
 
 data FxPosting = FxPosting
   { fxPostingFx :: !(Maybe Decimal)
@@ -380,6 +466,7 @@ data Activity
   | ActivityFee Fee
   | ActivityFx Fx
   | ActivityStockTrade StockTrade
+  | ActivityCashSweep !CashSweepActivity
 
 class ToActivity a where
   toActivity :: a -> Activity
@@ -396,11 +483,15 @@ instance ToActivity Fx where
 instance ToActivity StockTrade where
   toActivity = ActivityStockTrade
 
-activityToTransaction :: Activity -> Transaction
-activityToTransaction (ActivityDeposit dep) = toTransaction dep
-activityToTransaction (ActivityFee cf) = toTransaction cf
-activityToTransaction (ActivityFx fx) = toTransaction fx
-activityToTransaction (ActivityStockTrade st) = toTransaction st
+-- | Converts an activity to a transaction.
+--
+-- Not every activity results in a transaction. For example, a cash sweep activity is ignored.
+activityToTransaction :: Activity -> Maybe Transaction
+activityToTransaction (ActivityDeposit dep) = return $ toTransaction dep
+activityToTransaction (ActivityFee cf) = return $ toTransaction cf
+activityToTransaction (ActivityFx fx) = return $ toTransaction fx
+activityToTransaction (ActivityStockTrade st) = return $ toTransaction st
+activityToTransaction (ActivityCashSweep _) = Nothing
 
 activityFromFxRows :: FxRow -> FxRow -> Either Text Activity
 activityFromFxRows fstRow sndRow = toActivity <$> mergeFx fstRow sndRow
@@ -426,6 +517,10 @@ smartRecordsToActivities ((DCSRFxRow fxx) : ((DCSRFxRow fxy) : ys)) =
   case activityFromFxRows fxx fxy of
     Right activity -> (activity :) <$> smartRecordsToActivities ys
     Left err -> Left err
+smartRecordsToActivities ((DCSRCashSweepTransfer sweepTransfer) : ((DCSRCashAccountTransfer accountTransfer) : ys)) =
+  case cashSweepActivityFromCashTransfers sweepTransfer accountTransfer of
+    Right activity -> (ActivityCashSweep activity :) <$> smartRecordsToActivities ys
+    Left err -> Left err
 smartRecordsToActivities (x : xs) = do
   activity <- activityFromSmartRecord x
   rest <- smartRecordsToActivities xs
@@ -443,7 +538,7 @@ csvRecordsToActivities =
 
 -- | Transforms a parsed Degiro CSV statement into Ledger transactions.
 csvRecordsToLedger :: [DegiroCsvRecord] -> Either Text [Transaction]
-csvRecordsToLedger recs = activityToTransaction <<$>> csvRecordsToActivities recs
+csvRecordsToLedger recs = catMaybes <$> (activityToTransaction <<$>> csvRecordsToActivities recs)
 
 -- | Transforms a Degiro CSV statement into Ledger transactions.
 csvStatementToLedger :: CsvFile LBS.ByteString -> Either Text [Transaction]

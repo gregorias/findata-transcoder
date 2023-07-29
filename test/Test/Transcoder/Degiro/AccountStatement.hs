@@ -4,12 +4,14 @@ module Test.Transcoder.Degiro.AccountStatement (
   tests,
 ) where
 
+import Data.ByteString.Lazy qualified as LBS
 import Data.Cash (Cash (Cash))
 import Data.Text qualified as T
 import Data.Time (fromGregorian)
 import Data.Time.LocalTime (TimeOfDay (TimeOfDay))
 import Hledger.Read.TestUtils (
   transactionQQ,
+  transactionsQQ,
  )
 import NeatInterpolation (trimming)
 import Relude
@@ -47,6 +49,21 @@ tests = do
                 Assets:Liquid:Degiro         0.00 EUR = 0 EUR
                 Expenses:Financial Services  0.00 EUR|]
           ]
+
+    it "Parses an account statement (2023 May-July)." $ do
+      accountStatement <- CsvFile <$> LBS.readFile "test/data/degiro-account-statement.csv"
+      ledger <- assertRight $ DegiroAccStmt.csvStatementToLedger accountStatement
+      ledger
+        `shouldBe`
+        -- We ignore Degiro sweep transfers. I don't care about the
+        -- distinction between the DEGIRO account and the Flatex account.
+        [transactionsQQ|
+          2023/07/02 * Flatex Interest Income
+            Assets:Liquid:Degiro           -0.00 CHF = 1065.66 CHF
+            Expenses:Financial Services     0.00 CHF
+          2023/07/03 * Flatex Interest Income
+            Assets:Liquid:Degiro        -0.00 EUR = 0.00 EUR
+            Expenses:Financial Services  0.00 EUR|]
 
 csvRecordsToLedgerTests :: SpecWith ()
 csvRecordsToLedgerTests = do
@@ -169,30 +186,6 @@ csvRecordsToLedgerTests = do
                   Assets:Liquid:Degiro  -2.50 EUR = -2.50 EUR
                   Expenses:Financial Services  2.50 EUR|]
         ]
-
-  it "Parses a cash account transfer." $ do
-    ledger <-
-      assertRight
-        $ csvRecordsToLedger
-          [ DegiroCsvRecord
-              { dcrDate = fromGregorian 2022 2 7
-              , dcrTime = TimeOfDay 10 17 0
-              , dcrValueDate = fromGregorian 2022 2 4
-              , dcrProduct = ""
-              , dcrIsin = Nothing
-              , dcrDescription = "Transfer from your Cash Account at flatex Bank: 2.63 CHF"
-              , dcrFx = Nothing
-              , dcrChange = Nothing
-              , dcrBalance = Cash chf 242.66
-              , dcrOrderId = ""
-              }
-          ]
-    ledger
-      `shouldBe` [ [transactionQQ|
-            2022/02/07 * Transfer from your Cash Account at flatex Bank: 2.63 CHF
-              Assets:Liquid:Degiro  -2.63 CHF = 242.66 CHF
-              Expenses:Financial Services  2.63 CHF|]
-                 ]
 
   it "Parses an Fx transaction." $ do
     ledger <-

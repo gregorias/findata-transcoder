@@ -1,0 +1,5 @@
+Date,Time,Value date,Product,ISIN,Description,FX,Change,,Balance,,Order ID
+03-07-2023,01:31,30-06-2023,,,Flatex Interest Income,,EUR,0.00,EUR,0.00,
+02-07-2023,21:01,30-06-2023,,,Flatex Interest Income,,CHF,0.00,CHF,1065.66,
+24-05-2023,11:06,23-05-2023,,,Transfer to your Cash Account at flatex Bank: 910.3 CHF,,,,CHF,1065.66,
+24-05-2023,11:06,23-05-2023,FLATEX CHF BANKACCOUNT,NLFLATEXACNT,Degiro Cash Sweep Transfer,,CHF,-910.30,CHF,155.36,
