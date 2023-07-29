@@ -5,7 +5,7 @@ module Transcoder.Degiro.AccountStatement (
 ) where
 
 import Control.Lens (set, view)
-import Control.Monad (msum)
+import Control.Monad.Cont (Cont, MonadCont (callCC), runCont)
 import Data.ByteString.Lazy qualified as LBS
 import Data.Cash (Cash (Cash), cashAmount, cashCurrency, cashP)
 import Data.Cash qualified as Cash
@@ -77,6 +77,7 @@ data Deposit = Deposit
   , depositBalance :: !Cash
   -- ^ Final Degiro cash balance.
   }
+  deriving stock (Eq, Show)
 
 dcrToDeposit :: DegiroCsvRecord -> Maybe Deposit
 dcrToDeposit rec
@@ -105,6 +106,7 @@ data StockTrade = StockTrade
   , stChange :: !Cash
   , stBalance :: !Cash
   }
+  deriving stock (Eq, Show)
 
 data StockTradeType = Buy | Sell
   deriving stock (Bounded, Enum, Eq, Show)
@@ -190,6 +192,35 @@ instance ToTransaction StockTrade where
    where
     prettyStockName = prettyIsin trIsin
 
+data FxType = Credit | Debit
+
+data FxRow = FxRow
+  { fxRowDate :: !Day
+  , fxRowTime :: !TimeOfDay
+  , fxRowFx :: !(Maybe Decimal)
+  , fxRowChange :: !Cash
+  , fxRowBalance :: !Cash
+  }
+  deriving stock (Eq, Show)
+
+fxTypeP :: Text -> Maybe FxType
+fxTypeP "FX Credit" = Just Credit
+fxTypeP "FX Debit" = Just Debit
+fxTypeP _ = Nothing
+
+dcrToFxRow :: DegiroCsvRecord -> Maybe FxRow
+dcrToFxRow rec = do
+  void $ fxTypeP $ dcrDescription rec
+  change <- dcrChange rec
+  return
+    FxRow
+      { fxRowDate = dcrDate rec
+      , fxRowTime = dcrTime rec
+      , fxRowFx = dcrFx rec
+      , fxRowChange = change
+      , fxRowBalance = dcrBalance rec
+      }
+
 -- | A fee paid to or from Degiro.
 -- https://www.reddit.com/r/BEFire/comments/q0eil0/degiro_flatex_interestswhat_are_they/
 data Fee = Fee
@@ -198,6 +229,7 @@ data Fee = Fee
   , fAmount :: !Cash
   , fBalance :: !Cash
   }
+  deriving stock (Eq, Show)
 
 dcrToFee :: DegiroCsvRecord -> Maybe Fee
 dcrToFee rec
@@ -215,39 +247,45 @@ dcrToFee rec
       return $ Fee (dcrDate rec) (dcrDescription rec) (Cash.negate change) (dcrBalance rec)
   | otherwise = Nothing
 
-feeToTransaction :: Fee -> Transaction
-feeToTransaction (Fee{fDate = date, fDescription = description, fAmount = amount, fBalance = balance}) =
-  makeTransaction
-    date
-    (Just Cleared)
-    description
-    [ post degiroAccount (makeCashAmount amount)
-        & set
-          pBalanceAssertion
-          (balassert $ makeCashAmount balance)
-    , post "Expenses:Financial Services" (makeCashAmount $ Cash.negate amount)
-    ]
+instance ToTransaction Fee where
+  toTransaction
+    ( Fee
+        { fDate = date
+        , fDescription = description
+        , fAmount = amount
+        , fBalance = balance
+        }
+      ) =
+      makeTransaction
+        date
+        (Just Cleared)
+        description
+        [ post degiroAccount (makeCashAmount amount)
+            & set
+              pBalanceAssertion
+              (balassert $ makeCashAmount balance)
+        , post "Expenses:Financial Services" (makeCashAmount $ Cash.negate amount)
+        ]
 
-data FxType = Credit | Debit
+-- | A semantic elaboration on DegiroCsvRecord.
+--
+-- Each instance of this type corresponds to one CSV record but semantically distilled.
+data DegiroCsvSmartRecord
+  = DCSRDeposit !Deposit
+  | DCSRStockTrade !StockTrade
+  | DCSRFxRow !FxRow
+  | DCSRFee !Fee
+  deriving stock (Eq, Show)
 
-data FxRow = FxRow
-  { fxRowDate :: !Day
-  , fxRowTime :: !TimeOfDay
-  , fxRowFx :: !(Maybe Decimal)
-  , fxRowChange :: !Cash
-  , fxRowBalance :: !Cash
-  }
-
-fxTypeP :: Text -> Maybe FxType
-fxTypeP "FX Credit" = Just Credit
-fxTypeP "FX Debit" = Just Debit
-fxTypeP _ = Nothing
-
-dcrToFxRow :: DegiroCsvRecord -> Maybe FxRow
-dcrToFxRow rec = do
-  void $ fxTypeP $ dcrDescription rec
-  change <- dcrChange rec
-  return $ FxRow (dcrDate rec) (dcrTime rec) (dcrFx rec) change (dcrBalance rec)
+csvRecordToSmartRecord :: DegiroCsvRecord -> Maybe DegiroCsvSmartRecord
+csvRecordToSmartRecord dcr = flip runCont id $ callCC $ \exit -> do
+  let exitOnJust :: Maybe DegiroCsvSmartRecord -> Cont (Maybe DegiroCsvSmartRecord) ()
+      exitOnJust = maybe pass (exit . Just)
+  exitOnJust $ DCSRDeposit <$> dcrToDeposit dcr
+  exitOnJust $ DCSRStockTrade <$> dcrToStockTrade dcr
+  exitOnJust $ DCSRFxRow <$> dcrToFxRow dcr
+  exitOnJust $ DCSRFee <$> dcrToFee dcr
+  return Nothing
 
 data FxPosting = FxPosting
   { fxPostingFx :: !(Maybe Decimal)
@@ -360,56 +398,42 @@ instance ToActivity StockTrade where
 
 activityToTransaction :: Activity -> Transaction
 activityToTransaction (ActivityDeposit dep) = toTransaction dep
-activityToTransaction (ActivityFee cf) = feeToTransaction cf
+activityToTransaction (ActivityFee cf) = toTransaction cf
 activityToTransaction (ActivityFx fx) = toTransaction fx
 activityToTransaction (ActivityStockTrade st) = toTransaction st
 
-dcrsToFx :: DegiroCsvRecord -> DegiroCsvRecord -> Either Text (Maybe Fx)
-dcrsToFx fstRec sndRec
-  | isNothing (dcrToFxRow fstRec) = return Nothing
-  | otherwise =
-      do
-        fstRow <- case dcrToFxRow fstRec of
-          Just r -> return r
-          Nothing -> Left . toText @String $ "Could not parse an FX record: " <> show fstRec
-        sndRow <- case dcrToFxRow sndRec of
-          Just r -> return r
-          Nothing -> Left . toText @String $ "Found an unmatched FX record: " <> show fstRec
-        Just <$> mergeFx fstRow sndRow
+activityFromFxRows :: FxRow -> FxRow -> Either Text Activity
+activityFromFxRows fstRow sndRow = toActivity <$> mergeFx fstRow sndRow
 
-dcrsToFxActivity :: DegiroCsvRecord -> DegiroCsvRecord -> Either Text (Maybe Activity)
-dcrsToFxActivity fstRec sndRec = toActivity <<$>> dcrsToFx fstRec sndRec
+activityFromSmartRecord :: DegiroCsvSmartRecord -> Either Text Activity
+activityFromSmartRecord (DCSRDeposit dep) = Right $ toActivity dep
+activityFromSmartRecord (DCSRStockTrade st) = Right $ toActivity st
+activityFromSmartRecord (DCSRFee cf) = Right $ toActivity cf
+activityFromSmartRecord record = Left $ "Can't create an activity. Unrecognized smart record: " <> show record
 
-dcrToSingleRowActivity :: DegiroCsvRecord -> Maybe Activity
-dcrToSingleRowActivity rec =
-  msum
-    $ flap
-      [ fmap toActivity . dcrToDeposit
-      , fmap toActivity . dcrToFee
-      , fmap toActivity . dcrToStockTrade
-      ]
-      rec
+parseCsvSmartRecords :: [DegiroCsvRecord] -> Either Text [DegiroCsvSmartRecord]
+parseCsvSmartRecords dcrs =
+  let tryParse :: DegiroCsvRecord -> Either DegiroCsvRecord DegiroCsvSmartRecord
+      tryParse dcr = maybe (Left dcr) return $ csvRecordToSmartRecord dcr
+      reportError :: DegiroCsvRecord -> Text
+      reportError = ("Could not parse CSV record into a smart record: " <>) . dcrDescription
+      elems :: [Either Text DegiroCsvSmartRecord]
+      elems = mapLeft reportError . tryParse <$> dcrs
+   in sequence elems
 
-parseActivitiesErrorString :: DegiroCsvRecord -> Either Text a
-parseActivitiesErrorString row =
-  Left
-    $ "Could not process all elements.\n"
-    <> "One remaining row's description: "
-    <> dcrDescription row
-    <> "\n"
+smartRecordsToActivities :: [DegiroCsvSmartRecord] -> Either Text [Activity]
+smartRecordsToActivities ((DCSRFxRow fxx) : ((DCSRFxRow fxy) : ys)) =
+  case activityFromFxRows fxx fxy of
+    Right activity -> (activity :) <$> smartRecordsToActivities ys
+    Left err -> Left err
+smartRecordsToActivities (x : xs) = do
+  activity <- activityFromSmartRecord x
+  rest <- smartRecordsToActivities xs
+  return $ activity : rest
+smartRecordsToActivities [] = return []
 
 parseActivities :: [DegiroCsvRecord] -> Either Text [Activity]
-parseActivities [] = return []
-parseActivities [x] = case dcrToSingleRowActivity x of
-  Nothing -> parseActivitiesErrorString x
-  Just ac -> return [ac]
-parseActivities (x : xs@(y : ys)) = case dcrToSingleRowActivity x of
-  Nothing -> do
-    maybeFx <- dcrsToFxActivity x y
-    case maybeFx of
-      Nothing -> parseActivitiesErrorString x
-      Just ac -> (ac :) <$> parseActivities ys
-  Just ac -> (ac :) <$> parseActivities xs
+parseActivities dcrs = parseCsvSmartRecords dcrs >>= smartRecordsToActivities
 
 -- | Parses a parsed Degiro CSV statement into stronger types.
 csvRecordsToActivities :: [DegiroCsvRecord] -> Either Text [Activity]

@@ -307,8 +307,6 @@ csvRecordsToLedgerTests = do
             ]
       errorMsg
         `shouldSatisfy` ( \errMsg ->
-                            "Could not process all elements.\n"
-                              `T.isInfixOf` errMsg
-                              && "One remaining row's description: Bogus description"
+                            "Could not parse CSV record into a smart record: Bogus description"
                               `T.isInfixOf` errMsg
                         )
