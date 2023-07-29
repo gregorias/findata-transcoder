@@ -2,14 +2,13 @@ module Test.Transcoder.EasyRide (
   tests,
 ) where
 
-import qualified Data.ByteString as BS
+import Data.ByteString qualified as BS
 import Data.Text.Encoding (decodeUtf8)
-import Hledger.Read.TestUtils (parseTransactionUnsafe)
-import NeatInterpolation (trimming)
+import Hledger.Read.TestUtils (transactionQQ)
 import Test.Hspec (describe, it)
-import qualified Test.Hspec as Hspec
+import Test.Hspec qualified as Hspec
 import Test.Hspec.Expectations.Pretty (shouldBe)
-import qualified Transcoder.EasyRide as EasyRide
+import Transcoder.EasyRide qualified as EasyRide
 import Prelude
 
 tests :: Hspec.SpecWith ()
@@ -19,8 +18,7 @@ tests = do
       it "converts a transaction (01)" $ do
         receipt <- decodeUtf8 <$> BS.readFile "test/data/easyride-01.txt"
         let expectedTr =
-              parseTransactionUnsafe
-                [trimming|
+              [transactionQQ|
                   2021/07/11 * EasyRide
                     ! Assets:Liquid:BCGE CC  -2.30 CHF
                     Expenses:Transport        2.30 CHF
@@ -29,8 +27,7 @@ tests = do
       it "converts a transaction (02)" $ do
         receipt <- decodeUtf8 <$> BS.readFile "test/data/easyride-02.txt"
         let expectedTr =
-              parseTransactionUnsafe
-                [trimming|
+              [transactionQQ|
                   2022/09/04 * EasyRide
                     ! Assets:Liquid:BCGE CC  -10.50 CHF
                     Expenses:Transport        10.50 CHF
@@ -39,8 +36,7 @@ tests = do
       it "converts a transaction (03)" $ do
         receipt <- decodeUtf8 <$> BS.readFile "test/data/easyride-03.txt"
         let expectedTr =
-              parseTransactionUnsafe
-                [trimming|
+              [transactionQQ|
                   2023/01/01 * EasyRide
                     ! Assets:Liquid:BCGE CC  -5.20 CHF
                     Expenses:Transport        5.20 CHF

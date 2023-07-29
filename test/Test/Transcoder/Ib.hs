@@ -7,13 +7,13 @@ module Test.Transcoder.Ib (
 ) where
 
 import Data.Ratio ((%))
-import qualified Data.Text as T
+import Data.Text qualified as T
 import Data.Time (fromGregorian)
 import Hledger (MarketPrice (MarketPrice))
-import Hledger.Read.TestUtils (parseTransactionUnsafe)
+import Hledger.Read.TestUtils (transactionQQ, transactionsQQ)
 import Relude
 import Test.Hspec (describe, it)
-import qualified Test.Hspec as Hspec
+import Test.Hspec qualified as Hspec
 import Test.Hspec.Expectations.Pretty (shouldBe, shouldSatisfy)
 import Transcoder.Data.LedgerReport (LedgerReport (..))
 import Transcoder.Ib (
@@ -21,7 +21,7 @@ import Transcoder.Ib (
   statementActivityToLedgerReport,
  )
 import Transcoder.Ib.Csv (ActivityStatement (asDividends), nullActivityStatement)
-import qualified Transcoder.Ib.Csv as IbCsv
+import Transcoder.Ib.Csv qualified as IbCsv
 
 tests :: Hspec.SpecWith ()
 tests = do
@@ -47,11 +47,11 @@ parseTests = do
           ( LedgerReport
               { ledgerReportMarketPrices = []
               , ledgerReportTransactions =
-                  [ parseTransactionUnsafe
-                      "2020/01/01 * VOO dividend @ 0.45 per share\n\
-                      \  Assets:Liquid:IB:USD\n\
-                      \  State:2020:IB Withholding Tax:VOO  USD 0\n\
-                      \  Income:Capital Gains  USD -450"
+                  [ [transactionQQ|
+                    2020/01/01 * VOO dividend @ 0.45 per share
+                      Assets:Liquid:IB:USD
+                      State:2020:IB Withholding Tax:VOO  USD 0
+                      Income:Capital Gains  USD -450|]
                   ]
               }
           )
@@ -154,33 +154,28 @@ parseTests = do
       parseActivityCsv csv
         `shouldBe` Right
           ( LedgerReport
-              [ parseTransactionUnsafe
-                  "2020/01/15 * USD.CHF\n\
-                  \ Assets:Liquid:IB:USD  USD -2200000.00 @ 0.96358 CHF\n\
-                  \ Assets:Liquid:IB:CHF  CHF 2119800.76\n\
-                  \ Assets:Liquid:IB:CHF  CHF -1.93502\n\
-                  \ Expenses:Financial Services  CHF 1.93502"
-              , parseTransactionUnsafe
-                  "2020/01/20 IB Deposit/Withdrawal\n\
-                  \*  Assets:Liquid:IB:CHF  CHF 100.32\n\
-                  \!  Todo"
-              , parseTransactionUnsafe
-                  "2020/10/02 * VOO dividend @ 1.3085 per share\n\
-                  \  Assets:Liquid:IB:USD\n\
-                  \  State:2020:IB Withholding Tax:VOO  USD 0.25\n\
-                  \  Income:Capital Gains  USD -1.31"
-              , parseTransactionUnsafe
-                  "2020/10/05 * VOO trade\n\
-                  \  Assets:Investments:IB:VOO  2 VOO\n\
-                  \  Assets:Liquid:IB:USD  -1 USD\n\
-                  \  Assets:Liquid:IB:USD  -0.5 USD\n\
-                  \  Expenses:Financial Services  0.5 USD"
-              , parseTransactionUnsafe
-                  "2020/11/26 * IB Status\n\
-                  \  Assets:Liquid:IB:CHF  CHF 0 = CHF 123.40\n\
-                  \  Assets:Liquid:IB:USD  USD 0 = USD 567.80\n\
-                  \  Assets:Investments:IB:VOO  0 VOO = VOO 2"
-              ]
+              [transactionsQQ|
+                2020/01/15 * USD.CHF
+                 Assets:Liquid:IB:USD  USD -2200000.00 @ 0.96358 CHF
+                 Assets:Liquid:IB:CHF  CHF 2119800.76
+                 Assets:Liquid:IB:CHF  CHF -1.93502
+                 Expenses:Financial Services  CHF 1.93502
+                2020/01/20 IB Deposit/Withdrawal
+                *  Assets:Liquid:IB:CHF  CHF 100.32
+                !  Todo
+                2020/10/02 * VOO dividend @ 1.3085 per share
+                  Assets:Liquid:IB:USD
+                  State:2020:IB Withholding Tax:VOO  USD 0.25
+                  Income:Capital Gains  USD -1.31
+                2020/10/05 * VOO trade
+                  Assets:Investments:IB:VOO  2 VOO
+                  Assets:Liquid:IB:USD  -1 USD
+                  Assets:Liquid:IB:USD  -0.5 USD
+                  Expenses:Financial Services  0.5 USD
+                2020/11/26 * IB Status
+                  Assets:Liquid:IB:CHF  CHF 0 = CHF 123.40
+                  Assets:Liquid:IB:USD  USD 0 = USD 567.80
+                  Assets:Investments:IB:VOO  0 VOO = VOO 2|]
               [ MarketPrice
                   (fromGregorian 2020 11 26)
                   "VOO"

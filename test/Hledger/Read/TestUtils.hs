@@ -3,19 +3,18 @@
 module Hledger.Read.TestUtils (
   postingP,
   transactionP,
-  parseTransactionUnsafe,
   transactionQQ,
   transactionsQQ,
 ) where
 
-import qualified Control.Lens as L
+import Control.Lens qualified as L
 import Control.Monad.Combinators (
   manyTill,
   someTill,
  )
 import Data.Char (isDigit)
 import Data.Maybe (fromJust)
-import qualified Data.Text as T
+import Data.Text qualified as T
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Hledger (
   AmountPrice (..),
@@ -30,7 +29,7 @@ import Hledger.Data.Extra (
  )
 import Hledger.Data.Lens (pBalanceAssertion, pComment, pStatus, tDescription, tStatus)
 import Hledger.Data.Posting (balassert)
-import qualified Hledger.Data.Transaction as Tr
+import Hledger.Data.Transaction qualified as Tr
 import Hledger.Data.Types (
   Amount (..),
   BalanceAssertion (..),
@@ -38,11 +37,12 @@ import Hledger.Data.Types (
   Status (..),
   Transaction,
  )
-import qualified Hledger.Read.Common as Hledger (
+import Hledger.Extra ()
+import Hledger.Read.Common qualified as Hledger (
   descriptionp,
   statusp,
  )
-import qualified Hledger.Utils.Parse as Hledger
+import Hledger.Utils.Parse qualified as Hledger
 import Language.Haskell.TH.Quote (
   QuasiQuoter (..),
  )
@@ -63,7 +63,7 @@ import Text.Megaparsec (
   takeWhile1P,
   try,
  )
-import qualified Text.Megaparsec as MP
+import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char (
   char,
   newline,
@@ -71,9 +71,9 @@ import Text.Megaparsec.Char (
   spaceChar,
   string,
  )
-import qualified Text.Megaparsec.Char as MP
+import Text.Megaparsec.Char qualified as MP
 import Text.Megaparsec.Char.Extra (eolOrEof)
-import qualified Text.Megaparsec.Internal as MP
+import Text.Megaparsec.Internal qualified as MP
 import Transcoder.Data.MyDecimal (decimalP, defaultDecimalFormat)
 import Trimdent (trimdent)
 
@@ -93,8 +93,9 @@ isCurrency = flip elem ["CHF", "USD", "PLN", "EUR"]
 
 commoditySymbolP :: Parser Text
 commoditySymbolP =
-  label "commodity symbol" $
-    quotedCommoditySymbolP <|> simpleCommoditySymbolP
+  label "commodity symbol"
+    $ quotedCommoditySymbolP
+    <|> simpleCommoditySymbolP
 
 quotedCommoditySymbolP :: Parser Text
 quotedCommoditySymbolP =
@@ -128,8 +129,8 @@ commodityP = do
               return (symbol, amount)
           )
   void $ many space
-  return $
-    case maybeSymbol of
+  return
+    $ case maybeSymbol of
       Just symbol -> makeCommodityAmount symbol amount
       Nothing -> num amount
 
@@ -197,11 +198,11 @@ postingP = do
           { aprice = amountPrice
           }
   void eolOrEof
-  return $
-    post account amount'
-      & L.set pBalanceAssertion balAssert
-        . L.set pStatus status
-        . L.set pComment comment
+  return
+    $ post account amount'
+    & L.set pBalanceAssertion balAssert
+    . L.set pStatus status
+    . L.set pComment comment
 
 -- | A partial Transaction parser
 --
@@ -215,10 +216,10 @@ transactionP = do
   status <- statusP <* many space
   title <- descriptionP <* newline
   ps <- some postingP
-  return $
-    Tr.transaction date ps
-      & L.set tStatus status
-        . L.set tDescription title
+  return
+    $ Tr.transaction date ps
+    & L.set tStatus status
+    . L.set tDescription title
 
 transactionsP :: Parser [Transaction]
 transactionsP = MP.many transactionP
@@ -230,14 +231,16 @@ parseTransactionsUnsafe :: Text -> [Transaction]
 parseTransactionsUnsafe = fromJust . MP.parseMaybe transactionsP
 
 transactionQQExp :: String -> Q Exp
-transactionQQExp trString = [|parseTransactionUnsafe input|]
+transactionQQExp trString = [|transaction|]
  where
   input = toText . trimdent $ trString
+  transaction = parseTransactionUnsafe input
 
 transactionsQQExp :: String -> Q Exp
-transactionsQQExp trString = [|parseTransactionsUnsafe input|]
+transactionsQQExp trString = [|trs|]
  where
   input = toText . trimdent $ trString
+  trs = parseTransactionsUnsafe input
 
 transactionQQ :: QuasiQuoter
 transactionQQ =

@@ -1,3 +1,7 @@
+{-# LANGUAGE DeriveLift #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 module Data.Time.Extra (
   dayP,
   usFullDayP,
@@ -9,12 +13,19 @@ import Data.Text (Text)
 import Data.Time (Day, defaultTimeLocale, parseTimeM)
 import Data.Time.Calendar (fromGregorianValid)
 import Data.Time.Calendar.Extra (monthP)
+import Data.Time.Calendar.OrdinalDate (fromOrdinalDate, toOrdinalDate)
+import Language.Haskell.TH.Syntax (Lift (..))
 import Relude (ToString (toString))
 import Text.Megaparsec (MonadParsec (label, try), Parsec, match, single)
-import qualified Text.Megaparsec as MP
+import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char (digitChar, string)
 import Text.Megaparsec.Char.Lexer (decimal)
 import Prelude
+
+instance Lift Day where
+  liftTyped d =
+    let (y, yod) = toOrdinalDate d
+     in [||fromOrdinalDate y yod||]
 
 -- | Parses strings like "DD/MM/YYYY" or "YY-MM-DD" into a day.
 dayP ::

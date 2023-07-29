@@ -5,10 +5,10 @@ module Test.Transcoder.Mbank (
 ) where
 
 import Data.Time.Calendar (fromGregorian)
-import Hledger.Read.TestUtils (parseTransactionUnsafe)
+import Hledger.Read.TestUtils (transactionQQ)
 import Relude
 import Test.Hspec (describe, it, shouldBe)
-import qualified Test.Hspec as Hspec
+import Test.Hspec qualified as Hspec
 import Text.Megaparsec (parseMaybe)
 import Transcoder.Data.MyDecimal (fromUnitsAndCents)
 import Transcoder.Mbank (
@@ -41,10 +41,10 @@ mbankTests = do
     describe "mTrToLedger" $ do
       it "transforms an mbank transaction" $ do
         let ledgerTr =
-              parseTransactionUnsafe
-                "2019/10/28 PRZELEW ŚRODKÓW\n\
-                \  Assets:Liquid:mBank  PLN -15 = PLN 100949\n\
-                \  Expenses:Other"
+              [transactionQQ|
+                  2019/10/28 PRZELEW ŚRODKÓW
+                    Assets:Liquid:mBank  PLN -15 = PLN 100949
+                    Expenses:Other|]
             mbankTr =
               MbankTransaction
                 (fromGregorian 2019 10 28)

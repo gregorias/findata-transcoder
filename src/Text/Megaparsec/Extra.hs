@@ -1,8 +1,12 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 module Text.Megaparsec.Extra (
   parsePretty,
 ) where
 
 import Data.Either.Extra (mapLeft)
+import Language.Haskell.TH.Lift.Generics (genericLiftTypedCompat)
+import Language.Haskell.TH.Syntax (Lift (..))
 import Relude
 import Text.Megaparsec (
   Parsec,
@@ -12,6 +16,10 @@ import Text.Megaparsec (
   errorBundlePretty,
   parse,
  )
+import Text.Megaparsec qualified as MP
+
+instance Lift MP.Pos where
+  liftTyped = genericLiftTypedCompat
 
 -- | Parses input and provides a pretty error message.
 parsePretty ::

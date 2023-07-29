@@ -4,7 +4,7 @@ module Test.Transcoder.Degiro.Portfolio (
 
 import Data.Time (fromGregorian)
 import Hledger (MarketPrice (MarketPrice))
-import Hledger.Read.TestUtils (parseTransactionUnsafe)
+import Hledger.Read.TestUtils (transactionsQQ)
 import Relude
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe)
@@ -27,12 +27,11 @@ csvRecordsToLedgerTests = do
     csvStatementToLedger (fromGregorian 2010 01 01) csv
       `shouldBe` Right
         ( LedgerReport
-            [ parseTransactionUnsafe
-                "2010/01/01 * Degiro Status\n\
-                \  Assets:Liquid:Degiro  CHF 0 = CHF 143.20\n\
-                \  Assets:Investments:Degiro:IBGS  0 IBGS = IBGS 10\n\
-                \  Assets:Investments:Degiro:IWDA  0 IWDA = IWDA 10"
-            ]
+            [transactionsQQ|
+              2010/01/01 * Degiro Status
+                Assets:Liquid:Degiro  CHF 0 = CHF 143.20
+                Assets:Investments:Degiro:IBGS  0 IBGS = IBGS 10
+                Assets:Investments:Degiro:IWDA  0 IWDA = IWDA 10|]
             [ MarketPrice
                 (fromGregorian 2010 01 01)
                 "IBGS"

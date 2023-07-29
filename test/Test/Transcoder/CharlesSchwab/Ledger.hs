@@ -6,7 +6,7 @@ module Test.Transcoder.CharlesSchwab.Ledger (
 
 import Data.Ratio ((%))
 import Data.Time (fromGregorian)
-import Hledger.Read.TestUtils (parseTransactionUnsafe)
+import Hledger.Read.TestUtils (transactionsQQ)
 import Relude
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe)
@@ -36,11 +36,10 @@ tests = do
         csvToLedger entries
           `shouldBe` Right
             ( LedgerReport
-                [ parseTransactionUnsafe
-                    "2021/01/19 Wire Funds\n\
-                    \  * Assets:Liquid:Charles Schwab:USD  -123.45 USD\n\
-                    \  ! Todo"
-                ]
+                [transactionsQQ|
+                  2021/01/19 Wire Funds
+                    * Assets:Liquid:Charles Schwab:USD  -123.45 USD
+                    ! Todo|]
                 []
             )
       it "transforms a vesting entry" $ do
@@ -58,11 +57,10 @@ tests = do
         csvToLedger entries
           `shouldBe` Right
             ( LedgerReport
-                [ parseTransactionUnsafe
-                    "2020/12/31 * GOOG Vesting\n\
-                    \  Equity:Charles Schwab:Unvested GOOG  -5 GOOG\n\
-                    \  Assets:Investments:Charles Schwab:GOOG  5 GOOG"
-                ]
+                [transactionsQQ|
+                  2020/12/31 * GOOG Vesting
+                    Equity:Charles Schwab:Unvested GOOG  -5 GOOG
+                    Assets:Investments:Charles Schwab:GOOG  5 GOOG|]
                 []
             )
       it "transforms an interest entry" $ do
@@ -80,11 +78,10 @@ tests = do
         csvToLedger entries
           `shouldBe` Right
             ( LedgerReport
-                [ parseTransactionUnsafe
-                    "2021/01/28 * Credit Interest\n\
-                    \  Assets:Liquid:Charles Schwab:USD  0.19 USD\n\
-                    \  Income:Google"
-                ]
+                [transactionsQQ|
+                  2021/01/28 * Credit Interest
+                    Assets:Liquid:Charles Schwab:USD  0.19 USD
+                    Income:Google|]
                 []
             )
       it "transforms an sell entry" $ do
@@ -102,12 +99,11 @@ tests = do
         csvToLedger entries
           `shouldBe` Right
             ( LedgerReport
-                [ parseTransactionUnsafe
-                    "2020/12/31 * GOOG Sale\n\
-                    \  Assets:Investments:Charles Schwab:GOOG  -8 GOOG @ 1765.2706 USD\n\
-                    \  Assets:Liquid:Charles Schwab:USD  14121.85 USD\n\
-                    \  Expenses:Financial Services  0.31 USD"
-                ]
+                [transactionsQQ|
+                  2020/12/31 * GOOG Sale
+                    Assets:Investments:Charles Schwab:GOOG  -8 GOOG @ 1765.2706 USD
+                    Assets:Liquid:Charles Schwab:USD  14121.85 USD
+                    Expenses:Financial Services  0.31 USD|]
                 []
             )
       it "transforms a withholding tax entry" $ do
@@ -125,10 +121,9 @@ tests = do
         csvToLedger entries
           `shouldBe` Right
             ( LedgerReport
-                [ parseTransactionUnsafe
-                    "2020/12/31 * Withholding Tax\n\
-                    \  Assets:Liquid:Charles Schwab:USD  -1.23 USD\n\
-                    \  Equity:Charles Schwab:Unvested GOOG Withholding Tax"
-                ]
+                [transactionsQQ|
+                  2020/12/31 * Withholding Tax
+                    Assets:Liquid:Charles Schwab:USD  -1.23 USD
+                    Equity:Charles Schwab:Unvested GOOG Withholding Tax|]
                 []
             )

@@ -27,6 +27,7 @@ library
       Control.Applicative.Combinators.Extra
       Data.Cash
       Data.Csv.Extra
+      Data.Decimal.Extra
       Data.Text.IO.Extra
       Data.Time.Calendar.Extra
       Data.Time.Extra
@@ -93,6 +94,7 @@ library
     , hledger-lib >=1.19
     , lens
     , lens-regex-pcre
+    , lift-generics
     , megaparsec
     , mtl
     , parser-combinators
@@ -101,6 +103,7 @@ library
     , safe
     , template-haskell
     , text
+    , th-lift-instances
     , time
     , time-compat
     , transformers

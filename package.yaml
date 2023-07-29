@@ -90,6 +90,7 @@ library:
   - hledger-lib >= 1.19
   - lens
   - lens-regex-pcre
+  - lift-generics
   - megaparsec
   - mtl
   - parser-combinators
@@ -98,6 +99,7 @@ library:
   - safe
   - template-haskell
   - text
+  - th-lift-instances
   - time
   - time-compat
   - transformers

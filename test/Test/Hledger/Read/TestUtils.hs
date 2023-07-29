@@ -2,7 +2,7 @@
 
 module Test.Hledger.Read.TestUtils (tests) where
 
-import qualified Control.Lens as L
+import Control.Lens qualified as L
 import Data.Time (fromGregorian)
 import Hledger (
   Amount (aprice),
@@ -28,15 +28,13 @@ import Hledger.Data.Types (
   Status (..),
  )
 import Hledger.Read.TestUtils (
-  parseTransactionUnsafe,
   postingP,
-  transactionP,
   transactionQQ,
   transactionsQQ,
  )
 import Relude
 import Test.Hspec (describe, it)
-import qualified Test.Hspec as Hspec
+import Test.Hspec qualified as Hspec
 import Test.Hspec.Expectations.Pretty (shouldBe)
 import Text.Megaparsec (parseMaybe)
 import Transcoder.Data.Currency (usd)
@@ -113,9 +111,10 @@ tests = do
     describe "transactionParser" $ do
       it "Parses a moneyless transaction" $ do
         let tr =
-              "2019/10/28 * Title\n\
-              \  Assets:Bank With Spaces\n\
-              \  Expenses:Other"
+              [transactionQQ|
+               2019/10/28 * Title
+                 Assets:Bank With Spaces
+                 Expenses:Other|]
             expectedTrBase =
               transaction
                 (fromGregorian 2019 10 28)
@@ -126,12 +125,13 @@ tests = do
               expectedTrBase
                 & L.set tDescription "Title"
                 & L.set tStatus Cleared
-        parseTransactionUnsafe tr `shouldBe` expectedTr
+        tr `shouldBe` expectedTr
       it "Parses a proper transaction with amount" $ do
         let tr =
-              "2019/10/28 * Title\n\
-              \  Assets:Bank With Spaces  SPY -15\n\
-              \  Expenses:Other"
+              [transactionQQ|
+              2019/10/28 * Title
+                Assets:Bank With Spaces  SPY -15
+                Expenses:Other|]
             expectedTrBase =
               transaction
                 (fromGregorian 2019 10 28)
@@ -144,11 +144,12 @@ tests = do
               expectedTrBase
                 & L.set tDescription "Title"
                 & L.set tStatus Cleared
-        parseTransactionUnsafe tr `shouldBe` expectedTr
+        tr `shouldBe` expectedTr
       it "Parses a proper transaction with spaceless amount" $ do
         let tr =
-              "2019/10/28 Title\n\
-              \  Bank  -15SPY"
+              [transactionQQ|
+              2019/10/28 Title
+                Bank  -15SPY|]
             expectedTrBase =
               transaction
                 (fromGregorian 2019 10 28)
@@ -159,12 +160,13 @@ tests = do
             expectedTr =
               expectedTrBase
                 & L.set tDescription "Title"
-        parseMaybe transactionP tr `shouldBe` Just expectedTr
+        tr `shouldBe` expectedTr
       it "Parses a proper transaction with balance" $ do
         let tr =
-              "2019/10/28 * Title\n\
-              \  Assets:Bank  = SPY 123\n\
-              \  Expenses:Other"
+              [transactionQQ|
+              2019/10/28 * Title
+                Assets:Bank  = SPY 123
+                Expenses:Other|]
             expectedTrBase =
               transaction
                 (fromGregorian 2019 10 28)
@@ -178,20 +180,21 @@ tests = do
               expectedTrBase
                 & L.set tDescription "Title"
                 & L.set tStatus Cleared
-        parseTransactionUnsafe tr `shouldBe` expectedTr
+        tr `shouldBe` expectedTr
       it "Parses a proper transaction with amount & balance" $ do
         let tr =
-              "2019/10/28 * Title\n\
-              \  Assets:Bank  SPY 100 = SPY 123\n\
-              \  Expenses:Other"
+              [transactionQQ|
+                2019/10/28 * Title
+                 Assets:Bank  SPY 100 = SPY 123
+                 Expenses:Other|]
             expectedTrBase =
               transaction
                 (fromGregorian 2019 10 28)
                 [ nullposting
                     { paccount = "Assets:Bank"
                     , pbalanceassertion =
-                        balassert $
-                          makeCommodityAmount "SPY" 123
+                        balassert
+                          $ makeCommodityAmount "SPY" 123
                     , pamount = Mixed $ fromList [(MixedAmountKeyNoPrice "SPY", makeCommodityAmount "SPY" 100)]
                     }
                 , post "Expenses:Other" missingamt
@@ -200,7 +203,7 @@ tests = do
               expectedTrBase
                 & L.set tDescription "Title"
                 & L.set tStatus Cleared
-        parseTransactionUnsafe tr `shouldBe` expectedTr
+        tr `shouldBe` expectedTr
       it "Parses a Forex posting with price information." $ do
         let posting = "  Assets:Bank  USD 100 @ CHF 0.9513\n"
             expectedPosting =
@@ -208,9 +211,10 @@ tests = do
                 "Assets:Bank"
                 ( (makeCurrencyAmount usd 100)
                     { aprice =
-                        Just . UnitPrice $
-                          makeCommodityAmount "CHF" 0.9513
-                            & amountSetFullPrecision
+                        Just
+                          . UnitPrice
+                          $ makeCommodityAmount "CHF" 0.9513
+                          & amountSetFullPrecision
                     }
                 )
         parseMaybe postingP posting `shouldBe` Just expectedPosting
