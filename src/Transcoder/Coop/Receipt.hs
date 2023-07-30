@@ -6,12 +6,13 @@ module Transcoder.Coop.Receipt (
   PaymentMethod (..),
   CreditCardPaymentMethod (..),
   Rabatt (..),
+  entryLineP,
   receiptP,
 ) where
 
 import Control.Lens ((^?))
 import Control.Lens.Regex.Text (regex)
-import qualified Control.Lens.Regex.Text as LR
+import Control.Lens.Regex.Text qualified as LR
 import Data.Decimal (Decimal)
 import Data.List.NonEmpty (some1)
 import Data.Time (Day)
@@ -46,7 +47,7 @@ newtype Rabatt = Rabatt Decimal
 rabattLineP :: Parser Rabatt
 rabattLineP = try $ do
   rest :: Text <- anyLineP
-  let maybeRabatt = rest ^? [regex|.* (-\d+\.\d\d)|] . LR.groups
+  let maybeRabatt = rest ^? [regex|.* (-\d+\.\d\d)\n|] . LR.groups
   rabattText <-
     maybe
       (fail . toString $ "Could not parse the rabatt line: " <> rest)
@@ -68,6 +69,7 @@ data Entry = Entry
   { entryName :: !Text
   , entryTotal :: !Decimal
   }
+  deriving stock (Eq, Show)
 
 entryLineP :: Parser Entry
 entryLineP = do
@@ -78,7 +80,7 @@ entryLineP = do
       return
       ( destructureMatchGroups
           =<< ( entryLine
-                  ^? [regex|(.*) (\d+|\d+\.\d+) (\d+\.\d\d)( \d+\.\d\d)? (\d+\.\d\d)( \d+)?|]
+                  ^? [regex|(.*) (-?\d+|-?\d+\.\d+) (\d+\.\d\d)( \d+\.\d\d)? (-?\d+\.\d\d)( \d+)?|]
                     . LR.groups
               )
       )
@@ -103,7 +105,8 @@ data Payment = Payment
 
 paymentP :: Parser Payment
 paymentP = do
-  supercashP <|> creditCardP
+  supercashP
+    <|> creditCardP
     <|> ( do
             method <- (string "TWINT" >> return TWINT) <|> (string "Superpunkte" >> return Superpunkte)
             total <- hspace1 >> cashP
@@ -124,9 +127,9 @@ paymentP = do
     return $ Payment (CreditCard $ CreditCardPaymentMethod cardnumber) total
 
 newtype CreditCardPaymentMethod = CreditCardPaymentMethod
-  { -- | An obscured card number that appears in the receipt, e.g.,
-    -- 'XXXXXX******1144'
-    creditCardPaymentMethodObscuredCardNumber :: Text
+  { creditCardPaymentMethodObscuredCardNumber :: Text
+  -- ^ An obscured card number that appears in the receipt, e.g.,
+  -- 'XXXXXX******1144'
   }
 
 data PaymentMethod

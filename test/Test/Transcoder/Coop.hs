@@ -10,6 +10,7 @@ import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Hledger.Read.TestUtils (transactionQQ)
 import NeatInterpolation (trimming)
 import Test.HUnit (assertFailure)
+import Test.HUnit.Extra (assertRight)
 import Test.Hspec (describe, it)
 import Test.Hspec qualified as Hspec
 import Test.Hspec.Expectations.Pretty (shouldBe)
@@ -61,6 +62,16 @@ tests = do
                   Expenses:Groceries     37.35 CHF
                   Expenses:Other         -2.40 CHF|]
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
+
+      it "handles a correction" $ do
+        coop <- decodeUtf8 <$> BS.readFile "test/data/coop-banana.txt"
+        let expectedTr =
+              [transactionQQ|
+                2023/07/28 * Coop
+                  ! Assets:Liquid:BCGE CC  -14.00 CHF
+                  Expenses:Groceries        14.00 CHF|]
+        tr <- assertRight $ Coop.receiptToLedger Coop.emptyConfig coop
+        tr `shouldBe` expectedTr
 
       it "correctlyCountsAUnnotatedRabatt" $ do
         coop <- decodeUtf8 <$> BS.readFile "test/data/coop-spargel-rabatt.txt"
