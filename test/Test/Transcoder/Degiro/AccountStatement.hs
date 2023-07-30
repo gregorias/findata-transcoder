@@ -23,7 +23,11 @@ import Transcoder.Data.Currency (chf, eur)
 import Transcoder.Data.Isin (isin)
 import Transcoder.Degiro.AccountStatement (csvRecordsToLedger)
 import Transcoder.Degiro.AccountStatement qualified as DegiroAccStmt
-import Transcoder.Degiro.Csv (DegiroCsvRecord (..), DegiroIsin (DegiroIsin), parseCsvStatement)
+import Transcoder.Degiro.Csv (
+  DegiroCsvRecord (..),
+  DegiroIsin (DegiroIsin),
+  parseCsvStatement,
+ )
 
 tests :: SpecWith ()
 tests = do
@@ -58,6 +62,12 @@ tests = do
         -- We ignore Degiro sweep transfers. I don't care about the
         -- distinction between the DEGIRO account and the Flatex account.
         [transactionsQQ|
+          2023/05/23 Deposit
+            ! Assets:Liquid:BCGE   -10000 CHF
+            * Assets:Liquid:Degiro  10000 CHF = 10155.36 CHF
+          2023/05/23 * Degiro Forex
+            Assets:Liquid:Degiro  -9088.73 CHF = 1065.66 CHF @ 1.0263 EUR
+            Assets:Liquid:Degiro   9328.13 EUR = 0.00 EUR
           2023/07/02 * Flatex Interest Income
             Assets:Liquid:Degiro           -0.00 CHF = 1065.66 CHF
             Expenses:Financial Services     0.00 CHF
