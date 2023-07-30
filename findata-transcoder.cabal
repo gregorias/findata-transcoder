@@ -205,6 +205,7 @@ test-suite findata-transcoder-test
     , bytestring
     , cassava
     , containers
+    , extra
     , findata-transcoder
     , hledger-lib
     , hspec

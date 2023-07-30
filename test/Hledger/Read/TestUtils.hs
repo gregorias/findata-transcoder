@@ -1,4 +1,7 @@
+{-# LANGUAGE DeriveLift #-}
 {-# LANGUAGE TemplateHaskellQuotes #-}
+{-# OPTIONS_GHC -Wno-missing-deriving-strategies #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Hledger.Read.TestUtils (
   postingP,
@@ -22,6 +25,7 @@ import Hledger (
   missingamt,
   post,
  )
+import Hledger qualified as H
 import Hledger.Data.Amount (num)
 import Hledger.Data.Extra (
   makeCommodityAmount,
@@ -73,14 +77,15 @@ import Text.Megaparsec.Char (
  )
 import Text.Megaparsec.Char qualified as MP
 import Text.Megaparsec.Char.Extra (eolOrEof)
+import Text.Megaparsec.Extra as MP
 import Text.Megaparsec.Internal qualified as MP
 import Transcoder.Data.MyDecimal (decimalP, defaultDecimalFormat)
 import Trimdent (trimdent)
 
-type Parser = Parsec () Text
+type Parser = Parsec H.HledgerParseErrorData Text
 
 toParser :: Hledger.TextParser Identity a -> Parser a
-toParser = MP.withParsecT (const ())
+toParser = MP.withParsecT id
 
 space :: (MonadParsec e s m, Token s ~ Char) => m Char
 space = single ' '
@@ -224,23 +229,21 @@ transactionP = do
 transactionsP :: Parser [Transaction]
 transactionsP = MP.many transactionP
 
-parseTransactionUnsafe :: Text -> Transaction
-parseTransactionUnsafe = fromJust . MP.parseMaybe transactionP
-
-parseTransactionsUnsafe :: Text -> [Transaction]
-parseTransactionsUnsafe = fromJust . MP.parseMaybe transactionsP
-
 transactionQQExp :: String -> Q Exp
-transactionQQExp trString = [|transaction|]
+transactionQQExp trString = case eitherTr of
+  Right tr -> [|tr|]
+  Left err -> fail $ show err
  where
   input = toText . trimdent $ trString
-  transaction = parseTransactionUnsafe input
+  eitherTr = MP.parsePretty transactionP "" input
 
 transactionsQQExp :: String -> Q Exp
-transactionsQQExp trString = [|trs|]
+transactionsQQExp trString = case eitherTrs of
+  Right trs -> [|trs|]
+  Left err -> fail $ show err
  where
   input = toText . trimdent $ trString
-  trs = parseTransactionsUnsafe input
+  eitherTrs = MP.parsePretty transactionsP "" input
 
 transactionQQ :: QuasiQuoter
 transactionQQ =

@@ -141,6 +141,7 @@ tests:
     - bytestring
     - cassava
     - containers
+    - extra
     - hledger-lib
     - findata-transcoder
     - hspec
