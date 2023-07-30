@@ -235,6 +235,8 @@ dcrToFee :: DegiroCsvRecord -> Maybe Fee
 dcrToFee rec
   | "Exchange Connection Fee"
       `T.isInfixOf` dcrDescription rec
+      || "DEGIRO Transaction and/or third party fees"
+      `T.isInfixOf` dcrDescription rec
       || "Flatex Interest"
       `T.isInfixOf` dcrDescription rec = do
       change <- dcrChange rec

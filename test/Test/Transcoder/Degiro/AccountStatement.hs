@@ -54,7 +54,7 @@ tests = do
                 Expenses:Financial Services  0.00 EUR|]
           ]
 
-    it "Parses an account statement (2023 May-July)." $ do
+    it "Parses an account statement (2023 April-July)." $ do
       accountStatement <- CsvFile <$> LBS.readFile "test/data/degiro-account-statement.csv"
       ledger <- assertRight $ DegiroAccStmt.csvStatementToLedger accountStatement
       ledger
@@ -65,6 +65,12 @@ tests = do
           2023/05/23 Deposit
             ! Assets:Liquid:BCGE   -10000 CHF
             * Assets:Liquid:Degiro  10000 CHF = 10155.36 CHF
+          2023/05/23 * Degiro Stock Transaction
+            Assets:Investments:Degiro:IWDA  125 IWDA @ 74.625 EUR
+            Assets:Liquid:Degiro     -9328.12 EUR = -9328.13 EUR
+          2023/05/23 * DEGIRO Transaction and/or third party fees
+            Assets:Liquid:Degiro        -0.97 CHF = 10154.39 CHF
+            Expenses:Financial Services  0.97 CHF
           2023/05/23 * Degiro Forex
             Assets:Liquid:Degiro  -9088.73 CHF = 1065.66 CHF @ 1.0263 EUR
             Assets:Liquid:Degiro   9328.13 EUR = 0.00 EUR
