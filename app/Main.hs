@@ -49,7 +49,7 @@ import Transcoder.Splitwise qualified as Splitwise
 import Transcoder.UberEats qualified as UberEats
 
 version :: Text
-version = "1.0.0.0"
+version = "1.0.1.0"
 
 ledgerTrsToReport :: [Transaction] -> LedgerReport
 ledgerTrsToReport = flip LedgerReport []

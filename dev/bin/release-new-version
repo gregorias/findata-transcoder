@@ -24,9 +24,9 @@ end
 set NEW_VERSION (get-version)
 and echo "New version: $NEW_VERSION."
 git add app/Main.hs package.yaml
-and echo "Rebuilding to update findata-funnel.cabal."
+and echo "Rebuilding to update findata-transcoder.cabal."
 and stack build --fast
-and git add findata-funnel.cabal
+and git add findata-transcoder.cabal
 and echo "Committing the new version."
 and git commit -m 'chore: release'
 and git push
