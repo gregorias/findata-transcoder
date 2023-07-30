@@ -1,7 +1,7 @@
 module Main (main) where
 
-import qualified Data.ByteString.Lazy as LBS
-import qualified Data.Text.IO as T
+import Data.ByteString.Lazy qualified as LBS
+import Data.Text.IO qualified as T
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Hledger (Transaction)
 import Hledger.Extra (showTransaction)
@@ -21,32 +21,35 @@ import Options.Applicative (
   subparser,
  )
 import Relude
-import qualified Text.Megaparsec as MP
+import Text.Megaparsec qualified as MP
 import Transcoder.Bcge (bcgeCsvToLedger)
-import qualified Transcoder.Bcge.Hint as BcgeHint
-import qualified Transcoder.BcgeCC as BcgeCC
-import qualified Transcoder.CharlesSchwab as CharlesSchwab
-import qualified Transcoder.Coop as Coop
-import qualified Transcoder.Coop.Config as Coop
+import Transcoder.Bcge.Hint qualified as BcgeHint
+import Transcoder.BcgeCC qualified as BcgeCC
+import Transcoder.CharlesSchwab qualified as CharlesSchwab
+import Transcoder.Coop qualified as Coop
+import Transcoder.Coop.Config qualified as Coop
 import Transcoder.Data.CsvFile (CsvFile (..))
 import Transcoder.Data.LedgerReport (LedgerReport (..), showLedgerReport)
-import qualified Transcoder.Degiro.AccountStatement as DegiroAccount (
+import Transcoder.Degiro.AccountStatement qualified as DegiroAccount (
   csvStatementToLedger,
  )
-import qualified Transcoder.Degiro.Portfolio as DegiroPortfolio (
+import Transcoder.Degiro.Portfolio qualified as DegiroPortfolio (
   csvStatementToLedger,
  )
-import qualified Transcoder.EasyRide as EasyRide
-import qualified Transcoder.Finpension as Finpension
+import Transcoder.EasyRide qualified as EasyRide
+import Transcoder.Finpension qualified as Finpension
 import Transcoder.GPayslip (payslipTextToLedger)
-import qualified Transcoder.Galaxus as Galaxus
-import qualified Transcoder.GooglePlay as GooglePlay
+import Transcoder.Galaxus qualified as Galaxus
+import Transcoder.GooglePlay qualified as GooglePlay
 import Transcoder.Ib as Ib (parseActivityCsv)
 import Transcoder.Mbank (mbankCsvToLedger)
-import qualified Transcoder.Patreon as Patreon
-import qualified Transcoder.Revolut as Revolut
-import qualified Transcoder.Splitwise as Splitwise
-import qualified Transcoder.UberEats as UberEats
+import Transcoder.Patreon qualified as Patreon
+import Transcoder.Revolut qualified as Revolut
+import Transcoder.Splitwise qualified as Splitwise
+import Transcoder.UberEats qualified as UberEats
+
+version :: Text
+version = "1.0.0.0"
 
 ledgerTrsToReport :: [Transaction] -> LedgerReport
 ledgerTrsToReport = flip LedgerReport []
@@ -241,6 +244,12 @@ commands =
         <> command "parse-revolut" revolutCommand
         <> command "parse-splitwise" splitwiseCommand
         <> command "parse-uber-eats" uberEatsCommand
+        <> command
+          "version"
+          ( info
+              (pure (T.putStrLn version) <**> helper)
+              (progDesc "Prints the version of the program.")
+          )
     )
 
 main :: IO ()
