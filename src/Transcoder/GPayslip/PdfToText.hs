@@ -42,8 +42,8 @@ data Item = Item
 
 -- | The Payslip data as represented on the PDF.
 data Payslip = Payslip
-  { -- | The day of payment.
-    payslipDay :: !Day
+  { payslipDay :: !Day
+  -- ^ The day of payment.
   , payslipSummary :: !PayslipSummary
   , payslipEarnings :: !Earnings
   , payslipNotionalPay :: !NotionalPay
@@ -69,6 +69,7 @@ data Earnings = Earnings
   , earningsErHealthInsurance :: !Item
   , earningsAnnualBonusGross :: !(Maybe Item)
   , earningsBonusGross :: !(Maybe Item)
+  , earningsSpotBonusGross :: !(Maybe Item)
   , earningsPeerBonus :: !(Maybe Item)
   , earningsEducationSubsidyGross :: !(Maybe Item)
   , earningsNonCashSpotBonusGrossUp :: !(Maybe Item)
@@ -172,35 +173,37 @@ payslipSummaryP = label "payslip summary" $ do
 earningsP :: Parser Earnings
 earningsP = label "earnings" $ do
   void $ try (space1 >> string "Earnings" >> newline)
-  void $
-    string "Taxable Earnings"
-      >> space1
-      >> string "Earning type"
-      >> space1
-      >> string "Prior Period"
-      >> space1
-      >> string "Unit"
-      >> space1
-      >> string "Rate of Pay"
-      >> space1
-      >> string "Current"
-      >> newline
+  void
+    $ string "Taxable Earnings"
+    >> space1
+    >> string "Earning type"
+    >> space1
+    >> string "Prior Period"
+    >> space1
+    >> string "Unit"
+    >> space1
+    >> string "Rate of Pay"
+    >> space1
+    >> string "Current"
+    >> newline
   monthlySalary <- earningsItemP "Monthly Salary"
   erHealthInsurance <- earningsItemP "ER Health Insurance"
   annualBonusGross <- optional $ earningsItemP "Annual Bonus Gross"
   bonusGross <- optional $ earningsItemP "Bonus Gross"
+  spotBonusGross <- optional $ earningsItemP "Spot Bonus Gross"
   peerBonus <- optional $ earningsItemP "Peer Bonus"
   educationSubsidyGross <- optional $ earningsItemP "Education Subsidy Gross"
   nonCashSpotBonusGrossUp <- optional $ earningsItemP "NonCash Spot Bonus GrosUp"
   mealAllowanceGrossUp <- optional $ earningsItemP "Meal Allowance Gross Up"
   void $ itemP "Total Taxable Earnings"
   total <- itemP "Total Earnings"
-  return $
-    Earnings
+  return
+    $ Earnings
       { earningsMonthlySalary = monthlySalary
       , earningsErHealthInsurance = erHealthInsurance
       , earningsAnnualBonusGross = annualBonusGross
       , earningsBonusGross = bonusGross
+      , earningsSpotBonusGross = spotBonusGross
       , earningsPeerBonus = peerBonus
       , earningsEducationSubsidyGross = educationSubsidyGross
       , earningsNonCashSpotBonusGrossUp = nonCashSpotBonusGrossUp
@@ -247,8 +250,8 @@ notionalPayP = label "notional pay" $ do
     priorPeriod <- cashAmountP <* space1
     current <- cashAmountP <* newline
     return Item{itemPriorPeriod = priorPeriod, itemCurrent = current}
-  return $
-    NotionalPay
+  return
+    $ NotionalPay
       { notionalPayNonCashSpotBonus = nonCashSpotBonus
       , notionalPayMealAllowanceNet = mealAllowanceNet
       , notionalPayGsuGainIncomeTaxes = gsuGainIncomeTaxes
@@ -259,21 +262,21 @@ notionalPayP = label "notional pay" $ do
 statutoryDeductionsP :: Parser StatutoryDeductions
 statutoryDeductionsP = label "statutory deductions" $ do
   void $ try (space1 >> string "Statutory Deductions" >> newline)
-  void $
-    string "Statutory Deductions:"
-      >> space1
-      >> string "Prior Period"
-      >> space1
-      >> string "Current rate %"
-      >> space1
-      >> string "Current"
-      >> newline
+  void
+    $ string "Statutory Deductions:"
+    >> space1
+    >> string "Prior Period"
+    >> space1
+    >> string "Current rate %"
+    >> space1
+    >> string "Current"
+    >> newline
   wht <- itemWithCurrentRateP "WHT"
   swissSocialSecurity <- itemWithCurrentRateP "Swiss Social Security"
   unemploymentInsurance <- itemWithCurrentRateP "Unemployment Insurance"
   total <- itemP "Total Statutory Deductions"
-  return $
-    StatutoryDeductions
+  return
+    $ StatutoryDeductions
       { statutoryDeductionsWht = wht
       , statutoryDeductionsSwissSocialSecurity = swissSocialSecurity
       , statutoryDeductionsUnemploymentInsurance = unemploymentInsurance
@@ -294,24 +297,24 @@ statutoryDeductionsP = label "statutory deductions" $ do
 otherPaymentsAndDeductionsP :: Parser OtherPaymentsAndDeductions
 otherPaymentsAndDeductionsP = label "other payments and deductions" $ do
   void $ try (space1 >> string "Other Payments and Deductions" >> newline)
-  void $
-    string "Other Payments and Deductions"
-      >> space1
-      >> string "Prior Period"
-      >> space1
-      >> string "Current"
-      >> newline
+  void
+    $ string "Other Payments and Deductions"
+    >> space1
+    >> string "Prior Period"
+    >> space1
+    >> string "Current"
+    >> newline
   ( gGiveDeductions
     , pensionContributionEe
     , mssbWitholdingCredit
     , gcardRepayment
     ) <-
-    runPermutation $
-      (,,,)
-        <$> toPermutationWithDefault Nothing (Just <$> itemP "gGive Deductions")
-        <*> toPermutation (itemP "Pension Contribution EE")
-        <*> toPermutationWithDefault Nothing (Just <$> itemP "MSSB Withholding Credit")
-        <*> toPermutationWithDefault Nothing (Just <$> itemP "Gcard Repayment")
+    runPermutation
+      $ (,,,)
+      <$> toPermutationWithDefault Nothing (Just <$> itemP "gGive Deductions")
+      <*> toPermutation (itemP "Pension Contribution EE")
+      <*> toPermutationWithDefault Nothing (Just <$> itemP "MSSB Withholding Credit")
+      <*> toPermutationWithDefault Nothing (Just <$> itemP "Gcard Repayment")
   total <- itemP "Total Other Payments and Deductions"
   return $ OtherPaymentsAndDeductions pensionContributionEe mssbWitholdingCredit gcardRepayment gGiveDeductions total
 

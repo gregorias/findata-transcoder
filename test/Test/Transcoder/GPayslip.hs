@@ -7,6 +7,7 @@ module Test.Transcoder.GPayslip (
 import Data.Text.IO qualified as T
 import Hledger.Read.TestUtils (transactionQQ)
 import Relude
+import Test.HUnit.Extra (assertRight)
 import Test.Hspec (describe, it)
 import Test.Hspec qualified as Hspec
 import Test.Hspec.Expectations.Pretty (shouldBe)
@@ -84,4 +85,18 @@ tests = do
                * Assets:Illiquid:AXA Wintherthur Pension Fund  858.19 CHF
                * Assets:Debts:Google  95.80 CHF
                * Equity:MssbCs Withholding  -812.00 CHF
+              |]
+      it "Test July 2023" $ do
+        payslip <- T.readFile "./test/data/gpayslip-202307.txt"
+        ledger <- assertRight $ payslipTextToLedger payslip
+        ledger
+          `shouldBe` [transactionQQ|
+             2023/07/25 Google Salary
+               ! Assets:Liquid:BCGE  14868.71 CHF
+               * Income:Google      -16332.15 CHF
+               * State:2023:Mandatory Contributions:Social Security        2067.35 CHF
+               * State:2023:Mandatory Contributions:Unemployment Insurance  135.85 CHF
+               * State:2023:Withholding Tax:Total  7036.85 CHF
+               * Assets:Illiquid:AXA Wintherthur Pension Fund  858.19 CHF
+               * Equity:MssbCs Withholding  -8634.80 CHF
               |]
