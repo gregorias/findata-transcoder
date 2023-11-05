@@ -1,15 +1,15 @@
--- | This module parses CharlesSchwab CSV statement
+-- | This module parses CharlesSchwab CSV statements.
 module Transcoder.CharlesSchwab (
-  csvToLedger,
+  parseBrokerageAccountHistory,
 ) where
 
-import qualified Data.ByteString.Lazy as LBS
+import Data.ByteString.Lazy qualified as LBS
+import Hledger (Transaction)
 import Relude
-import qualified Transcoder.CharlesSchwab.Csv as CsCsv
-import qualified Transcoder.CharlesSchwab.Ledger as Ledger
-import Transcoder.Data.LedgerReport (LedgerReport)
+import Transcoder.CharlesSchwab.Csv qualified as CsCsv
+import Transcoder.CharlesSchwab.Ledger qualified as Ledger
 
-csvToLedger :: LBS.ByteString -> Either Text LedgerReport
-csvToLedger stmt = do
+parseBrokerageAccountHistory :: LBS.ByteString -> Either Text [Transaction]
+parseBrokerageAccountHistory stmt = do
   recs <- CsCsv.parseCsStatement stmt
   Ledger.csvToLedger recs

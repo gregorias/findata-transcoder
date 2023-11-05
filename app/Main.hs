@@ -26,7 +26,7 @@ import Text.Megaparsec qualified as MP
 import Transcoder.Bcge (bcgeCsvToLedger)
 import Transcoder.Bcge.Hint qualified as BcgeHint
 import Transcoder.BcgeCC qualified as BcgeCC
-import Transcoder.CharlesSchwab qualified as CharlesSchwab
+import Transcoder.CharlesSchwab qualified as CS
 import Transcoder.Coop qualified as Coop
 import Transcoder.Coop.Config qualified as Coop
 import Transcoder.Data.CsvFile (CsvFile (..))
@@ -138,7 +138,7 @@ coopCommand =
 charlesSchwabCommand :: ParserInfo (IO ())
 charlesSchwabCommand =
   bankCommand
-    (pure $ parseBank CharlesSchwab.csvToLedger)
+    (pure $ parseBank CS.parseBrokerageAccountHistory)
     "Parses Charles Schwabs' CSV and outputs Ledger data."
 
 degiroAccountCommand :: ParserInfo (IO ())

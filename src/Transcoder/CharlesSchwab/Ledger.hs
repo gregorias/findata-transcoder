@@ -3,11 +3,11 @@ module Transcoder.CharlesSchwab.Ledger (
   csvToLedger,
 ) where
 
-import qualified Control.Lens as L
+import Control.Lens qualified as L
 import Data.Cash (Cash (Cash))
 import Data.Time (Day)
 import Data.Vector (Vector)
-import qualified Data.Vector as Vector
+import Data.Vector qualified as Vector
 import Hledger (
   AccountName,
   AmountPrice (UnitPrice),
@@ -27,7 +27,7 @@ import Transcoder.CharlesSchwab.Csv (
   csAction,
  )
 import Transcoder.Data.Currency (usd)
-import Transcoder.Data.LedgerReport (LedgerReport (LedgerReport), todoPosting)
+import Transcoder.Data.LedgerReport (todoPosting)
 import Transcoder.Wallet (
   equity,
   (<:>),
@@ -147,8 +147,9 @@ saleToLedgerTransaction rec = do
           ( makeCommodityAmount symbol (fromInteger $ -q)
               & L.set
                 aAmountPrice
-                ( Just . UnitPrice $
-                    makeCommodityAmount "USD" price
+                ( Just
+                    . UnitPrice
+                    $ makeCommodityAmount "USD" price
                       & amountSetFullPrecision
                 )
           )
@@ -192,7 +193,7 @@ csvRecordToLedgerTransaction rec =
             <*> [rec]
         )
 
-csvToLedger :: Vector CsCsvRecord -> Either Text LedgerReport
-csvToLedger recs =
+csvToLedger :: Vector CsCsvRecord -> Either Text [Transaction]
+csvToLedger recs = do
   let trs = Vector.mapMaybe csvRecordToLedgerTransaction recs
-   in Right $ LedgerReport (reverse $ Vector.toList trs) []
+  return $ reverse $ Vector.toList trs

@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Test.Transcoder.CharlesSchwab.Ledger (
   tests,
@@ -8,6 +9,7 @@ import Data.Ratio ((%))
 import Data.Time (fromGregorian)
 import Hledger.Read.TestUtils (transactionsQQ)
 import Relude
+import Test.HUnit.Extra (assertRight)
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe)
 import Transcoder.CharlesSchwab.Csv (
@@ -15,7 +17,6 @@ import Transcoder.CharlesSchwab.Csv (
   DollarAmount (..),
  )
 import Transcoder.CharlesSchwab.Ledger (csvToLedger)
-import Transcoder.Data.LedgerReport (LedgerReport (..))
 
 tests :: SpecWith ()
 tests = do
@@ -33,15 +34,13 @@ tests = do
                   Nothing
                   (Just $ DollarAmount (fromRational $ -12345 % 100))
               ]
-        csvToLedger entries
-          `shouldBe` Right
-            ( LedgerReport
-                [transactionsQQ|
-                  2021/01/19 Wire Funds
-                    * Assets:Liquid:Charles Schwab:USD  -123.45 USD
-                    ! Todo|]
-                []
-            )
+        trs <- assertRight $ csvToLedger entries
+        trs
+          `shouldBe` [transactionsQQ|
+                        2021/01/19 Wire Funds
+                          * Assets:Liquid:Charles Schwab:USD  -123.45 USD
+                          ! Todo|]
+
       it "transforms a vesting entry" $ do
         let entries =
               [ CsCsvRecord
@@ -54,15 +53,13 @@ tests = do
                   Nothing
                   Nothing
               ]
-        csvToLedger entries
-          `shouldBe` Right
-            ( LedgerReport
-                [transactionsQQ|
+        trs <- assertRight $ csvToLedger entries
+        trs
+          `shouldBe` [transactionsQQ|
                   2020/12/31 * GOOG Vesting
                     Equity:Charles Schwab:Unvested GOOG  -5 GOOG
                     Assets:Investments:Charles Schwab:GOOG  5 GOOG|]
-                []
-            )
+
       it "transforms an interest entry" $ do
         let entries =
               [ CsCsvRecord
@@ -75,15 +72,12 @@ tests = do
                   Nothing
                   (Just $ DollarAmount (fromRational $ 19 % 100))
               ]
-        csvToLedger entries
-          `shouldBe` Right
-            ( LedgerReport
-                [transactionsQQ|
+        trs <- assertRight $ csvToLedger entries
+        trs
+          `shouldBe` [transactionsQQ|
                   2021/01/28 * Credit Interest
                     Assets:Liquid:Charles Schwab:USD  0.19 USD
                     Income:Google|]
-                []
-            )
       it "transforms an sell entry" $ do
         let entries =
               [ CsCsvRecord
@@ -96,16 +90,13 @@ tests = do
                   (Just $ DollarAmount (fromRational $ 31 % 100))
                   (Just $ DollarAmount (fromRational $ 1412185 % 100))
               ]
-        csvToLedger entries
-          `shouldBe` Right
-            ( LedgerReport
-                [transactionsQQ|
+        trs <- assertRight $ csvToLedger entries
+        trs
+          `shouldBe` [transactionsQQ|
                   2020/12/31 * GOOG Sale
                     Assets:Investments:Charles Schwab:GOOG  -8 GOOG @ 1765.2706 USD
                     Assets:Liquid:Charles Schwab:USD  14121.85 USD
                     Expenses:Financial Services  0.31 USD|]
-                []
-            )
       it "transforms a withholding tax entry" $ do
         let entries =
               [ CsCsvRecord
@@ -118,12 +109,9 @@ tests = do
                   Nothing
                   (Just $ DollarAmount (fromRational $ -123 % 100))
               ]
-        csvToLedger entries
-          `shouldBe` Right
-            ( LedgerReport
-                [transactionsQQ|
-                  2020/12/31 * Withholding Tax
-                    Assets:Liquid:Charles Schwab:USD  -1.23 USD
-                    Equity:Charles Schwab:Unvested GOOG Withholding Tax|]
-                []
-            )
+        trs <- assertRight $ csvToLedger entries
+        trs
+          `shouldBe` [transactionsQQ|
+                       2020/12/31 * Withholding Tax
+                         Assets:Liquid:Charles Schwab:USD  -1.23 USD
+                         Equity:Charles Schwab:Unvested GOOG Withholding Tax|]
