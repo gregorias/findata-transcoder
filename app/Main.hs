@@ -135,11 +135,11 @@ coopCommand =
         exitFailure
       Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
 
-charlesSchwabCommand :: ParserInfo (IO ())
-charlesSchwabCommand =
+csBrokerageAccountHistoryCommand :: ParserInfo (IO ())
+csBrokerageAccountHistoryCommand =
   bankCommand
     (pure $ parseBank CS.parseBrokerageAccountHistory)
-    "Parses Charles Schwabs' CSV and outputs Ledger data."
+    "Parses Charles Schwabs' brokerage account history into Ledger transactions."
 
 degiroAccountCommand :: ParserInfo (IO ())
 degiroAccountCommand =
@@ -237,7 +237,7 @@ commands =
     ( command "parse-bcge" bcgeCommand
         <> command "parse-bcge-cc" bcgeCcCommand
         <> command "parse-coop" coopCommand
-        <> command "parse-cs" charlesSchwabCommand
+        <> command "parse-cs-brokerage-account-history" csBrokerageAccountHistoryCommand
         <> command "parse-degiro-account" degiroAccountCommand
         <> command "parse-degiro-portfolio" degiroPortfolioCommand
         <> command "parse-easy-ride" easyRideCommand
