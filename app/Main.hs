@@ -1,6 +1,7 @@
 module Main (main) where
 
 import Data.ByteString.Lazy qualified as LBS
+import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Hledger (Transaction)
@@ -80,8 +81,11 @@ parseBank parser = do
       exitFailure
     Right output -> T.putStr . toLedgerText $ output
 
-bankCommand :: Parser (IO ()) -> String -> ParserInfo (IO ())
-bankCommand bankP = info (bankP <**> helper) . progDesc
+-- | Creates a bank command with the provided action parser and its description.
+--
+-- This function enriches the parser with a `--help` option and a description.
+bankCommand :: Parser (IO ()) -> Text -> ParserInfo (IO ())
+bankCommand bankP = info (bankP <**> helper) . progDesc . T.unpack
 
 bcgeCommand :: ParserInfo (IO ())
 bcgeCommand = bankCommand (parseBcge <$> hintsFileOption) "Parses BCGE's CSV file and outputs ledupt data"
@@ -132,7 +136,10 @@ coopCommand =
       Right output -> putText . showLedgerReport . (flip LedgerReport [] . one) $ output
 
 charlesSchwabCommand :: ParserInfo (IO ())
-charlesSchwabCommand = bankCommand (pure $ parseBank CharlesSchwab.csvToLedger) "Parses Charles Schwabs' CSV and outputs Ledger data."
+charlesSchwabCommand =
+  bankCommand
+    (pure $ parseBank CharlesSchwab.csvToLedger)
+    "Parses Charles Schwabs' CSV and outputs Ledger data."
 
 degiroAccountCommand :: ParserInfo (IO ())
 degiroAccountCommand =
