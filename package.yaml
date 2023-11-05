@@ -10,8 +10,8 @@ extra-source-files:
 - README.md
 
 # Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Web
+synopsis:            Transcode financial statements into Ledger transactions.
+category:            Finance
 
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
@@ -19,45 +19,27 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/gregorias/findata-transcoder#readme>
 
 dependencies:
-- base >= 4.7 && < 5
+- base >= 4.14 && < 5
+
+language: GHC2021
 
 # Some defaults recommended by https://kowainik.github.io/posts/2019-02-06-style-guide#default-extensions
 # Also use Relude
 default-extensions:
-  BangPatterns
   DataKinds
-  DeriveDataTypeable
-  DeriveFoldable
-  DeriveFunctor
-  DeriveGeneric
-  DeriveTraversable
   DerivingStrategies
   DerivingVia
   DuplicateRecordFields
-  FlexibleContexts
-  FlexibleInstances
   FunctionalDependencies
   GADTs
-  GeneralisedNewtypeDeriving
-  ImportQualifiedPost
-  InstanceSigs
   LambdaCase
-  MultiParamTypeClasses
   MultiWayIf
   NoImplicitPrelude
-  NumericUnderscores
   OverloadedLabels
   OverloadedStrings
-  PatternSynonyms
   QuasiQuotes
-  ScopedTypeVariables
-  StandaloneDeriving
-  TupleSections
-  TypeApplications
   TypeFamilies
   TypeOperators
-  UnicodeSyntax
-  ViewPatterns
 
 # no-type-defaults, this is dangerous, but in terms of convenience it's so
 # useful to use ExtendedDefaultRules that I keep it.

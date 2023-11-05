@@ -1,12 +1,14 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.2.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
 name:           findata-transcoder
 version:        1.1.0.0
+synopsis:       Transcode financial statements into Ledger transactions.
 description:    Please see the README on GitHub at <https://github.com/gregorias/findata-transcoder#readme>
+category:       Finance
 homepage:       https://github.com/gregorias/findata-transcoder#readme
 bug-reports:    https://github.com/gregorias/findata-transcoder/issues
 author:         Grzegorz Milka
@@ -78,12 +80,12 @@ library
   hs-source-dirs:
       src
   default-extensions:
-      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
+      DataKinds DerivingStrategies DerivingVia DuplicateRecordFields FunctionalDependencies GADTs LambdaCase MultiWayIf NoImplicitPrelude OverloadedLabels OverloadedStrings QuasiQuotes TypeFamilies TypeOperators
   ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures
   build-depends:
       Decimal
     , aeson
-    , base >=4.7 && <5
+    , base >=4.14 && <5
     , bytestring
     , casing
     , cassava
@@ -109,17 +111,17 @@ library
     , transformers
     , unordered-containers
     , vector
-  default-language: Haskell2010
+  default-language: GHC2021
 
 executable findata-transcoder
   main-is: Main.hs
   hs-source-dirs:
       app
   default-extensions:
-      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
+      DataKinds DerivingStrategies DerivingVia DuplicateRecordFields FunctionalDependencies GADTs LambdaCase MultiWayIf NoImplicitPrelude OverloadedLabels OverloadedStrings QuasiQuotes TypeFamilies TypeOperators
   ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      base >=4.14 && <5
     , bytestring
     , findata-transcoder
     , hledger-lib
@@ -127,7 +129,7 @@ executable findata-transcoder
     , optparse-applicative
     , relude
     , time
-  default-language: Haskell2010
+  default-language: GHC2021
 
 test-suite doctest
   type: exitcode-stdio-1.0
@@ -137,14 +139,14 @@ test-suite doctest
   hs-source-dirs:
       doctest
   default-extensions:
-      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
+      DataKinds DerivingStrategies DerivingVia DuplicateRecordFields FunctionalDependencies GADTs LambdaCase MultiWayIf NoImplicitPrelude OverloadedLabels OverloadedStrings QuasiQuotes TypeFamilies TypeOperators
   ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -main-is DocTest
   build-depends:
-      base >=4.7 && <5
+      base >=4.14 && <5
     , doctest
     , findata-transcoder
     , relude
-  default-language: Haskell2010
+  default-language: GHC2021
 
 test-suite findata-transcoder-test
   type: exitcode-stdio-1.0
@@ -197,12 +199,12 @@ test-suite findata-transcoder-test
   hs-source-dirs:
       test
   default-extensions:
-      BangPatterns DataKinds DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia DuplicateRecordFields FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralisedNewtypeDeriving ImportQualifiedPost InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NoImplicitPrelude NumericUnderscores OverloadedLabels OverloadedStrings PatternSynonyms QuasiQuotes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators UnicodeSyntax ViewPatterns
+      DataKinds DerivingStrategies DerivingVia DuplicateRecordFields FunctionalDependencies GADTs LambdaCase MultiWayIf NoImplicitPrelude OverloadedLabels OverloadedStrings QuasiQuotes TypeFamilies TypeOperators
   ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -main-is Spec
   build-depends:
       Decimal
     , HUnit
-    , base >=4.7 && <5
+    , base >=4.14 && <5
     , bytestring
     , cassava
     , containers
@@ -222,4 +224,4 @@ test-suite findata-transcoder-test
     , time
     , trimdent
     , vector
-  default-language: Haskell2010
+  default-language: GHC2021
