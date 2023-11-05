@@ -23,7 +23,7 @@ data Cash = Cash
   { _cashCurrency :: !Currency
   , _cashAmount :: !Decimal
   }
-  deriving stock (Eq, Ord, Show)
+  deriving stock (Eq, Show)
 
 makeLenses ''Cash
 
@@ -41,10 +41,10 @@ cashP ::
   ) =>
   m Cash
 cashP =
-  Permutations.intercalateEffect MP.space1
-    $ Cash
-    <$> toPermutation currencyP
-    <*> toPermutation (decimalP defaultDecimalFormat)
+  Permutations.intercalateEffect MP.space1 $
+    Cash
+      <$> toPermutation currencyP
+      <*> toPermutation (decimalP defaultDecimalFormat)
 
 negate :: Cash -> Cash
 negate = over cashAmount Relude.negate
