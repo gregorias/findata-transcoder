@@ -11,9 +11,9 @@ This project requires the following tools:
 
 Install lefthook:
 
-  ```shell
-   lefthook install
-   ```
+```shell
+lefthook install
+```
 
 [Commitlint]: https://github.com/conventional-changelog/commitlint
 [Lefthook]: https://github.com/evilmartians/lefthook

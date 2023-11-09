@@ -8,6 +8,10 @@ their data into one big ledger of my personal finances. There are other tools
 I've written that handle fetching those statements, preprocessing them (e.g.,
 `pdftotext` on PDF files), and orchestrating.
 
+## Building
+
+Some dependencies install PCRE. On macOS, you can use `brew install pcre`.
+
 ## Installation
 
 Install the binary with
