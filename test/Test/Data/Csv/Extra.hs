@@ -4,16 +4,14 @@ module Test.Data.Csv.Extra (
   tests,
 ) where
 
-import qualified Data.Csv as Csv
-import Data.Csv.Extra (
-  FromNamedRecord (..),
-  decodeByName,
-  lookup,
- )
+import Data.Csv qualified as Csv
+import Data.Csv.Extra (FromNamedRecord (..), decodeByName, fieldP, lookup)
 import Data.Vector (Vector)
 import Relude
+import Test.HUnit.Extra (assertRightOrFailPrint)
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe)
+import Text.Megaparsec.Extra (parsePretty)
 
 data TestRecord
   = RecordA
@@ -48,3 +46,12 @@ tests = do
               , RecordB
               ]
             )
+    describe "fieldP" $ do
+      it "decodes an unquoted field" $ do
+        let fieldOr = parsePretty (fieldP @Void) "example" ("foo" :: Text)
+        field <- assertRightOrFailPrint fieldOr
+        field `shouldBe` "foo"
+      it "decodes a quoted field" $ do
+        let fieldOr = parsePretty (fieldP @Void) "example" ("\"fo,\no\"\"b\r\nar\"" :: Text)
+        field <- assertRightOrFailPrint fieldOr
+        field `shouldBe` "fo,\no\"b\r\nar"
