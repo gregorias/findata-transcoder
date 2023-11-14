@@ -10,7 +10,7 @@ import Data.Text qualified as T
 import Data.Time (Day)
 import Data.Time.Extra (usFullDayP)
 import Hledger (AccountName, Posting, Status (Cleared, Pending), Transaction)
-import Hledger.Data.Extra (Comment (..), makePosting, makeTransaction)
+import Hledger.Data.Extra (Comment (..), ToAmount (toAmount), makePosting, makeTransaction)
 import Relude
 import Text.Megaparsec (label)
 import Text.Megaparsec qualified as MP
@@ -85,8 +85,8 @@ receiptP = do
   total <- totalP
   void $ many crlf
   paymentMethod <- paymentMethodP
-  return $
-    Receipt
+  return
+    $ Receipt
       { receiptDay = day
       , receiptItems = items
       , receiptTotal = total
@@ -98,7 +98,7 @@ itemToPosting Item{itemDescription = itemDescriptionValue, itemCost = cost} =
   makePosting
     Nothing
     (getAccountCategoryFromDescription itemDescriptionValue)
-    (Just cost)
+    (toAmount <$> Just cost)
     (Comment itemDescriptionValue)
  where
   getAccountCategoryFromDescription :: Text -> AccountName
@@ -128,7 +128,7 @@ receiptToTransaction
       makePosting
         (Just Pending)
         (getPayingAccount paymentMethod)
-        (Just $ Cash.negate total)
+        (Just . toAmount $ Cash.negate total)
         NoComment
 
 parseReceipt :: Text -> Either Text Transaction

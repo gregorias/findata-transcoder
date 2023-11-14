@@ -4,18 +4,18 @@ module Transcoder.Degiro.Portfolio (
 ) where
 
 import Control.Lens (Prism', over, preview, prism', set, view)
-import qualified Control.Lens as L
-import qualified Data.ByteString as BS
+import Control.Lens qualified as L
+import Data.ByteString qualified as BS
 import Data.ByteString.Internal (c2w)
-import qualified Data.ByteString.Lazy as LBS
+import Data.ByteString.Lazy qualified as LBS
 import Data.Cash (Cash (..))
-import qualified Data.Csv as Csv
+import Data.Csv qualified as Csv
 import Data.Decimal (Decimal)
 import Data.Time (Day)
 import Data.Vector (Vector)
 import Hledger (MarketPrice (MarketPrice), Status (Cleared), balassert, post, transaction)
 import Hledger.Data (Transaction)
-import Hledger.Data.Extra (ToPosting (..), makeCashAmount, makeCommodityAmount)
+import Hledger.Data.Extra (ToAmount (..), ToPosting (..), makeCommodityAmount)
 import Hledger.Data.Lens (pBalanceAssertion, tDescription, tStatus)
 import Relude
 import Transcoder.Data.CsvFile (CsvFile (..))
@@ -48,7 +48,8 @@ data DecimalOrEmpty = DecimalOrEmptyDecimal Decimal | DecimalOrEmptyEmpty
 instance Csv.FromField DecimalOrEmpty where
   parseField "" = pure DecimalOrEmptyEmpty
   parseField field =
-    DecimalOrEmptyDecimal . view myDecDec
+    DecimalOrEmptyDecimal
+      . view myDecDec
       <$> Csv.parseField field
 
 data CsvRecord = CsvRecord
@@ -81,8 +82,8 @@ instance Csv.FromNamedRecord CsvRecord where
     amt <- Csv.lookup nr "Amount"
     closing <- Csv.lookup nr "Closing"
     localVal <- getDegiroPortfolioCash <$> Csv.lookup nr "Local value"
-    return $
-      CsvRecord
+    return
+      $ CsvRecord
         productName
         isin
         amt
@@ -95,8 +96,8 @@ instance ToPosting CashPosition where
   toPosting (CashPosition cash@(Cash currency _value)) =
     post
       "Assets:Liquid:Degiro"
-      (makeCashAmount (Cash currency 0))
-      & L.set pBalanceAssertion (balassert $ makeCashAmount cash)
+      (toAmount (Cash currency 0))
+      & L.set pBalanceAssertion (balassert $ toAmount cash)
 
 data StockPosition = StockPosition
   { _spIsin :: Isin
@@ -111,8 +112,8 @@ instance ToPosting StockPosition where
       (makeCommodityAmount name 0)
       & L.set
         pBalanceAssertion
-        ( balassert $
-            makeCommodityAmount
+        ( balassert
+            $ makeCommodityAmount
               name
               (fromInteger amount)
         )
@@ -165,14 +166,15 @@ positionsToStatusTransaction stmtDate positions =
     stmtDate
     (toList $ fmap toPosting positions)
     & set tStatus Cleared
-      . set tDescription "Degiro Status"
+    . set tDescription "Degiro Status"
 
 -- | Transforms a Degiro CSV statement into a Ledger report
 csvStatementToLedger :: Day -> CsvFile LBS.ByteString -> Either Text LedgerReport
 csvStatementToLedger stmtDate (CsvFile csvFile) = do
   csvRecords :: Vector CsvRecord <-
-    over L._Right snd $
-      over L._Left toText $ Csv.decodeByName csvFile
+    over L._Right snd
+      $ over L._Left toText
+      $ Csv.decodeByName csvFile
   positions <-
     maybe
       (Left "Could not transform csv records to positions.\n")
@@ -184,11 +186,13 @@ csvStatementToLedger stmtDate (CsvFile csvFile) = do
       Right
       ( mapM
           (stockPositionToMarketPrice stmtDate)
-          ( catMaybes . toList $
-              preview _PositionStock <$> positions
+          ( catMaybes
+              . toList
+              $ preview _PositionStock
+              <$> positions
           )
       )
-  return $
-    LedgerReport
+  return
+    $ LedgerReport
       [positionsToStatusTransaction stmtDate positions]
       marketPrices

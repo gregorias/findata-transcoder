@@ -1,10 +1,8 @@
-{-# OPTIONS_GHC -Wno-typed-holes #-}
-
 module Transcoder.Finpension (
   parsePortfoliosTotal,
 ) where
 
-import qualified Control.Lens as L
+import Control.Lens qualified as L
 import Data.Decimal (Decimal)
 import Data.Time (Day)
 import Hledger (Status (Cleared), Transaction, balassert)
@@ -16,7 +14,7 @@ import Hledger.Data.Extra (
  )
 import Hledger.Data.Lens (pBalanceAssertion)
 import Relude
-import qualified Text.Megaparsec as MP
+import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char (newline)
 import Text.Megaparsec.Extra (parsePretty)
 import Transcoder.Data.Currency (chf)
@@ -36,8 +34,8 @@ portfoliosTotalP = decimalP (DecimalFormat NoChunkSep (Just TwoDigitDecimalFract
 parsePortfoliosTotal :: Day -> Text -> Either Text Transaction
 parsePortfoliosTotal today totalText = do
   total <- parsePretty portfoliosTotalP "Finpension portfolios' total" totalText
-  return $
-    makeTransaction
+  return
+    $ makeTransaction
       today
       (Just Cleared)
       "Finpension Status"

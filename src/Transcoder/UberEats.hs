@@ -2,12 +2,12 @@ module Transcoder.UberEats (
   parseBill,
 ) where
 
-import qualified Control.Lens as L
+import Control.Lens qualified as L
 import Data.Cash (
   Cash,
   cashP,
  )
-import qualified Data.Cash as Cash
+import Data.Cash qualified as Cash
 import Data.Time (
   Day,
  )
@@ -19,14 +19,14 @@ import Hledger (
   post,
  )
 import Hledger.Data.Extra (
+  ToAmount (toAmount),
   ToTransaction (toTransaction),
-  makeCashAmount,
   makeTransaction,
  )
 import Hledger.Data.Lens (pStatus)
 import Relude
-import qualified Text.Megaparsec as MP
-import qualified Text.Megaparsec.Char as MP
+import Text.Megaparsec qualified as MP
+import Text.Megaparsec.Char qualified as MP
 import Text.Megaparsec.Extra (
   parsePretty,
  )
@@ -55,9 +55,9 @@ instance ToTransaction Bill where
       (billDay bill)
       (Just Cleared)
       "Uber Eats"
-      [ post (toAccount $ billSource bill) (makeCashAmount . Cash.negate . billAmount $ bill)
+      [ post (toAccount $ billSource bill) (toAmount . Cash.negate . billAmount $ bill)
           & L.set pStatus Pending
-      , post (expenses <:> "Take Away") (makeCashAmount . billAmount $ bill)
+      , post (expenses <:> "Take Away") (toAmount . billAmount $ bill)
       ]
 
 sourceP :: Parser Source
@@ -68,12 +68,12 @@ dateP = dayP "%-m/%-d/%y"
 
 hourP :: Parser ()
 hourP =
-  void $
-    MP.some MP.digitChar
-      >> MP.single ':'
-      >> MP.some MP.digitChar
-      >> MP.single ' '
-      >> MP.choice (MP.string <$> ["AM", "PM"])
+  void
+    $ MP.some MP.digitChar
+    >> MP.single ':'
+    >> MP.some MP.digitChar
+    >> MP.single ' '
+    >> MP.choice (MP.string <$> ["AM", "PM"])
 
 billP :: Parser Bill
 billP = do

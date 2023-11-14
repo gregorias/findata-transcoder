@@ -27,9 +27,9 @@ import Hledger (
  )
 import Hledger.Data.Extra (
   Comment (NoComment),
+  ToAmount (..),
   ToPosting (toPosting),
   ToTransaction (toTransaction),
-  makeCashAmount,
   makeCommodityAmount,
   makePosting,
   makeTransaction,
@@ -92,9 +92,9 @@ instance ToTransaction Deposit where
       date
       Nothing
       "Deposit"
-      [ makePosting (Just Pending) bcgeAccount (Just $ Cash.negate amount) NoComment
-      , makePosting (Just Cleared) degiroAccount (Just amount) NoComment
-          & set pBalanceAssertion (balassert $ makeCashAmount balance)
+      [ makePosting (Just Pending) bcgeAccount (Just . toAmount $ Cash.negate amount) NoComment
+      , makePosting (Just Cleared) degiroAccount (Just $ toAmount amount) NoComment
+          & set pBalanceAssertion (balassert $ toAmount balance)
       ]
 
 -- | A single stock trade, i.e., a buy or sell transaction without any additional fees etc.
@@ -180,14 +180,14 @@ instance ToTransaction StockTrade where
                 ( Just
                     . UnitPrice
                     . amountSetFullPrecision
-                    . makeCashAmount
+                    . toAmount
                     $ price
                 )
           )
-      , makePosting Nothing degiroAccount (Just change) NoComment
+      , makePosting Nothing degiroAccount (Just $ toAmount change) NoComment
           & set
             pBalanceAssertion
-            (balassert $ makeCashAmount bal)
+            (balassert $ toAmount bal)
       ]
    where
     prettyStockName = prettyIsin trIsin
@@ -256,11 +256,11 @@ instance ToTransaction Fee where
         date
         (Just Cleared)
         description
-        [ post degiroAccount (makeCashAmount amount)
+        [ post degiroAccount (toAmount amount)
             & set
               pBalanceAssertion
-              (balassert $ makeCashAmount balance)
-        , post "Expenses:Financial Services" (makeCashAmount $ Cash.negate amount)
+              (balassert $ toAmount balance)
+        , post "Expenses:Financial Services" (toAmount $ Cash.negate amount)
         ]
 
 -- A transfer between the cash account and the investment account.
@@ -396,9 +396,9 @@ instance ToPosting FxPosting where
   toPosting (FxPosting _fx currency change balance) =
     post
       degiroAccount
-      ( makeCashAmount (Cash currency change)
+      ( toAmount (Cash currency change)
       )
-      & set pBalanceAssertion (balassert $ makeCashAmount (Cash currency balance))
+      & set pBalanceAssertion (balassert $ toAmount (Cash currency balance))
 
 data Fx = Fx
   { _fxDate :: !Day
@@ -441,7 +441,7 @@ instance ToTransaction Fx where
         (pAmount . aAmountPrice)
         ( UnitPrice
             . amountSetFullPrecision
-            . makeCashAmount
+            . toAmount
             . Cash
               (fxPostingCurrency postArg)
             <$> fxPostingFx postArg

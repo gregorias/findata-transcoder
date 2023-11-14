@@ -12,6 +12,7 @@ import Control.Lens (makeLenses, over)
 import Control.Monad.Permutations (toPermutation)
 import Control.Monad.Permutations qualified as Permutations
 import Data.Decimal (Decimal)
+import Hledger.Data.Extra (ToAmount (..), makeCurrencyAmount)
 import Relude hiding (negate)
 import Relude qualified
 import Text.Megaparsec qualified as MP
@@ -27,6 +28,9 @@ data Cash = Cash
 
 makeLenses ''Cash
 
+instance ToAmount Cash where
+  toAmount (Cash currency amount) = makeCurrencyAmount currency amount
+
 -- | Parses cash strings
 --
 -- >>> MP.parseMaybe cashP "CHF 100.00"
@@ -41,10 +45,10 @@ cashP ::
   ) =>
   m Cash
 cashP =
-  Permutations.intercalateEffect MP.space1 $
-    Cash
-      <$> toPermutation currencyP
-      <*> toPermutation (decimalP defaultDecimalFormat)
+  Permutations.intercalateEffect MP.space1
+    $ Cash
+    <$> toPermutation currencyP
+    <*> toPermutation (decimalP defaultDecimalFormat)
 
 negate :: Cash -> Cash
 negate = over cashAmount Relude.negate

@@ -1,17 +1,18 @@
 module Hledger.Data.Extra (
   Comment (..),
-  ToPosting (..),
-  ToTransaction (..),
-  makeCashAmount,
   makeCurrencyAmount,
   makeCommodityAmount,
   makePosting,
   makeTransaction,
   setCurrencyPrecision,
+
+  -- * Conversion classes
+  ToAmount (..),
+  ToPosting (..),
+  ToTransaction (..),
 ) where
 
 import Control.Lens (over, set)
-import Data.Cash (Cash (Cash))
 import Data.Time (Day)
 import Hledger (AccountName, Posting, Status, Transaction, missingamt, post, transaction)
 import Hledger.Data.Amount (num)
@@ -38,7 +39,7 @@ makeCommodityAmount :: Text -> Quantity -> Amount
 makeCommodityAmount commodity quantity =
   num quantity
     & set aCommodity commodity
-      . set (aStyle . asCommoditySpaced) True
+    . set (aStyle . asCommoditySpaced) True
 
 setCurrencyPrecision :: Amount -> Amount
 setCurrencyPrecision =
@@ -53,9 +54,6 @@ makeCurrencyAmount currency quantity =
   makeCommodityAmount (show currency) quantity
     & setCurrencyPrecision
 
-makeCashAmount :: Cash -> Amount
-makeCashAmount (Cash currency quantity) = makeCurrencyAmount currency quantity
-
 data Comment
   = NoComment
   | Comment !Text
@@ -67,12 +65,12 @@ setComment (Comment comment) = set pComment comment
 -- | Makes a Posting.
 --
 -- This is a helper function that follows the order of definition in a normal posting.
-makePosting :: Maybe Status -> AccountName -> Maybe Cash -> Comment -> Posting
-makePosting maybeStatus accountName maybeCash comment =
+makePosting :: Maybe Status -> AccountName -> Maybe Amount -> Comment -> Posting
+makePosting maybeStatus accountName maybeAmount comment =
   post accountName missingamt
     & setComment comment
-      . maybe id (set pStatus) maybeStatus
-      . maybe id (set pAmount . makeCashAmount) maybeCash
+    & maybe id (set pStatus) maybeStatus
+    & maybe id (set pAmount) maybeAmount
 
 -- | Makes a Transaction.
 --
@@ -81,7 +79,13 @@ makeTransaction :: Day -> Maybe Status -> Text -> [Posting] -> Transaction
 makeTransaction day maybeStatus description ps =
   transaction day ps
     & set tDescription description
-      . maybe id (set tStatus) maybeStatus
+    . maybe id (set tStatus) maybeStatus
+
+class ToAmount a where
+  toAmount :: a -> Amount
+
+instance ToAmount Amount where
+  toAmount = id
 
 class ToPosting a where
   toPosting :: a -> Posting

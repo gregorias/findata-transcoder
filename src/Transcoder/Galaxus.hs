@@ -14,6 +14,7 @@ import Data.Time (
 import Hledger (AccountName, Posting, Status (Cleared, Pending), Transaction)
 import Hledger.Data.Extra (
   Comment (..),
+  ToAmount (toAmount),
   ToTransaction (..),
   makePosting,
   makeTransaction,
@@ -54,7 +55,7 @@ itemToPosting item =
    in makePosting
         status
         postingCategory
-        (Just $ itemCost item)
+        (Just . toAmount $ itemCost item)
         (Comment $ itemDescription item <> optionalItemCount)
  where
   itemType = detectItemType $ itemDescription item
@@ -81,7 +82,7 @@ instance ToTransaction Receipt where
       ( [paymentPosting] <> toList (itemToPosting <$> items)
       )
    where
-    paymentPosting = makePosting (Just Pending) paymentSource (Just $ Cash.negate total) NoComment
+    paymentPosting = makePosting (Just Pending) paymentSource (Just . toAmount $ Cash.negate total) NoComment
 
 type Parser = MP.Parsec Void Text
 
@@ -121,8 +122,8 @@ receiptP = do
   (items, total) <- some1Till_ itemP gesamtbetragP
   void newline
   paymentSource <- zahlungsmittelP
-  return $
-    Receipt
+  return
+    $ Receipt
       { receiptDate = date
       , receiptItems = items
       , receiptPaymentSource = paymentSource

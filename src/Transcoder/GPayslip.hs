@@ -12,7 +12,7 @@ import Data.Cash (Cash (Cash))
 import Data.Decimal (Decimal)
 import Data.Time.Calendar (toGregorian)
 import Hledger (AccountName, Posting, Status (Cleared, Pending), Transaction, transaction)
-import Hledger.Data.Extra (Comment (NoComment), makePosting)
+import Hledger.Data.Extra (Comment (NoComment), ToAmount (toAmount), makePosting)
 import Hledger.Data.Lens (tDescription)
 import Relude
 import Text.Megaparsec.Extra (
@@ -30,8 +30,8 @@ import Transcoder.GPayslip.PdfToText (
  )
 
 data PayslipLedgerConfig = PayslipLedgerConfig
-  { -- | The bank account Google sends the salary to.
-    payslipLedgerConfigBankAccount :: !Text
+  { payslipLedgerConfigBankAccount :: !Text
+  -- ^ The bank account Google sends the salary to.
   , payslipLedgerConfigSecondPillarAccount :: !Text
   }
   deriving stock (Show, Eq)
@@ -69,7 +69,7 @@ payslipToLedger
     ) =
     transaction
       day
-      ( [ makePosting (Just Pending) bankAccount (Just $ Cash chf paymentAmount) NoComment
+      ( [ makePosting (Just Pending) bankAccount (Just . toAmount $ Cash chf paymentAmount) NoComment
         , mkPosting "Income:Google" (-payslipSummaryEarnings summary)
         , mkPosting (statePrefix <> "Mandatory Contributions:Social Security") (itemToTotal socialSecurity)
         , mkPosting (statePrefix <> "Mandatory Contributions:Unemployment Insurance") (itemToTotal unemploymentInsurance)
@@ -95,7 +95,7 @@ payslipToLedger
       makePosting
         (Just Cleared)
         accountName
-        (Just $ Cash chf amount)
+        (Just . toAmount $ Cash chf amount)
         NoComment
 
 -- | Transforms text extracted from a Google payslip's PDF into a
