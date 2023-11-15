@@ -43,6 +43,10 @@ default-extensions:
 
 # no-type-defaults, this is dangerous, but in terms of convenience it's so
 # useful to use ExtendedDefaultRules that I keep it.
+#
+# no-name-shadowing: Name shadowing is potentially dangerous, but not having it
+# forces me to figure out alternative names, which can make code less readable.
+# Overall, I think it's worth the trade off to enable name shadowing.
 ghc-options:
   - -Wall
   - -Werror
@@ -56,6 +60,7 @@ ghc-options:
   - -Wredundant-constraints
   - -Wno-type-defaults
   - -Wno-partial-type-signatures
+  - -Wno-name-shadowing
 
 library:
   source-dirs: src
