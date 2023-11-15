@@ -1,6 +1,11 @@
 -- | This module contains data relevant to how I organize my Ledger file.
 module Transcoder.Wallet (
+  (<:>),
+
+  -- * Accounts
   assets,
+  liquidAssets,
+  investmentAssets,
   bcgeAccount,
   bcgeCCAccount,
   degiroAccount,
@@ -12,8 +17,6 @@ module Transcoder.Wallet (
   expensesTransport,
   expensesYtPremium,
   financialServices,
-  liquidAssets,
-  (<:>),
 ) where
 
 import Hledger (AccountName)
@@ -34,6 +37,9 @@ infixl 5 <:>
 
 liquidAssets :: AccountName
 liquidAssets = assets <:> "Liquid"
+
+investmentAssets :: AccountName
+investmentAssets = assets <:> "Investments"
 
 debtAssets :: AccountName
 debtAssets = assets <:> "Debts"
