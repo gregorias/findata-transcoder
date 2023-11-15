@@ -141,6 +141,12 @@ csBrokerageAccountHistoryCommand =
     (pure $ parseBank CS.parseBrokerageAccountHistory)
     "Parses Charles Schwabs' brokerage account history into Ledger transactions."
 
+csEacAccountHistoryCommand :: ParserInfo (IO ())
+csEacAccountHistoryCommand =
+  bankCommand
+    (pure $ parseBank $ CS.parseEacAccountHistory . decodeUtf8)
+    "Parses Charles Schwabs' EAC history into Ledger transactions."
+
 degiroAccountCommand :: ParserInfo (IO ())
 degiroAccountCommand =
   bankCommand
@@ -238,6 +244,7 @@ commands =
         <> command "parse-bcge-cc" bcgeCcCommand
         <> command "parse-coop" coopCommand
         <> command "parse-cs-brokerage-account-history" csBrokerageAccountHistoryCommand
+        <> command "parse-cs-eac-history" csEacAccountHistoryCommand
         <> command "parse-degiro-account" degiroAccountCommand
         <> command "parse-degiro-portfolio" degiroPortfolioCommand
         <> command "parse-easy-ride" easyRideCommand

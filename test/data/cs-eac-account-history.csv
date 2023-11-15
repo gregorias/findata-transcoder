@@ -1,0 +1,24 @@
+"Transaction Details for Equity Awards Center account as of 11/05/2023 05:17:39 AM ET"
+"Date","Action","Symbol","Description","Quantity","Fees & Commissions","Disbursement Election","Amount"
+"08/04/2023","Wire Transfer","GOOG","Cash Disbursement","","","","-$19717.70"
+"08/01/2023","Sale","GOOG","Share Sale","150.806","$0.18","","$19717.70"
+"","Type","Shares","Sale Price","Subscription Date","Subscription FMV","Purchase Date","Purchase Price","Purchase FMV","Disposition Type","Grant Id","Vest Date","Vest FMV","Gross Proceeds",
+"","RS","0.806","$130.75","","","","","","","C1115699","05/25/2023","$121.64","$105.38",
+"","Type","Shares","Sale Price","Subscription Date","Subscription FMV","Purchase Date","Purchase Price","Purchase FMV","Disposition Type","Grant Id","Vest Date","Vest FMV","Gross Proceeds",
+"","RS","12.663","$130.75","","","","","","","C1115699","05/25/2023","$121.64","$1,655.69",
+"","Type","Shares","Sale Price","Subscription Date","Subscription FMV","Purchase Date","Purchase Price","Purchase FMV","Disposition Type","Grant Id","Vest Date","Vest FMV","Gross Proceeds",
+"","RS","13.671","$130.75","","","","","","","C1115699","07/25/2023","$121.88","$1,787.48",
+"","Type","Shares","Sale Price","Subscription Date","Subscription FMV","Purchase Date","Purchase Price","Purchase FMV","Disposition Type","Grant Id","Vest Date","Vest FMV","Gross Proceeds",
+"","RS","36.732","$130.75","","","","","","","C774777","06/25/2023","$123.02","$4,802.71",
+"","Type","Shares","Sale Price","Subscription Date","Subscription FMV","Purchase Date","Purchase Price","Purchase FMV","Disposition Type","Grant Id","Vest Date","Vest FMV","Gross Proceeds",
+"","RS","13.469","$130.75","","","","","","","C1115699","06/25/2023","$123.02","$1,761.07",
+"","Type","Shares","Sale Price","Subscription Date","Subscription FMV","Purchase Date","Purchase Price","Purchase FMV","Disposition Type","Grant Id","Vest Date","Vest FMV","Gross Proceeds",
+"","RS","12.245","$130.75","","","","","","","C975797","06/25/2023","$123.02","$1,601.03",
+"","Type","Shares","Sale Price","Subscription Date","Subscription FMV","Purchase Date","Purchase Price","Purchase FMV","Disposition Type","Grant Id","Vest Date","Vest FMV","Gross Proceeds",
+"","RS","61.22","$130.75","","","","","","","C637744","06/25/2023","$123.02","$8,004.52",
+"07/27/2023","Deposit","GOOG","RS","13.671","","",""
+"","Award Date","Award ID","Vest Date","Vest FMV",
+"","03/08/2023","C1115699","07/25/2023","$121.88",
+"06/28/2023","Deposit","GOOG","RS","12.245","","",""
+"","Award Date","Award ID","Vest Date","Vest FMV",
+"","01/05/2022","C975797","06/25/2023","$123.02",
