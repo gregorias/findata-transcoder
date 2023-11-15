@@ -13,6 +13,7 @@ module Data.Csv.Extra (
 
   -- * Megaparsec-compatible parsers
   fieldP,
+  quotedFieldP,
 ) where
 
 import Control.Applicative.Combinators.Extra (surroundedBy)
@@ -61,19 +62,20 @@ decodeByName csv =
     (\case CsvFnrWrapper a -> a)
     $ Csv.decodeByName csv
 
+-- | RFC 4180-compatible CSV quoted field parser that decodes the field.
+quotedFieldP :: (MonadParsec e s m, MP.Token s ~ Char, MP.Tokens s ~ Text) => m Text
+quotedFieldP = MP.label "quoted CSV field" . surroundedBy (MP.char '"') $ do
+  -- takeWhile1P is important, so that the internal parser accepts something,
+  -- otherwise we have an infinite loop.
+  chunks <- MP.many (MP.takeWhile1P Nothing (/= '"') <|> (MP.string "\"\"" $> "\""))
+  return $ mconcat chunks
+
 -- | RFC 4180-compatible CSV field parser.
 fieldP :: (MonadParsec e s m, MP.Token s ~ Char, MP.Tokens s ~ Text) => m Text
-fieldP = MP.label "CSV field" $ quotedField <|> unquotedField
+fieldP = MP.label "CSV field" $ quotedFieldP <|> unquotedField
  where
   -- Potentially essential to ensure we've actually read the entire field, and
   -- fieldEnding = void eolOrEof <|> void (MP.char ',')
-
-  quotedField :: (MonadParsec e s m, MP.Token s ~ Char, MP.Tokens s ~ Text) => m Text
-  quotedField = MP.label "quoted CSV field" . surroundedBy (MP.char '"') $ do
-    -- takeWhile1P is important, so that the internal parser accepts something,
-    -- otherwise we have an infinite loop.
-    chunks <- MP.many (MP.takeWhile1P Nothing (/= '"') <|> (MP.string "\"\"" $> "\""))
-    return $ mconcat chunks
 
   unquotedField =
     MP.label "unquoted CSV field" $ MP.takeWhileP Nothing (not . (`elem` [',', '\r', '\n', '"']))
