@@ -16,12 +16,12 @@ import Transcoder.CharlesSchwab.Csv (
   CsCsvRecord (CsCsvRecord),
   DollarAmount (..),
  )
-import Transcoder.CharlesSchwab.Ledger (csvToLedger)
+import Transcoder.CharlesSchwab.Ledger (brokerageHistoryToLedger)
 
 tests :: SpecWith ()
 tests = do
   describe "Transcoder.CharlesSchwab.Ledger" $ do
-    describe "csvToLedger" $ do
+    describe "brokerageHistoryToLedger" $ do
       it "transforms a wire fund entry" $ do
         let entries =
               [ CsCsvRecord
@@ -34,7 +34,7 @@ tests = do
                   Nothing
                   (Just $ DollarAmount (fromRational $ -12345 % 100))
               ]
-        trs <- assertRight $ csvToLedger entries
+        trs <- assertRight $ brokerageHistoryToLedger entries
         trs
           `shouldBe` [transactionsQQ|
                         2021/01/19 Wire Funds
@@ -53,7 +53,7 @@ tests = do
                   Nothing
                   Nothing
               ]
-        trs <- assertRight $ csvToLedger entries
+        trs <- assertRight $ brokerageHistoryToLedger entries
         trs
           `shouldBe` [transactionsQQ|
                   2020/12/31 * GOOG Vesting
@@ -72,7 +72,7 @@ tests = do
                   Nothing
                   (Just $ DollarAmount (fromRational $ 19 % 100))
               ]
-        trs <- assertRight $ csvToLedger entries
+        trs <- assertRight $ brokerageHistoryToLedger entries
         trs
           `shouldBe` [transactionsQQ|
                   2021/01/28 * Credit Interest
@@ -90,7 +90,7 @@ tests = do
                   (Just $ DollarAmount (fromRational $ 31 % 100))
                   (Just $ DollarAmount (fromRational $ 1412185 % 100))
               ]
-        trs <- assertRight $ csvToLedger entries
+        trs <- assertRight $ brokerageHistoryToLedger entries
         trs
           `shouldBe` [transactionsQQ|
                   2020/12/31 * GOOG Sale
@@ -109,7 +109,7 @@ tests = do
                   Nothing
                   (Just $ DollarAmount (fromRational $ -123 % 100))
               ]
-        trs <- assertRight $ csvToLedger entries
+        trs <- assertRight $ brokerageHistoryToLedger entries
         trs
           `shouldBe` [transactionsQQ|
                        2020/12/31 * Withholding Tax

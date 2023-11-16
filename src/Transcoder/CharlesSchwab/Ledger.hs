@@ -1,6 +1,6 @@
 -- | This module turns a parsed CS CSV statement into ledger format.
 module Transcoder.CharlesSchwab.Ledger (
-  csvToLedger,
+  brokerageHistoryToLedger,
 ) where
 
 import Control.Lens qualified as L
@@ -200,7 +200,7 @@ csvRecordToLedgerTransaction rec =
             <*> [rec]
         )
 
-csvToLedger :: Vector CsCsvRecord -> Either Text [Transaction]
-csvToLedger recs = do
+brokerageHistoryToLedger :: Vector CsCsvRecord -> Either Text [Transaction]
+brokerageHistoryToLedger recs = do
   let trs = Vector.mapMaybe csvRecordToLedgerTransaction recs
   return $ reverse $ Vector.toList trs

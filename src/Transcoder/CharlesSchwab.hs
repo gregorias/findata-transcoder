@@ -12,4 +12,4 @@ import Transcoder.CharlesSchwab.Ledger qualified as Ledger
 parseBrokerageAccountHistory :: LBS.ByteString -> Either Text [Transaction]
 parseBrokerageAccountHistory stmt = do
   recs <- CsCsv.parseCsStatement stmt
-  Ledger.csvToLedger recs
+  Ledger.brokerageHistoryToLedger recs
