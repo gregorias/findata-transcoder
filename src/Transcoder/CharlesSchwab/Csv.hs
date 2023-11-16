@@ -2,24 +2,25 @@
 module Transcoder.CharlesSchwab.Csv (
   -- * Parsing
   parseCsStatement,
+  dollarAmountP,
 
   -- * Types
   DollarAmount (..),
   CsCsvRecord (..),
 ) where
 
-import qualified Control.Lens as L
+import Control.Lens qualified as L
 import Control.Monad.Combinators (manyTill)
-import qualified Data.ByteString.Lazy as LBS
+import Data.ByteString.Lazy qualified as LBS
 import Data.Csv (FromNamedRecord (..), (.:))
-import qualified Data.Csv as Csv
+import Data.Csv qualified as Csv
 import Data.Decimal (Decimal)
 import Data.Time (Day, defaultTimeLocale)
 import Data.Time.Format (parseTimeM)
 import Data.Vector (Vector)
 import Relude
 import Text.Megaparsec (Parsec, anySingle, chunk, single)
-import qualified Text.Megaparsec as MP
+import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char (space)
 import Text.Megaparsec.Char.Lexer (signed)
 import Text.Megaparsec.Extra (
@@ -107,13 +108,17 @@ instance FromNamedRecord CsCsvRecord where
   parseNamedRecord rec =
     CsCsvRecord
       <$> (unCsDay <$> rec .: "Date")
-      <*> rec .: "Action"
-      <*> rec .: "Symbol"
-      <*> rec .: "Description"
+      <*> rec
+      .: "Action"
+      <*> rec
+      .: "Symbol"
+      <*> rec
+      .: "Description"
       <*> quantityP rec
       <*> maybeDollarAmountP rec "Price"
       <*> maybeDollarAmountP rec "Fees & Comm"
-      <*> rec .: "Amount"
+      <*> rec
+      .: "Amount"
 
 line :: Parsec Void LBS.ByteString LBS.ByteString
 line = do
