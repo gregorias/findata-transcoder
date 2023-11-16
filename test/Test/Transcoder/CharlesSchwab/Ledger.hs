@@ -12,8 +12,10 @@ import Relude
 import Test.HUnit.Extra (assertRight)
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe)
-import Transcoder.CharlesSchwab.Csv (
+import Transcoder.CharlesSchwab.Brokerage.Csv (
   CsCsvRecord (CsCsvRecord),
+ )
+import Transcoder.CharlesSchwab.Csv (
   DollarAmount (..),
  )
 import Transcoder.CharlesSchwab.Ledger (brokerageHistoryToLedger)

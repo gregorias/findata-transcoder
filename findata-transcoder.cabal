@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -45,6 +45,7 @@ library
       Transcoder.Bcge.Hint
       Transcoder.BcgeCC
       Transcoder.CharlesSchwab
+      Transcoder.CharlesSchwab.Brokerage.Csv
       Transcoder.CharlesSchwab.Csv
       Transcoder.CharlesSchwab.Ledger
       Transcoder.Coop
@@ -81,7 +82,7 @@ library
       src
   default-extensions:
       DataKinds DerivingStrategies DerivingVia DuplicateRecordFields FunctionalDependencies GADTs LambdaCase MultiWayIf NoImplicitPrelude OverloadedLabels OverloadedStrings QuasiQuotes TypeFamilies TypeOperators
-  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures
+  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing
   build-depends:
       Decimal
     , aeson
@@ -119,7 +120,7 @@ executable findata-transcoder
       app
   default-extensions:
       DataKinds DerivingStrategies DerivingVia DuplicateRecordFields FunctionalDependencies GADTs LambdaCase MultiWayIf NoImplicitPrelude OverloadedLabels OverloadedStrings QuasiQuotes TypeFamilies TypeOperators
-  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.14 && <5
     , bytestring
@@ -140,7 +141,7 @@ test-suite doctest
       doctest
   default-extensions:
       DataKinds DerivingStrategies DerivingVia DuplicateRecordFields FunctionalDependencies GADTs LambdaCase MultiWayIf NoImplicitPrelude OverloadedLabels OverloadedStrings QuasiQuotes TypeFamilies TypeOperators
-  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -main-is DocTest
+  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N -main-is DocTest
   build-depends:
       base >=4.14 && <5
     , doctest
@@ -170,7 +171,7 @@ test-suite findata-transcoder-test
       Test.Transcoder.Bcge.Hint
       Test.Transcoder.BcgeCC
       Test.Transcoder.CharlesSchwab
-      Test.Transcoder.CharlesSchwab.Csv
+      Test.Transcoder.CharlesSchwab.Brokerage.Csv
       Test.Transcoder.CharlesSchwab.Ledger
       Test.Transcoder.Coop
       Test.Transcoder.Coop.Config
@@ -200,7 +201,7 @@ test-suite findata-transcoder-test
       test
   default-extensions:
       DataKinds DerivingStrategies DerivingVia DuplicateRecordFields FunctionalDependencies GADTs LambdaCase MultiWayIf NoImplicitPrelude OverloadedLabels OverloadedStrings QuasiQuotes TypeFamilies TypeOperators
-  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -threaded -rtsopts -with-rtsopts=-N -main-is Spec
+  ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N -main-is Spec
   build-depends:
       Decimal
     , HUnit

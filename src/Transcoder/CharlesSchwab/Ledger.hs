@@ -28,10 +28,12 @@ import Hledger.Data.Extra (
  )
 import Hledger.Data.Lens (aAmountPrice, pMaybeAmount, pStatus, tDescription, tStatus)
 import Relude
-import Transcoder.CharlesSchwab.Csv (
-  CsCsvRecord (csAmount, csDate, csDescription, csFees, csPrice, csQuantity, csSymbol),
-  DollarAmount (..),
+import Transcoder.CharlesSchwab.Brokerage.Csv (
+  CsCsvRecord (csAction, csAmount, csDate, csDescription, csFees, csPrice, csQuantity, csSymbol),
   csAction,
+ )
+import Transcoder.CharlesSchwab.Csv (
+  DollarAmount (..),
  )
 import Transcoder.Data.Currency (usd)
 import Transcoder.Data.LedgerReport (todoPosting)

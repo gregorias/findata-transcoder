@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedLists #-}
 
-module Test.Transcoder.CharlesSchwab.Csv (
+module Test.Transcoder.CharlesSchwab.Brokerage.Csv (
   tests,
 ) where
 
@@ -9,11 +9,17 @@ import Data.Time (fromGregorian)
 import Relude
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe)
-import Transcoder.CharlesSchwab.Csv (CsCsvRecord (CsCsvRecord), DollarAmount (..), parseCsStatement)
+import Transcoder.CharlesSchwab.Brokerage.Csv (
+  CsCsvRecord (CsCsvRecord),
+  parseCsStatement,
+ )
+import Transcoder.CharlesSchwab.Csv (
+  DollarAmount (..),
+ )
 
 tests :: SpecWith ()
 tests = do
-  describe "Transcoder.CharlesSchwab.Csv" $ do
+  describe "Transcoder.CharlesSchwab.Brokerage.Csv" $ do
     describe "parseCsStatement" $ do
       it "parses a Charles Schwab Statement" $ do
         let csv =
