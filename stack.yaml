@@ -2,8 +2,7 @@ resolver: lts-21.19
 
 # User packages to be built.
 packages:
-- .
+  - .
 # Dependency packages to be pulled from upstream that are not in the resolver.
 extra-deps:
-- weeder-2.1.3
-- currency-codes-3.0.0.1
+  - currency-codes-3.0.0.1
