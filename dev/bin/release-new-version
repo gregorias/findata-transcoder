@@ -12,7 +12,7 @@ or begin
   exit 0
 end
 
-echo "Bump up the new version in app/Main and package.yaml. Once done, confirm [y/n]":
+echo "Bump up the new version in package.yaml. Once done, confirm [y/n]":
 read confirm
 switch $confirm
     case y
@@ -23,7 +23,7 @@ switch $confirm
 end
 set NEW_VERSION (get-version)
 and echo "New version: $NEW_VERSION."
-git add app/Main.hs package.yaml
+git add package.yaml
 and echo "Rebuilding to update findata-transcoder.cabal."
 and stack build --fast
 and git add findata-transcoder.cabal

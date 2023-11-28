@@ -4,6 +4,7 @@ import Data.ByteString.Lazy qualified as LBS
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Data.Time.Clock (getCurrentTime, utctDay)
+import Data.Version (showVersion)
 import Hledger (Transaction)
 import Hledger.Extra (showTransaction)
 import Options.Applicative (
@@ -21,6 +22,7 @@ import Options.Applicative (
   strOption,
   subparser,
  )
+import Paths_findata_transcoder qualified
 import Relude
 import Text.Megaparsec qualified as MP
 import Transcoder.Bcge (bcgeCsvToLedger)
@@ -50,7 +52,7 @@ import Transcoder.Splitwise qualified as Splitwise
 import Transcoder.UberEats qualified as UberEats
 
 version :: Text
-version = "1.2.0.0"
+version = toText . showVersion $ Paths_findata_transcoder.version
 
 ledgerTrsToReport :: [Transaction] -> LedgerReport
 ledgerTrsToReport = flip LedgerReport []

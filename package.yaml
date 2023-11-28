@@ -1,45 +1,45 @@
-name:                findata-transcoder
-version:             1.2.0.0
-github:              "gregorias/findata-transcoder"
-license:             AGPL-3
-author:              "Grzegorz Milka"
-maintainer:          "grzegorzmilka@gmail.com"
-copyright:           "2020-2023 Grzegorz Milka"
+name: findata-transcoder
+version: 1.2.0.0
+github: "gregorias/findata-transcoder"
+license: AGPL-3
+author: "Grzegorz Milka"
+maintainer: "grzegorzmilka@gmail.com"
+copyright: "2020-2023 Grzegorz Milka"
 
 extra-source-files:
-- README.md
+  - README.md
 
 # Metadata used when publishing your package
-synopsis:            Transcode financial statements into Ledger transactions.
-category:            Finance
+synopsis: Transcode financial statements into Ledger transactions.
+category: Finance
 
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/gregorias/findata-transcoder#readme>
+description: Please see the README on GitHub at <https://github.com/gregorias/findata-transcoder#readme>
 
 dependencies:
-- base >= 4.14 && < 5
+  - base >= 4.14 && < 5
 
 language: GHC2021
 
 # Some defaults recommended by https://kowainik.github.io/posts/2019-02-06-style-guide#default-extensions
 # Also use Relude
 default-extensions:
-  DataKinds
-  DerivingStrategies
-  DerivingVia
-  DuplicateRecordFields
-  FunctionalDependencies
-  GADTs
-  LambdaCase
-  MultiWayIf
-  NoImplicitPrelude
-  OverloadedLabels
-  OverloadedStrings
-  QuasiQuotes
-  TypeFamilies
-  TypeOperators
+  - DataKinds
+  - DerivingStrategies
+  - DerivingVia
+  - DuplicateRecordFields
+  - FunctionalDependencies
+  - GADTs
+  - LambdaCase
+  - MultiWayIf
+  - NoImplicitPrelude
+  - OverloadedLabels
+  - OverloadedStrings
+  - QuasiQuotes
+  - TypeFamilies
+  - TypeOperators
 
 # no-type-defaults, this is dangerous, but in terms of convenience it's so
 # useful to use ExtendedDefaultRules that I keep it.
@@ -65,96 +65,92 @@ ghc-options:
 library:
   source-dirs: src
   dependencies:
-  - aeson
-  - Decimal
-  - bytestring
-  - casing
-  - cassava
-  - containers
-  - currency-codes
-  - either
-  - extra
-  - hledger-lib >= 1.19
-  - lens
-  - lens-regex-pcre
-  - lift-generics
-  - megaparsec
-  - mtl
-  - parser-combinators
-  - regex-tdfa
-  - relude
-  - safe
-  - template-haskell
-  - text
-  - th-lift-instances
-  - time
-  - time-compat
-  - transformers
-  - unordered-containers
-  - vector
+    - aeson
+    - Decimal
+    - bytestring
+    - casing
+    - cassava
+    - containers
+    - currency-codes
+    - either
+    - extra
+    - hledger-lib >= 1.19
+    - lens
+    - lens-regex-pcre
+    - lift-generics
+    - megaparsec
+    - mtl
+    - parser-combinators
+    - regex-tdfa
+    - relude
+    - safe
+    - template-haskell
+    - text
+    - th-lift-instances
+    - time
+    - time-compat
+    - transformers
+    - unordered-containers
+    - vector
 
 executables:
   findata-transcoder:
-    main:                Main.hs
-    source-dirs:         app
+    main: Main.hs
+    source-dirs: app
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
     dependencies:
-    - bytestring
-    - findata-transcoder
-    - hledger-lib
-    - megaparsec
-    - optparse-applicative
-    - relude
-    - time
-    # Fix https://stackoverflow.com/questions/67519851/multiple-files-use-the-same-module-name
-    when:
-    - condition: false
-      other-modules: Paths_findata_transcoder
+      - bytestring
+      - findata-transcoder
+      - hledger-lib
+      - megaparsec
+      - optparse-applicative
+      - relude
+      - time
 
 tests:
   findata-transcoder-test:
-    main:                Spec.hs
-    source-dirs:         test
+    main: Spec.hs
+    source-dirs: test
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    - -main-is Spec
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -main-is Spec
     dependencies:
-    - Decimal
-    - bytestring
-    - cassava
-    - containers
-    - extra
-    - hledger-lib
-    - findata-transcoder
-    - hspec
-    - hspec-expectations-pretty-diff
-    - HUnit
-    - lens
-    - megaparsec
-    - neat-interpolation
-    - parser-combinators
-    - relude
-    - replace-megaparsec
-    - template-haskell
-    - text
-    - time
-    - trimdent
-    - vector
+      - Decimal
+      - bytestring
+      - cassava
+      - containers
+      - extra
+      - hledger-lib
+      - findata-transcoder
+      - hspec
+      - hspec-expectations-pretty-diff
+      - HUnit
+      - lens
+      - megaparsec
+      - neat-interpolation
+      - parser-combinators
+      - relude
+      - replace-megaparsec
+      - template-haskell
+      - text
+      - time
+      - trimdent
+      - vector
 
   doctest:
-    main:                DocTest.hs
-    source-dirs:         doctest
+    main: DocTest.hs
+    source-dirs: doctest
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    - -main-is DocTest
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -main-is DocTest
     dependencies:
-    - doctest
-    - findata-transcoder
-    - relude
+      - doctest
+      - findata-transcoder
+      - relude
