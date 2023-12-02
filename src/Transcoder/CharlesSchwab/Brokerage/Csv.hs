@@ -97,19 +97,9 @@ line = do
   (content, eol) <- MP.manyTill_ anySingle (chunk "\n")
   return $ tokensToChunk (Proxy :: Proxy LBS.ByteString) content `LBS.append` eol
 
-dropFirstLine :: Parser ()
-dropFirstLine = do
-  void $ manyTill anySingle (chunk "\n")
-
-lastLine :: Parser ()
-lastLine = do
-  void $ chunk "Transactions Total" <|> chunk "\"Transactions Total\""
-  void MP.takeRest
-
 csStatementToCsvContentP :: Parser (CsvFile LBS.ByteString)
 csStatementToCsvContentP = do
-  dropFirstLine
-  csvLines <- manyTill line (MP.try lastLine)
+  csvLines <- many line
   return $ CsvFile (LBS.concat csvLines)
 
 parseCsCsv :: CsvFile LBS.ByteString -> Either Text (Vector CsCsvRecord)

@@ -214,7 +214,6 @@ test-suite findata-transcoder-test
       Test.Transcoder.Bcge.Hint
       Test.Transcoder.BcgeCC
       Test.Transcoder.CharlesSchwab
-      Test.Transcoder.CharlesSchwab.Brokerage.Csv
       Test.Transcoder.CharlesSchwab.Ledger
       Test.Transcoder.Coop
       Test.Transcoder.Coop.Config
