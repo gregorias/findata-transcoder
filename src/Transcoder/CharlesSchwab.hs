@@ -9,6 +9,7 @@ import Hledger (Transaction)
 import Relude
 import Transcoder.CharlesSchwab.Brokerage.Csv qualified as BCsv
 import Transcoder.CharlesSchwab.Eac.Csv qualified as ECsv
+import Transcoder.CharlesSchwab.Eac.Data qualified as Eac
 import Transcoder.CharlesSchwab.Eac.Ledger (eacHistoryToLedger)
 import Transcoder.CharlesSchwab.Ledger qualified as Ledger
 
@@ -22,4 +23,4 @@ parseBrokerageAccountHistory stmt = do
 parseEacAccountHistory :: Text -> Either Text [Transaction]
 parseEacAccountHistory stmt = do
   recordSheet <- ECsv.parseHistory stmt
-  eacHistoryToLedger (ECsv.rsRecords recordSheet)
+  eacHistoryToLedger (Eac.rsRecords recordSheet)

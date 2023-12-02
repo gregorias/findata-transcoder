@@ -48,6 +48,7 @@ library
       Transcoder.CharlesSchwab.Brokerage.Csv
       Transcoder.CharlesSchwab.Csv
       Transcoder.CharlesSchwab.Eac.Csv
+      Transcoder.CharlesSchwab.Eac.Data
       Transcoder.CharlesSchwab.Eac.Ledger
       Transcoder.CharlesSchwab.Ledger
       Transcoder.Coop

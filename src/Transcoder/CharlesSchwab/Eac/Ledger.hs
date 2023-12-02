@@ -13,8 +13,8 @@ import Hledger.Data.Extra (
   makeTransaction,
  )
 import Relude
-import Transcoder.CharlesSchwab.Eac.Csv (Record (..))
-import Transcoder.CharlesSchwab.Eac.Csv qualified as EacCsv
+import Transcoder.CharlesSchwab.Eac.Data (Record (..))
+import Transcoder.CharlesSchwab.Eac.Data qualified as Eac
 import Transcoder.Wallet (equity, financialServices, investmentAssets, liquidAssets, (<:>))
 
 recordToTransaction :: Record -> Either Text Transaction
@@ -22,9 +22,9 @@ recordToTransaction (RecordWireTransfer wt) = wireTransferToTransaction wt
 recordToTransaction (RecordSale s) = saleToTransaction s
 recordToTransaction (RecordDeposit d) = depositToTransaction d
 
-wireTransferToTransaction :: EacCsv.WireTransfer -> Either Text Transaction
+wireTransferToTransaction :: Eac.WireTransfer -> Either Text Transaction
 wireTransferToTransaction
-  ( EacCsv.WireTransfer
+  ( Eac.WireTransfer
       { wtDescription = _wtDescription
       , wtAmount = wtAmount
       , wtSymbol = _wtSymbol
@@ -44,9 +44,9 @@ wireTransferToTransaction
         , makePosting (Just Pending) "Todo" Nothing NoComment
         ]
 
-saleToTransaction :: EacCsv.Sale -> Either Text Transaction
+saleToTransaction :: Eac.Sale -> Either Text Transaction
 saleToTransaction
-  ( EacCsv.Sale
+  ( Eac.Sale
       { sSymbol = sSymbol
       , sSubsales = _sSubsales
       , sQuantity = sQuantity
@@ -78,9 +78,9 @@ saleToTransaction
             NoComment
         ]
 
-depositToTransaction :: EacCsv.Deposit -> Either Text Transaction
+depositToTransaction :: Eac.Deposit -> Either Text Transaction
 depositToTransaction
-  ( EacCsv.Deposit
+  ( Eac.Deposit
       { dQuantity = dQuantity
       , dDescription = _dDescription
       , dDepositAwardInfo = _dDepositAwardInfo

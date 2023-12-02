@@ -2,20 +2,9 @@
 module Transcoder.CharlesSchwab.Eac.Csv (
   -- * Parsing
   parseHistory,
-
-  -- * Types
-  RecordSheet (..),
-  Record (..),
-  WireTransfer (..),
-  Sale (..),
-  SubsaleType (..),
-  Subsale (..),
-  Deposit (..),
-  DepositAwardInfo (..),
 ) where
 
 import Data.Csv.Extra qualified as Csv
-import Data.Decimal (Decimal)
 import Data.Time (Day)
 import Data.Time.Extra (dayP)
 import Relude
@@ -26,73 +15,18 @@ import Text.Megaparsec.Char qualified as MP
 import Text.Megaparsec.Char.Extra (eolOrEof)
 import Text.Megaparsec.Extra (ToNestedParser (toNestedParser))
 import Text.Megaparsec.Extra qualified as MP
-import Transcoder.CharlesSchwab.Csv (DollarAmount, dollarAmountP)
+import Transcoder.CharlesSchwab.Csv (dollarAmountP)
+import Transcoder.CharlesSchwab.Eac.Data (
+  Deposit (..),
+  DepositAwardInfo (..),
+  Record (..),
+  RecordSheet (..),
+  Sale (..),
+  Subsale (..),
+  SubsaleType (..),
+  WireTransfer (..),
+ )
 import Transcoder.Data.MyDecimal (decimalP, defaultDecimalFormat)
-
--- | A record sheet represent an entire EAC account history statement.
-data RecordSheet = RecordSheet
-  { rsDate :: !Day
-  , rsRecords :: ![Record]
-  }
-  deriving stock (Eq, Show, Generic)
-
--- | A record represents a single transaction in an EAC account history
--- statement.
-data Record
-  = RecordWireTransfer !WireTransfer
-  | RecordSale !Sale
-  | RecordDeposit !Deposit
-  deriving stock (Eq, Show, Generic)
-
-data WireTransfer = WireTransfer
-  { wtDate :: !Day
-  , wtSymbol :: !Text
-  , wtDescription :: !Text
-  , wtAmount :: !DollarAmount
-  }
-  deriving stock (Eq, Show, Generic)
-
-data Sale = Sale
-  { sDate :: !Day
-  , sSymbol :: !Text
-  , sDescription :: !Text
-  , sQuantity :: !Decimal
-  , sFeesAndCommissions :: !DollarAmount
-  , sAmount :: !DollarAmount
-  , sSubsales :: ![Subsale]
-  }
-  deriving stock (Eq, Show, Generic)
-
-data SubsaleType = SubsaleTypeRs
-  deriving stock (Eq, Show, Generic)
-
-data Subsale = Subsale
-  { sType :: !SubsaleType
-  , sShares :: !Decimal
-  , sSalePrice :: !DollarAmount
-  , sGrantId :: !Text
-  , sVestDate :: !Day
-  , sVestFMV :: !DollarAmount
-  , sGrossProceeds :: !DollarAmount
-  }
-  deriving stock (Eq, Show, Generic)
-
-data Deposit = Deposit
-  { dDate :: !Day
-  , dSymbol :: !Text
-  , dDescription :: !Text
-  , dQuantity :: !Decimal
-  , dDepositAwardInfo :: !DepositAwardInfo
-  }
-  deriving stock (Eq, Show, Generic)
-
-data DepositAwardInfo = DepositAwardInfo
-  { daiAwardDate :: !Day
-  , daiAwardId :: !Text
-  , daiVestDate :: !Day
-  , daiVestFMV :: !DollarAmount
-  }
-  deriving stock (Eq, Show, Generic)
 
 type Stream = Text
 
