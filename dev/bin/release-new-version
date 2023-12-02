@@ -8,8 +8,8 @@ end
 
 set OLD_VERSION (get-version)
 or begin
-  echo "Could not get the current version. Aborting."
-  exit 0
+    echo "Could not get the current version. Aborting."
+    exit 0
 end
 
 echo "Bump up the new version in package.yaml. Once done, confirm [y/n]":
