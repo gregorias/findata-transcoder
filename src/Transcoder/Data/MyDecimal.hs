@@ -1,6 +1,3 @@
-{-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE TypeFamilies #-}
-
 -- | My extended parsing utilities for parsing decimals.
 module Transcoder.Data.MyDecimal (
   decimalP,
@@ -14,9 +11,9 @@ module Transcoder.Data.MyDecimal (
   MyDecimal (..),
 ) where
 
-import qualified Control.Lens.Iso as Lens
+import Control.Lens.Iso qualified as Lens
 import Data.Char (digitToInt)
-import qualified Data.Csv as Csv
+import Data.Csv qualified as Csv
 import Data.Decimal (Decimal, realFracToDecimal)
 import Data.Ratio ((%))
 import Relude
@@ -25,7 +22,7 @@ import Text.Megaparsec (
   Token,
   parseMaybe,
  )
-import qualified Text.Megaparsec as MP
+import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char (char, digitChar, space)
 import Text.Megaparsec.Char.Lexer (decimal, signed)
 
@@ -48,11 +45,11 @@ chunkSepFormat _ f (ChunkSep c) = f c
 -- | 'DecimalFormat' describes the format of a decimal.
 -- If a fraction part is present, then it starts with `.`
 data DecimalFormat = DecimalFormat
-  { -- | The optional character used to separate 3 digit chunks.
-    decimalFormatChunkSep :: !ChunkSepFormat
-  , -- | 'decimalFormatFractionFormat' describes the format of an optional
-    -- fraction part of a decimal.
-    decimalFormatFractionFormat :: !(Maybe DecimalFractionFormat)
+  { decimalFormatChunkSep :: !ChunkSepFormat
+  -- ^ The optional character used to separate 3 digit chunks.
+  , decimalFormatFractionFormat :: !(Maybe DecimalFractionFormat)
+  -- ^ 'decimalFormatFractionFormat' describes the format of an optional
+  -- fraction part of a decimal.
   }
 
 -- | The default format that has no chunk separation and can have a fractional
