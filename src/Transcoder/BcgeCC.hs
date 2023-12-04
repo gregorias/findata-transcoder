@@ -4,10 +4,16 @@ module Transcoder.BcgeCC (
   rechnungToLedger,
 ) where
 
-import qualified Control.Lens as L
+import Control.Lens qualified as L
 import Control.Lens.Regex.Text (regex)
-import qualified Control.Lens.Regex.Text as LR
+import Control.Lens.Regex.Text qualified as LR
 import Data.Decimal (Decimal)
+import Data.Decimal.Extra (
+  ChunkSepFormat (ChunkSep, NoChunkSep),
+  DecimalFormat (..),
+  DecimalFractionFormat (TwoDigitDecimalFraction),
+  decimalP,
+ )
 import Data.Time (Day)
 import Data.Time.Extra (dayP)
 import Hledger (
@@ -17,7 +23,7 @@ import Hledger (
   post,
   transaction,
  )
-import qualified Hledger.Data.Extra as HDE
+import Hledger.Data.Extra qualified as HDE
 import Hledger.Data.Lens (pBalanceAssertion, tDescription, tStatus)
 import Relude
 import Relude.Extra.Map (lookup)
@@ -37,12 +43,6 @@ import Text.Megaparsec.Extra (
   parsePretty,
  )
 import Transcoder.Data.Currency (chf)
-import Transcoder.Data.MyDecimal (
-  ChunkSepFormat (ChunkSep, NoChunkSep),
-  DecimalFormat (..),
-  DecimalFractionFormat (TwoDigitDecimalFraction),
-  decimalP,
- )
 import Transcoder.Wallet (
   bcgeCCAccount,
   expensesOther,
@@ -83,8 +83,8 @@ transactionP = label "transaction" $ do
   category <- anyLineP
   void . optional $ exchangeRateP
   processingFee <- optional processingFeeP
-  return $
-    RawRechnungTransaction
+  return
+    $ RawRechnungTransaction
       { rrtDay = fstDay
       , rrtAuxDay = sndDay
       , rrtTitle = title
@@ -129,8 +129,9 @@ transactionP = label "transaction" $ do
           )
       )
   titleAndAmountP :: BcgeCCParser (Text, Decimal)
-  titleAndAmountP = label "transaction title and amount" $
-    try $ do
+  titleAndAmountP = label "transaction title and amount"
+    $ try
+    $ do
       before <- getParserState
       rol :: Text <- anyLineP
       let (maybeTitleAndAmount :: Maybe (Text, Decimal)) = do
@@ -163,8 +164,8 @@ rechnungP = do
   trs <- transactionsP
   (_, owedAmount) <- manyTill_ anyLineP totalOwedAmountP
   void $ many anyLineP
-  return $
-    Rechnung
+  return
+    $ Rechnung
       { rechnungDay = day
       , rechnungTransactions = trs
       , rechnungOwedAmount = owedAmount
@@ -182,7 +183,7 @@ rawRechnungTransactionToTransaction
     } =
     transaction day postings
       & L.set tStatus Cleared
-        . L.set tDescription title
+      . L.set tDescription title
    where
     makeAFeePosting fee = post financialServices (HDE.makeCurrencyAmount chf fee)
     feeOrZero = fromMaybe 0 processingFeeInChf
@@ -201,7 +202,7 @@ rechnungToTransactions
     (rawRechnungTransactionToTransaction <$> trs)
       <> [ transaction day [balancePosting]
             & L.set tStatus Cleared
-              . L.set tDescription "BCGE CC Status"
+            . L.set tDescription "BCGE CC Status"
          ]
    where
     balancePosting =

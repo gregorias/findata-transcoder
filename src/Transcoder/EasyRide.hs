@@ -2,8 +2,14 @@ module Transcoder.EasyRide (
   receiptToLedger,
 ) where
 
-import qualified Control.Lens as L
+import Control.Lens qualified as L
 import Data.Decimal (Decimal)
+import Data.Decimal.Extra (
+  ChunkSepFormat (ChunkSep),
+  DecimalFormat (..),
+  DecimalFractionFormat (TwoDigitDecimalFraction),
+  decimalP,
+ )
 import Data.Time (Day, fromGregorian)
 import Data.Time.Calendar.Extra (monthP)
 import Hledger (
@@ -11,8 +17,8 @@ import Hledger (
   Transaction,
   transaction,
  )
-import qualified Hledger as Ledger
-import qualified Hledger.Data.Extra as HDE
+import Hledger qualified as Ledger
+import Hledger.Data.Extra qualified as HDE
 import Hledger.Data.Lens (pStatus, tDescription, tStatus)
 import Relude
 import Text.Megaparsec (
@@ -31,12 +37,6 @@ import Text.Megaparsec.Extra (
   parsePretty,
  )
 import Transcoder.Data.Currency (chf)
-import Transcoder.Data.MyDecimal (
-  ChunkSepFormat (ChunkSep),
-  DecimalFormat (..),
-  DecimalFractionFormat (TwoDigitDecimalFraction),
-  decimalP,
- )
 import Transcoder.Wallet (bcgeCCAccount, expensesTransport)
 
 data Receipt = Receipt
@@ -74,7 +74,7 @@ receiptToTransaction :: Receipt -> Transaction
 receiptToTransaction (Receipt day total) =
   transaction day postings
     & L.set tDescription "EasyRide"
-      . L.set tStatus Cleared
+    . L.set tStatus Cleared
  where
   postings = [bcgePosting, transportPosting]
   bcgePosting =

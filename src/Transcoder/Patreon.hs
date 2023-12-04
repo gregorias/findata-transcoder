@@ -7,7 +7,11 @@ import Control.Lens (
  )
 import Data.Char (isDigit)
 import Data.Decimal (Decimal)
-import qualified Data.Text as Text
+import Data.Decimal.Extra (
+  decimalP,
+  defaultDecimalFormat,
+ )
+import Data.Text qualified as Text
 import Data.Time.Calendar (
   Day,
   fromGregorianValid,
@@ -29,18 +33,6 @@ import Hledger.Data.Lens (
   tDescription,
   tStatus,
  )
-import Transcoder.Data.Currency (
-  usd,
- )
-import Transcoder.Data.MyDecimal (
-  decimalP,
-  defaultDecimalFormat,
- )
-import Transcoder.Wallet (
-  expenses,
-  revolutAccount,
-  (<:>),
- )
 import Relude
 import Relude.Unsafe (fromJust)
 import Text.Megaparsec (
@@ -61,6 +53,14 @@ import Text.Megaparsec.Char.Lexer (
  )
 import Text.Megaparsec.Extra (
   parsePretty,
+ )
+import Transcoder.Data.Currency (
+  usd,
+ )
+import Transcoder.Wallet (
+  expenses,
+  revolutAccount,
+  (<:>),
  )
 
 data Entry = Entry
@@ -118,10 +118,10 @@ receiptToTransaction :: Receipt -> Transaction
 receiptToTransaction Receipt{date = date', entries = entries', total = total'} =
   transaction date' postings
     & set tDescription "Patreon"
-      . set tStatus Cleared
+    . set tStatus Cleared
  where
   revolutPosting =
-    post (revolutAccount <:> "USD") (makeCurrencyAmount usd (- total'))
+    post (revolutAccount <:> "USD") (makeCurrencyAmount usd (-total'))
       & set pStatus Pending
   postings = [revolutPosting] <> (entryToPosting <$> entries')
 

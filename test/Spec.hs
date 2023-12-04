@@ -3,6 +3,7 @@ module Spec (main) where
 import Relude
 import Test.Control.Applicative.Combinators.Extra qualified
 import Test.Data.Csv.Extra qualified
+import Test.Data.Decimal.Extra qualified
 import Test.Data.Time.Calendar.Extra qualified
 import Test.Data.Time.Extra qualified
 import Test.Hledger.Data.Extra qualified as HDE
@@ -52,6 +53,7 @@ tests = do
   HDE.tests
   Test.Control.Applicative.Combinators.Extra.tests
   Test.Data.Csv.Extra.tests
+  Test.Data.Decimal.Extra.tests
   Test.Data.Time.Calendar.Extra.tests
   Test.Data.Time.Extra.tests
   Test.Hledger.Data.Lens.tests

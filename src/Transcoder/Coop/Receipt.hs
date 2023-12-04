@@ -14,6 +14,14 @@ import Control.Lens ((^?))
 import Control.Lens.Regex.Text (regex)
 import Control.Lens.Regex.Text qualified as LR
 import Data.Decimal (Decimal)
+import Data.Decimal.Extra (
+  ChunkSepFormat (..),
+  DecimalFormat (..),
+  DecimalFractionFormat (..),
+  cashDecimalFormat,
+  decimalP,
+  defaultDecimalFormat,
+ )
 import Data.List.NonEmpty (some1)
 import Data.Time (Day)
 import Data.Time.Extra (dayP)
@@ -22,14 +30,6 @@ import Relude.Extra
 import Text.Megaparsec (Parsec, manyTill, manyTill_, parseMaybe, try)
 import Text.Megaparsec.Char (hspace1, newline, printChar, string)
 import Text.Megaparsec.Char.Extra (anyLineP)
-import Transcoder.Data.MyDecimal (
-  ChunkSepFormat (..),
-  DecimalFormat (..),
-  DecimalFractionFormat (..),
-  cashDecimalFormat,
-  decimalP,
-  defaultDecimalFormat,
- )
 
 type Parser = Parsec Void Text
 

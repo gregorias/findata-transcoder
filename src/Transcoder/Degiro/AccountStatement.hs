@@ -10,6 +10,10 @@ import Data.ByteString.Lazy qualified as LBS
 import Data.Cash (Cash (Cash), cashAmount, cashCurrency, cashP)
 import Data.Cash qualified as Cash
 import Data.Decimal (Decimal)
+import Data.Decimal.Extra (
+  decimalP,
+  defaultDecimalFormat,
+ )
 import Data.Either.Combinators (
   mapLeft,
  )
@@ -52,10 +56,6 @@ import Text.Megaparsec.Char.Lexer (decimal)
 import Transcoder.Data.CsvFile (CsvFile)
 import Transcoder.Data.Currency (Currency, currencyP)
 import Transcoder.Data.Isin (Isin, isin)
-import Transcoder.Data.MyDecimal (
-  decimalP,
-  defaultDecimalFormat,
- )
 import Transcoder.Degiro.Csv (
   DegiroCsvRecord (..),
   DegiroIsin (DegiroIsin, Nlflatexacnt),

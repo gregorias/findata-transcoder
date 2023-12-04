@@ -4,13 +4,13 @@ module Test.Transcoder.Mbank (
   mbankTests,
 ) where
 
+import Data.Decimal.Extra (fromUnitsAndCents)
 import Data.Time.Calendar (fromGregorian)
 import Hledger.Read.TestUtils (transactionQQ)
 import Relude
 import Test.Hspec (describe, it, shouldBe)
 import Test.Hspec qualified as Hspec
 import Text.Megaparsec (parseMaybe)
-import Transcoder.Data.MyDecimal (fromUnitsAndCents)
 import Transcoder.Mbank (
   MbankTransaction (..),
   decodeMbankCsv,

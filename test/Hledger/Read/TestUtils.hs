@@ -16,6 +16,7 @@ import Control.Monad.Combinators (
   someTill,
  )
 import Data.Char (isDigit)
+import Data.Decimal.Extra (decimalP, defaultDecimalFormat)
 import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
@@ -79,7 +80,6 @@ import Text.Megaparsec.Char qualified as MP
 import Text.Megaparsec.Char.Extra (eolOrEof)
 import Text.Megaparsec.Extra as MP
 import Text.Megaparsec.Internal qualified as MP
-import Transcoder.Data.MyDecimal (decimalP, defaultDecimalFormat)
 import Trimdent (trimdent)
 
 type Parser = Parsec H.HledgerParseErrorData Text

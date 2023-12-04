@@ -12,13 +12,13 @@ import Control.Lens (makeLenses, over)
 import Control.Monad.Permutations (toPermutation)
 import Control.Monad.Permutations qualified as Permutations
 import Data.Decimal (Decimal)
+import Data.Decimal.Extra (decimalP, defaultDecimalFormat)
 import Hledger.Data.Extra (ToAmount (..), makeCurrencyAmount)
 import Relude hiding (negate)
 import Relude qualified
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MP
 import Transcoder.Data.Currency (Currency, currencyP)
-import Transcoder.Data.MyDecimal (decimalP, defaultDecimalFormat)
 
 data Cash = Cash
   { _cashCurrency :: !Currency

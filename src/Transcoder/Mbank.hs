@@ -9,9 +9,10 @@ module Transcoder.Mbank (
 
 import Data.ByteString.Lazy as LBS
 import Data.Csv (DecodeOptions (DecodeOptions), FromNamedRecord (..), decodeByNameWith, lookup)
-import qualified Data.Csv as CSV
+import Data.Csv qualified as CSV
 import Data.Decimal (Decimal)
-import qualified Data.Text as T
+import Data.Decimal.Extra (fromUnitsAndCents)
+import Data.Text qualified as T
 import Data.Time.Calendar (Day)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Data.Vector (Vector)
@@ -34,9 +35,8 @@ import Text.Megaparsec (
   parseMaybe,
  )
 import Text.Megaparsec.Char (char, string)
-import qualified Transcoder.Data.Currency as Currency
+import Transcoder.Data.Currency qualified as Currency
 import Transcoder.Data.LedgerReport (LedgerReport (LedgerReport))
-import Transcoder.Data.MyDecimal (fromUnitsAndCents)
 
 pln :: Quantity -> Amount
 pln = makeCurrencyAmount Currency.pln
@@ -128,10 +128,10 @@ mbankCsvToLedger inputCsv = do
   let parserErrorToString err =
         "Could not parse mBank's CSV.\n" <> show err
   mtransactions <-
-    first (parserErrorToString . toText) $
-      ( fmap snd
-          . decodeByNameWith (DecodeOptions (fromIntegral (ord ';')))
-      )
+    first (parserErrorToString . toText)
+      $ ( fmap snd
+            . decodeByNameWith (DecodeOptions (fromIntegral (ord ';')))
+        )
         inputCsv
   let sortedMTransactions = sortOn mTrDate (toList mtransactions)
       ltransactions = fmap mTrToLedger sortedMTransactions

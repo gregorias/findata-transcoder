@@ -1,8 +1,9 @@
 module Test.Transcoder.Bcge (tests) where
 
 import Control.Lens (set)
+import Data.Decimal.Extra (fromUnitsAndCents)
 import Data.Time.Calendar (fromGregorian)
-import qualified Hledger.Data.Extra as HDE
+import Hledger.Data.Extra qualified as HDE
 import Hledger.Data.Lens (
   pAccount,
   pBalanceAssertion,
@@ -10,14 +11,14 @@ import Hledger.Data.Lens (
   tStatus,
  )
 import Hledger.Data.Posting (balassert, nullposting)
-import qualified Hledger.Data.Posting as Hledger
+import Hledger.Data.Posting qualified as Hledger
 import Hledger.Data.Transaction (transaction)
 import Hledger.Data.Types (
   Status (..),
  )
 import Relude
 import Test.Hspec (describe, it, shouldBe)
-import qualified Test.Hspec as Hspec
+import Test.Hspec qualified as Hspec
 import Text.Megaparsec (parseMaybe)
 import Transcoder.Bcge (
   BcgeTransaction (..),
@@ -27,9 +28,8 @@ import Transcoder.Bcge (
   saldoToLedger,
   statementDateParser,
  )
-import qualified Transcoder.Bcge.Hint as Hint
+import Transcoder.Bcge.Hint qualified as Hint
 import Transcoder.Data.Currency (chf)
-import Transcoder.Data.MyDecimal (fromUnitsAndCents)
 
 tests :: Hspec.SpecWith ()
 tests = do
@@ -63,27 +63,27 @@ tests = do
           `shouldBe` saldoTransaction
 
     describe "bcgeTransactionToLedger" $ do
-      it "converts transactions and applies hints" $
-        let bcgeTr =
-              BcgeTransaction
-                (fromGregorian 2020 11 21)
-                "Title"
-                (fromUnitsAndCents 3 50)
-            config =
-              [ Hint.ConfigEntry "Title" $
-                  Hint.TransactionHint "NewTitle" "Assets:Special"
-              ]
-            bcgePosting =
-              Hledger.post
-                "Assets:Liquid:BCGE"
-                (HDE.makeCurrencyAmount chf $ fromUnitsAndCents 3 50)
-            counterPosting =
-              Hledger.post
-                "Assets:Special"
-                (HDE.makeCurrencyAmount chf $ fromUnitsAndCents (-3) 50)
-            expectedTransaction =
-              transaction (fromGregorian 2020 11 21) [bcgePosting, counterPosting]
-                & set tDescription "NewTitle"
+      it "converts transactions and applies hints"
+        $ let bcgeTr =
+                BcgeTransaction
+                  (fromGregorian 2020 11 21)
+                  "Title"
+                  (fromUnitsAndCents 3 50)
+              config =
+                [ Hint.ConfigEntry "Title"
+                    $ Hint.TransactionHint "NewTitle" "Assets:Special"
+                ]
+              bcgePosting =
+                Hledger.post
+                  "Assets:Liquid:BCGE"
+                  (HDE.makeCurrencyAmount chf $ fromUnitsAndCents 3 50)
+              counterPosting =
+                Hledger.post
+                  "Assets:Special"
+                  (HDE.makeCurrencyAmount chf $ fromUnitsAndCents (-3) 50)
+              expectedTransaction =
+                transaction (fromGregorian 2020 11 21) [bcgePosting, counterPosting]
+                  & set tDescription "NewTitle"
                   . set tStatus Cleared
-         in bcgeTransactionToLedger (Just config) bcgeTr
-              `shouldBe` expectedTransaction
+           in bcgeTransactionToLedger (Just config) bcgeTr
+                `shouldBe` expectedTransaction

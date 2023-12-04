@@ -22,25 +22,19 @@ module Transcoder.Ib.Csv.ActivityStatementParse (
   parseActivityStatement,
 ) where
 
-import qualified Control.Lens as L
-import qualified Data.Csv as Csv hiding (FromNamedRecord, decodeByName, lookup)
-import qualified Data.Csv as CsvLookup (lookup)
-import qualified Data.Csv.Extra as Csv
+import Control.Lens qualified as L
+import Data.Csv qualified as Csv hiding (FromNamedRecord, decodeByName, lookup)
+import Data.Csv qualified as CsvLookup (lookup)
+import Data.Csv.Extra qualified as Csv
 import Data.Decimal (Decimal)
+import Data.Decimal.Extra (decimalP, defaultDecimalFormat)
 import Data.Either.Extra (mapLeft)
 import Data.List (isInfixOf)
 import Data.List.Extra (allSame)
-import qualified Data.Map.Strict as Map
+import Data.Map.Strict qualified as Map
 import Data.Time (Day, defaultTimeLocale, fromGregorian, parseTimeM)
 import Data.Time.Calendar.Extra (monthP)
-import qualified Data.Vector as V
-import Transcoder.Data.Currency (Currency, currencyP)
-import Transcoder.Data.MyDecimal (decimalP, defaultDecimalFormat, myDecDec)
-import Transcoder.Ib.Csv.RawParse (
-  Csv (..),
-  Section (..),
-  Statement (..),
- )
+import Data.Vector qualified as V
 import Relude
 import Text.Megaparsec (
   MonadParsec,
@@ -57,8 +51,15 @@ import Text.Megaparsec (
   someTill_,
   try,
  )
-import qualified Text.Megaparsec as MP
+import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char (alphaNumChar, char, digitChar, letterChar, numberChar, space, string)
+import Transcoder.Data.Currency (Currency, currencyP)
+import Transcoder.Data.MyDecimal (myDecDec)
+import Transcoder.Ib.Csv.RawParse (
+  Csv (..),
+  Section (..),
+  Statement (..),
+ )
 
 datePhraseParser :: Parsec Void Text Day
 datePhraseParser = do
@@ -96,7 +97,8 @@ data StockPosition = StockPosition
 
 instance Csv.FromNamedRecord StockPosition where
   parseNamedRecord = do
-    StockPosition <$> Csv.lookup "Symbol"
+    StockPosition
+      <$> Csv.lookup "Symbol"
       <*> Csv.lookup "Quantity"
       <*> (L.view myDecDec <$> Csv.lookup "Close Price")
 
@@ -149,8 +151,9 @@ instance Csv.FromField AssetCategory where
   parseField "Forex" = pure Forex
   parseField "Stocks" = pure Stocks
   parseField field =
-    fail $
-      "Could not parse asset category: " <> (chr . fromEnum <$> decodeUtf8 @String field)
+    fail
+      $ "Could not parse asset category: "
+      <> (chr . fromEnum <$> decodeUtf8 @String field)
 
 tradesDateTimeParser :: Parsec Void Text Day
 tradesDateTimeParser =
@@ -164,9 +167,12 @@ instance Csv.FromNamedRecord StockTrade where
               dtString <- Csv.lookup "Date/Time"
               let eitherDate = MP.parse tradesDateTimeParser "" dtString
               either
-                ( const $
-                    fail . toString $
-                      "Could not parse Date/Time: " <> dtString <> "."
+                ( const
+                    $ fail
+                    . toString
+                    $ "Could not parse Date/Time: "
+                    <> dtString
+                    <> "."
                 )
                 return
                 eitherDate
@@ -211,9 +217,12 @@ instance Csv.FromNamedRecord ForexTrade where
               dtString <- Csv.lookup "Date/Time"
               let eitherDate = MP.parse tradesDateTimeParser "" dtString
               either
-                ( const $
-                    fail . toString $
-                      "Could not parse Date/Time: " <> dtString <> "."
+                ( const
+                    $ fail
+                    . toString
+                    $ "Could not parse Date/Time: "
+                    <> dtString
+                    <> "."
                 )
                 return
                 eitherDate
@@ -228,12 +237,12 @@ detectTradesCsvCategory :: Csv -> Either String AssetCategory
 detectTradesCsvCategory (Csv csv)
   | null csv = return Stocks
   | otherwise = do
-    (_header, cats) <-
-      Csv.decodeByNameWithP
-        catParser
-        Csv.defaultDecodeOptions
-        (encodeUtf8 csv)
-    extractCat $ toList cats
+      (_header, cats) <-
+        Csv.decodeByNameWithP
+          catParser
+          Csv.defaultDecodeOptions
+          (encodeUtf8 csv)
+      extractCat $ toList cats
  where
   catParser nr = CsvLookup.lookup nr "Asset Category"
   extractCat :: [AssetCategory] -> Either String AssetCategory
@@ -327,8 +336,9 @@ instance Csv.FromNamedRecord DividendRecord where
                 let parsed = MP.parse symbolDpsParser "" desc
                 either
                   ( \err ->
-                      fail $
-                        "Could not parse (symbol, dps).\n" <> show err
+                      fail
+                        $ "Could not parse (symbol, dps).\n"
+                        <> show err
                   )
                   return
                   parsed
@@ -359,18 +369,19 @@ instance Csv.FromNamedRecord WithholdingTaxRecord where
       do
         WithholdingTax
         <$> (Csv.lookup "Date" >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
-          <*> ( do
-                  desc :: String <- Csv.lookup "Description"
-                  let parsed = MP.parse @Void symbolParser "" desc
-                  either
-                    ( \err ->
-                        fail $
-                          "Could not parse symbol.\n" <> show err
-                    )
-                    return
-                    parsed
-              )
-          <*> (L.view myDecDec <$> Csv.lookup "Amount")
+        <*> ( do
+                desc :: String <- Csv.lookup "Description"
+                let parsed = MP.parse @Void symbolParser "" desc
+                either
+                  ( \err ->
+                      fail
+                        $ "Could not parse symbol.\n"
+                        <> show err
+                  )
+                  return
+                  parsed
+            )
+        <*> (L.view myDecDec <$> Csv.lookup "Amount")
 
 _WithholdingTaxRecord :: L.Prism' WithholdingTaxRecord WithholdingTax
 _WithholdingTaxRecord =
@@ -404,7 +415,8 @@ instance Csv.FromNamedRecord CashReportRecord where
       then return OtherCashReportRecord
       else do
         Just currency <- return $ readMaybe currencyField
-        EndingCashRecord . EndingCash currency
+        EndingCashRecord
+          . EndingCash currency
           <$> (L.view myDecDec <$> Csv.lookup "Total")
 
 fetchSection :: String -> Statement -> Either String Section
@@ -434,19 +446,23 @@ parseNamedSection name stmt = do
   let csvs = unSection $ fetchSectionOrEmpty name stmt
   prependErrorMessage
     ("Could not parse " <> name <> " records.")
-    $ fmap concat . mapM parseCsv $
-      csvs
+    $ fmap concat
+    . mapM parseCsv
+    $ csvs
 
 parseTradesCsv :: Csv -> Either String Trades
 parseTradesCsv csv = do
   cat <- detectTradesCsvCategory csv
   case cat of
     Stocks ->
-      prependErrorMessage "Could not parse stock trades." $
-        Trades <$> parseCsv csv <*> pure []
+      prependErrorMessage "Could not parse stock trades."
+        $ Trades
+        <$> parseCsv csv
+        <*> pure []
     Forex ->
-      prependErrorMessage "Could not parse forex trades." $
-        Trades [] <$> parseCsv csv
+      prependErrorMessage "Could not parse forex trades."
+        $ Trades []
+        <$> parseCsv csv
 
 parseTradesSection :: Statement -> Either String Trades
 parseTradesSection stmt = do
@@ -455,8 +471,8 @@ parseTradesSection stmt = do
   prependErrorMessage
     ("Could not parse " <> tradesName <> " records.")
     $ fold
-      <$> (mapM parseTradesCsv :: NonEmpty Csv -> Either String (NonEmpty Trades))
-        (csvs :: NonEmpty Csv)
+    <$> (mapM parseTradesCsv :: NonEmpty Csv -> Either String (NonEmpty Trades))
+      (csvs :: NonEmpty Csv)
 
 -- | Useful information gleaned directly from IB's CSV activity statement.
 data ActivityStatement = ActivityStatement
@@ -493,8 +509,8 @@ parseActivityStatement csvs = mapLeft toText $ do
   taxes <-
     mapMaybe (L.preview _WithholdingTaxRecord)
       <$> parseNamedSection "Withholding Tax" csvs
-  return $
-    ActivityStatement
+  return
+    $ ActivityStatement
       date
       cashPositions
       stockPositions

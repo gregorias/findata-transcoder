@@ -15,14 +15,15 @@ module Transcoder.Bcge (
 import Control.Lens (
   set,
  )
-import qualified Control.Lens as L
+import Control.Lens qualified as L
 import Control.Monad.Writer.Lazy (execWriter, tell)
 import Data.Cash (Cash (Cash), cashAmount)
 import Data.Decimal (Decimal)
+import Data.Decimal.Extra (ChunkSepFormat (NoChunkSep), cashDecimalFormat, decimalP)
 import Data.List (elemIndex)
 import Data.Time.Calendar (Day)
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
-import qualified Hledger.Data.Extra as HDE
+import Hledger.Data.Extra qualified as HDE
 import Hledger.Data.Lens (
   pAccount,
   pBalanceAssertion,
@@ -30,7 +31,7 @@ import Hledger.Data.Lens (
   tStatus,
  )
 import Hledger.Data.Posting (balassert, nullposting)
-import qualified Hledger.Data.Posting as Hledger
+import Hledger.Data.Posting qualified as Hledger
 import Hledger.Data.Transaction (transaction)
 import Hledger.Data.Types (
   Status (..),
@@ -46,10 +47,9 @@ import Text.Megaparsec (
  )
 import Text.Megaparsec.Char (char, string)
 import Text.Megaparsec.Char.Extra (eolOrEof)
-import qualified Transcoder.Bcge.Hint as Hint
+import Transcoder.Bcge.Hint qualified as Hint
 import Transcoder.Data.Currency (chf)
 import Transcoder.Data.LedgerReport (LedgerReport (LedgerReport))
-import Transcoder.Data.MyDecimal (ChunkSepFormat (NoChunkSep), cashDecimalFormat, decimalP)
 
 bcgeAccount :: String
 bcgeAccount = "Assets:Liquid:BCGE"
@@ -154,7 +154,7 @@ bcgeTransactionToLedger :: Maybe Hint.Config -> BcgeTransaction -> Transaction
 bcgeTransactionToLedger maybeConfig (BcgeTransaction date title amount) =
   transaction date [bcgePosting, counterPosting]
     & set tDescription (toText description)
-      . set tStatus Cleared
+    . set tStatus Cleared
  where
   maybeHint = do
     config <- maybeConfig
@@ -174,12 +174,12 @@ saldoToLedger :: Day -> Decimal -> Transaction
 saldoToLedger date balance =
   transaction date [balancePosting]
     & set tDescription "BCGE Status"
-      . set tStatus Cleared
+    . set tStatus Cleared
  where
   balancePosting =
     nullposting
       & set pAccount bcgeAccount
-        . set pBalanceAssertion (balassert . HDE.makeCurrencyAmount chf $ balance)
+      . set pBalanceAssertion (balassert . HDE.makeCurrencyAmount chf $ balance)
 
 bStToLedger :: Maybe Hint.Config -> BcgeStatement -> [Transaction]
 bStToLedger config (BcgeStatement date balance trs) = execWriter collectTrs

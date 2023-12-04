@@ -5,6 +5,7 @@ module Transcoder.CharlesSchwab.Eac.Csv (
 ) where
 
 import Data.Csv.Extra qualified as Csv
+import Data.Decimal.Extra (decimalP, defaultDecimalFormat)
 import Data.Time (Day)
 import Data.Time.Extra (dayP)
 import Relude
@@ -26,7 +27,6 @@ import Transcoder.CharlesSchwab.Eac.Data (
   SubsaleType (..),
   WireTransfer (..),
  )
-import Transcoder.Data.MyDecimal (decimalP, defaultDecimalFormat)
 
 type Stream = Text
 

@@ -10,6 +10,10 @@ module Transcoder.CharlesSchwab.Csv (
 import Data.Cash (Cash (Cash))
 import Data.Csv qualified as Csv
 import Data.Decimal (Decimal)
+import Data.Decimal.Extra (
+  decimalP,
+  defaultDecimalFormat,
+ )
 import Hledger.Data.Extra (ToAmount (..))
 import Relude
 import Text.Megaparsec (Parsec, single)
@@ -17,10 +21,6 @@ import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char (space)
 import Text.Megaparsec.Char.Lexer (signed)
 import Transcoder.Data.Currency (usd)
-import Transcoder.Data.MyDecimal (
-  decimalP,
-  defaultDecimalFormat,
- )
 
 -- I would not need this type with dependent types.
 -- I would just use (Cash USD).

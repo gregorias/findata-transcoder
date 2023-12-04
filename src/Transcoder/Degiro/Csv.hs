@@ -9,11 +9,17 @@ module Transcoder.Degiro.Csv (
 ) where
 
 import Control.Applicative.Combinators (count)
-import qualified Data.ByteString.Lazy as LBS
+import Data.ByteString.Lazy qualified as LBS
 import Data.Cash (Cash (Cash))
 import Data.Csv (parseField, (.!))
-import qualified Data.Csv as Csv
+import Data.Csv qualified as Csv
 import Data.Decimal (Decimal)
+import Data.Decimal.Extra (
+  ChunkSepFormat (NoChunkSep),
+  DecimalFormat (..),
+  DecimalFractionFormat (OptionalUnlimitedDecimalFraction),
+  decimalP,
+ )
 import Data.Either.Combinators (
   mapLeft,
  )
@@ -23,19 +29,13 @@ import Data.Time (
   defaultTimeLocale,
   parseTimeM,
  )
-import qualified Data.Vector as V
+import Data.Vector qualified as V
 import Relude
 import Text.Megaparsec (Parsec, single)
-import qualified Text.Megaparsec as MP
+import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char (numberChar)
 import Transcoder.Data.CsvFile (CsvFile (CsvFile))
 import Transcoder.Data.Isin (Isin)
-import Transcoder.Data.MyDecimal (
-  ChunkSepFormat (NoChunkSep),
-  DecimalFormat (..),
-  DecimalFractionFormat (OptionalUnlimitedDecimalFraction),
-  decimalP,
- )
 
 -- | Type representing possible values of the ISIN field in Degiro reports.
 data DegiroIsin
@@ -47,8 +47,8 @@ instance Csv.FromField DegiroIsin where
   parseField field
     | field == encodeUtf8 @Text "NLFLATEXACNT" = return Nlflatexacnt
     | otherwise =
-      (DegiroIsin <$> parseField field)
-        <|> fail ("Expected NLFLATEXACNT or an ISIN, but got: " <> decodeUtf8 field <> ".")
+        (DegiroIsin <$> parseField field)
+          <|> fail ("Expected NLFLATEXACNT or an ISIN, but got: " <> decodeUtf8 field <> ".")
 
 newtype DegiroDay = DegiroDay
   { unDegiroDay :: Day
@@ -113,8 +113,8 @@ instance Csv.FromRecord DegiroCsvRecord where
     maybeChange <- join $ parseCash <$> rec .! 7 <*> rec .! 8
     Just balance <- join $ parseCash <$> rec .! 9 <*> rec .! 10
     orderId <- rec .! 11
-    return $
-      DegiroCsvRecord
+    return
+      $ DegiroCsvRecord
         date
         time
         valueDate

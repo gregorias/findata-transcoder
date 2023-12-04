@@ -4,6 +4,12 @@ module Transcoder.Finpension (
 
 import Control.Lens qualified as L
 import Data.Decimal (Decimal)
+import Data.Decimal.Extra (
+  ChunkSepFormat (..),
+  DecimalFormat (DecimalFormat),
+  DecimalFractionFormat (TwoDigitDecimalFraction),
+  decimalP,
+ )
 import Data.Time (Day)
 import Hledger (Status (Cleared), Transaction, balassert)
 import Hledger.Data.Extra (
@@ -18,12 +24,6 @@ import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char (newline)
 import Text.Megaparsec.Extra (parsePretty)
 import Transcoder.Data.Currency (chf)
-import Transcoder.Data.MyDecimal (
-  ChunkSepFormat (..),
-  DecimalFormat (DecimalFormat),
-  DecimalFractionFormat (TwoDigitDecimalFraction),
-  decimalP,
- )
 import Transcoder.Wallet (assets, equity, (<:>))
 
 type Parser = MP.Parsec Void Text

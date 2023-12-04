@@ -19,6 +19,12 @@ module Transcoder.GPayslip.PdfToText (
 import Control.Monad.Permutations (runPermutation, toPermutation, toPermutationWithDefault)
 import Data.Char
 import Data.Decimal (Decimal)
+import Data.Decimal.Extra (
+  ChunkSepFormat (..),
+  DecimalFormat (..),
+  DecimalFractionFormat (..),
+  decimalP,
+ )
 import Data.Time (Day, fromGregorian)
 import Data.Time.Calendar.Extra
 import Relude
@@ -26,12 +32,6 @@ import Text.Megaparsec (Parsec, anySingle, label, satisfy, single, skipManyTill,
 import Text.Megaparsec.Char (char, newline, space1, string)
 import Text.Megaparsec.Char.Extra (anyLineP)
 import Text.Megaparsec.Char.Lexer
-import Transcoder.Data.MyDecimal (
-  ChunkSepFormat (..),
-  DecimalFormat (..),
-  DecimalFractionFormat (..),
-  decimalP,
- )
 
 -- | A single item (row) in a payslip.
 data Item = Item

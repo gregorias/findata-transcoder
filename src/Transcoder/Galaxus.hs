@@ -5,6 +5,11 @@ module Transcoder.Galaxus (
 import Control.Applicative.Combinators.Extra (some1Till_)
 import Data.Cash (Cash (Cash))
 import Data.Cash qualified as Cash
+import Data.Decimal.Extra (
+  ChunkSepFormat (..),
+  cashDecimalFormat,
+  decimalP,
+ )
 import Data.Text qualified as T
 import Data.Time (
   Day,
@@ -30,11 +35,6 @@ import Text.Megaparsec.Char.Extra qualified as MP
 import Text.Megaparsec.Char.Lexer qualified as MP
 import Text.Megaparsec.Extra (parsePretty)
 import Transcoder.Data.Currency (chf)
-import Transcoder.Data.MyDecimal (
-  ChunkSepFormat (..),
-  cashDecimalFormat,
-  decimalP,
- )
 import Transcoder.Wallet (bcgeAccount, bcgeCCAccount)
 
 data Item = Item
