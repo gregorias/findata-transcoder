@@ -11,29 +11,28 @@ module Transcoder.Coop.Config (
 
 import Control.Lens (over, _Left)
 import Data.Aeson (FromJSON (..), (.:), (.:?))
-import qualified Data.Aeson as Aeson
-import qualified Data.Text as T
+import Data.Aeson qualified as Aeson
+import Data.Text qualified as T
 import Hledger (AccountName)
 import Relude
 import Safe (headMay)
-import qualified Text.Regex.TDFA as Regex
-import qualified Text.Regex.TDFA.Text as Regex
+import Text.Regex.TDFA qualified as Regex
+import Text.Regex.TDFA.Text qualified as Regex
 import Transcoder.Wallet (debtAssets, (<:>))
 
 data SharedExpenseRule = SharedExpenseRule
-  { -- | Matches product names covered by this rule.
-    _ruleRegex :: !Regex.Regex
-  , -- | The list of persons sharing this expense.
-    _ruleDebtors :: ![Text]
+  { _ruleRegex :: !Regex.Regex
+  -- ^ Matches product names covered by this rule.
+  , _ruleDebtors :: ![Text]
+  -- ^ The list of persons sharing this expense.
   }
 
 newtype ParseableRegex = ParseableRegex {unParseableRegex :: Regex.Regex}
 
 instance FromJSON ParseableRegex where
-  parseJSON = Aeson.withText "Regex" $
-    \s ->
-      either fail return $
-        ParseableRegex <$> Regex.compile Regex.defaultCompOpt Regex.defaultExecOpt s
+  parseJSON = Aeson.withText "Regex"
+    $ \s ->
+      either fail (return . ParseableRegex) (Regex.compile Regex.defaultCompOpt Regex.defaultExecOpt s)
 
 instance FromJSON SharedExpenseRule where
   parseJSON = Aeson.withObject "SharedExpenseRule" $ \o ->
@@ -42,14 +41,16 @@ instance FromJSON SharedExpenseRule where
 newtype SharedExpenseRules = SharedExpenseRules [SharedExpenseRule]
 
 instance FromJSON SharedExpenseRules where
-  parseJSON = Aeson.withArray "SharedExpenseRules" $ \v ->
-    SharedExpenseRules . toList <$> sequence (parseJSON <$> v)
+  parseJSON =
+    Aeson.withArray "SharedExpenseRules"
+      $ fmap (SharedExpenseRules . toList)
+      . mapM parseJSON
 
 data PaymentCard = PaymentCard
-  { -- | The last four digits of a payment card.
-    paymentCardLastFourDigits :: !Text
-  , -- | The account name of associated with the payment card.
-    paymentCardAccount :: !AccountName
+  { paymentCardLastFourDigits :: !Text
+  -- ^ The last four digits of a payment card.
+  , paymentCardAccount :: !AccountName
+  -- ^ The account name of associated with the payment card.
   }
 
 instance FromJSON PaymentCard where
@@ -77,7 +78,8 @@ emptyConfig = Config (SharedExpenseRules []) []
 
 instance FromJSON Config where
   parseJSON = Aeson.withObject "Config" $ \v ->
-    Config <$> (fromMaybe (SharedExpenseRules []) <$> v .:? "shared")
+    Config
+      <$> (fromMaybe (SharedExpenseRules []) <$> v .:? "shared")
       <*> (fromMaybe [] <$> v .:? "paymentCards")
 
 getDebtorsFromRule :: SharedExpenseRule -> Text -> Maybe [AccountName]

@@ -6,7 +6,7 @@ import NeatInterpolation (trimming)
 import Relude
 import Test.HUnit.Lang (assertFailure)
 import Test.Hspec (describe, it)
-import qualified Test.Hspec as Hspec
+import Test.Hspec qualified as Hspec
 import Test.Hspec.Expectations.Pretty (shouldBe)
 import Transcoder.Coop.Config (Config (..), decodeConfig, getDebtors)
 
