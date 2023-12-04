@@ -265,6 +265,7 @@ test-suite findata-transcoder-test
   build-depends:
       Decimal
     , HUnit
+    , aeson
     , base >=4.14 && <5
     , bytestring
     , cassava

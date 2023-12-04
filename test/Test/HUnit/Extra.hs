@@ -3,10 +3,12 @@ module Test.HUnit.Extra (
   assertLeft,
   assertRight,
   assertRightOrFailPrint,
+  textShouldContain,
 ) where
 
 import Relude
-import Test.HUnit (assertFailure)
+import Test.HUnit (Assertion, assertFailure)
+import Test.Hspec.Expectations.Pretty (shouldContain)
 
 -- | Asserts that the given Either is Left.
 assertLeft :: (Show r) => Either l r -> IO l
@@ -25,3 +27,7 @@ assertRight (Right r) = return r
 assertRightOrFailPrint :: Either Text r -> IO r
 assertRightOrFailPrint (Left err) = assertFailure . toString $ "Expected Right, got an error:\n" <> err
 assertRightOrFailPrint (Right r) = return r
+
+-- | Asserts that the given text contains the given text.
+textShouldContain :: Text -> Text -> Assertion
+textShouldContain haystack needle = toString haystack `shouldContain` toString needle

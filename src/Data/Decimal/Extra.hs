@@ -10,14 +10,18 @@ module Data.Decimal.Extra (
 
   -- * Parsing
   decimalP,
+  parseJSON,
 
   -- * Utilities
   fromUnitsAndCents,
 ) where
 
+import Data.Aeson qualified as Aeson
+import Data.Aeson.Types qualified as Aeson
 import Data.Char (digitToInt)
 import Data.Decimal (Decimal, DecimalRaw (..), realFracToDecimal)
 import Data.Ratio ((%))
+import Data.Text qualified as T
 import Language.Haskell.TH.Syntax (Lift)
 import Relude
 import Text.Megaparsec (MonadParsec, Token)
@@ -122,3 +126,12 @@ fromUnitsAndCents units cents = unitsDec `op` centsDec
   unitsDec = realFracToDecimal 0 (units % 1)
   centsDec = realFracToDecimal 2 (cents % 100)
   op = if units >= 0 then (+) else (-)
+
+-- | An Aeson-compatible parser for decimals with a format option.
+--
+-- Useful to define custom FromJSON instances.
+parseJSON :: DecimalFormat -> Aeson.Value -> Aeson.Parser Decimal
+parseJSON format = Aeson.withText "decimal" $ \text ->
+  case MP.parseMaybe @Void (decimalP format) text of
+    Nothing -> fail $ "Could not parse " <> T.unpack text <> " as a decimal."
+    Just d -> return d

@@ -122,6 +122,7 @@ tests:
       - -main-is Spec
     dependencies:
       - Decimal
+      - aeson
       - bytestring
       - cassava
       - containers

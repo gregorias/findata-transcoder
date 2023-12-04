@@ -2,6 +2,7 @@
 
 module Test.Data.Decimal.Extra (tests) where
 
+import Data.Aeson qualified as Aeson
 import Data.Decimal (Decimal, realFracToDecimal)
 import Data.Decimal.Extra (
   ChunkSepFormat (ChunkSep, NoChunkSep),
@@ -10,12 +11,21 @@ import Data.Decimal.Extra (
   decimalP,
   defaultDecimalFormat,
   fromUnitsAndCents,
+  parseJSON,
  )
 import Data.Ratio ((%))
+import Data.Text qualified as T
 import Relude
+import Test.HUnit.Extra (assertLeft, textShouldContain)
 import Test.Hspec (SpecWith, describe, it, shouldBe)
 import Text.Megaparsec (Parsec, parseMaybe)
 import Text.Megaparsec.Char (string)
+
+newtype DecimalWithCommas = DecimalWithCommas Decimal
+  deriving newtype (Eq, Show)
+
+instance Aeson.FromJSON DecimalWithCommas where
+  parseJSON = fmap DecimalWithCommas . parseJSON (DecimalFormat (ChunkSep ',') Nothing)
 
 tests :: SpecWith ()
 tests = do
@@ -55,3 +65,13 @@ tests = do
           )
           "2.00123"
           `shouldBe` Just (fromRational 2)
+
+    describe "parseJSON" $ do
+      it "parses a number with commas" $ do
+        Aeson.decode @DecimalWithCommas "\"2,000,000\""
+          `shouldBe` Just (DecimalWithCommas (fromRational 2000000))
+
+      it "gives an understandable message when parsing fails with commas" $ do
+        let eitherDecimal = Aeson.eitherDecode @DecimalWithCommas "\"asdfasdf\""
+        message <- assertLeft eitherDecimal
+        T.pack message `textShouldContain` "Could not parse asdfasdf as a decimal."
