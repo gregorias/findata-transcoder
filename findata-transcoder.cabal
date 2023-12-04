@@ -27,6 +27,7 @@ source-repository head
 library
   exposed-modules:
       Control.Applicative.Combinators.Extra
+      Data.Aeson.Extra
       Data.Cash
       Data.Csv.Extra
       Data.Decimal.Extra
