@@ -39,6 +39,7 @@ library
       Hledger.Data.MarketPrice.Extra
       Hledger.Extra
       Numeric.PositiveNatural
+      Prettyprinter.Extra
       Text.Megaparsec.Char.Extra
       Text.Megaparsec.Extra
       Text.Megaparsec.Extra.ErrorText
@@ -119,6 +120,7 @@ library
     , megaparsec
     , mtl
     , parser-combinators
+    , prettyprinter
     , regex-tdfa
     , relude
     , safe
@@ -213,6 +215,7 @@ test-suite findata-transcoder-test
       Test.Hledger.Read.TestUtils
       Test.HUnit.Extra
       Test.Numeric.PositiveNatural
+      Test.Prettyprinter.Extra
       Test.Text.Megaparsec.Char.Extra
       Test.Text.Megaparsec.Match
       Test.Transcoder.Bcge
@@ -279,6 +282,7 @@ test-suite findata-transcoder-test
     , megaparsec
     , neat-interpolation
     , parser-combinators
+    , prettyprinter
     , relude
     , replace-megaparsec
     , template-haskell

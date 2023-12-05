@@ -81,6 +81,7 @@ library:
     - megaparsec
     - mtl
     - parser-combinators
+    - prettyprinter
     - regex-tdfa
     - relude
     - safe
@@ -136,6 +137,7 @@ tests:
       - megaparsec
       - neat-interpolation
       - parser-combinators
+      - prettyprinter
       - relude
       - replace-megaparsec
       - template-haskell

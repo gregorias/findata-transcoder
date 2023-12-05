@@ -13,6 +13,7 @@ import Test.Hledger.Extra qualified
 import Test.Hledger.Read.TestUtils qualified
 import Test.Hspec (SpecWith, hspec)
 import Test.Numeric.PositiveNatural qualified
+import Test.Prettyprinter.Extra qualified
 import Test.Text.Megaparsec.Char.Extra qualified
 import Test.Text.Megaparsec.Match qualified
 import Test.Transcoder.Bcge qualified
@@ -61,6 +62,7 @@ tests = do
   Test.Hledger.Extra.tests
   Test.Hledger.Read.TestUtils.tests
   Test.Numeric.PositiveNatural.tests
+  Test.Prettyprinter.Extra.tests
   Test.Transcoder.Bcge.tests
   Test.Transcoder.BcgeCC.tests
   Test.Transcoder.CharlesSchwab.tests
