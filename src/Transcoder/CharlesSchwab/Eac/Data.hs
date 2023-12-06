@@ -20,9 +20,8 @@ import Relude
 import Transcoder.CharlesSchwab.DollarAmount (DollarAmount)
 
 -- | A record sheet represents an entire EAC account history statement.
-data RecordSheet = RecordSheet
-  { rsDate :: !Day
-  , rsRecords :: ![Record]
+newtype RecordSheet = RecordSheet
+  { rsRecords :: [Record]
   }
   deriving stock (Eq, Show, Generic)
 

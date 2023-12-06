@@ -192,11 +192,11 @@ recordP =
 
 recordSheetP :: Parser RecordSheet
 recordSheetP = do
-  preambleDate <- preambleP
+  void preambleP
   headerP
   records <- MP.many recordP
   eof
-  return $ RecordSheet preambleDate records
+  return $ RecordSheet records
 
 parseHistory :: Stream -> Either Text RecordSheet
 parseHistory = MP.parsePretty recordSheetP "EAC account CSV"
