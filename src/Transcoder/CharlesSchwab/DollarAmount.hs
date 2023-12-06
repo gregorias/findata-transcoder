@@ -1,5 +1,5 @@
--- | This module contains utilities for parsing Charles Schwab's CSVs.
-module Transcoder.CharlesSchwab.Csv (
+-- | This module contains the DollarAmount type and its parsers.
+module Transcoder.CharlesSchwab.DollarAmount (
   -- * Parsing
   dollarAmountP,
 
@@ -22,8 +22,9 @@ import Text.Megaparsec.Char (space)
 import Text.Megaparsec.Char.Lexer (signed)
 import Transcoder.Data.Currency (usd)
 
--- I would not need this type with dependent types.
--- I would just use (Cash USD).
+-- | A wrapper around 'Decimal' to represent a dollar amount.
+--
+-- I would not need this type with dependent types. I would then just use Cash USD.
 newtype DollarAmount = DollarAmount
   { unDollarAmount :: Decimal
   }

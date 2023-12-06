@@ -22,7 +22,7 @@ import Text.Megaparsec.Extra (
   parsePretty,
  )
 import Text.Megaparsec.Stream (tokensToChunk)
-import Transcoder.CharlesSchwab.Csv (DollarAmount, dollarAmountP)
+import Transcoder.CharlesSchwab.DollarAmount (DollarAmount, dollarAmountP)
 import Transcoder.Data.CsvFile (CsvFile (..))
 
 csSimpleDayP :: Parsec Void String Day

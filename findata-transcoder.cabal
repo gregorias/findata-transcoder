@@ -48,7 +48,7 @@ library
       Transcoder.BcgeCC
       Transcoder.CharlesSchwab
       Transcoder.CharlesSchwab.Brokerage.Csv
-      Transcoder.CharlesSchwab.Csv
+      Transcoder.CharlesSchwab.DollarAmount
       Transcoder.CharlesSchwab.Eac.Csv
       Transcoder.CharlesSchwab.Eac.Data
       Transcoder.CharlesSchwab.Eac.Ledger

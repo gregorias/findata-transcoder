@@ -15,7 +15,7 @@ import Test.Hspec.Expectations.Pretty (shouldBe)
 import Transcoder.CharlesSchwab.Brokerage.Csv (
   CsCsvRecord (CsCsvRecord),
  )
-import Transcoder.CharlesSchwab.Csv (
+import Transcoder.CharlesSchwab.DollarAmount (
   DollarAmount (..),
  )
 import Transcoder.CharlesSchwab.Ledger (brokerageHistoryToLedger)

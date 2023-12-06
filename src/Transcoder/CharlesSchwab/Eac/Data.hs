@@ -17,7 +17,7 @@ module Transcoder.CharlesSchwab.Eac.Data (
 import Data.Decimal (Decimal)
 import Data.Time (Day)
 import Relude
-import Transcoder.CharlesSchwab.Csv (DollarAmount)
+import Transcoder.CharlesSchwab.DollarAmount (DollarAmount)
 
 -- | A record sheet represents an entire EAC account history statement.
 data RecordSheet = RecordSheet

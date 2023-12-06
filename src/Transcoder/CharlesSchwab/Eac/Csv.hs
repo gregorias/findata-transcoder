@@ -16,7 +16,7 @@ import Text.Megaparsec.Char qualified as MP
 import Text.Megaparsec.Char.Extra (eolOrEof)
 import Text.Megaparsec.Extra (ToNestedParser (toNestedParser))
 import Text.Megaparsec.Extra qualified as MP
-import Transcoder.CharlesSchwab.Csv (dollarAmountP)
+import Transcoder.CharlesSchwab.DollarAmount (dollarAmountP)
 import Transcoder.CharlesSchwab.Eac.Data (
   Deposit (..),
   DepositAwardInfo (..),

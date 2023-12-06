@@ -32,7 +32,7 @@ import Transcoder.CharlesSchwab.Brokerage.Csv (
   CsCsvRecord (csAction, csAmount, csDate, csDescription, csFees, csPrice, csQuantity, csSymbol),
   csAction,
  )
-import Transcoder.CharlesSchwab.Csv (
+import Transcoder.CharlesSchwab.DollarAmount (
   DollarAmount (..),
  )
 import Transcoder.Data.Currency (usd)
