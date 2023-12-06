@@ -43,6 +43,7 @@ import Test.Transcoder.Patreon qualified
 import Test.Transcoder.Revolut qualified
 import Test.Transcoder.Splitwise qualified
 import Test.Transcoder.UberEats qualified
+import Test.Witch.Extra qualified
 
 main :: IO ()
 main = hspec tests
@@ -90,3 +91,4 @@ tests = do
   Test.Transcoder.UberEats.tests
   Test.Text.Megaparsec.Char.Extra.tests
   Test.Text.Megaparsec.Match.tests
+  Test.Witch.Extra.tests

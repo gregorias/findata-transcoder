@@ -6,6 +6,9 @@ module Witch.Extra (
 ) where
 
 import Data.Either.Combinators (mapLeft)
+import Prettyprinter (Pretty (..), vsep, (<+>))
+import Prettyprinter qualified as P
+import Prettyprinter.Extra (PrettyException, unPrettyException)
 import Relude
 import Witch (TryFrom (..), TryFromException (..), maybeTryFrom)
 
@@ -29,3 +32,21 @@ eitherNestException ::
   Either (TryFromException source target) b ->
   Either (TryFromException source' target') b
 eitherNestException newSource = mapLeft (nestException newSource)
+
+instance (Show a) => Pretty (TryFromException a b) where
+  pretty (TryFromException source Nothing) =
+    vsep
+      [ "TryFromException"
+      , "source: " <+> P.hang 0 (show source)
+      ]
+  pretty (TryFromException source (Just se)) =
+    vsep
+      [ "TryFromException"
+      , "source:" <+> P.hang 0 (show source)
+      , "cause:" <+> P.hang 0 cause
+      ]
+   where
+    cause :: P.Doc ann
+    cause = case fromException @PrettyException se of
+      Just prettyException -> unPrettyException prettyException
+      Nothing -> fromString $ show se

@@ -145,6 +145,7 @@ tests:
       - time
       - trimdent
       - vector
+      - witch
 
   doctest:
     main: DocTest.hs
