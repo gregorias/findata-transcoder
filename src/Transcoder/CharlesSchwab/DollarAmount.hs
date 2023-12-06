@@ -7,6 +7,8 @@ module Transcoder.CharlesSchwab.DollarAmount (
   DollarAmount (..),
 ) where
 
+import Data.Aeson (FromJSON (..))
+import Data.Aeson qualified as Aeson
 import Data.Cash (Cash (Cash))
 import Data.Csv qualified as Csv
 import Data.Decimal (Decimal)
@@ -14,12 +16,14 @@ import Data.Decimal.Extra (
   decimalP,
   defaultDecimalFormat,
  )
+import Data.Text qualified as T
 import Hledger.Data.Extra (ToAmount (..))
 import Relude
 import Text.Megaparsec (Parsec, single)
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char (space)
 import Text.Megaparsec.Char.Lexer (signed)
+import Text.Megaparsec.Extra qualified as MP
 import Transcoder.Data.Currency (usd)
 
 -- | A wrapper around 'Decimal' to represent a dollar amount.
@@ -48,3 +52,9 @@ instance Csv.FromField DollarAmount where
       (fail . toString $ "Could not parse the dollar amount: " <> fieldString)
       return
       (MP.parseMaybe dollarAmountP fieldString)
+
+instance FromJSON DollarAmount where
+  parseJSON = Aeson.withText "dollar amount" $ \text ->
+    case MP.parsePretty dollarAmountP "" text of
+      Left err -> fail $ "Could not parse the dollar amount: " <> T.unpack err
+      Right amount -> return amount

@@ -71,7 +71,7 @@ tests = do
         Aeson.decode @DecimalWithCommas "\"2,000,000\""
           `shouldBe` Just (DecimalWithCommas (fromRational 2000000))
 
-      it "gives an understandable message when parsing fails with commas" $ do
+      it "gives an understandable message when parsing fails" $ do
         let eitherDecimal = Aeson.eitherDecode @DecimalWithCommas "\"asdfasdf\""
         message <- assertLeft eitherDecimal
         T.pack message `textShouldContain` "Could not parse asdfasdf as a decimal."
