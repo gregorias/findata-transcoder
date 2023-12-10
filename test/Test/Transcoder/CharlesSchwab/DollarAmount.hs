@@ -20,6 +20,10 @@ tests = do
         Aeson.decode @DollarAmount "\"-$2000000\""
           `shouldBe` Just (DollarAmount (-2000000))
 
+      it "parses \"$0.18\"" $ do
+        Aeson.decode @DollarAmount "\"$0.18\""
+          `shouldBe` Just (DollarAmount 0.18)
+
       it "gives an understandable message when parsing fails" $ do
         let eitherDecimal = Aeson.eitherDecode @DollarAmount "\"asdfasdf\""
         message <- assertLeft eitherDecimal
