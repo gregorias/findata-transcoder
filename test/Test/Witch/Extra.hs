@@ -21,22 +21,24 @@ tests = do
       describe "nestException" $ do
         it "shows a pretty exception in multiple lines" $ do
           let base = PrettyException "foo"
-          let firstLayer = TryFromException @Text "inner source" (Just (SomeException base))
-          let secondLayer = Witch.nestException @Text "outer source" firstLayer
+          let (firstLayer :: TryFromException Text Text) =
+                TryFromException @Text "inner source" (Just (SomeException base))
+          let (secondLayer :: TryFromException Text Text) =
+                Witch.nestException ("outer source" :: Text) firstLayer
           void $ putDocW 5 (pretty secondLayer)
           show (pretty secondLayer)
             `shouldBe` [trimming|
-                TryFromException
+                TryFromException @Text @Text
                 source: "outer source"
-                cause: TryFromException
+                cause: TryFromException @Text @Text
                        source: "inner source"
                        cause: foo|]
 
       it "pretty prints the source" $ do
-        let ex = TryFromException (AdtSource "A" "B") Nothing
+        let (ex :: TryFromException AdtSource (Maybe Text)) = TryFromException (AdtSource "A" "B") Nothing
         show (pretty ex)
           `shouldBe` [trimming|
-              TryFromException
+              TryFromException @AdtSource @Maybe Text
               source: AdtSource {
                           asA = "A",
                           asB = "B"

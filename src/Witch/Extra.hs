@@ -6,6 +6,7 @@ module Witch.Extra (
 ) where
 
 import Data.Either.Combinators (mapLeft)
+import Data.Typeable (typeRep)
 import Prettyprinter (Pretty (..), vsep, (<+>))
 import Prettyprinter qualified as P
 import Prettyprinter.Extra (PrettyException (..), unPrettyException)
@@ -21,7 +22,7 @@ instance TryFrom (Maybe a) a where
 -- Transforms the nested exception into a PrettyException for pretty multi-line
 -- printing. I don't need it for anything else. Can't pretty print it otherwise.
 nestException ::
-  (Show source) =>
+  (Show source, Typeable source, Typeable target) =>
   source' ->
   TryFromException source target ->
   TryFromException source' target'
@@ -31,21 +32,27 @@ nestException newSource e = TryFromException newSource (Just (SomeException $ Pr
 --
 -- Name inspired by Aeson's eitherDecodeFoo family of functions.
 eitherNestException ::
-  (Show source) =>
+  (Show source, Typeable source, Typeable target) =>
   source' ->
   Either (TryFromException source target) b ->
   Either (TryFromException source' target') b
 eitherNestException newSource = mapLeft (nestException newSource)
 
-instance (Show a) => Pretty (TryFromException a b) where
+instance (Show a, Typeable a, Typeable b) => Pretty (TryFromException a b) where
   pretty (TryFromException source maybeSe) =
     vsep
-      ( [ "TryFromException"
+      ( [ "TryFromException @" <> sourceType <> " @" <> targetType
         , "source:" <+> P.hang 0 (show source & nicify & pretty)
         ]
           <> maybe [] (\se -> ["cause:" <+> P.hang 0 (prettyCause se)]) maybeSe
       )
    where
+    sourceType :: P.Doc ann
+    sourceType = show $ typeRep $ Proxy @a
+
+    targetType :: P.Doc ann
+    targetType = show $ typeRep $ Proxy @b
+
     prettyCause :: SomeException -> P.Doc ann
     prettyCause se = case fromException @PrettyException se of
       Just prettyException -> unPrettyException prettyException
