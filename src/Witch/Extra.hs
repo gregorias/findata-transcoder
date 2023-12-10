@@ -38,19 +38,15 @@ eitherNestException ::
 eitherNestException newSource = mapLeft (nestException newSource)
 
 instance (Show a) => Pretty (TryFromException a b) where
-  pretty (TryFromException source Nothing) =
+  pretty (TryFromException source maybeSe) =
     vsep
-      [ "TryFromException"
-      , "source:" <+> P.hang 0 (show source & nicify & pretty)
-      ]
-  pretty (TryFromException source (Just se)) =
-    vsep
-      [ "TryFromException"
-      , "source:" <+> P.hang 0 (show source & nicify & pretty)
-      , "cause:" <+> P.hang 0 cause
-      ]
+      ( [ "TryFromException"
+        , "source:" <+> P.hang 0 (show source & nicify & pretty)
+        ]
+          <> maybe [] (\se -> ["cause:" <+> P.hang 0 (prettyCause se)]) maybeSe
+      )
    where
-    cause :: P.Doc ann
-    cause = case fromException @PrettyException se of
+    prettyCause :: SomeException -> P.Doc ann
+    prettyCause se = case fromException @PrettyException se of
       Just prettyException -> unPrettyException prettyException
       Nothing -> fromString $ show se
