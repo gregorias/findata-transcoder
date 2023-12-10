@@ -80,6 +80,7 @@ library:
     - lift-generics
     - megaparsec
     - mtl
+    - nicify-lib
     - parser-combinators
     - prettyprinter
     - regex-tdfa

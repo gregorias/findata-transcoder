@@ -10,6 +10,7 @@ import Prettyprinter (Pretty (..), vsep, (<+>))
 import Prettyprinter qualified as P
 import Prettyprinter.Extra (PrettyException, unPrettyException)
 import Relude
+import Text.Nicify (nicify)
 import Witch (TryFrom (..), TryFromException (..), maybeTryFrom)
 
 instance TryFrom (Maybe a) a where
@@ -37,12 +38,12 @@ instance (Show a) => Pretty (TryFromException a b) where
   pretty (TryFromException source Nothing) =
     vsep
       [ "TryFromException"
-      , "source: " <+> P.hang 0 (show source)
+      , "source:" <+> P.hang 0 (show source & nicify & pretty)
       ]
   pretty (TryFromException source (Just se)) =
     vsep
       [ "TryFromException"
-      , "source:" <+> P.hang 0 (show source)
+      , "source:" <+> P.hang 0 (show source & nicify & pretty)
       , "cause:" <+> P.hang 0 cause
       ]
    where

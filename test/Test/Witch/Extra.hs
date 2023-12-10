@@ -11,6 +11,9 @@ import Test.Hspec.Expectations.Pretty (shouldBe)
 import Witch (TryFromException (..))
 import Witch.Extra ()
 
+data AdtSource = AdtSource {asA :: !Text, asB :: !Text}
+  deriving stock (Show, Typeable)
+
 tests :: Hspec.SpecWith ()
 tests = do
   describe "Witch.Extra" $ do
@@ -28,3 +31,13 @@ tests = do
               cause: TryFromException
                      source: "inner source"
                      cause: foo|]
+
+      it "pretty prints the source" $ do
+        let ex = TryFromException (AdtSource "A" "B") Nothing
+        show (pretty ex)
+          `shouldBe` [trimming|
+              TryFromException
+              source: AdtSource {
+                          asA = "A",
+                          asB = "B"
+                      }|]
