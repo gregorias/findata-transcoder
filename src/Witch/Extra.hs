@@ -38,7 +38,7 @@ eitherNestException ::
   Either (TryFromException source' target') b
 eitherNestException newSource = mapLeft (nestException newSource)
 
-instance (Show a, Typeable a, Typeable b) => Pretty (TryFromException a b) where
+instance (Show a, Typeable a, Typeable b, Exception PrettyException) => Pretty (TryFromException a b) where
   pretty (TryFromException source maybeSe) =
     vsep
       ( [ "TryFromException @" <> sourceType <> " @" <> targetType
