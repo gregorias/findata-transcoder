@@ -3,7 +3,6 @@ module Test.Witch.Extra (tests) where
 import NeatInterpolation (trimming)
 import Prettyprinter (pretty)
 import Prettyprinter.Extra (PrettyException (..))
-import Prettyprinter.Util (putDocW)
 import Relude
 import Test.Hspec (describe, it)
 import Test.Hspec qualified as Hspec
@@ -25,7 +24,6 @@ tests = do
                 TryFromException @Text "inner source" (Just (SomeException base))
           let (secondLayer :: TryFromException Text Text) =
                 Witch.nestException ("outer source" :: Text) firstLayer
-          void $ putDocW 5 (pretty secondLayer)
           show (pretty secondLayer)
             `shouldBe` [trimming|
                 TryFromException @Text @Text
