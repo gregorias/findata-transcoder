@@ -1,5 +1,6 @@
 -- | Extra functionalities for HUnit.
 module Test.HUnit.Extra (
+  assertJust,
   assertLeft,
   assertRight,
   assertRightOrFailPrint,
@@ -9,6 +10,11 @@ module Test.HUnit.Extra (
 import Relude
 import Test.HUnit (Assertion, assertFailure)
 import Test.Hspec.Expectations.Pretty (shouldContain)
+
+-- | Asserts that the given Maybe is Just.
+assertJust :: Maybe a -> IO a
+assertJust (Just a) = return a
+assertJust Nothing = assertFailure "Expected Just, got Nothing"
 
 -- | Asserts that the given Either is Left.
 assertLeft :: (Show r) => Either l r -> IO l
