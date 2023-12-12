@@ -8,10 +8,7 @@ module Transcoder.CharlesSchwab.Eac.Data (
   Record (..),
   WireTransfer (..),
   Sale (..),
-  SubsaleType (..),
-  Subsale (..),
   Deposit (..),
-  DepositAwardInfo (..),
 ) where
 
 import Data.Decimal (Decimal)
@@ -48,21 +45,6 @@ data Sale = Sale
   , sQuantity :: !Decimal
   , sFeesAndCommissions :: !DollarAmount
   , sAmount :: !DollarAmount
-  , sSubsales :: ![Subsale]
-  }
-  deriving stock (Eq, Show, Generic)
-
-data SubsaleType = SubsaleTypeRs
-  deriving stock (Eq, Show, Generic)
-
-data Subsale = Subsale
-  { sType :: !SubsaleType
-  , sShares :: !Decimal
-  , sSalePrice :: !DollarAmount
-  , sGrantId :: !Text
-  , sVestDate :: !Day
-  , sVestFMV :: !DollarAmount
-  , sGrossProceeds :: !DollarAmount
   }
   deriving stock (Eq, Show, Generic)
 
@@ -71,14 +53,5 @@ data Deposit = Deposit
   , dSymbol :: !Text
   , dDescription :: !Text
   , dQuantity :: !Decimal
-  , dDepositAwardInfo :: !DepositAwardInfo
-  }
-  deriving stock (Eq, Show, Generic)
-
-data DepositAwardInfo = DepositAwardInfo
-  { daiAwardDate :: !Day
-  , daiAwardId :: !Text
-  , daiVestDate :: !Day
-  , daiVestFMV :: !DollarAmount
   }
   deriving stock (Eq, Show, Generic)

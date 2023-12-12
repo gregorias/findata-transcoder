@@ -8,8 +8,8 @@ import Data.ByteString.Lazy qualified as LBS
 import Hledger (Transaction)
 import Relude
 import Transcoder.CharlesSchwab.Brokerage.Csv qualified as BCsv
-import Transcoder.CharlesSchwab.Eac.Csv qualified as ECsv
 import Transcoder.CharlesSchwab.Eac.Data qualified as Eac
+import Transcoder.CharlesSchwab.Eac.Json qualified as EacJson
 import Transcoder.CharlesSchwab.Eac.Ledger (eacHistoryToLedger)
 import Transcoder.CharlesSchwab.Ledger qualified as Ledger
 
@@ -19,8 +19,8 @@ parseBrokerageAccountHistory stmt = do
   recs <- BCsv.parseCsStatement stmt
   Ledger.brokerageHistoryToLedger recs
 
--- | Parses CSV history statement from an EAC account.
-parseEacAccountHistory :: Text -> Either Text [Transaction]
+-- | Parses a JSON history statement from an EAC account.
+parseEacAccountHistory :: ByteString -> Either Text [Transaction]
 parseEacAccountHistory stmt = do
-  recordSheet <- ECsv.parseHistory stmt
+  recordSheet <- EacJson.parseHistory stmt
   eacHistoryToLedger (Eac.rsRecords recordSheet)

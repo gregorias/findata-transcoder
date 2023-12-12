@@ -146,7 +146,7 @@ csBrokerageAccountHistoryCommand =
 csEacAccountHistoryCommand :: ParserInfo (IO ())
 csEacAccountHistoryCommand =
   bankCommand
-    (pure $ parseBank $ CS.parseEacAccountHistory . decodeUtf8)
+    (pure $ parseBank $ CS.parseEacAccountHistory . LBS.toStrict)
     "Parses Charles Schwabs' EAC history into Ledger transactions."
 
 degiroAccountCommand :: ParserInfo (IO ())

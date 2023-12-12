@@ -49,8 +49,8 @@ library
       Transcoder.CharlesSchwab
       Transcoder.CharlesSchwab.Brokerage.Csv
       Transcoder.CharlesSchwab.DollarAmount
-      Transcoder.CharlesSchwab.Eac.Csv
       Transcoder.CharlesSchwab.Eac.Data
+      Transcoder.CharlesSchwab.Eac.Json
       Transcoder.CharlesSchwab.Eac.Ledger
       Transcoder.CharlesSchwab.Ledger
       Transcoder.Coop
@@ -224,6 +224,7 @@ test-suite findata-transcoder-test
       Test.Transcoder.BcgeCC
       Test.Transcoder.CharlesSchwab
       Test.Transcoder.CharlesSchwab.DollarAmount
+      Test.Transcoder.CharlesSchwab.Eac.Json
       Test.Transcoder.CharlesSchwab.Ledger
       Test.Transcoder.Coop
       Test.Transcoder.Coop.Config

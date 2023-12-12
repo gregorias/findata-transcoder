@@ -13,8 +13,10 @@ import Data.Cash (Cash (Cash))
 import Data.Csv qualified as Csv
 import Data.Decimal (Decimal)
 import Data.Decimal.Extra (
+  ChunkSepFormat (..),
+  DecimalFormat (..),
+  DecimalFractionFormat (..),
   decimalP,
-  defaultDecimalFormat,
  )
 import Data.Text qualified as T
 import Hledger.Data.Extra (ToAmount (..))
@@ -40,7 +42,7 @@ instance ToAmount DollarAmount where
 unsignedDollarAmountP :: Parsec Void Text Decimal
 unsignedDollarAmountP = do
   void $ single '$'
-  decimalP defaultDecimalFormat
+  decimalP (DecimalFormat (ChunkSep ',') (Just OptionalUnlimitedDecimalFraction))
 
 dollarAmountP :: Parsec Void Text DollarAmount
 dollarAmountP = DollarAmount <$> signed space unsignedDollarAmountP

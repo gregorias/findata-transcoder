@@ -1,6 +1,6 @@
 module Test.Transcoder.CharlesSchwab (tests) where
 
-import Data.Text.IO.Extra (readFileUtf8)
+import Data.ByteString qualified as BS
 import Hledger.Read.TestUtils (transactionsQQ)
 import Relude
 import Test.HUnit.Extra (assertRight, assertRightOrFailPrint)
@@ -35,9 +35,9 @@ tests = do
               Assets:Liquid:Charles Schwab:USD     USD      0.07
               Income:Google|]
     describe "parseEacAccountHistory" $ do
-      it "converts a CSV file to a report" $ do
-        csv <- readFileUtf8 "test/data/cs-eac-account-history.csv"
-        trs <- assertRightOrFailPrint $ CS.parseEacAccountHistory csv
+      it "converts a JSON statement to a report" $ do
+        json <- BS.readFile "test/data/cs-eac-account-history.json"
+        trs <- assertRightOrFailPrint $ CS.parseEacAccountHistory json
         trs
           `shouldBe` [transactionsQQ|
             2023/06/28 * GOOG Deposit

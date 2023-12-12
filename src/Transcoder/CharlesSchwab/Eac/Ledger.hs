@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-typed-holes #-}
-
 module Transcoder.CharlesSchwab.Eac.Ledger (
   eacHistoryToLedger,
 ) where
@@ -48,10 +46,8 @@ saleToTransaction :: Eac.Sale -> Either Text Transaction
 saleToTransaction
   ( Eac.Sale
       { sSymbol = sSymbol
-      , sSubsales = _sSubsales
       , sQuantity = sQuantity
       , sFeesAndCommissions = sFeesAndCommissions
-      , sDescription = _sDescription
       , sDate = sDate
       , sAmount = sAmount
       }
@@ -83,7 +79,6 @@ depositToTransaction
   ( Eac.Deposit
       { dQuantity = dQuantity
       , dDescription = _dDescription
-      , dDepositAwardInfo = _dDepositAwardInfo
       , dSymbol = dSymbol
       , dDate = dDate
       }
