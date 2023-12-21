@@ -73,6 +73,7 @@ data Earnings = Earnings
   , earningsPeerBonus :: !(Maybe Item)
   , earningsEducationSubsidyGross :: !(Maybe Item)
   , earningsNonCashSpotBonusGrossUp :: !(Maybe Item)
+  , earningsThirteen :: !(Maybe Item)
   , earningsMealAllowanceGrossUp :: !(Maybe Item)
   , earningsTotal :: !Item
   }
@@ -194,6 +195,7 @@ earningsP = label "earnings" $ do
   peerBonus <- optional $ earningsItemP "Peer Bonus"
   educationSubsidyGross <- optional $ earningsItemP "Education Subsidy Gross"
   nonCashSpotBonusGrossUp <- optional $ earningsItemP "NonCash Spot Bonus GrosUp"
+  thirteen <- optional $ earningsItemP "13th Month Payout"
   mealAllowanceGrossUp <- optional $ earningsItemP "Meal Allowance Gross Up"
   void $ itemP "Total Taxable Earnings"
   total <- itemP "Total Earnings"
@@ -207,6 +209,7 @@ earningsP = label "earnings" $ do
       , earningsPeerBonus = peerBonus
       , earningsEducationSubsidyGross = educationSubsidyGross
       , earningsNonCashSpotBonusGrossUp = nonCashSpotBonusGrossUp
+      , earningsThirteen = thirteen
       , earningsMealAllowanceGrossUp = mealAllowanceGrossUp
       , earningsTotal = total
       }
