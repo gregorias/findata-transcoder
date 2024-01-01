@@ -55,7 +55,7 @@ tests = do
           ]
 
     it "Parses an account statement (2023 April-July)." $ do
-      accountStatement <- CsvFile <$> LBS.readFile "test/data/degiro-account-statement.csv"
+      accountStatement <- CsvFile <$> LBS.readFile "test/data/degiro-account-statement-1.csv"
       ledger <- assertRight $ DegiroAccStmt.csvStatementToLedger accountStatement
       ledger
         `shouldBe`
@@ -80,6 +80,13 @@ tests = do
           2023/07/03 * Flatex Interest Income
             Assets:Liquid:Degiro        -0.00 EUR = 0.00 EUR
             Expenses:Financial Services  0.00 EUR|]
+
+    it "Parses an account statement (2023 December)." $ do
+      accountStatement <- CsvFile <$> LBS.readFile "test/data/degiro-account-statement-2.csv"
+      ledger <- assertRight $ DegiroAccStmt.csvStatementToLedger accountStatement
+      -- We ignore Degiro sweep transfers. I don't care about the
+      -- distinction between the DEGIRO account and the Flatex account.
+      ledger `shouldBe` []
 
 csvRecordsToLedgerTests :: SpecWith ()
 csvRecordsToLedgerTests = do

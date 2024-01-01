@@ -1,0 +1,5 @@
+Date,Time,Value date,Product,ISIN,Description,FX,Change,,Balance,,Order ID
+28-12-2023,11:47,27-12-2023,,,"Transfer from your Cash Account at flatex Bank: 18,645.37 CHF",,,,CHF,439.75,
+28-12-2023,11:47,27-12-2023,FLATEX CHF BANKACCOUNT,NLFLATEXACNT,Degiro Cash Sweep Transfer,,CHF,18645.37,CHF,19085.12,
+27-12-2023,12:17,26-12-2023,,,"Transfer to your Cash Account at flatex Bank: 19,000 CHF",,,,CHF,439.75,
+27-12-2023,12:17,26-12-2023,FLATEX CHF BANKACCOUNT,NLFLATEXACNT,Degiro Cash Sweep Transfer,,CHF,-19000.00,CHF,-18560.25,
