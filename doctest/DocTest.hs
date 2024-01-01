@@ -16,6 +16,7 @@ main =
     , "-XTypeApplications"
     , "-XScopedTypeVariables"
     , "-isrc"
+    , "src/Data/Cash.hs"
     , "src/Transcoder/Data/MyDecimal.hs"
     , "src/Transcoder/Data/Isin.hs"
     ]

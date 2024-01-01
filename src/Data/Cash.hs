@@ -37,7 +37,7 @@ instance ToAmount Cash where
 -- Just (Cash {_cashCurrency = CHF, _cashAmount = 100})
 --
 -- >>> MP.parseMaybe cashP "3.50 USD"
--- Just (Cash {_cashCurrency = USD, _cashAmount = 3.50})
+-- Just (Cash {_cashCurrency = USD, _cashAmount = 3.5})
 cashP ::
   ( MonadFail m
   , MP.MonadParsec e s m
