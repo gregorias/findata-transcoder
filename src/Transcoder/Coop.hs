@@ -7,11 +7,11 @@ module Transcoder.Coop (
 import Control.Lens (
   has,
  )
-import qualified Control.Lens as L
+import Control.Lens qualified as L
 import Control.Lens.Regex.Text (regex)
 import Data.Decimal (Decimal, realFracToDecimal)
-import qualified Data.Decimal as D
-import qualified Data.HashMap.Strict as HashMap
+import Data.Decimal qualified as D
+import Data.HashMap.Strict qualified as HashMap
 import Hledger (
   AccountName,
   Posting,
@@ -19,8 +19,8 @@ import Hledger (
   Transaction,
   transaction,
  )
-import qualified Hledger as Ledger
-import qualified Hledger.Data.Extra as HDE
+import Hledger qualified as Ledger
+import Hledger.Data.Extra qualified as HDE
 import Hledger.Data.Lens (pStatus, tDescription, tStatus)
 import Relude
 import Relude.Extra (groupBy)
@@ -37,7 +37,7 @@ import Transcoder.Coop.Receipt (
  )
 import Transcoder.Data.Currency (chf)
 import Transcoder.Wallet (bcgeAccount, bcgeCCAccount, expenses, (<:>))
-import qualified Transcoder.Wallet as Wallet
+import Transcoder.Wallet qualified as Wallet
 
 paymentMethodToAccount :: [PaymentCard] -> PaymentMethod -> Text
 paymentMethodToAccount _ TWINT = bcgeAccount
@@ -63,6 +63,7 @@ entryNameToExpenseCategory entry =
   health = "Gesundheit"
   itemToExpenseCategoryPairs =
     [ ([regex|Stimorol|], "Groceries:Chewing Gum")
+    , ([regex|V6|], "Groceries:Chewing Gum")
     , ([regex|Acqua Panna|], coffee)
     , ([regex|Naturaplan Espresso Havelaar Bohnen|], coffee)
     , ([regex|Emmi Caffè Latte|], coffee <:> "Latte")
@@ -126,7 +127,7 @@ receiptToTransaction :: Config -> Receipt -> Transaction
 receiptToTransaction config (Receipt day entries rabatt _total payments) =
   transaction day postings
     & L.set tDescription "Coop"
-      . L.set tStatus Cleared
+    . L.set tStatus Cleared
  where
   postings = toList paymentPostings <> catItems <> debtItems <> rabattPosting
   paymentPostings = paymentToPosting (paymentCards config) <$> payments
