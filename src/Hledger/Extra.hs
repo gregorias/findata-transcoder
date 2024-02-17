@@ -29,6 +29,8 @@ deriving stock instance Lift H.DigitGroupStyle
 
 deriving stock instance Lift H.AmountPrecision
 
+deriving stock instance Lift H.Rounding
+
 deriving stock instance Lift H.AmountStyle
 
 deriving stock instance Lift H.AmountPrice

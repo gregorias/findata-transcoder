@@ -42,8 +42,8 @@ tests = do
                      \    ! Todo\n\
                      \\n\
                      \2020-11-26 IB Status\n\
-                     \    Assets:Investments:IB:ACWF               0 = ACWF 123\n\
-                     \    Assets:Liquid:IB:CHF                     0 = CHF 100.00\n\
+                     \    Assets:Investments:IB:ACWF          ACWF 0 = ACWF 123\n\
+                     \    Assets:Liquid:IB:CHF              CHF 0.00 = CHF 100.00\n\
                      \\n\
                      \P 2020-11-26 ACWF 32.24 USD\n"
       it "Neatly formats a single transaction w/o extra lines" $ do
