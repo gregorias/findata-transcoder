@@ -69,8 +69,7 @@ data CsCsvRecord = CsCsvRecord
 
 instance FromNamedRecord CsCsvRecord where
   parseNamedRecord rec =
-    CsCsvRecord
-      <$> (unCsDay <$> rec .: "Date")
+    (CsCsvRecord . unCsDay <$> (rec .: "Date"))
       <*> rec
       .: "Action"
       <*> rec
@@ -108,8 +107,7 @@ parseCsCsv (CsvFile input) =
     <$> L.over
       L._Left
       toText
-      ( Csv.decodeByName input
-      )
+      (Csv.decodeByName input)
 
 parseCsStatement :: LBS.ByteString -> Either Text (Vector CsCsvRecord)
 parseCsStatement stmt = do
