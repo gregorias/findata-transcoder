@@ -12,15 +12,14 @@ pre-commit:
         -o "-XImportQualifiedPost"
         -i {staged_files}
         && git add {staged_files}
+    markdownlint:
+      tags: documentation style
+      glob: "*.md"
+      run: markdownlint {staged_files}
     prettier:
       tags: style
       glob: "*.{yml,yaml}"
       run: prettier -c {staged_files}
-    markdownlint:
-      tags: documentation style
-      files: git diff --name-only --cached --diff-filter=AM
-      glob: "*.md"
-      run: markdownlint {files}
     unit-tests:
       tags: test
       run: "stack test --ghc-options '-Werror'"
