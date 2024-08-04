@@ -16,14 +16,9 @@ import Data.Time (Day, defaultTimeLocale)
 import Data.Time.Format (parseTimeM)
 import Data.Vector (Vector)
 import Relude
-import Text.Megaparsec (Parsec, anySingle, chunk)
+import Text.Megaparsec (Parsec, anySingle)
 import Text.Megaparsec qualified as MP
-import Text.Megaparsec.Extra (
-  parsePretty,
- )
-import Text.Megaparsec.Stream (tokensToChunk)
 import Transcoder.CharlesSchwab.DollarAmount (DollarAmount, dollarAmountP)
-import Transcoder.Data.CsvFile (CsvFile (..))
 
 csSimpleDayP :: Parsec Void String Day
 csSimpleDayP = do
@@ -83,8 +78,6 @@ instance FromNamedRecord BrokerageHistoryCsvRecord where
       <*> rec
       .: "Amount"
 
-type Parser = Parsec Void LBS.ByteString
-
 maybeDollarAmountP :: Csv.NamedRecord -> ByteString -> Csv.Parser (Maybe DollarAmount)
 maybeDollarAmountP rec name = do
   field <- rec .: name
@@ -92,18 +85,8 @@ maybeDollarAmountP rec name = do
     then pure Nothing
     else return $ MP.parseMaybe dollarAmountP field
 
-line :: Parser LBS.ByteString
-line = do
-  (content, eol) <- MP.manyTill_ anySingle (chunk "\n")
-  return $ tokensToChunk (Proxy :: Proxy LBS.ByteString) content `LBS.append` eol
-
-csStatementToCsvContentP :: Parser (CsvFile LBS.ByteString)
-csStatementToCsvContentP = do
-  csvLines <- many line
-  return $ CsvFile (LBS.concat csvLines)
-
-parseCsCsv :: CsvFile LBS.ByteString -> Either Text (Vector BrokerageHistoryCsvRecord)
-parseCsCsv (CsvFile input) =
+parseCsCsv :: LBS.ByteString -> Either Text (Vector BrokerageHistoryCsvRecord)
+parseCsCsv input =
   snd
     <$> L.over
       L._Left
@@ -113,5 +96,4 @@ parseCsCsv (CsvFile input) =
 -- | Parses a Charles Schwab brokerage account history statement.
 parseBrokerageHistoryCsv :: LBS.ByteString -> Either Text [BrokerageHistoryCsvRecord]
 parseBrokerageHistoryCsv stmt = do
-  csvContent <- parsePretty csStatementToCsvContentP "Charles Schwab Statement" stmt
-  toList <$> parseCsCsv csvContent
+  toList <$> parseCsCsv stmt
