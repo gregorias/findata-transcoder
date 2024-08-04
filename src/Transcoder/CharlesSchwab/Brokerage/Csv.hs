@@ -7,14 +7,13 @@ module Transcoder.CharlesSchwab.Brokerage.Csv (
   BrokerageHistoryCsvRecord (..),
 ) where
 
-import Control.Lens qualified as L
 import Control.Monad.Combinators (manyTill)
 import Data.ByteString.Lazy qualified as LBS
 import Data.Csv (FromNamedRecord (..), (.:))
 import Data.Csv qualified as Csv
+import Data.Either.Extra (mapLeft)
 import Data.Time (Day, defaultTimeLocale)
 import Data.Time.Format (parseTimeM)
-import Data.Vector (Vector)
 import Relude
 import Text.Megaparsec (Parsec, anySingle)
 import Text.Megaparsec qualified as MP
@@ -85,15 +84,7 @@ maybeDollarAmountP rec name = do
     then pure Nothing
     else return $ MP.parseMaybe dollarAmountP field
 
-parseCsCsv :: LBS.ByteString -> Either Text (Vector BrokerageHistoryCsvRecord)
-parseCsCsv input =
-  snd
-    <$> L.over
-      L._Left
-      toText
-      (Csv.decodeByName input)
-
 -- | Parses a Charles Schwab brokerage account history statement.
 parseBrokerageHistoryCsv :: LBS.ByteString -> Either Text [BrokerageHistoryCsvRecord]
 parseBrokerageHistoryCsv stmt = do
-  toList <$> parseCsCsv stmt
+  toList . snd <$> mapLeft toText (Csv.decodeByName stmt)
