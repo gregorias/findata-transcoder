@@ -13,7 +13,7 @@ import Test.HUnit.Extra (assertRight)
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe)
 import Transcoder.CharlesSchwab.Brokerage.Csv (
-  CsCsvRecord (CsCsvRecord),
+  BrokerageHistoryCsvRecord (BrokerageHistoryCsvRecord),
  )
 import Transcoder.CharlesSchwab.DollarAmount (
   DollarAmount (..),
@@ -26,7 +26,7 @@ tests = do
     describe "brokerageHistoryToLedger" $ do
       it "transforms a wire fund entry" $ do
         let entries =
-              [ CsCsvRecord
+              [ BrokerageHistoryCsvRecord
                   (fromGregorian 2021 1 19)
                   "Wire Funds"
                   ""
@@ -34,7 +34,7 @@ tests = do
                   Nothing
                   Nothing
                   Nothing
-                  (Just $ DollarAmount (fromRational $ -12345 % 100))
+                  (Just $ DollarAmount (fromRational $ (-12345) % 100))
               ]
         trs <- assertRight $ brokerageHistoryToLedger entries
         trs
@@ -45,7 +45,7 @@ tests = do
 
       it "transforms a vesting entry" $ do
         let entries =
-              [ CsCsvRecord
+              [ BrokerageHistoryCsvRecord
                   (fromGregorian 2020 12 31)
                   "Stock Plan Activity"
                   "GOOG"
@@ -64,7 +64,7 @@ tests = do
 
       it "transforms an interest entry" $ do
         let entries =
-              [ CsCsvRecord
+              [ BrokerageHistoryCsvRecord
                   (fromGregorian 2021 1 28)
                   "Credit Interest"
                   ""
@@ -82,7 +82,7 @@ tests = do
                     Income:Google|]
       it "transforms an sell entry" $ do
         let entries =
-              [ CsCsvRecord
+              [ BrokerageHistoryCsvRecord
                   (fromGregorian 2020 12 31)
                   "Sell"
                   "GOOG"
@@ -101,7 +101,7 @@ tests = do
                     Expenses:Financial Services  0.31 USD|]
       it "transforms a withholding tax entry" $ do
         let entries =
-              [ CsCsvRecord
+              [ BrokerageHistoryCsvRecord
                   (fromGregorian 2020 12 31)
                   "Journal"
                   ""
@@ -109,7 +109,7 @@ tests = do
                   Nothing
                   Nothing
                   Nothing
-                  (Just $ DollarAmount (fromRational $ -123 % 100))
+                  (Just $ DollarAmount (fromRational $ (-123) % 100))
               ]
         trs <- assertRight $ brokerageHistoryToLedger entries
         trs

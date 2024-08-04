@@ -4,7 +4,7 @@ module Transcoder.CharlesSchwab.Brokerage.Csv (
   parseCsStatement,
 
   -- * Types
-  CsCsvRecord (..),
+  BrokerageHistoryCsvRecord (..),
 ) where
 
 import Control.Lens qualified as L
@@ -55,21 +55,22 @@ quantityP rec = do
     then pure Nothing
     else return $ readMaybe field
 
-data CsCsvRecord = CsCsvRecord
-  { csDate :: !Day
-  , csAction :: !Text
-  , csSymbol :: !Text
-  , csDescription :: !Text
-  , csQuantity :: !(Maybe Integer)
-  , csPrice :: !(Maybe DollarAmount)
-  , csFees :: !(Maybe DollarAmount)
-  , csAmount :: !(Maybe DollarAmount)
+-- | A CSV record from Charles Schwab’s brokerage account history.
+data BrokerageHistoryCsvRecord = BrokerageHistoryCsvRecord
+  { bhcrDate :: !Day
+  , bhcrAction :: !Text
+  , bhcrSymbol :: !Text
+  , bhcrDescription :: !Text
+  , bhcrQuantity :: !(Maybe Integer)
+  , bhcrPrice :: !(Maybe DollarAmount)
+  , bhcrFees :: !(Maybe DollarAmount)
+  , bhcrAmount :: !(Maybe DollarAmount)
   }
   deriving stock (Eq, Ord, Show)
 
-instance FromNamedRecord CsCsvRecord where
+instance FromNamedRecord BrokerageHistoryCsvRecord where
   parseNamedRecord rec =
-    (CsCsvRecord . unCsDay <$> (rec .: "Date"))
+    (BrokerageHistoryCsvRecord . unCsDay <$> (rec .: "Date"))
       <*> rec
       .: "Action"
       <*> rec
@@ -101,7 +102,7 @@ csStatementToCsvContentP = do
   csvLines <- many line
   return $ CsvFile (LBS.concat csvLines)
 
-parseCsCsv :: CsvFile LBS.ByteString -> Either Text (Vector CsCsvRecord)
+parseCsCsv :: CsvFile LBS.ByteString -> Either Text (Vector BrokerageHistoryCsvRecord)
 parseCsCsv (CsvFile input) =
   snd
     <$> L.over
@@ -109,7 +110,7 @@ parseCsCsv (CsvFile input) =
       toText
       (Csv.decodeByName input)
 
-parseCsStatement :: LBS.ByteString -> Either Text (Vector CsCsvRecord)
+parseCsStatement :: LBS.ByteString -> Either Text (Vector BrokerageHistoryCsvRecord)
 parseCsStatement stmt = do
   csvContent <- parsePretty csStatementToCsvContentP "Charles Schwab Statement" stmt
   parseCsCsv csvContent

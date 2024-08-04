@@ -29,8 +29,8 @@ import Hledger.Data.Extra (
 import Hledger.Data.Lens (aAmountPrice, pMaybeAmount, pStatus, tDescription, tStatus)
 import Relude
 import Transcoder.CharlesSchwab.Brokerage.Csv (
-  CsCsvRecord (csAction, csAmount, csDate, csDescription, csFees, csPrice, csQuantity, csSymbol),
-  csAction,
+  BrokerageHistoryCsvRecord (bhcrAction, bhcrAmount, bhcrDate, bhcrDescription, bhcrFees, bhcrPrice, bhcrQuantity, bhcrSymbol),
+  bhcrAction,
  )
 import Transcoder.CharlesSchwab.DollarAmount (
   DollarAmount (..),
@@ -64,11 +64,11 @@ data WireTransaction = WireTransaction
 wireFundsAction :: Text
 wireFundsAction = "Wire Funds"
 
-csvRecordToWireTransaction :: CsCsvRecord -> Maybe WireTransaction
+csvRecordToWireTransaction :: BrokerageHistoryCsvRecord -> Maybe WireTransaction
 csvRecordToWireTransaction rec = do
-  guard $ csAction rec == wireFundsAction
-  amount <- csAmount rec
-  return $ WireTransaction (csDate rec) amount
+  guard $ bhcrAction rec == wireFundsAction
+  amount <- bhcrAmount rec
+  return $ WireTransaction (bhcrDate rec) amount
 
 wireTransactionToLedgerTransaction :: WireTransaction -> Transaction
 wireTransactionToLedgerTransaction (WireTransaction day (DollarAmount amount)) =
@@ -84,18 +84,18 @@ wireTransactionToLedgerTransaction (WireTransaction day (DollarAmount amount)) =
 creditInterestAction :: Text
 creditInterestAction = "Credit Interest"
 
-creditInterestToLedgerTransaction :: CsCsvRecord -> Maybe Transaction
+creditInterestToLedgerTransaction :: BrokerageHistoryCsvRecord -> Maybe Transaction
 creditInterestToLedgerTransaction rec = do
-  guard $ csAction rec == creditInterestAction
-  (DollarAmount amount) <- csAmount rec
+  guard $ bhcrAction rec == creditInterestAction
+  (DollarAmount amount) <- bhcrAmount rec
   return
     $ transaction
-      (csDate rec)
+      (bhcrDate rec)
       [ post usdAccount missingamt
           & L.set pMaybeAmount (Just $ makeCurrencyAmount usd amount)
       , post "Income:Google" missingamt
       ]
-    & L.set tDescription (csAction rec)
+    & L.set tDescription (bhcrAction rec)
     . L.set tStatus Cleared
 
 data Vesting = Vesting
@@ -107,11 +107,11 @@ data Vesting = Vesting
 vestingAction :: Text
 vestingAction = "Stock Plan Activity"
 
-csvRecordToVesting :: CsCsvRecord -> Maybe Vesting
+csvRecordToVesting :: BrokerageHistoryCsvRecord -> Maybe Vesting
 csvRecordToVesting rec = do
-  guard $ csAction rec == vestingAction
-  quantity <- csQuantity rec
-  return $ Vesting (csDate rec) (csSymbol rec) quantity
+  guard $ bhcrAction rec == vestingAction
+  quantity <- bhcrQuantity rec
+  return $ Vesting (bhcrDate rec) (bhcrSymbol rec) quantity
 
 vestingToLedgerTransaction :: Vesting -> Transaction
 vestingToLedgerTransaction (Vesting day symbol q) =
@@ -123,15 +123,15 @@ vestingToLedgerTransaction (Vesting day symbol q) =
     & L.set tDescription (symbol <> " Vesting")
     . L.set tStatus Cleared
 
-wireSentToLedgerTransaction :: CsCsvRecord -> Maybe Transaction
+wireSentToLedgerTransaction :: BrokerageHistoryCsvRecord -> Maybe Transaction
 wireSentToLedgerTransaction rec = do
-  guard $ csAction rec == "Wire Sent"
-  (DollarAmount amount) <- csAmount rec
+  guard $ bhcrAction rec == "Wire Sent"
+  (DollarAmount amount) <- bhcrAmount rec
   return
     $ makeTransaction
-      (csDate rec)
+      (bhcrDate rec)
       Nothing
-      (csAction rec)
+      (bhcrAction rec)
       [ makePosting
           (Just Cleared)
           usdAccount
@@ -140,17 +140,17 @@ wireSentToLedgerTransaction rec = do
       , makePosting (Just Pending) "ToDo" Nothing NoComment
       ]
 
-saleToLedgerTransaction :: CsCsvRecord -> Maybe Transaction
+saleToLedgerTransaction :: BrokerageHistoryCsvRecord -> Maybe Transaction
 saleToLedgerTransaction rec = do
-  guard $ csAction rec == "Sell"
-  (DollarAmount amount) <- csAmount rec
-  (DollarAmount fee) <- csFees rec
-  (DollarAmount price) <- csPrice rec
-  q <- csQuantity rec
-  let symbol = csSymbol rec
+  guard $ bhcrAction rec == "Sell"
+  (DollarAmount amount) <- bhcrAmount rec
+  (DollarAmount fee) <- bhcrFees rec
+  (DollarAmount price) <- bhcrPrice rec
+  q <- bhcrQuantity rec
+  let symbol = bhcrSymbol rec
   return
     $ transaction
-      (csDate rec)
+      (bhcrDate rec)
       [ post
           (vestedStockAccount symbol)
           ( makeCommodityAmount symbol (fromInteger $ -q)
@@ -170,14 +170,14 @@ saleToLedgerTransaction rec = do
     & L.set tDescription (symbol <> " Sale")
     . L.set tStatus Cleared
 
-taxToLedgerTransaction :: CsCsvRecord -> Maybe Transaction
+taxToLedgerTransaction :: BrokerageHistoryCsvRecord -> Maybe Transaction
 taxToLedgerTransaction rec = do
-  guard $ csAction rec == "Journal"
-  guard $ csDescription rec == "Gencash transaction for SPS RS Lapse Tool"
-  (DollarAmount amount) <- csAmount rec
+  guard $ bhcrAction rec == "Journal"
+  guard $ bhcrDescription rec == "Gencash transaction for SPS RS Lapse Tool"
+  (DollarAmount amount) <- bhcrAmount rec
   return
     $ transaction
-      (csDate rec)
+      (bhcrDate rec)
       [ post
           usdAccount
           (makeCurrencyAmount usd amount)
@@ -186,9 +186,9 @@ taxToLedgerTransaction rec = do
     & L.set tDescription "Withholding Tax"
     . L.set tStatus Cleared
 
-csvRecordToLedgerTransaction :: CsCsvRecord -> Maybe Transaction
+csvRecordToLedgerTransaction :: BrokerageHistoryCsvRecord -> Maybe Transaction
 csvRecordToLedgerTransaction rec =
-  let (wireF :: CsCsvRecord -> Maybe Transaction) = csvRecordToWireTransaction >=> (return . wireTransactionToLedgerTransaction)
+  let (wireF :: BrokerageHistoryCsvRecord -> Maybe Transaction) = csvRecordToWireTransaction >=> (return . wireTransactionToLedgerTransaction)
       vestingF = csvRecordToVesting >=> (return . vestingToLedgerTransaction)
    in asum
         ( [ wireF
@@ -201,7 +201,7 @@ csvRecordToLedgerTransaction rec =
             <*> [rec]
         )
 
-brokerageHistoryToLedger :: Vector CsCsvRecord -> Either Text [Transaction]
+brokerageHistoryToLedger :: Vector BrokerageHistoryCsvRecord -> Either Text [Transaction]
 brokerageHistoryToLedger recs = do
   let trs = Vector.mapMaybe csvRecordToLedgerTransaction recs
   return $ reverse $ Vector.toList trs
