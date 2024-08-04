@@ -16,7 +16,7 @@ import Transcoder.CharlesSchwab.Ledger qualified as Ledger
 -- | Parses CSV history statement from a brokerage account.
 parseBrokerageAccountHistory :: LBS.ByteString -> Either Text [Transaction]
 parseBrokerageAccountHistory stmt = do
-  recs <- BCsv.parseCsStatement stmt
+  recs <- BCsv.parseBrokerageHistoryCsv stmt
   Ledger.brokerageHistoryToLedger recs
 
 -- | Parses a JSON history statement from an EAC account.

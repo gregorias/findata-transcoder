@@ -1,7 +1,7 @@
 -- | Utilities for parsing Charles Schwab's brokerage account history CSV.
 module Transcoder.CharlesSchwab.Brokerage.Csv (
   -- * Parsing
-  parseCsStatement,
+  parseBrokerageHistoryCsv,
 
   -- * Types
   BrokerageHistoryCsvRecord (..),
@@ -110,7 +110,8 @@ parseCsCsv (CsvFile input) =
       toText
       (Csv.decodeByName input)
 
-parseCsStatement :: LBS.ByteString -> Either Text (Vector BrokerageHistoryCsvRecord)
-parseCsStatement stmt = do
+-- | Parses a Charles Schwab brokerage account history statement.
+parseBrokerageHistoryCsv :: LBS.ByteString -> Either Text (Vector BrokerageHistoryCsvRecord)
+parseBrokerageHistoryCsv stmt = do
   csvContent <- parsePretty csStatementToCsvContentP "Charles Schwab Statement" stmt
   parseCsCsv csvContent
