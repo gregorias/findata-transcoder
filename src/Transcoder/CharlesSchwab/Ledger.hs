@@ -5,6 +5,7 @@ module Transcoder.CharlesSchwab.Ledger (
 
 import Control.Lens qualified as L
 import Data.Cash (Cash (Cash))
+import Data.Decimal (Decimal)
 import Data.Time (Day)
 import Hledger (
   AccountName,
@@ -99,7 +100,7 @@ creditInterestToLedgerTransaction rec = do
 data Vesting = Vesting
   { _vestingDate :: !Day
   , _vestingSymbol :: !Text
-  , _vestingAmount :: !Integer
+  , _vestingAmount :: !Decimal
   }
 
 vestingAction :: Text
@@ -115,8 +116,8 @@ vestingToLedgerTransaction :: Vesting -> Transaction
 vestingToLedgerTransaction (Vesting day symbol q) =
   transaction
     day
-    [ post unvestedGoog (makeCommodityAmount symbol (fromInteger $ -q))
-    , post (vestedStockAccount symbol) (makeCommodityAmount symbol (fromInteger q))
+    [ post unvestedGoog (makeCommodityAmount symbol (-q))
+    , post (vestedStockAccount symbol) (makeCommodityAmount symbol q)
     ]
     & L.set tDescription (symbol <> " Vesting")
     . L.set tStatus Cleared
@@ -151,7 +152,7 @@ saleToLedgerTransaction rec = do
       (bhcrDate rec)
       [ post
           (vestedStockAccount symbol)
-          ( makeCommodityAmount symbol (fromInteger $ -q)
+          ( makeCommodityAmount symbol (-q)
               & L.set
                 aAmountPrice
                 ( Just

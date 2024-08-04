@@ -223,6 +223,7 @@ test-suite findata-transcoder-test
       Test.Transcoder.Bcge.Hint
       Test.Transcoder.BcgeCC
       Test.Transcoder.CharlesSchwab
+      Test.Transcoder.CharlesSchwab.Brokerage.Csv
       Test.Transcoder.CharlesSchwab.DollarAmount
       Test.Transcoder.CharlesSchwab.Eac.Json
       Test.Transcoder.CharlesSchwab.Ledger

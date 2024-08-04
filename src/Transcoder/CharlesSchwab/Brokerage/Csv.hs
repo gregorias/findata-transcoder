@@ -11,6 +11,7 @@ import Control.Monad.Combinators (manyTill)
 import Data.ByteString.Lazy qualified as LBS
 import Data.Csv (FromNamedRecord (..), (.:))
 import Data.Csv qualified as Csv
+import Data.Decimal (Decimal)
 import Data.Either.Extra (mapLeft)
 import Data.Time (Day, defaultTimeLocale)
 import Data.Time.Format (parseTimeM)
@@ -42,7 +43,7 @@ instance Csv.FromField CsDay where
     let (day :: Maybe Day) = MP.parseMaybe csDayP (decodeUtf8 field)
     maybe (fail $ "Could not parse the date field: " ++ decodeUtf8 field) (return . CsDay) day
 
-quantityP :: Csv.NamedRecord -> Csv.Parser (Maybe Integer)
+quantityP :: Csv.NamedRecord -> Csv.Parser (Maybe Decimal)
 quantityP rec = do
   field <- rec .: "Quantity"
   if field == ""
@@ -55,7 +56,7 @@ data BrokerageHistoryCsvRecord = BrokerageHistoryCsvRecord
   , bhcrAction :: !Text
   , bhcrSymbol :: !Text
   , bhcrDescription :: !Text
-  , bhcrQuantity :: !(Maybe Integer)
+  , bhcrQuantity :: !(Maybe Decimal)
   , bhcrPrice :: !(Maybe DollarAmount)
   , bhcrFees :: !(Maybe DollarAmount)
   , bhcrAmount :: !(Maybe DollarAmount)
