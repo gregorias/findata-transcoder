@@ -49,7 +49,7 @@ quantityP rec = do
     then pure Nothing
     else return $ readMaybe field
 
--- | A CSV record from Charles Schwab’s brokerage account history.
+-- | A CSV record from Charles Schwab's brokerage account history.
 data BrokerageHistoryCsvRecord = BrokerageHistoryCsvRecord
   { bhcrDate :: !Day
   , bhcrAction :: !Text
