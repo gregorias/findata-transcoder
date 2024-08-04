@@ -111,7 +111,7 @@ parseCsCsv (CsvFile input) =
       (Csv.decodeByName input)
 
 -- | Parses a Charles Schwab brokerage account history statement.
-parseBrokerageHistoryCsv :: LBS.ByteString -> Either Text (Vector BrokerageHistoryCsvRecord)
+parseBrokerageHistoryCsv :: LBS.ByteString -> Either Text [BrokerageHistoryCsvRecord]
 parseBrokerageHistoryCsv stmt = do
   csvContent <- parsePretty csStatementToCsvContentP "Charles Schwab Statement" stmt
-  parseCsCsv csvContent
+  toList <$> parseCsCsv csvContent

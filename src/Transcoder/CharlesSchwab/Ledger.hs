@@ -6,8 +6,6 @@ module Transcoder.CharlesSchwab.Ledger (
 import Control.Lens qualified as L
 import Data.Cash (Cash (Cash))
 import Data.Time (Day)
-import Data.Vector (Vector)
-import Data.Vector qualified as Vector
 import Hledger (
   AccountName,
   AmountPrice (UnitPrice),
@@ -201,7 +199,7 @@ csvRecordToLedgerTransaction rec =
             <*> [rec]
         )
 
-brokerageHistoryToLedger :: Vector BrokerageHistoryCsvRecord -> Either Text [Transaction]
+brokerageHistoryToLedger :: [BrokerageHistoryCsvRecord] -> Either Text [Transaction]
 brokerageHistoryToLedger recs = do
-  let trs = Vector.mapMaybe csvRecordToLedgerTransaction recs
-  return $ reverse $ Vector.toList trs
+  let trs = mapMaybe csvRecordToLedgerTransaction recs
+  return $ reverse trs
