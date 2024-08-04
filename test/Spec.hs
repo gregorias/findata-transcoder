@@ -21,9 +21,9 @@ import Test.Transcoder.Bcge.Hint qualified as BcgeHint
 import Test.Transcoder.BcgeCC qualified
 import Test.Transcoder.CharlesSchwab qualified
 import Test.Transcoder.CharlesSchwab.Brokerage.Csv qualified
+import Test.Transcoder.CharlesSchwab.Brokerage.Ledger qualified
 import Test.Transcoder.CharlesSchwab.DollarAmount qualified
 import Test.Transcoder.CharlesSchwab.Eac.Json qualified
-import Test.Transcoder.CharlesSchwab.Ledger qualified
 import Test.Transcoder.Coop qualified
 import Test.Transcoder.Coop.Config qualified
 import Test.Transcoder.Coop.Receipt qualified
@@ -71,9 +71,9 @@ tests = do
   Test.Transcoder.BcgeCC.tests
   Test.Transcoder.CharlesSchwab.tests
   Test.Transcoder.CharlesSchwab.Brokerage.Csv.tests
+  Test.Transcoder.CharlesSchwab.Brokerage.Ledger.tests
   Test.Transcoder.CharlesSchwab.DollarAmount.tests
   Test.Transcoder.CharlesSchwab.Eac.Json.tests
-  Test.Transcoder.CharlesSchwab.Ledger.tests
   Test.Transcoder.Coop.tests
   Test.Transcoder.Coop.Config.tests
   Test.Transcoder.Coop.Receipt.tests

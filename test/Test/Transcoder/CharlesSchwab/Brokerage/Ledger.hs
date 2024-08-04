@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.Transcoder.CharlesSchwab.Ledger (
+module Test.Transcoder.CharlesSchwab.Brokerage.Ledger (
   tests,
 ) where
 
@@ -15,14 +15,14 @@ import Test.Hspec.Expectations.Pretty (shouldBe)
 import Transcoder.CharlesSchwab.Brokerage.Csv (
   BrokerageHistoryCsvRecord (BrokerageHistoryCsvRecord),
  )
+import Transcoder.CharlesSchwab.Brokerage.Ledger (brokerageHistoryToLedger)
 import Transcoder.CharlesSchwab.DollarAmount (
   DollarAmount (..),
  )
-import Transcoder.CharlesSchwab.Ledger (brokerageHistoryToLedger)
 
 tests :: SpecWith ()
 tests = do
-  describe "Transcoder.CharlesSchwab.Ledger" $ do
+  describe "Transcoder.CharlesSchwab.Brokerage.Ledger" $ do
     describe "brokerageHistoryToLedger" $ do
       it "transforms a wire fund entry" $ do
         let entries =

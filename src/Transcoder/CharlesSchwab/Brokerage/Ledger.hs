@@ -1,5 +1,5 @@
--- | This module turns a parsed CS CSV statement into ledger format.
-module Transcoder.CharlesSchwab.Ledger (
+-- | This module turns a parsed brokerage account history CSV statement into ledger format.
+module Transcoder.CharlesSchwab.Brokerage.Ledger (
   brokerageHistoryToLedger,
 ) where
 

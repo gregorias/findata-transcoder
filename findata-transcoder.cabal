@@ -48,11 +48,11 @@ library
       Transcoder.BcgeCC
       Transcoder.CharlesSchwab
       Transcoder.CharlesSchwab.Brokerage.Csv
+      Transcoder.CharlesSchwab.Brokerage.Ledger
       Transcoder.CharlesSchwab.DollarAmount
       Transcoder.CharlesSchwab.Eac.Data
       Transcoder.CharlesSchwab.Eac.Json
       Transcoder.CharlesSchwab.Eac.Ledger
-      Transcoder.CharlesSchwab.Ledger
       Transcoder.Coop
       Transcoder.Coop.Config
       Transcoder.Coop.Receipt
@@ -224,9 +224,9 @@ test-suite findata-transcoder-test
       Test.Transcoder.BcgeCC
       Test.Transcoder.CharlesSchwab
       Test.Transcoder.CharlesSchwab.Brokerage.Csv
+      Test.Transcoder.CharlesSchwab.Brokerage.Ledger
       Test.Transcoder.CharlesSchwab.DollarAmount
       Test.Transcoder.CharlesSchwab.Eac.Json
-      Test.Transcoder.CharlesSchwab.Ledger
       Test.Transcoder.Coop
       Test.Transcoder.Coop.Config
       Test.Transcoder.Coop.Receipt
