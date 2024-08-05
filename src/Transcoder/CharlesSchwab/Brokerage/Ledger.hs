@@ -14,7 +14,6 @@ import Hledger (
   Transaction,
   amountSetFullPrecision,
   missingamt,
-  transaction,
  )
 import Hledger.Data.Extra (
   Comment (NoComment),
@@ -26,8 +25,6 @@ import Hledger.Data.Extra (
  )
 import Hledger.Data.Lens (
   aAmountPrice,
-  tDescription,
-  tStatus,
  )
 import Relude
 import Transcoder.CharlesSchwab.Brokerage.Csv (
@@ -90,13 +87,13 @@ creditInterestToLedgerTransaction rec = do
   guard $ bhcrAction rec == creditInterestAction
   (DollarAmount amount) <- bhcrAmount rec
   return
-    $ transaction
+    $ makeTransaction
       (bhcrDate rec)
+      Cleared
+      (bhcrAction rec)
       [ makePosting Nothing usdAccount (makeCurrencyAmount usd amount) NoComment
       , makePosting Nothing "Income:Google" missingamt NoComment
       ]
-    & L.set tDescription (bhcrAction rec)
-    . L.set tStatus Cleared
 
 data Vesting = Vesting
   { _vestingDate :: !Day
@@ -115,13 +112,13 @@ csvRecordToVesting rec = do
 
 vestingToLedgerTransaction :: Vesting -> Transaction
 vestingToLedgerTransaction (Vesting day symbol q) =
-  transaction
+  makeTransaction
     day
+    Cleared
+    (symbol <> " Vesting")
     [ makePosting Nothing unvestedGoog (makeCommodityAmount symbol (-q)) NoComment
     , makePosting Nothing (vestedStockAccount symbol) (makeCommodityAmount symbol q) NoComment
     ]
-    & L.set tDescription (symbol <> " Vesting")
-    . L.set tStatus Cleared
 
 wireSentToLedgerTransaction :: BrokerageHistoryCsvRecord -> Maybe Transaction
 wireSentToLedgerTransaction rec = do
@@ -149,8 +146,10 @@ saleToLedgerTransaction rec = do
   q <- bhcrQuantity rec
   let symbol = bhcrSymbol rec
   return
-    $ transaction
+    $ makeTransaction
       (bhcrDate rec)
+      Cleared
+      (symbol <> " Sale")
       [ makePosting
           Nothing
           (vestedStockAccount symbol)
@@ -167,8 +166,6 @@ saleToLedgerTransaction rec = do
       , makePosting Nothing usdAccount (makeCurrencyAmount usd amount) NoComment
       , makePosting Nothing "Expenses:Financial Services" (makeCurrencyAmount usd fee) NoComment
       ]
-    & L.set tDescription (symbol <> " Sale")
-    . L.set tStatus Cleared
 
 taxToLedgerTransaction :: BrokerageHistoryCsvRecord -> Maybe Transaction
 taxToLedgerTransaction rec = do
@@ -176,13 +173,13 @@ taxToLedgerTransaction rec = do
   guard $ bhcrDescription rec == "Gencash transaction for SPS RS Lapse Tool"
   (DollarAmount amount) <- bhcrAmount rec
   return
-    $ transaction
+    $ makeTransaction
       (bhcrDate rec)
+      Cleared
+      "Withholding Tax"
       [ makePosting Nothing usdAccount (makeCurrencyAmount usd amount) NoComment
       , makePosting Nothing (equityCs <:> "Unvested GOOG Withholding Tax") missingamt NoComment
       ]
-    & L.set tDescription "Withholding Tax"
-    . L.set tStatus Cleared
 
 csvRecordToLedgerTransaction :: BrokerageHistoryCsvRecord -> Maybe Transaction
 csvRecordToLedgerTransaction rec =
