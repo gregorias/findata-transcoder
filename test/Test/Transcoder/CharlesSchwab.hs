@@ -19,21 +19,24 @@ tests = do
         trs
           `shouldBe` [transactionsQQ|
             2022/09/29 * GOOG Sale
+              ! Equity:Charles Schwab:Unvested GOOG       GOOG -40 ; TODO: Check how much of this is coming from dividends.
+              Assets:Investments:Charles Schwab:GOOG    GOOG  40
               Assets:Investments:Charles Schwab:GOOG    GOOG -40 @ USD 98.5606
-              Assets:Liquid:Charles Schwab:USD                     USD 3942.33
+              Assets:Liquid:Charles Schwab:Brokerage                     USD 3942.33
               Expenses:Financial Services                             USD 0.09
 
             2022/09/29 * Withholding Tax
-              Assets:Liquid:Charles Schwab:USD     USD  -1538.33
+              Assets:Liquid:Charles Schwab:Brokerage     USD  -1538.33
               Equity:Charles Schwab:Unvested GOOG Withholding Tax
 
             2022/09/30 Wire Sent
-              * Assets:Liquid:Charles Schwab:USD   USD -10818.38
+              * Assets:Liquid:Charles Schwab:Brokerage   USD -10818.38
               ! ToDo
 
             2022/10/28 * Credit Interest
-              Assets:Liquid:Charles Schwab:USD     USD      0.07
+              Assets:Liquid:Charles Schwab:Brokerage     USD      0.07
               Income:Google|]
+
     describe "parseEacAccountHistory" $ do
       it "converts a JSON statement to a report" $ do
         json <- BS.readFile "test/data/cs-eac-account-history.json"

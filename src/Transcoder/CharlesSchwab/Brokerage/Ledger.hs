@@ -16,7 +16,7 @@ import Hledger (
   missingamt,
  )
 import Hledger.Data.Extra (
-  Comment (NoComment),
+  Comment (Comment, NoComment),
   ToAmount (toAmount),
   makeCommodityAmount,
   makeCurrencyAmount,
@@ -40,17 +40,18 @@ import Transcoder.Wallet (
   equity,
   (<:>),
  )
+import Transcoder.Wallet qualified as Wallet
 
 -- "Wire Fund", "Sell" & "Journal", "Credit Interest"
 
 equityCs :: AccountName
 equityCs = equity <:> "Charles Schwab"
 
-usdAccount :: Text
-usdAccount = "Assets:Liquid:Charles Schwab:USD"
-
 unvestedGoog :: AccountName
 unvestedGoog = equityCs <:> "Unvested GOOG"
+
+usdAccount :: Text
+usdAccount = Wallet.liquidAssets <:> "Charles Schwab:Brokerage"
 
 vestedStockAccount :: Text -> Text
 vestedStockAccount symbol = "Assets:Investments:Charles Schwab:" <> symbol
@@ -150,7 +151,9 @@ saleToLedgerTransaction rec = do
       (bhcrDate rec)
       Cleared
       (symbol <> " Sale")
-      [ makePosting
+      [ makePosting Pending unvestedGoog (makeCommodityAmount symbol (-q)) (Comment "TODO: Check how much of this is coming from dividends.")
+      , makePosting Nothing (vestedStockAccount symbol) (makeCommodityAmount symbol q) NoComment
+      , makePosting
           Nothing
           (vestedStockAccount symbol)
           ( makeCommodityAmount symbol (-q)
@@ -164,7 +167,7 @@ saleToLedgerTransaction rec = do
           )
           NoComment
       , makePosting Nothing usdAccount (makeCurrencyAmount usd amount) NoComment
-      , makePosting Nothing "Expenses:Financial Services" (makeCurrencyAmount usd fee) NoComment
+      , makePosting Nothing Wallet.financialServices (makeCurrencyAmount usd fee) NoComment
       ]
 
 taxToLedgerTransaction :: BrokerageHistoryCsvRecord -> Maybe Transaction

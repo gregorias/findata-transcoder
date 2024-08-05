@@ -33,7 +33,7 @@ tests = do
         brokerageHistoryToLedger [entry]
           `shouldBe` [transactionsQQ|
                         2021/01/19 Wire Funds
-                          * Assets:Liquid:Charles Schwab:USD  -123.45 USD
+                          * Assets:Liquid:Charles Schwab:Brokerage  -123.45 USD
                           ! Todo|]
 
       it "transforms a vesting entry" $ do
@@ -68,9 +68,9 @@ tests = do
         brokerageHistoryToLedger [entry]
           `shouldBe` [transactionsQQ|
                   2021/01/28 * Credit Interest
-                    Assets:Liquid:Charles Schwab:USD  0.19 USD
+                    Assets:Liquid:Charles Schwab:Brokerage  0.19 USD
                     Income:Google|]
-      it "transforms an sell entry" $ do
+      it "transforms a sell entry (2020)" $ do
         let entry =
               BrokerageHistoryCsvRecord
                 (fromGregorian 2020 12 31)
@@ -84,9 +84,30 @@ tests = do
         brokerageHistoryToLedger [entry]
           `shouldBe` [transactionsQQ|
                   2020/12/31 * GOOG Sale
+                    ! Equity:Charles Schwab:Unvested GOOG     GOOG -8 ; TODO: Check how much of this is coming from dividends.
+                    Assets:Investments:Charles Schwab:GOOG   8 GOOG
                     Assets:Investments:Charles Schwab:GOOG  -8 GOOG @ 1765.2706 USD
-                    Assets:Liquid:Charles Schwab:USD  14121.85 USD
-                    Expenses:Financial Services  0.31 USD|]
+                    Assets:Liquid:Charles Schwab:Brokerage  USD 14121.85
+                    Expenses:Financial Services             USD     0.31|]
+      it "transforms a sell entry (2024)" $ do
+        let entry =
+              BrokerageHistoryCsvRecord
+                (fromGregorian 2024 06 27)
+                "Sell"
+                "GOOG"
+                "ALPHABET INC. CLASS C"
+                (Just 40.045)
+                (Just $ DollarAmount 185.2337)
+                (Just $ DollarAmount 0.22)
+                (Just $ DollarAmount 7417.46)
+        brokerageHistoryToLedger [entry]
+          `shouldBe` [transactionsQQ|
+                  2024/06/27 * GOOG Sale
+                    ! Equity:Charles Schwab:Unvested GOOG     GOOG -40.045 ; TODO: Check how much of this is coming from dividends.
+                    Assets:Investments:Charles Schwab:GOOG  GOOG  40.045
+                    Assets:Investments:Charles Schwab:GOOG  GOOG -40.045 @ USD 185.2337
+                    Assets:Liquid:Charles Schwab:Brokerage  USD 7417.46
+                    Expenses:Financial Services             USD    0.22|]
       it "transforms a withholding tax entry" $ do
         let entry =
               BrokerageHistoryCsvRecord
@@ -101,5 +122,5 @@ tests = do
         brokerageHistoryToLedger [entry]
           `shouldBe` [transactionsQQ|
                        2020/12/31 * Withholding Tax
-                         Assets:Liquid:Charles Schwab:USD  -1.23 USD
+                         Assets:Liquid:Charles Schwab:Brokerage  -1.23 USD
                          Equity:Charles Schwab:Unvested GOOG Withholding Tax|]
