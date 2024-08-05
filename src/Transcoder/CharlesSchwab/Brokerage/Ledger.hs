@@ -14,7 +14,6 @@ import Hledger (
   Transaction,
   amountSetFullPrecision,
   missingamt,
-  post,
   transaction,
  )
 import Hledger.Data.Extra (
@@ -25,7 +24,11 @@ import Hledger.Data.Extra (
   makePosting,
   makeTransaction,
  )
-import Hledger.Data.Lens (aAmountPrice, pMaybeAmount, pStatus, tDescription, tStatus)
+import Hledger.Data.Lens (
+  aAmountPrice,
+  tDescription,
+  tStatus,
+ )
 import Relude
 import Transcoder.CharlesSchwab.Brokerage.Csv (
   BrokerageHistoryCsvRecord (bhcrAction, bhcrAmount, bhcrDate, bhcrDescription, bhcrFees, bhcrPrice, bhcrQuantity, bhcrSymbol),
@@ -71,14 +74,13 @@ csvRecordToWireTransaction rec = do
 
 wireTransactionToLedgerTransaction :: WireTransaction -> Transaction
 wireTransactionToLedgerTransaction (WireTransaction day (DollarAmount amount)) =
-  transaction
+  makeTransaction
     day
-    [ post usdAccount missingamt
-        & L.set pStatus Cleared
-        . L.set pMaybeAmount (Just $ makeCurrencyAmount usd amount)
+    Nothing
+    wireFundsAction
+    [ makePosting Cleared usdAccount (makeCurrencyAmount usd amount) NoComment
     , todoPosting
     ]
-    & L.set tDescription wireFundsAction
 
 creditInterestAction :: Text
 creditInterestAction = "Credit Interest"
@@ -90,9 +92,8 @@ creditInterestToLedgerTransaction rec = do
   return
     $ transaction
       (bhcrDate rec)
-      [ post usdAccount missingamt
-          & L.set pMaybeAmount (Just $ makeCurrencyAmount usd amount)
-      , post "Income:Google" missingamt
+      [ makePosting Nothing usdAccount (makeCurrencyAmount usd amount) NoComment
+      , makePosting Nothing "Income:Google" missingamt NoComment
       ]
     & L.set tDescription (bhcrAction rec)
     . L.set tStatus Cleared
@@ -116,8 +117,8 @@ vestingToLedgerTransaction :: Vesting -> Transaction
 vestingToLedgerTransaction (Vesting day symbol q) =
   transaction
     day
-    [ post unvestedGoog (makeCommodityAmount symbol (-q))
-    , post (vestedStockAccount symbol) (makeCommodityAmount symbol q)
+    [ makePosting Nothing unvestedGoog (makeCommodityAmount symbol (-q)) NoComment
+    , makePosting Nothing (vestedStockAccount symbol) (makeCommodityAmount symbol q) NoComment
     ]
     & L.set tDescription (symbol <> " Vesting")
     . L.set tStatus Cleared
@@ -150,7 +151,8 @@ saleToLedgerTransaction rec = do
   return
     $ transaction
       (bhcrDate rec)
-      [ post
+      [ makePosting
+          Nothing
           (vestedStockAccount symbol)
           ( makeCommodityAmount symbol (-q)
               & L.set
@@ -161,10 +163,9 @@ saleToLedgerTransaction rec = do
                     & amountSetFullPrecision
                 )
           )
-      , post usdAccount missingamt
-          & L.set pMaybeAmount (Just $ makeCurrencyAmount usd amount)
-      , post "Expenses:Financial Services" missingamt
-          & L.set pMaybeAmount (Just $ makeCurrencyAmount usd fee)
+          NoComment
+      , makePosting Nothing usdAccount (makeCurrencyAmount usd amount) NoComment
+      , makePosting Nothing "Expenses:Financial Services" (makeCurrencyAmount usd fee) NoComment
       ]
     & L.set tDescription (symbol <> " Sale")
     . L.set tStatus Cleared
@@ -177,10 +178,8 @@ taxToLedgerTransaction rec = do
   return
     $ transaction
       (bhcrDate rec)
-      [ post
-          usdAccount
-          (makeCurrencyAmount usd amount)
-      , post (equityCs <:> "Unvested GOOG Withholding Tax") missingamt
+      [ makePosting Nothing usdAccount (makeCurrencyAmount usd amount) NoComment
+      , makePosting Nothing (equityCs <:> "Unvested GOOG Withholding Tax") missingamt NoComment
       ]
     & L.set tDescription "Withholding Tax"
     . L.set tStatus Cleared
