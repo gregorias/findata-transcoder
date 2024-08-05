@@ -31,6 +31,7 @@ library
       Data.Cash
       Data.Csv.Extra
       Data.Decimal.Extra
+      Data.Maybe.Extra
       Data.Text.IO.Extra
       Data.Time.Calendar.Extra
       Data.Time.Extra

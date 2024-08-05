@@ -79,10 +79,9 @@ instance ToTransaction Receipt where
       date
       (Just Cleared)
       "Digitec/Galaxus"
-      ( [paymentPosting] <> toList (itemToPosting <$> items)
-      )
+      ([paymentPosting] <> toList (itemToPosting <$> items))
    where
-    paymentPosting = makePosting (Just Pending) paymentSource (Just . toAmount $ Cash.negate total) NoComment
+    paymentPosting = makePosting Pending paymentSource (toAmount $ Cash.negate total) NoComment
 
 type Parser = MP.Parsec Void Text
 

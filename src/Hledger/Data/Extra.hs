@@ -13,6 +13,7 @@ module Hledger.Data.Extra (
 ) where
 
 import Control.Lens (over, set)
+import Data.Maybe.Extra (ToMaybeX (..))
 import Data.Time (Day)
 import Hledger (AccountName, Posting, Status, Transaction, missingamt, post, transaction)
 import Hledger.Data.Amount (num)
@@ -65,21 +66,25 @@ setComment (Comment comment) = set pComment comment
 -- | Makes a Posting.
 --
 -- This is a helper function that follows the order of definition in a normal posting.
-makePosting :: Maybe Status -> AccountName -> Maybe Amount -> Comment -> Posting
+makePosting ::
+  (ToMaybeX Status toMaybeStatus, ToMaybeX Amount toMaybeAmount) =>
+  toMaybeStatus -> AccountName -> toMaybeAmount -> Comment -> Posting
 makePosting maybeStatus accountName maybeAmount comment =
   post accountName missingamt
     & setComment comment
-    & maybe id (set pStatus) maybeStatus
-    & maybe id (set pAmount) maybeAmount
+    & maybe id (set pStatus) (toMaybeX maybeStatus)
+    & maybe id (set pAmount) (toMaybeX maybeAmount)
 
 -- | Makes a Transaction.
 --
 -- This is a helper function that follows the order of definition in a normal transaction.
-makeTransaction :: Day -> Maybe Status -> Text -> [Posting] -> Transaction
+makeTransaction ::
+  (ToMaybeX Status maybeStatus) =>
+  Day -> maybeStatus -> Text -> [Posting] -> Transaction
 makeTransaction day maybeStatus description ps =
   transaction day ps
     & set tDescription description
-    . maybe id (set tStatus) maybeStatus
+    . maybe id (set tStatus) (toMaybeX maybeStatus)
 
 class ToAmount a where
   toAmount :: a -> Amount

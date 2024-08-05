@@ -6,6 +6,7 @@ module Transcoder.GooglePlay (parseReceipt) where
 import Control.Monad.Combinators (manyTill_)
 import Data.Cash (Cash (..), cashP)
 import Data.Cash qualified as Cash
+import Data.Maybe.Extra ()
 import Data.Text qualified as T
 import Data.Time (Day)
 import Data.Time.Extra (usFullDayP)

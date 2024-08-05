@@ -132,11 +132,11 @@ wireSentToLedgerTransaction rec = do
       Nothing
       (bhcrAction rec)
       [ makePosting
-          (Just Cleared)
+          Cleared
           usdAccount
-          (Just . toAmount $ Cash usd amount)
+          (toAmount $ Cash usd amount)
           NoComment
-      , makePosting (Just Pending) "ToDo" Nothing NoComment
+      , makePosting Pending "ToDo" Nothing NoComment
       ]
 
 saleToLedgerTransaction :: BrokerageHistoryCsvRecord -> Maybe Transaction
