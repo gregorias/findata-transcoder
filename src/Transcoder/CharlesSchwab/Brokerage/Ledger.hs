@@ -200,7 +200,6 @@ csvRecordToLedgerTransaction rec =
             <*> [rec]
         )
 
-brokerageHistoryToLedger :: [BrokerageHistoryCsvRecord] -> Either Text [Transaction]
-brokerageHistoryToLedger recs = do
-  let trs = mapMaybe csvRecordToLedgerTransaction recs
-  return $ reverse trs
+-- | Transcodes a parsed brokerage account history CSV statement into ledger format.
+brokerageHistoryToLedger :: [BrokerageHistoryCsvRecord] -> [Transaction]
+brokerageHistoryToLedger recs = reverse $ mapMaybe csvRecordToLedgerTransaction recs

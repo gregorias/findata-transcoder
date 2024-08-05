@@ -1,6 +1,3 @@
-{-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE QuasiQuotes #-}
-
 module Test.Transcoder.CharlesSchwab.Brokerage.Ledger (
   tests,
 ) where
@@ -9,7 +6,6 @@ import Data.Ratio ((%))
 import Data.Time (fromGregorian)
 import Hledger.Read.TestUtils (transactionsQQ)
 import Relude
-import Test.HUnit.Extra (assertRight)
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe)
 import Transcoder.CharlesSchwab.Brokerage.Csv (
@@ -36,7 +32,7 @@ tests = do
                   Nothing
                   (Just $ DollarAmount (fromRational $ (-12345) % 100))
               ]
-        trs <- assertRight $ brokerageHistoryToLedger entries
+        let trs = brokerageHistoryToLedger entries
         trs
           `shouldBe` [transactionsQQ|
                         2021/01/19 Wire Funds
@@ -55,7 +51,7 @@ tests = do
                   Nothing
                   Nothing
               ]
-        trs <- assertRight $ brokerageHistoryToLedger entries
+        let trs = brokerageHistoryToLedger entries
         trs
           `shouldBe` [transactionsQQ|
                   2020/12/31 * GOOG Vesting
@@ -74,7 +70,7 @@ tests = do
                   Nothing
                   (Just $ DollarAmount (fromRational $ 19 % 100))
               ]
-        trs <- assertRight $ brokerageHistoryToLedger entries
+        let trs = brokerageHistoryToLedger entries
         trs
           `shouldBe` [transactionsQQ|
                   2021/01/28 * Credit Interest
@@ -92,7 +88,7 @@ tests = do
                   (Just $ DollarAmount (fromRational $ 31 % 100))
                   (Just $ DollarAmount (fromRational $ 1412185 % 100))
               ]
-        trs <- assertRight $ brokerageHistoryToLedger entries
+        let trs = brokerageHistoryToLedger entries
         trs
           `shouldBe` [transactionsQQ|
                   2020/12/31 * GOOG Sale
@@ -111,7 +107,7 @@ tests = do
                   Nothing
                   (Just $ DollarAmount (fromRational $ (-123) % 100))
               ]
-        trs <- assertRight $ brokerageHistoryToLedger entries
+        let trs = brokerageHistoryToLedger entries
         trs
           `shouldBe` [transactionsQQ|
                        2020/12/31 * Withholding Tax
