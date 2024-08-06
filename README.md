@@ -1,7 +1,8 @@
 # findata-transcoder
 
-This tool that parses and transforms CSV and other text financial statements
-into a [ledger-like](https://www.ledger-cli.org/) file.
+Findata Transcoder is a CLI tool that parses and transcodes CSV and other
+text-based financial statements into a
+[ledger-like](https://www.ledger-cli.org/) format.
 
 I use it in my automation system that downloads financial statements and puts
 their data into one big ledger of my personal finances. There are other tools
