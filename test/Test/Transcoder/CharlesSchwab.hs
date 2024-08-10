@@ -29,7 +29,7 @@ tests = do
 
             2022/09/30 Wire Sent
               * Assets:Liquid:Charles Schwab:Brokerage   USD -10818.38
-              ! ToDo
+              ! Todo
 
             2022/10/28 * Credit Interest
               Assets:Liquid:Charles Schwab:Brokerage     USD      0.07

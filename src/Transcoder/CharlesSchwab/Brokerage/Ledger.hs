@@ -135,7 +135,7 @@ wireSentToLedgerTransaction rec = do
           usdAccount
           (toAmount $ Cash usd amount)
           NoComment
-      , makePosting Pending "ToDo" Nothing NoComment
+      , makePosting Pending "Todo" Nothing NoComment
       ]
 
 saleToLedgerTransaction :: BrokerageHistoryCsvRecord -> Maybe Transaction
