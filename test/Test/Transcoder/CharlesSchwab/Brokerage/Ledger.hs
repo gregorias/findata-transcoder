@@ -50,7 +50,7 @@ tests = do
         brokerageHistoryToLedger [entry]
           `shouldBe` [transactionsQQ|
                   2020/12/31 * GOOG Vesting
-                    Equity:Charles Schwab:Unvested GOOG  -5 GOOG
+                    ! Equity:Charles Schwab:Unvested GOOG  -5 GOOG ; TODO: Check how much of this is coming from dividends.
                     Assets:Investments:Charles Schwab:GOOG  5 GOOG|]
 
       it "transforms an interest entry" $ do
@@ -84,8 +84,6 @@ tests = do
         brokerageHistoryToLedger [entry]
           `shouldBe` [transactionsQQ|
                   2020/12/31 * GOOG Sale
-                    ! Equity:Charles Schwab:Unvested GOOG     GOOG -8 ; TODO: Check how much of this is coming from dividends.
-                    Assets:Investments:Charles Schwab:GOOG   8 GOOG
                     Assets:Investments:Charles Schwab:GOOG  -8 GOOG @ 1765.2706 USD
                     Assets:Liquid:Charles Schwab:Brokerage  USD 14121.85
                     Expenses:Financial Services             USD     0.31|]
@@ -103,8 +101,6 @@ tests = do
         brokerageHistoryToLedger [entry]
           `shouldBe` [transactionsQQ|
                   2024/06/27 * GOOG Sale
-                    ! Equity:Charles Schwab:Unvested GOOG     GOOG -40.045 ; TODO: Check how much of this is coming from dividends.
-                    Assets:Investments:Charles Schwab:GOOG  GOOG  40.045
                     Assets:Investments:Charles Schwab:GOOG  GOOG -40.045 @ USD 185.2337
                     Assets:Liquid:Charles Schwab:Brokerage  USD 7417.46
                     Expenses:Financial Services             USD    0.22|]

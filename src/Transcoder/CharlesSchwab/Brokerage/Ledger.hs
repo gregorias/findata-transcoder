@@ -117,7 +117,7 @@ vestingToLedgerTransaction (Vesting day symbol q) =
     day
     Cleared
     (symbol <> " Vesting")
-    [ makePosting Nothing unvestedGoog (makeCommodityAmount symbol (-q)) NoComment
+    [ makePosting Pending unvestedGoog (makeCommodityAmount symbol (-q)) (Comment "TODO: Check how much of this is coming from dividends.")
     , makePosting Nothing (vestedStockAccount symbol) (makeCommodityAmount symbol q) NoComment
     ]
 
@@ -151,9 +151,7 @@ saleToLedgerTransaction rec = do
       (bhcrDate rec)
       Cleared
       (symbol <> " Sale")
-      [ makePosting Pending unvestedGoog (makeCommodityAmount symbol (-q)) (Comment "TODO: Check how much of this is coming from dividends.")
-      , makePosting Nothing (vestedStockAccount symbol) (makeCommodityAmount symbol q) NoComment
-      , makePosting
+      [ makePosting
           Nothing
           (vestedStockAccount symbol)
           ( makeCommodityAmount symbol (-q)

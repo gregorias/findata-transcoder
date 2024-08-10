@@ -19,8 +19,6 @@ tests = do
         trs
           `shouldBe` [transactionsQQ|
             2022/09/29 * GOOG Sale
-              ! Equity:Charles Schwab:Unvested GOOG       GOOG -40 ; TODO: Check how much of this is coming from dividends.
-              Assets:Investments:Charles Schwab:GOOG    GOOG  40
               Assets:Investments:Charles Schwab:GOOG    GOOG -40 @ USD 98.5606
               Assets:Liquid:Charles Schwab:Brokerage                     USD 3942.33
               Expenses:Financial Services                             USD 0.09
