@@ -24,8 +24,8 @@ end
 set NEW_VERSION (get-version)
 and echo "New version: $NEW_VERSION."
 git add package.yaml
-and echo "Rebuilding to update findata-transcoder.cabal."
-and cabal build
+and echo "Update findata-transcoder.cabal."
+and hpack
 and git add findata-transcoder.cabal
 and echo "Committing the new version."
 and git commit -m 'chore: release'
