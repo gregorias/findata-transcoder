@@ -148,7 +148,7 @@ tests:
       - vector
       - witch
 
-  doctest:
+  findata-transcoder-doctest:
     main: DocTest.hs
     source-dirs: doctest
     ghc-options:
@@ -157,6 +157,6 @@ tests:
       - -with-rtsopts=-N
       - -main-is DocTest
     dependencies:
-      - doctest
+      - doctest-parallel
       - findata-transcoder
       - relude

@@ -38,13 +38,16 @@ instance ToAmount Cash where
 
 -- | Parses cash strings
 --
--- >>> MP.parseMaybe cashP "CHF 100.00"
+-- >>> import Text.Megaparsec (parseMaybe)
+-- >>> parseMaybe cashP "CHF 100.00"
 -- Just (Cash {_cashCurrency = CHF, _cashAmount = 100})
 --
--- >>> MP.parseMaybe cashP "3.50 USD"
+-- >>> import Text.Megaparsec (parseMaybe)
+-- >>> parseMaybe cashP "3.50 USD"
 -- Just (Cash {_cashCurrency = USD, _cashAmount = 3.5})
 --
--- >>> MP.parseMaybe cashP "19,000 CHF"
+-- >>> import Text.Megaparsec (parseMaybe)
+-- >>> parseMaybe cashP "19,000 CHF"
 -- Just (Cash {_cashCurrency = CHF, _cashAmount = 19000})
 cashP ::
   ( MonadFail m

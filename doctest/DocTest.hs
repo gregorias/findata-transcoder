@@ -2,21 +2,9 @@ module DocTest (
   main,
 ) where
 
-import Relude
-import Test.DocTest (doctest)
+import Relude (IO, (=<<))
+import System.Environment (getArgs)
+import Test.DocTest (mainFromCabal)
 
 main :: IO ()
-main =
-  doctest
-    [ "-XNoImplicitPrelude"
-    , "-XDerivingStrategies"
-    , "-XGeneralizedNewtypeDeriving"
-    , "-XOverloadedStrings"
-    , "-XTemplateHaskell"
-    , "-XTypeApplications"
-    , "-XScopedTypeVariables"
-    , "-isrc"
-    , "src/Data/Cash.hs"
-    , "src/Transcoder/Data/MyDecimal.hs"
-    , "src/Transcoder/Data/Isin.hs"
-    ]
+main = mainFromCabal "findata-transcoder" =<< getArgs

@@ -66,7 +66,8 @@ cashDecimalFormat = flip DecimalFormat (Just TwoDigitDecimalFraction)
 
 -- | A decimal parser that handles separators and fractions.
 --
--- >>> MP.parseMaybe (decimalP defaultDecimalFormat) "-2000.41"
+-- >>> import Text.Megaparsec (parseMaybe)
+-- >>> parseMaybe (decimalP defaultDecimalFormat) "-2000.41"
 -- Just -2000.41
 decimalP ::
   ( MonadFail m
