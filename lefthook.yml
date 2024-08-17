@@ -1,9 +1,14 @@
 pre-commit:
   commands:
+    hpack:
+      glob: "package.yaml"
+      run: >-
+        hpack
+        && git add findata-transcoder.cabal
     hlint:
       tags: lint
       glob: "*.hs"
-      run: stack exec hlint {staged_files} -- -X QuasiQuotes
+      run: cabal exec hlint {staged_files} -- -X QuasiQuotes
     fourmolu:
       tags: style
       glob: "*.hs"
@@ -22,7 +27,7 @@ pre-commit:
       run: prettier -c {staged_files}
     unit-tests:
       tags: test
-      run: "stack test --ghc-options '-Werror'"
+      run: "cabal test --ghc-options '-Werror'"
 commit-msg:
   commands:
     commitlint:

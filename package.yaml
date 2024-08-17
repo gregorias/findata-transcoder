@@ -74,7 +74,7 @@ library:
     - currency-codes
     - either
     - extra
-    - hledger-lib >= 1.19
+    - hledger-lib
     - lens
     - lens-regex-pcre
     - lift-generics

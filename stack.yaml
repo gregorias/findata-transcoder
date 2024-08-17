@@ -1,8 +1,0 @@
-resolver: lts-22.31
-
-# User packages to be built.
-packages:
-  - .
-# Dependency packages to be pulled from upstream that are not in the resolver.
-extra-deps:
-  - currency-codes-3.0.0.1
