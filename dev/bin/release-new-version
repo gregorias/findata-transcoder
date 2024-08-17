@@ -3,7 +3,7 @@
 # This script releases a new version of the project.
 
 function get-version
-    stack run findata-transcoder version
+    cabal run findata-transcoder version
 end
 
 set OLD_VERSION (get-version)
@@ -25,7 +25,7 @@ set NEW_VERSION (get-version)
 and echo "New version: $NEW_VERSION."
 git add package.yaml
 and echo "Rebuilding to update findata-transcoder.cabal."
-and stack build --fast
+and cabal build
 and git add findata-transcoder.cabal
 and echo "Committing the new version."
 and git commit -m 'chore: release'
