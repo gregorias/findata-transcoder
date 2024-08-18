@@ -106,7 +106,7 @@ library
   build-depends:
       Decimal
     , aeson
-    , base >=4.14 && <5
+    , base >=4.18 && <5
     , bytestring
     , casing
     , cassava
@@ -160,7 +160,7 @@ executable findata-transcoder
       TypeOperators
   ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.14 && <5
+      base >=4.18 && <5
     , bytestring
     , findata-transcoder
     , hledger-lib
@@ -194,7 +194,7 @@ test-suite findata-transcoder-doctest
       TypeOperators
   ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N -main-is DocTest
   build-depends:
-      base >=4.14 && <5
+      base >=4.18 && <5
     , doctest-parallel
     , findata-transcoder
     , relude
@@ -275,7 +275,7 @@ test-suite findata-transcoder-test
       Decimal
     , HUnit
     , aeson
-    , base >=4.14 && <5
+    , base >=4.18 && <5
     , bytestring
     , cassava
     , containers
