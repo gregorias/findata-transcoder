@@ -1,7 +1,7 @@
 module Hledger.Data.Extra (
   Comment (..),
-  makeCurrencyAmount,
   makeCommodityAmount,
+  makeCurrencyAmount,
   makePosting,
   makeTransaction,
   setCurrencyPrecision,
@@ -13,6 +13,7 @@ module Hledger.Data.Extra (
 ) where
 
 import Control.Lens (over, set)
+import Data.Decimal.Extra (decimalPrecision)
 import Data.Maybe.Extra (ToMaybeX (..))
 import Data.Time (Day)
 import Hledger (AccountName, Posting, Status, Transaction, missingamt, post, transaction)
@@ -36,11 +37,13 @@ import Hledger.Data.Types (
 import Relude
 import Transcoder.Data.Currency (Currency)
 
+-- | Makes an amount with an arbitrary commodity.
 makeCommodityAmount :: Text -> Quantity -> Amount
 makeCommodityAmount commodity quantity =
   num quantity
     & set aCommodity commodity
     . set (aStyle . asCommoditySpaced) True
+    . set (aStyle . asPrecision) (Precision $ decimalPrecision quantity)
 
 setCurrencyPrecision :: Amount -> Amount
 setCurrencyPrecision =
