@@ -2,8 +2,9 @@ pre-commit:
   commands:
     hpack:
       glob: "package.yaml"
-      run: hpack
-      stage_files: true
+      run: >-
+        hpack
+        && git add findata-transcoder.cabal
     hlint:
       tags: lint
       glob: "*.hs"
@@ -15,7 +16,7 @@ pre-commit:
         fourmolu -o "-XTypeApplications"
         -o "-XImportQualifiedPost"
         -i {staged_files}
-      stage_files: true
+      stage_fixed: true
     markdownlint:
       tags: documentation style
       glob: "*.md"

@@ -13,7 +13,7 @@ homepage:       https://github.com/gregorias/findata-transcoder#readme
 bug-reports:    https://github.com/gregorias/findata-transcoder/issues
 author:         Grzegorz Milka
 maintainer:     grzegorzmilka@gmail.com
-copyright:      2020-2023 Grzegorz Milka
+copyright:      2020-2024 Grzegorz Milka
 license:        AGPL-3
 license-file:   LICENSE
 build-type:     Simple
