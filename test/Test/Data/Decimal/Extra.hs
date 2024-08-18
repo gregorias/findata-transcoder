@@ -9,6 +9,7 @@ import Data.Decimal.Extra (
   DecimalFormat (..),
   DecimalFractionFormat (OptionalUnlimitedDecimalFraction, TwoDigitDecimalFraction),
   decimalP,
+  decimalPrecision,
   defaultDecimalFormat,
   fromUnitsAndCents,
   parseJSON,
@@ -33,6 +34,12 @@ tests = do
     describe "fromUnitsAndCents" $ do
       it "correctly handles negative numbers" $ do
         fromUnitsAndCents (-5) 50 `shouldBe` realFracToDecimal 2 (-5.50 :: Double)
+
+    describe "decimalPrecision" $ do
+      it "correctly calculates the precision of a decimal" $ do
+        decimalPrecision 2.5 `shouldBe` 1
+        decimalPrecision 2 `shouldBe` 0
+        decimalPrecision 2.123 `shouldBe` 3
 
     describe "default decimalP" $ do
       let (defaultDecimalP :: Parsec () Text Decimal) = decimalP defaultDecimalFormat

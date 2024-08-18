@@ -14,12 +14,17 @@ module Data.Decimal.Extra (
 
   -- * Utilities
   fromUnitsAndCents,
+  decimalPrecision,
 ) where
 
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Types qualified as Aeson
 import Data.Char (digitToInt)
-import Data.Decimal (Decimal, DecimalRaw (..), realFracToDecimal)
+import Data.Decimal (
+  Decimal,
+  DecimalRaw (..),
+  realFracToDecimal,
+ )
 import Data.Ratio ((%))
 import Data.Text qualified as T
 import Language.Haskell.TH.Syntax (Lift)
@@ -127,6 +132,10 @@ fromUnitsAndCents units cents = unitsDec `op` centsDec
   unitsDec = realFracToDecimal 0 (units % 1)
   centsDec = realFracToDecimal 2 (cents % 100)
   op = if units >= 0 then (+) else (-)
+
+-- | Returns the number of decimal places in a decimal.
+decimalPrecision :: Decimal -> Word8
+decimalPrecision (Decimal{decimalPlaces = p}) = p
 
 -- | An Aeson-compatible parser for decimals with a format option.
 --
