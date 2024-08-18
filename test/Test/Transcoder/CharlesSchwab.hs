@@ -13,28 +13,65 @@ tests :: Hspec.SpecWith ()
 tests = do
   describe "Transcoder.CharlesSchwab" $ do
     describe "parseBrokerageAccountHistory" $ do
-      it "converts a CSV file to a report" $ do
-        csv <- readFileLBS "test/data/cs-brokerage-account-history.csv"
+      it "converts a CSV file to a report (2024-08)" $ do
+        csv <- readFileLBS "test/data/cs-brokerage-account-history-2024-08.csv"
         trs <- assertRight . CS.parseBrokerageAccountHistory $ csv
         trs
           `shouldBe` [transactionsQQ|
-            2022/09/29 * GOOG Sale
-              Assets:Investments:Charles Schwab:GOOG    GOOG -40 @ USD 98.5606
-              Assets:Liquid:Charles Schwab:Brokerage                     USD 3942.33
-              Expenses:Financial Services                             USD 0.09
+            2024/06/27 * GOOG Sale
+              Assets:Investments:Charles Schwab:GOOG  GOOG -40.045 @ USD 185.2337
+              Assets:Liquid:Charles Schwab:Brokerage  USD 7417.46
+              Expenses:Financial Services             USD    0.22
 
-            2022/09/29 * Withholding Tax
-              Assets:Liquid:Charles Schwab:Brokerage     USD  -1538.33
+            2024/06/27 * GOOG Vesting
+              ! Equity:Charles Schwab:Unvested GOOG     GOOG -40.045 ; TODO: Check how much of this is coming from dividends.
+              Assets:Investments:Charles Schwab:GOOG  GOOG  40.045
+
+            2024/06/27 * GOOG Sale
+              Assets:Investments:Charles Schwab:GOOG  GOOG -21.024 @ USD 185.2337
+              Assets:Liquid:Charles Schwab:Brokerage  USD 3894.24
+              Expenses:Financial Services             USD    0.11
+
+            2024/06/27 * GOOG Vesting
+              ! Equity:Charles Schwab:Unvested GOOG     GOOG -21.024 ; TODO: Check how much of this is coming from dividends.
+              Assets:Investments:Charles Schwab:GOOG  GOOG  21.024
+
+            2024/06/27 * Withholding Tax
+              Assets:Liquid:Charles Schwab:Brokerage  USD -1438.65
               Equity:Charles Schwab:Unvested GOOG Withholding Tax
 
-            2022/09/30 Wire Sent
-              * Assets:Liquid:Charles Schwab:Brokerage   USD -10818.38
+            2024/06/27 * Withholding Tax
+              Assets:Liquid:Charles Schwab:Brokerage  USD -2740.24
+              Equity:Charles Schwab:Unvested GOOG Withholding Tax
+
+            2024/06/27 * Credit Interest
+              Assets:Liquid:Charles Schwab:Brokerage  USD 0.84
+              Income:Google
+
+            2024/06/28 Wire Sent
+              * Assets:Liquid:Charles Schwab:Brokerage  USD -14139.28
               ! Todo
 
-            2022/10/28 * Credit Interest
-              Assets:Liquid:Charles Schwab:Brokerage     USD      0.07
-              Income:Google|]
+            2024/07/29 * GOOG Sale
+              Assets:Investments:Charles Schwab:GOOG  GOOG  -22.025 @ USD 168.1593
+              Assets:Liquid:Charles Schwab:Brokerage   USD  3703.61
+              Expenses:Financial Services              USD     0.10
 
+            2024/07/29 * GOOG Vesting
+              ! Equity:Charles Schwab:Unvested GOOG  GOOG   -22.025 ; TODO: Check how much of this is coming from dividends.
+              Assets:Investments:Charles Schwab:GOOG  GOOG   22.025
+
+            2024/07/29 * Withholding Tax
+              Assets:Liquid:Charles Schwab:Brokerage  USD -1453.63
+              Equity:Charles Schwab:Unvested GOOG Withholding Tax
+
+            2024/07/30 * Credit Interest
+              Assets:Liquid:Charles Schwab:Brokerage  USD  0.20
+              Income:Google
+
+            2024/07/31 Wire Sent
+              * Assets:Liquid:Charles Schwab:Brokerage  USD -2250.18
+              ! Todo|]
     describe "parseEacAccountHistory" $ do
       it "converts a JSON statement to a report" $ do
         json <- BS.readFile "test/data/cs-eac-account-history.json"
