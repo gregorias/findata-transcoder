@@ -2,7 +2,7 @@
 #
 # This script releases a new version of the project.
 
-function get-version
+function get-version --description "Gets the current version of the project from the cabal file."
     cabal run findata-transcoder version
 end
 
@@ -21,12 +21,13 @@ switch $confirm
         echo "Aborting due to lack of confirmation (user input was $confirm)."
         exit 0
 end
-set NEW_VERSION (get-version)
-and echo "New version: $NEW_VERSION."
+
 git add package.yaml
 and echo "Update findata-transcoder.cabal."
 and hpack
 and git add findata-transcoder.cabal
+and set NEW_VERSION (get-version)
+and echo "New version: $NEW_VERSION."
 and echo "Committing the new version."
 and git commit -m 'chore: release'
 and git push
