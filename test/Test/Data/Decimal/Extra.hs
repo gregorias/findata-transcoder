@@ -1,5 +1,3 @@
-{-# LANGUAGE ExtendedDefaultRules #-}
-
 module Test.Data.Decimal.Extra (tests) where
 
 import Data.Aeson qualified as Aeson
@@ -14,7 +12,6 @@ import Data.Decimal.Extra (
   fromUnitsAndCents,
   parseJSON,
  )
-import Data.Ratio ((%))
 import Data.Text qualified as T
 import Relude
 import Test.HUnit.Extra (assertLeft, textShouldContain)
@@ -45,38 +42,38 @@ tests = do
       let (defaultDecimalP :: Parsec () Text Decimal) = decimalP defaultDecimalFormat
       it "parses a negative number" $ do
         parseMaybe defaultDecimalP "-123.321"
-          `shouldBe` Just (fromRational $ -123 - (321 % 1000))
+          `shouldBe` Just (-123.321)
       it "parses a positive number" $ do
         parseMaybe defaultDecimalP "123.321"
-          `shouldBe` Just (fromRational $ 123 + (321 % 1000))
+          `shouldBe` Just 123.321
       it "parses a unit" $ do
         parseMaybe defaultDecimalP "1"
-          `shouldBe` Just (fromRational 1)
+          `shouldBe` Just 1
       it "parses a fraction" $ do
         parseMaybe defaultDecimalP "0.01"
-          `shouldBe` Just (fromRational $ 1 % 100)
+          `shouldBe` Just 0.01
 
     describe "various decimalP" $ do
       it "parses a number with commas" $ do
-        parseMaybe (decimalP (DecimalFormat (ChunkSep ',') Nothing)) "2,000,000"
-          `shouldBe` Just (fromRational 2000000)
+        parseMaybe @Void (decimalP (DecimalFormat (ChunkSep ',') Nothing)) ("2,000,000" :: Text)
+          `shouldBe` Just 2000000
 
       it "parses a number with commas" $ do
-        parseMaybe (decimalP (DecimalFormat (ChunkSep ',') (Just OptionalUnlimitedDecimalFraction))) "2,000,000"
-          `shouldBe` Just (fromRational 2000000)
+        parseMaybe @Void (decimalP (DecimalFormat (ChunkSep ',') (Just OptionalUnlimitedDecimalFraction))) ("2,000,000" :: Text)
+          `shouldBe` Just 2000000
 
       it "parses only two digits when TwoDigit format is set" $ do
-        parseMaybe
+        parseMaybe @Void
           ( decimalP (DecimalFormat NoChunkSep (Just TwoDigitDecimalFraction))
               <* string "123"
           )
-          "2.00123"
-          `shouldBe` Just (fromRational 2)
+          ("2.00123" :: Text)
+          `shouldBe` Just 2
 
     describe "parseJSON" $ do
       it "parses a number with commas" $ do
         Aeson.decode @DecimalWithCommas "\"2,000,000\""
-          `shouldBe` Just (DecimalWithCommas (fromRational 2000000))
+          `shouldBe` Just (DecimalWithCommas 2000000)
 
       it "gives an understandable message when parsing fails" $ do
         let eitherDecimal = Aeson.eitherDecode @DecimalWithCommas "\"asdfasdf\""
