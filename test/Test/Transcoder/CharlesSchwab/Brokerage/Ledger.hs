@@ -3,8 +3,10 @@ module Test.Transcoder.CharlesSchwab.Brokerage.Ledger (
 ) where
 
 import Data.Time (fromGregorian)
+import Hledger.Extra (showTransaction)
 import Hledger.Read.TestUtils (transactionsQQ)
 import Relude
+import Test.HUnit.Extra (assertHead)
 import Test.Hspec (SpecWith, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe)
 import Transcoder.CharlesSchwab.Brokerage.Csv (
@@ -120,3 +122,22 @@ tests = do
                        2020/12/31 * Withholding Tax
                          Assets:Liquid:Charles Schwab:Brokerage  -1.23 USD
                          Equity:Charles Schwab:Unvested GOOG Withholding Tax|]
+
+      describe "supports fractional GOOG printing" $ do
+        it "in sell entries" $ do
+          let entry =
+                BrokerageHistoryCsvRecord
+                  (fromGregorian 2024 06 27)
+                  "Sell"
+                  "GOOG"
+                  "ALPHABET INC. CLASS C"
+                  (Just 40.045)
+                  (Just $ DollarAmount 185.2337)
+                  (Just $ DollarAmount 0.22)
+                  (Just $ DollarAmount 7417.46)
+          tr <- assertHead $ brokerageHistoryToLedger [entry]
+          showTransaction tr
+            `shouldBe` "2024-06-27 * GOOG Sale\n\
+                       \    Assets:Investments:Charles Schwab:GOOG    GOOG -40.045 @ USD 185.2337\n\
+                       \    Assets:Liquid:Charles Schwab:Brokerage                    USD 7417.46\n\
+                       \    Expenses:Financial Services                                  USD 0.22\n"

@@ -4,6 +4,7 @@ module Test.HUnit.Extra (
   assertLeft,
   assertRight,
   assertRightOrFailPrint,
+  assertHead,
   textShouldContain,
 ) where
 
@@ -33,6 +34,11 @@ assertRight (Right r) = return r
 assertRightOrFailPrint :: Either Text r -> IO r
 assertRightOrFailPrint (Left err) = assertFailure . toString $ "Expected Right, got an error:\n" <> err
 assertRightOrFailPrint (Right r) = return r
+
+-- | Asserts that the list is not empty.
+assertHead :: [a] -> IO a
+assertHead [] = assertFailure "Expected a non-empty list, got an empty list"
+assertHead (x : _) = return x
 
 -- | Asserts that the given text contains the given text.
 textShouldContain :: Text -> Text -> Assertion
