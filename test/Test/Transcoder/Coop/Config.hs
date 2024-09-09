@@ -28,10 +28,7 @@ tests = do
           (\e -> assertFailure $ "Could not decode the config. " <> toString e)
           return
           eitherConfig
-      getDebtors rules "Bio Butter 200g"
-        `shouldBe` [ "Assets:Debts:John Doe"
-                   , "Assets:Debts:Mary Sue"
-                   ]
+      getDebtors rules "Bio Butter 200g" `shouldBe` ["Assets:Debts:John Doe", "Assets:Debts:Mary Sue"]
 
     it "Parses the config and does not apply the rules" $ do
       let json =
@@ -48,5 +45,4 @@ tests = do
           (\e -> assertFailure $ "Could not decode the config. " <> toString e)
           return
           eitherConfig
-      getDebtors rules "Margarine 200g"
-        `shouldBe` []
+      getDebtors rules "Margarine 200g" `shouldBe` []
