@@ -39,7 +39,20 @@ import Transcoder.Data.Currency (chf)
 import Transcoder.Wallet (bcgeAccount, bcgeCCAccount, expenses, (<:>))
 import Transcoder.Wallet qualified as Wallet
 
-paymentMethodToAccount :: [PaymentCard] -> PaymentMethod -> Text
+-- | Converts a Coop receipt in text to a Ledger transaction.
+receiptToLedger :: Config -> Text -> Either Text Transaction
+receiptToLedger config receiptText = do
+  receipt <- parsePretty receiptP "a Coop receipt" receiptText
+  return $ receiptToTransaction config receipt
+
+-- | Assigns a ledger account to a payment method.
+paymentMethodToAccount ::
+  -- | My payment cards with their associated ledger accounts.
+  [PaymentCard] ->
+  -- | The payment method used in a particular transaction.
+  PaymentMethod ->
+  -- | The ledger account to which the payment should be posted.
+  AccountName
 paymentMethodToAccount _ TWINT = bcgeAccount
 paymentMethodToAccount
   cards
@@ -53,17 +66,17 @@ entryNameToExpenseCategory :: Text -> Text
 entryNameToExpenseCategory entry =
   fromMaybe
     "Groceries"
-    ( listToMaybe (mapMaybe (\(rgx, cat) -> if has rgx entry then Just cat else Nothing) itemToExpenseCategoryPairs)
-    )
+    (listToMaybe (mapMaybe (\(rgx, cat) -> if has rgx entry then Just cat else Nothing) itemToExpenseCategoryPairs))
  where
   household = "Household"
-  coffee = "Groceries" <:> "Coffee"
-  readyMeals = "Groceries" <:> "Ready Meals"
-  alcohol = "Groceries" <:> "Alcohol"
+  groceries = "Groceries"
+  coffee = groceries <:> "Coffee"
+  readyMeals = groceries <:> "Ready Meals"
+  alcohol = groceries <:> "Alcohol"
   health = "Gesundheit"
   itemToExpenseCategoryPairs =
-    [ ([regex|Stimorol|], "Groceries:Chewing Gum")
-    , ([regex|V6|], "Groceries:Chewing Gum")
+    [ ([regex|Stimorol|], groceries <:> "Chewing Gum")
+    , ([regex|V6|], groceries <:> "Chewing Gum")
     , ([regex|Acqua Panna|], coffee)
     , ([regex|Naturaplan Espresso Havelaar Bohnen|], coffee)
     , ([regex|Emmi Caffè Latte|], coffee <:> "Latte")
@@ -158,8 +171,3 @@ receiptToTransaction config (Receipt day entries rabatt _total payments) =
       "Expenses:Other"
       (HDE.makeCurrencyAmount chf rabattVal)
   rabattPosting = rabattToPosting <$> maybeToList rabatt
-
-receiptToLedger :: Config -> Text -> Either Text Transaction
-receiptToLedger config receiptText = do
-  receipt <- parsePretty receiptP "a Coop receipt" receiptText
-  return $ receiptToTransaction config receipt
