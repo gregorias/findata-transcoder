@@ -35,20 +35,24 @@ tests = do
               [transactionQQ|
                   2021/04/09 * Coop
                     ! Assets:Liquid:BCGE  -6.10 CHF
-                    Expenses:Groceries  4.50 CHF
-                    Expenses:Groceries:Chewing Gum  1.60 CHF|]
+                    Expenses:Groceries  4.50 CHF ; Karma Sweet Potato Fries TK 450g
+                    Expenses:Groceries:Chewing Gum  1.60 CHF ; Stimorol Peppermint 14g|]
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
-      it "correctly assigns to categories" $ do
+      it "correctly assigns to sorted categories" $ do
         coop <- decodeUtf8 <$> BS.readFile "test/data/coop-cat.txt"
         let expectedTr =
               [transactionQQ|
                 2021/04/09 * Coop
-                  ! Assets:Liquid:BCGE  -0.17 CHF
-                  Expenses:Gesundheit             0.02 CHF
-                  Expenses:Groceries:Ready Meals  0.03 CHF
-                  Expenses:Household              0.11 CHF
-                  Expenses:Groceries:Chewing Gum  0.01 CHF|]
+                  ! Assets:Liquid:BCGE  -0.07 CHF
+                  Expenses:Gesundheit             0.01 CHF ; Listerine Cool Mint milder Geschmack 500
+                  Expenses:Gesundheit             0.01 CHF ; Nivea Sun Protect&Dry Touch LSF50 200ML
+                  Expenses:Groceries:Chewing Gum  0.01 CHF ; Stimorol Peppermint 14g
+                  Expenses:Groceries:Ready Meals  0.01 CHF ; Findus Egli Knusperli MSC TK 230g
+                  Expenses:Groceries:Ready Meals  0.01 CHF ; ZENBU Nigiri & Maki 218G
+                  Expenses:Groceries:Ready Meals  0.01 CHF ; ZENBU Salmon Poké 270G
+                  Expenses:Household              0.01 CHF ; Brita Kartusche Maxtra+ 3St
+                |]
 
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
@@ -57,10 +61,14 @@ tests = do
         let expectedTr =
               [transactionQQ|
                 2021/04/09 * Coop
-                  ! Assets:Liquid:BCGE  -44.35 CHF
-                  Expenses:Groceries     37.35 CHF
-                  Expenses:Household      9.40 CHF
-                  Expenses:Other         -2.40 CHF|]
+                  ! Assets:Liquid:BCGE  -15.35 CHF
+                  Expenses:Groceries      2.95 CHF ; Lindt Excellence 90% Cacao 100G
+                  Expenses:Groceries      2.95 CHF ; Lindt Excellence 90% Cacao 100G
+                  Expenses:Groceries      2.95 CHF ; Lindt Excellence 90% Cacao 100G
+                  Expenses:Groceries      2.95 CHF ; Lindt Excellence 90% Cacao 100G
+                  Expenses:Household      5.95 CHF ; Dettol Desinfektionstücher 60Stk.
+                  Expenses:Other         -2.40 CHF
+                |]
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
       it "handles a correction" $ do
@@ -69,7 +77,13 @@ tests = do
               [transactionQQ|
                 2023/07/28 * Coop
                   ! Assets:Liquid:BCGE CC  -14.00 CHF
-                  Expenses:Groceries        14.00 CHF|]
+                  Expenses:Groceries         4.25 CHF ; Betty Bossi Wrap Chicken Pesto 210G 1.0
+                  Expenses:Groceries         2.30 CHF ; Max Havelaar Bananen offen PLU 100
+                  Expenses:Groceries        14.95 CHF ; Naturaplan Bio Sal-mon Poké Bowl 320G
+                  Expenses:Groceries       -14.95 CHF ; Naturaplan Bio Sal-mon Poké Bowl 320G
+                  Expenses:Groceries         7.45 CHF ; Naturaplan Bio Sal-mon Poké Bowl 320G 1.0
+                |]
+
         tr <- assertRight $ Coop.receiptToLedger Coop.emptyConfig coop
         tr `shouldBe` expectedTr
 
@@ -79,7 +93,8 @@ tests = do
               [transactionQQ|
                 2021/04/09 * Coop
                   ! Assets:Liquid:BCGE           -9.90 CHF
-                  Expenses:Groceries             11.90 CHF
+                  Expenses:Groceries              5.95 CHF ; Rana Girasoli Spargel 250G
+                  Expenses:Groceries              5.95 CHF ; Rana Girasoli Spargel 250G
                   Expenses:Other                 -2.00 CHF|]
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
@@ -89,7 +104,8 @@ tests = do
               [transactionQQ|
                   2021/04/09 * Coop
                     ! Assets:Liquid:BCGE CC        -14.95 CHF
-                    Expenses:Groceries:Ready Meals  14.95 CHF|]
+                    Expenses:Groceries:Ready Meals  14.95 CHF ; ZENBU Nigiri & Maki 218G
+              |]
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
       it "correctly handles multiple payment methods with supercash" $ do
@@ -99,7 +115,8 @@ tests = do
                   2021/04/09 * Coop
                     Expenses:Other                -7.00 CHF
                     ! Assets:Liquid:BCGE CC         -7.95 CHF
-                    Expenses:Groceries:Ready Meals  14.95 CHF|]
+                    Expenses:Groceries:Ready Meals  14.95 CHF ; ZENBU Nigiri & Maki 218G
+              |]
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
       it "correctly handles multiple payment methods with super points" $ do
@@ -109,7 +126,8 @@ tests = do
                   2022/04/16 * Coop
                     Expenses:Other                -0.50 CHF
                     ! Assets:Liquid:BCGE CC         -1.00 CHF
-                    Expenses:Groceries:Chewing Gum  1.50 CHF|]
+                    Expenses:Groceries:Chewing Gum  1.50 CHF ; Stimorol Peppermint 14g
+                |]
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
       it "correctly applies debtor postings" $ do
@@ -127,8 +145,10 @@ tests = do
               [transactionQQ|
                   2021/04/09 * Coop
                     ! Assets:Liquid:BCGE CC  -4.40 CHF
-                    Expenses:Groceries  2.90 CHF
-                    Expenses:Groceries:Chewing Gum  0.75 CHF
+                    Expenses:Groceries  1.10 CHF ; Bio Landbrötli 90G
+                    Expenses:Groceries  0.00 CHF ; Naturaplan Bio Mandeln ganz 200G
+                    Expenses:Groceries  1.80 CHF ; Naturaplan Bio Vollmilch UHT 1lt.
+                    Expenses:Groceries:Chewing Gum  0.75 CHF ; Stimorol Peppermint 14g
                     ! Assets:Debts:John Doe           0.75 CHF|]
         Coop.receiptToLedger config coop `shouldBe` Right expectedTr
 
@@ -144,5 +164,5 @@ tests = do
               [transactionQQ|
                   2022/12/08 * Coop
                     ! Assets:Liquid:Foo  -3.75 CHF
-                    Expenses:Groceries  3.75 CHF|]
+                    Expenses:Groceries  3.75 CHF ; Die Butter Mödeli 250G|]
         Coop.receiptToLedger config coop `shouldBe` Right expectedTr

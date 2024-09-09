@@ -20,12 +20,13 @@ import Hledger (
   transaction,
  )
 import Hledger qualified as Ledger
+import Hledger.Data.Extra (makePosting)
 import Hledger.Data.Extra qualified as HDE
 import Hledger.Data.Lens (pStatus, tDescription, tStatus)
 import Relude
 import Relude.Extra (groupBy)
 import Text.Megaparsec.Extra (parsePretty)
-import Transcoder.Coop.Config (Config (..), PaymentCard, assignAccount, getDebtors)
+import Transcoder.Coop.Config (Config (..), PaymentCard, SharedExpenseRules, assignAccount, getDebtors)
 import Transcoder.Coop.Receipt (
   CreditCardPaymentMethod (CreditCardPaymentMethod),
   Entry (..),
@@ -126,10 +127,12 @@ paymentToPosting cards Payment{paymentMethod = method, paymentTotal = total} =
   postingStatus TWINT = Pending
   postingStatus (CreditCard _) = Pending
 
+type EntryName = Text
+
 -- | Splits a single receipt entry into an expense category and optional debtor accounts.
-entryToPostings :: Config -> Entry -> ((AccountName, Decimal), [(AccountName, Decimal)])
-entryToPostings (Config{shared = rules}) (Entry{entryName = name, entryTotal = total}) =
-  ((expenseCategory, mainAlloc), zip debtors debtAllocs)
+entryToPostings :: SharedExpenseRules -> Entry -> ((AccountName, Decimal, EntryName), [(AccountName, Decimal)])
+entryToPostings rules (Entry{entryName = name, entryTotal = total}) =
+  ((expenseCategory, mainAlloc, name), zip debtors debtAllocs)
  where
   expenseCategory = expenses <:> entryNameToExpenseCategory name
   debtors = getDebtors rules name
@@ -142,21 +145,24 @@ receiptToTransaction config (Receipt day entries rabatt _total payments) =
     & L.set tDescription "Coop"
     . L.set tStatus Cleared
  where
-  postings = toList paymentPostings <> catItems <> debtItems <> rabattPosting
+  postings = toList paymentPostings <> categoryItems <> debtItems <> rabattPosting
   paymentPostings = paymentToPosting (paymentCards config) <$> payments
-  (myExpenses :: [(AccountName, Decimal)], debtors :: [(AccountName, Decimal)]) =
-    map (entryToPostings config) entries & unzip & fmap concat
-  catToTotals :: HashMap Text (NonEmpty Decimal) = snd <<$>> groupBy fst myExpenses
+  (myExpenses :: [(AccountName, Decimal, EntryName)], debtors :: [(AccountName, Decimal)]) =
+    map (entryToPostings (shared config)) entries & unzip & fmap concat
   debtToTotals :: HashMap Text (NonEmpty Decimal) = snd <<$>> groupBy fst debtors
-  [catToTotal, debtToTotal] = fmap sum <$> [catToTotals, debtToTotals]
-  catItems =
-    map
-      ( \(cat, total') ->
-          Ledger.post
-            cat
-            (HDE.makeCurrencyAmount chf total')
+  debtToTotal = sum <$> debtToTotals
+  sortedExpenses =
+    sortBy
+      ( \(catLeft, _, entryLeft) (catRight, _, entryRight) ->
+          compare (catLeft, entryLeft) (catRight, entryRight)
       )
-      (HashMap.toList catToTotal)
+      myExpenses
+  categoryItems =
+    map
+      ( \(expenseCategory, amount, entryName) ->
+          makePosting Nothing expenseCategory (HDE.makeCurrencyAmount chf amount) (HDE.Comment entryName)
+      )
+      sortedExpenses
   debtItems =
     map
       ( \(cat, total') ->

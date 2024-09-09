@@ -45,16 +45,6 @@ Artikel Menge Preis Aktion Total Zusatz
 
 Dettol Desinfektionstücher 60Stk. 1 5.95 5.95
 
-BEYOND MEAT Burger 2x113G 1 7.50 7.50 0
-
-Scotch-B. Schwamm Synth. Delicate 3ST 1 3.45 3.45
-
-Findus Gemüse-Mix Royal TK 600g 1 7.60 7.60 0
-
-Findus Gemüse-Mix Asia TK 600g 1 7.60 7.60 0
-
-Äpfel Gala I offen 0.863 2.85 2.85 0
-
 Lindt Excellence 90% Cacao 100G 1 2.95 2.95 A0
 
 Lindt Excellence 90% Cacao 100G 1 2.95 2.95 A0
@@ -67,9 +57,9 @@ Rabatt Lindt -2.40
 
 Rabatt Tr.früchte/Nussk vp, Tr.früchte o -0.00
 
-Total CHF 44.35
+Total CHF 15.35
 
-TWINT 44.35
+TWINT 15.35
 
 COOP GENOSSENSCHAFT, CHE-116.311.185 MWST
 
