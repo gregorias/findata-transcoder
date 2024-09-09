@@ -13,8 +13,7 @@ tests = do
   describe "Transcoder.Coop.Receipt" $ do
     describe "entryLineP" $ do
       it "parses a correction entry line" $ do
-        let eitherEntry = MP.parsePretty Coop.entryLineP "" "Naturaplan Bio Sal-mon Poké Bowl 320G -1.0 14.95 -14.95 0"
-        entry <- assertRight eitherEntry
+        entry <- assertRight $ MP.parsePretty Coop.entryLineP "" "Naturaplan Bio Sal-mon Poké Bowl 320G -1.0 14.95 -14.95 0"
         entry
           `shouldBe` Coop.Entry
             { entryName = "Naturaplan Bio Sal-mon Poké Bowl 320G"

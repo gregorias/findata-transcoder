@@ -1,13 +1,13 @@
 -- | A module for representing and parsing a Coop receipt.
 module Transcoder.Coop.Receipt (
   Receipt (..),
+  receiptP,
   Entry (..),
+  entryLineP,
   Payment (..),
   PaymentMethod (..),
   CreditCardPaymentMethod (..),
   Rabatt (..),
-  entryLineP,
-  receiptP,
 ) where
 
 import Control.Lens ((^?))
@@ -41,6 +41,17 @@ data Receipt = Receipt
   , receiptTotal :: !Decimal
   , receiptPayments :: !(NonEmpty Payment)
   }
+
+receiptP :: Parser Receipt
+receiptP = do
+  (_, day) <- manyTill_ anyLineP (dayP "%d.%m.%y" <* anyLineP)
+  void $ manyTill_ anyLineP headerLineP
+  (maybeEntries, (maybeRabatt, total)) <-
+    manyTill_
+      ((newline >> return Nothing) <|> (string "0\n" >> return Nothing) <|> (Just <$> entryLineP))
+      maybeRabattAndTotalP
+  void $ many newline
+  Receipt day (catMaybes maybeEntries) maybeRabatt total <$> some1 (paymentP <* many newline)
 
 newtype Rabatt = Rabatt Decimal
 
@@ -151,14 +162,3 @@ maybeRabattAndTotalP = do
   maybeRabatt <- viaNonEmpty fold1 <$> many (rabattLineP <* many newline)
   total <- totalLineP
   return (maybeRabatt, total)
-
-receiptP :: Parser Receipt
-receiptP = do
-  (_, day) <- manyTill_ anyLineP (dayP "%d.%m.%y" <* anyLineP)
-  void $ manyTill_ anyLineP headerLineP
-  (maybeEntries, (maybeRabatt, total)) <-
-    manyTill_
-      ((newline >> return Nothing) <|> (string "0\n" >> return Nothing) <|> (Just <$> entryLineP))
-      maybeRabattAndTotalP
-  void $ many newline
-  Receipt day (catMaybes maybeEntries) maybeRabatt total <$> some1 (paymentP <* many newline)
