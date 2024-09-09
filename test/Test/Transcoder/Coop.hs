@@ -29,7 +29,7 @@ tests :: Hspec.SpecWith ()
 tests = do
   describe "Transcoder.Coop" $ do
     describe "receiptToLedger Coop.emptyConfig" $ do
-      it "convertsToATransaction" $ do
+      it "converts a receipt to a transaction" $ do
         coop <- decodeUtf8 <$> BS.readFile "test/data/coop.txt"
         let expectedTr =
               [transactionQQ|
@@ -39,7 +39,7 @@ tests = do
                     Expenses:Groceries:Chewing Gum  1.60 CHF|]
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
-      it "correctlyAssignsCategories" $ do
+      it "correctly assigns to categories" $ do
         coop <- decodeUtf8 <$> BS.readFile "test/data/coop-cat.txt"
         let expectedTr =
               [transactionQQ|
@@ -52,7 +52,7 @@ tests = do
 
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
-      it "correctlyHandlesARabatt" $ do
+      it "correctly handles a rabatt" $ do
         coop <- decodeUtf8 <$> BS.readFile "test/data/coop-rabatt.txt"
         let expectedTr =
               [transactionQQ|
@@ -73,7 +73,7 @@ tests = do
         tr <- assertRight $ Coop.receiptToLedger Coop.emptyConfig coop
         tr `shouldBe` expectedTr
 
-      it "correctlyCountsAUnnotatedRabatt" $ do
+      it "correctly counts an unannotated rabatt" $ do
         coop <- decodeUtf8 <$> BS.readFile "test/data/coop-spargel-rabatt.txt"
         let expectedTr =
               [transactionQQ|
@@ -83,7 +83,7 @@ tests = do
                   Expenses:Other                 -2.00 CHF|]
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
-      it "correctlyRecognizesMyCC" $ do
+      it "correctly recognizes my credit card" $ do
         coop <- decodeUtf8 <$> BS.readFile "test/data/coop-card.txt"
         let expectedTr =
               [transactionQQ|
