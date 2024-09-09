@@ -1,12 +1,21 @@
--- | Parses a config file for parsing Coop receipts.
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "Functor law" #-}
+
+-- | Configuration for parsing Coop receipts.
 module Transcoder.Coop.Config (
-  SharedExpenseRules,
-  PaymentCard,
-  assignAccount,
+  -- * Configuration
   Config (..),
   emptyConfig,
   decodeConfig,
+
+  -- * Shared expense rules
+  SharedExpenseRules,
   getDebtors,
+
+  -- * Payment cards
+  PaymentCard,
+  assignAccount,
 ) where
 
 import Control.Lens (over, _Left)
@@ -19,6 +28,27 @@ import Safe (headMay)
 import Text.Regex.TDFA qualified as Regex
 import Text.Regex.TDFA.Text qualified as Regex
 import Transcoder.Wallet (debtAssets, (<:>))
+
+-- | Configuration for processing Coop receipts.
+--
+-- It consists of information on relevant payment cards and rules for sharing expenses.
+data Config = Config
+  { shared :: !SharedExpenseRules
+  , paymentCards :: ![PaymentCard]
+  }
+
+emptyConfig :: Config
+emptyConfig = Config (SharedExpenseRules []) []
+
+instance FromJSON Config where
+  parseJSON = Aeson.withObject "Config" $ \v ->
+    Config
+      <$> (fromMaybe (SharedExpenseRules []) <$> v .:? "shared")
+      <*> (fromMaybe [] <$> v .:? "paymentCards")
+
+-- | Decodes a JSON config.
+decodeConfig :: LByteString -> Either Text Config
+decodeConfig = over _Left (("Could not decode the JSON config.\n" <>) . toText) . Aeson.eitherDecode'
 
 data SharedExpenseRule = SharedExpenseRule
   { _ruleRegex :: !Regex.Regex
@@ -36,7 +66,7 @@ instance FromJSON ParseableRegex where
 
 instance FromJSON SharedExpenseRule where
   parseJSON = Aeson.withObject "SharedExpenseRule" $ \o ->
-    SharedExpenseRule <$> (unParseableRegex <$> o .: "product") <*> o .: "debtors"
+    (SharedExpenseRule . unParseableRegex <$> (o .: "product")) <*> o .: "debtors"
 
 newtype SharedExpenseRules = SharedExpenseRules [SharedExpenseRule]
 
@@ -45,6 +75,20 @@ instance FromJSON SharedExpenseRules where
     Aeson.withArray "SharedExpenseRules"
       $ fmap (SharedExpenseRules . toList)
       . mapM parseJSON
+
+getDebtorsFromRule :: SharedExpenseRule -> Text -> Maybe [AccountName]
+getDebtorsFromRule (SharedExpenseRule regex debtors) productName = do
+  void $ join . rightToMaybe $ Regex.execute regex productName
+  return ((<:>) debtAssets <$> debtors)
+
+-- | Returns debtor account names sharing the expense.
+getDebtors ::
+  SharedExpenseRules ->
+  -- | The product's name.
+  Text ->
+  [AccountName]
+getDebtors (SharedExpenseRules rules) productName =
+  fromMaybe [] $ asum $ flip getDebtorsFromRule productName <$> rules
 
 data PaymentCard = PaymentCard
   { paymentCardLastFourDigits :: !Text
@@ -67,35 +111,3 @@ assignAccount cards obscuredAccountNumber = paymentCardAccount <$> foundCard
   lastFourDigits = T.takeEnd 4 obscuredAccountNumber
   accountMatch = (lastFourDigits ==)
   foundCard = headMay $ filter (accountMatch . paymentCardLastFourDigits) cards
-
-data Config = Config
-  { shared :: !SharedExpenseRules
-  , paymentCards :: ![PaymentCard]
-  }
-
-emptyConfig :: Config
-emptyConfig = Config (SharedExpenseRules []) []
-
-instance FromJSON Config where
-  parseJSON = Aeson.withObject "Config" $ \v ->
-    Config
-      <$> (fromMaybe (SharedExpenseRules []) <$> v .:? "shared")
-      <*> (fromMaybe [] <$> v .:? "paymentCards")
-
-getDebtorsFromRule :: SharedExpenseRule -> Text -> Maybe [AccountName]
-getDebtorsFromRule (SharedExpenseRule regex debtors) productName = do
-  void $ join . rightToMaybe $ Regex.execute regex productName
-  return ((<:>) debtAssets <$> debtors)
-
--- | Returns debtor account names sharing the expense.
-getDebtors ::
-  SharedExpenseRules ->
-  -- | The product's name.
-  Text ->
-  [AccountName]
-getDebtors (SharedExpenseRules rules) productName =
-  fromMaybe [] $ asum $ flip getDebtorsFromRule productName <$> rules
-
--- | Decodes a JSON config.
-decodeConfig :: LByteString -> Either Text Config
-decodeConfig = over _Left (("Could not decode the JSON config.\n" <>) . toText) . Aeson.eitherDecode'
