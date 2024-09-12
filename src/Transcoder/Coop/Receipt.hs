@@ -44,14 +44,21 @@ data Receipt = Receipt
 
 receiptP :: Parser Receipt
 receiptP = do
-  (_, day) <- manyTill_ anyLineP (dayP "%d.%m.%y" <* anyLineP)
-  void $ manyTill_ anyLineP headerLineP
+  day <- ignoreLinesTill dayLineP
+  void $ ignoreLinesTill headerLineP
   (maybeEntries, (maybeRabatt, total)) <-
     manyTill_
       ((newline >> return Nothing) <|> (string "0\n" >> return Nothing) <|> (Just <$> entryLineP))
       maybeRabattAndTotalP
   void $ many newline
   Receipt day (catMaybes maybeEntries) maybeRabatt total <$> some1 (paymentP <* many newline)
+ where
+  ignoreLinesTill :: Parser a -> Parser a
+  ignoreLinesTill p = do
+    (_, a) <- manyTill_ anyLineP p
+    return a
+  dayLineP :: Parser Day
+  dayLineP = dayP "%d.%m.%y" <* anyLineP
 
 newtype Rabatt = Rabatt Decimal
 
