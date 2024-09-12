@@ -7,12 +7,12 @@ module Transcoder.Coop.Receipt (
   Payment (..),
   PaymentMethod (..),
   CreditCardPaymentMethod (..),
-  Rabatt (..),
 ) where
 
 import Control.Lens ((^?))
 import Control.Lens.Regex.Text (regex)
 import Control.Lens.Regex.Text qualified as LR
+import Control.Monad (msum)
 import Data.Decimal (Decimal)
 import Data.Decimal.Extra (
   ChunkSepFormat (..),
@@ -26,7 +26,6 @@ import Data.List.NonEmpty (some1)
 import Data.Time (Day)
 import Data.Time.Extra (dayP)
 import Relude
-import Relude.Extra
 import Text.Megaparsec (Parsec, manyTill, manyTill_, parseMaybe, try)
 import Text.Megaparsec.Char (hspace1, newline, printChar, string)
 import Text.Megaparsec.Char.Extra (anyLineP)
@@ -37,7 +36,6 @@ type Parser = Parsec Void Text
 data Receipt = Receipt
   { receiptDate :: !Day
   , receiptEntries :: ![Entry]
-  , receiptRabatt :: !(Maybe Rabatt)
   , receiptTotal :: !Decimal
   , receiptPayments :: !(NonEmpty Payment)
   }
@@ -46,12 +44,13 @@ receiptP :: Parser Receipt
 receiptP = do
   day <- ignoreLinesTill dayLineP
   void $ ignoreLinesTill headerLineP
-  (maybeEntries, (maybeRabatt, total)) <-
+  (maybeEntries, total) <-
     manyTill_
       ((newline >> return Nothing) <|> (string "0\n" >> return Nothing) <|> (Just <$> entryLineP))
-      maybeRabattAndTotalP
+      totalLineP
   void $ many newline
-  Receipt day (catMaybes maybeEntries) maybeRabatt total <$> some1 (paymentP <* many newline)
+  -- Ignore entries with total 0, because they are not interesting for my accounting.
+  Receipt day (filter (\e -> entryTotal e /= 0) $ catMaybes maybeEntries) total <$> some1 (paymentP <* many newline)
  where
   ignoreLinesTill :: Parser a -> Parser a
   ignoreLinesTill p = do
@@ -60,28 +59,6 @@ receiptP = do
   dayLineP :: Parser Day
   dayLineP = dayP "%d.%m.%y" <* anyLineP
 
-newtype Rabatt = Rabatt Decimal
-
-rabattLineP :: Parser Rabatt
-rabattLineP = try $ do
-  rest :: Text <- anyLineP
-  let maybeRabatt = rest ^? [regex|.* (-\d+\.\d\d)\n|] . LR.groups
-  rabattText <-
-    maybe
-      (fail . toString $ "Could not parse the rabatt line: " <> rest)
-      ( \case
-          [rabattText] -> return rabattText
-          x -> (fail $ "Could not destructure the rabatt line: " <> show x)
-      )
-      maybeRabatt
-  total <- case parseMaybe @Void (decimalP defaultDecimalFormat) rabattText of
-    Nothing -> fail . toString $ "Could not parse the rabatt's total: " <> rabattText
-    Just t -> return t
-  return . Rabatt $ total
-
-instance Semigroup Rabatt where
-  (<>) (Rabatt a) (Rabatt b) = Rabatt (a + b)
-
 -- | A single purchase entry.
 data Entry = Entry
   { entryName :: !Text
@@ -89,22 +66,23 @@ data Entry = Entry
   }
   deriving stock (Eq, Show)
 
-entryLineP :: Parser Entry
-entryLineP = do
-  entryLine <- anyLineP
+parseEntryLineAsDeduction :: Text -> Maybe Entry
+parseEntryLineAsDeduction line = do
+  parsedLine <- line ^? [regex|(.*) (-\d+\.\d\d)\n|] . LR.groups
+  (name, totalText) <- case parsedLine of
+    [deductionName, deductionTotal] -> return (deductionName, deductionTotal)
+    _ -> Nothing
+  total <- parseMaybe @Void (decimalP defaultDecimalFormat) totalText
+  return $ Entry name total
+
+parseEntryLineAsRegular :: Text -> Maybe Entry
+parseEntryLineAsRegular entryLine = do
   (entryName', totalText) <-
-    maybe
-      (fail . toString $ "Could not parse the entry line: " <> entryLine)
-      return
-      ( destructureMatchGroups
-          =<< ( entryLine
-                  ^? [regex|(.*) (-?\d+|-?\d+\.\d+) (\d+\.\d\d)( \d+\.\d\d)? (-?\d+\.\d\d)( \d+)?|]
-                    . LR.groups
-              )
-      )
-  total <- case parseMaybe @Void (decimalP defaultDecimalFormat) totalText of
-    Nothing -> fail . toString $ "Could not parse the entry's total: " <> entryLine
-    Just t -> return t
+    destructureMatchGroups
+      =<< ( entryLine
+              ^? [regex|(.*) (-?\d+|-?\d+\.\d+) (\d+\.\d\d)( \d+\.\d\d)? (-?\d+\.\d\d)( \d+)?|] . LR.groups
+          )
+  total <- parseMaybe @Void (decimalP defaultDecimalFormat) totalText
   return $ Entry entryName' total
  where
   destructureMatchGroups =
@@ -112,6 +90,14 @@ entryLineP = do
       [entryName', _menge, _preAktionTotal, _preis, total] -> Just (entryName', total)
       [entryName', _menge, _preAktionTotal, _preis, total, _zusatz] -> Just (entryName', total)
       _ -> Nothing
+
+entryLineP :: Parser Entry
+entryLineP = try $ do
+  entryLine <- anyLineP
+  maybe
+    (fail . toString $ "Could not parse entry line: " <> entryLine)
+    return
+    (msum ([parseEntryLineAsRegular, parseEntryLineAsDeduction] <*> pure entryLine))
 
 cashP :: Parser Decimal
 cashP = decimalP (DecimalFormat (ChunkSep '\'') (Just TwoDigitDecimalFraction))
@@ -163,9 +149,3 @@ totalLineP :: Parser Decimal
 totalLineP = do
   void $ string "Total CHF "
   decimalP (DecimalFormat (ChunkSep '\'') (Just TwoDigitDecimalFraction))
-
-maybeRabattAndTotalP :: Parser (Maybe Rabatt, Decimal)
-maybeRabattAndTotalP = do
-  maybeRabatt <- viaNonEmpty fold1 <$> many (rabattLineP <* many newline)
-  total <- totalLineP
-  return (maybeRabatt, total)

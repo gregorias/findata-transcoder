@@ -32,7 +32,6 @@ import Transcoder.Coop.Receipt (
   Entry (..),
   Payment (..),
   PaymentMethod (..),
-  Rabatt (..),
   Receipt (..),
   receiptP,
  )
@@ -140,12 +139,12 @@ entryToPostings rules (Entry{entryName = name, entryTotal = total}) =
   (mainAlloc : debtAllocs) = D.normalizeDecimal <$> D.allocate twoDigitTotal (replicate (1 + length debtors) 1)
 
 receiptToTransaction :: Config -> Receipt -> Transaction
-receiptToTransaction config (Receipt day entries rabatt _total payments) =
+receiptToTransaction config (Receipt day entries _total payments) =
   transaction day postings
     & L.set tDescription "Coop"
     . L.set tStatus Cleared
  where
-  postings = toList paymentPostings <> categoryItems <> debtItems <> rabattPosting
+  postings = toList paymentPostings <> categoryItems <> debtItems
   paymentPostings = paymentToPosting (paymentCards config) <$> payments
   (myExpenses :: [(AccountName, Decimal, EntryName)], debtors :: [(AccountName, Decimal)]) =
     map (entryToPostings (shared config)) entries & unzip & fmap concat
@@ -172,8 +171,3 @@ receiptToTransaction config (Receipt day entries rabatt _total payments) =
             & L.set pStatus Pending
       )
       (HashMap.toList debtToTotal)
-  rabattToPosting (Rabatt rabattVal) =
-    Ledger.post
-      "Expenses:Other"
-      (HDE.makeCurrencyAmount chf rabattVal)
-  rabattPosting = rabattToPosting <$> maybeToList rabatt

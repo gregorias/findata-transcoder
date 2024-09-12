@@ -66,8 +66,8 @@ tests = do
                   Expenses:Groceries      2.95 CHF ; Lindt Excellence 90% Cacao 100G
                   Expenses:Groceries      2.95 CHF ; Lindt Excellence 90% Cacao 100G
                   Expenses:Groceries      2.95 CHF ; Lindt Excellence 90% Cacao 100G
+                  Expenses:Groceries     -2.40 CHF ; Rabatt Lindt
                   Expenses:Household      5.95 CHF ; Dettol Desinfektionstücher 60Stk.
-                  Expenses:Other         -2.40 CHF
                 |]
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
@@ -95,7 +95,8 @@ tests = do
                   ! Assets:Liquid:BCGE           -9.90 CHF
                   Expenses:Groceries              5.95 CHF ; Rana Girasoli Spargel 250G
                   Expenses:Groceries              5.95 CHF ; Rana Girasoli Spargel 250G
-                  Expenses:Other                 -2.00 CHF|]
+                  Expenses:Groceries             -2.00 CHF ; Rana Girasoli Spargel 250G
+                |]
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
       it "correctly recognizes my credit card" $ do
@@ -146,7 +147,6 @@ tests = do
                   2021/04/09 * Coop
                     ! Assets:Liquid:BCGE CC  -4.40 CHF
                     Expenses:Groceries  1.10 CHF ; Bio Landbrötli 90G
-                    Expenses:Groceries  0.00 CHF ; Naturaplan Bio Mandeln ganz 200G
                     Expenses:Groceries  1.80 CHF ; Naturaplan Bio Vollmilch UHT 1lt.
                     Expenses:Groceries:Chewing Gum  0.75 CHF ; Stimorol Peppermint 14g
                     ! Assets:Debts:John Doe           0.75 CHF|]
