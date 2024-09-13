@@ -26,7 +26,7 @@ import Data.List.NonEmpty (some1)
 import Data.Time (Day)
 import Data.Time.Extra (dayP)
 import Relude
-import Text.Megaparsec (Parsec, label, manyTill, manyTill_, parseMaybe)
+import Text.Megaparsec (Parsec, label, manyTill, manyTill_, parseMaybe, try)
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char (hspace1, newline, printChar, string)
 import Text.Megaparsec.Char.Extra (anyLineP)
@@ -46,13 +46,12 @@ receiptP :: Parser Receipt
 receiptP = do
   day <- ignoreLinesTill dayLineP
   void $ ignoreLinesTill headerLineP
-  (maybeEntries, total) <-
-    manyTill_
-      ((newline >> return Nothing) <|> (string "0\n" >> return Nothing) <|> (Just <$> entryLineP))
-      totalLineP
-  void $ many newline
+  entries <- many entryP
   -- Ignore entries with total 0, because they are not interesting for my accounting.
-  Receipt day (filter (\e -> entryTotal e /= 0) $ catMaybes maybeEntries) total <$> some1 (paymentP <* many newline)
+  let interestingEntries = filter (\e -> entryTotal e /= 0) entries
+  total <- totalP
+  void $ many newline
+  Receipt day interestingEntries total <$> some1 (paymentP <* many newline)
  where
   ignoreLinesTill :: Parser a -> Parser a
   ignoreLinesTill p = do
@@ -60,6 +59,13 @@ receiptP = do
     return a
   dayLineP :: Parser Day
   dayLineP = dayP "%d.%m.%y" <* anyLineP
+  entryP :: Parser Entry
+  entryP = label "entry lines" . try $ do
+    void $ many (void newline <|> void (string "0\n"))
+    entryLineP
+  totalP = label "total lines (\"Total CHF\" preceded by newlines)" . try $ do
+    void $ many (void newline <|> void (string "0\n"))
+    totalLineP
 
 -- | A single purchase entry.
 data Entry = Entry
@@ -98,6 +104,8 @@ parseEntryLine line = msum $ [parseEntryLineAsRegular, parseEntryLineAsDeduction
 
 entryLineP :: Parser Entry
 entryLineP = (label "entry line" . MP.try) $ do
+  -- The total line looks like an entry line, but is not. Don’t accept it.
+  MP.notFollowedBy (string "Total CHF ")
   offset <- MP.getOffset
   entryLine <- anyLineP
   maybe
