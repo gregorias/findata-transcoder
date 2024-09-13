@@ -26,9 +26,11 @@ import Data.List.NonEmpty (some1)
 import Data.Time (Day)
 import Data.Time.Extra (dayP)
 import Relude
-import Text.Megaparsec (Parsec, manyTill, manyTill_, parseMaybe, try)
+import Text.Megaparsec (Parsec, label, manyTill, manyTill_, parseMaybe)
+import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char (hspace1, newline, printChar, string)
 import Text.Megaparsec.Char.Extra (anyLineP)
+import Text.Megaparsec.Error.Builder qualified as MP
 
 type Parser = Parsec Void Text
 
@@ -91,13 +93,17 @@ parseEntryLineAsRegular entryLine = do
       [entryName', _menge, _preAktionTotal, _preis, total, _zusatz] -> Just (entryName', total)
       _ -> Nothing
 
+parseEntryLine :: Text -> Maybe Entry
+parseEntryLine line = msum $ [parseEntryLineAsRegular, parseEntryLineAsDeduction] <*> pure line
+
 entryLineP :: Parser Entry
-entryLineP = try $ do
+entryLineP = (label "entry line" . MP.try) $ do
+  offset <- MP.getOffset
   entryLine <- anyLineP
   maybe
-    (fail . toString $ "Could not parse entry line: " <> entryLine)
+    (MP.parseError $ MP.err offset (MP.utoks entryLine))
     return
-    (msum ([parseEntryLineAsRegular, parseEntryLineAsDeduction] <*> pure entryLine))
+    (parseEntryLine entryLine)
 
 cashP :: Parser Decimal
 cashP = decimalP (DecimalFormat (ChunkSep '\'') (Just TwoDigitDecimalFraction))
