@@ -71,6 +71,22 @@ tests = do
                 |]
         Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
 
+      it "correctly handles an in-order correction" $ do
+        coop <- decodeUtf8 <$> BS.readFile "test/data/coop-rabatt-outoforder.txt"
+        let expectedTr =
+              [transactionQQ|
+                2024/09/06 * Coop
+                  ! Assets:Liquid:BCGE CC  -51.80 CHF
+                  Expenses:Groceries      12.50 CHF ; CHOPFAB Draft Dose 6x50CL
+                  Expenses:Groceries      13.50 CHF ; CHOPFAB Pale Ale Dose 6x50CL
+                  Expenses:Groceries     -13.50 CHF ; CHOPFAB Pale Ale Dose 6x50CL
+                  Expenses:Groceries      14.50 CHF ; Grimbergen Blonde Dose 4x50CL
+                  Expenses:Groceries      -5.40 CHF ; Rabatt Bier
+                  Expenses:Groceries      21.95 CHF ; Rum Bacardi Carta Blanca 70CL
+                  Expenses:Household       2.85 CHF ; Oecoplan Haushaltpapier d&short 2ROL
+                |]
+        Coop.receiptToLedger Coop.emptyConfig coop `shouldBe` Right expectedTr
+
       it "handles a correction" $ do
         coop <- decodeUtf8 <$> BS.readFile "test/data/coop-banana.txt"
         let expectedTr =
