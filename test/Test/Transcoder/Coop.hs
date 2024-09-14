@@ -153,7 +153,8 @@ tests = do
             [trimming|
                     {
                       "shared": [
-                        {"product": "Stimorol",   "debtors": ["John Doe"]}
+                        {"product": "Stimorol",   "debtors": ["John Doe"]},
+                        {"product": "milch",      "debtors": ["John Doe"]}
                       ]
                     }
                 |]
@@ -162,10 +163,10 @@ tests = do
               [transactionQQ|
                   2021/04/09 * Coop
                     ! Assets:Liquid:BCGE CC  -4.40 CHF
-                    Expenses:Groceries  1.10 CHF ; Bio Landbrötli 90G
-                    Expenses:Groceries  1.80 CHF ; Naturaplan Bio Vollmilch UHT 1lt.
+                    Expenses:Groceries        1.10 CHF ; Bio Landbrötli 90G
+                    Expenses:Groceries        0.90 CHF ; Naturaplan Bio Vollmilch UHT 1lt.
                     Expenses:Groceries:Chewing Gum  0.75 CHF ; Stimorol Peppermint 14g
-                    ! Assets:Debts:John Doe           0.75 CHF|]
+                    ! Assets:Debts:John Doe         1.65 CHF ; Stimorol Peppermint 14g, Naturaplan Bio Vollmilch UHT 1lt.|]
         Coop.receiptToLedger config coop `shouldBe` Right expectedTr
 
       it "correctly assigns account number for a card" $ do

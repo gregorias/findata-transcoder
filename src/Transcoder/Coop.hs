@@ -11,7 +11,9 @@ import Control.Lens qualified as L
 import Control.Lens.Regex.Text (regex)
 import Data.Decimal (Decimal, realFracToDecimal)
 import Data.Decimal qualified as D
+import Data.Foldable1 (foldl1')
 import Data.HashMap.Strict qualified as HashMap
+import Data.Tuple.Extra (fst3)
 import Hledger (
   AccountName,
   Posting,
@@ -129,9 +131,9 @@ paymentToPosting cards Payment{paymentMethod = method, paymentTotal = total} =
 type EntryName = Text
 
 -- | Splits a single receipt entry into an expense category and optional debtor accounts.
-entryToPostings :: SharedExpenseRules -> Entry -> ((AccountName, Decimal, EntryName), [(AccountName, Decimal)])
+entryToPostings :: SharedExpenseRules -> Entry -> ((AccountName, Decimal, EntryName), [(AccountName, Decimal, EntryName)])
 entryToPostings rules (Entry{entryName = name, entryTotal = total}) =
-  ((expenseCategory, mainAlloc, name), zip debtors debtAllocs)
+  ((expenseCategory, mainAlloc, name), zip3 debtors debtAllocs (repeat name))
  where
   expenseCategory = expenses <:> entryNameToExpenseCategory name
   debtors = getDebtors rules name
@@ -146,10 +148,22 @@ receiptToTransaction config (Receipt day entries _total payments) =
  where
   postings = toList paymentPostings <> categoryItems <> debtItems
   paymentPostings = paymentToPosting (paymentCards config) <$> payments
-  (myExpenses :: [(AccountName, Decimal, EntryName)], debtors :: [(AccountName, Decimal)]) =
-    map (entryToPostings (shared config)) entries & unzip & fmap concat
-  debtToTotals :: HashMap Text (NonEmpty Decimal) = snd <<$>> groupBy fst debtors
-  debtToTotal = sum <$> debtToTotals
+  ( myExpenses :: [(AccountName, Decimal, EntryName)]
+    , debtors :: [(AccountName, Decimal, EntryName)]
+    ) =
+      map (entryToPostings (shared config)) entries & unzip & fmap concat
+
+  debtorToItems :: HashMap Text (NonEmpty (Decimal, EntryName))
+  debtorToItems = (\(_, amount, name) -> (amount, name)) <<$>> groupBy fst3 debtors
+
+  debtorToPostingDetails :: HashMap Text (Decimal, Text)
+  debtorToPostingDetails =
+    foldl1'
+      ( \(amount1, comment1) (amount2, comment2) ->
+          (amount1 + amount2, comment1 <> ", " <> comment2)
+      )
+      <$> debtorToItems
+
   sortedExpenses =
     sortBy
       ( \(catLeft, _, entryLeft) (catRight, _, entryRight) ->
@@ -164,10 +178,11 @@ receiptToTransaction config (Receipt day entries _total payments) =
       sortedExpenses
   debtItems =
     map
-      ( \(cat, total') ->
-          Ledger.post
-            cat
-            (HDE.makeCurrencyAmount chf total')
-            & L.set pStatus Pending
+      ( \(debtor, (total, entryList)) ->
+          makePosting
+            Pending
+            debtor
+            (HDE.makeCurrencyAmount chf total)
+            (HDE.Comment entryList)
       )
-      (HashMap.toList debtToTotal)
+      (HashMap.toList debtorToPostingDetails)
