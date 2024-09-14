@@ -3,7 +3,7 @@
 # This script releases a new version of the project.
 
 function get-version --description "Gets the current version of the project from the cabal file."
-    cabal run findata-transcoder version
+    cabal run -v0 findata-transcoder version
     or begin
         echo "Could not get the current version. Aborting."
         exit 1
