@@ -22,15 +22,16 @@ switch $confirm
         exit 0
 end
 
-git add package.yaml
-and echo "Update findata-transcoder.cabal."
+echo "Old version: $OLD_VERSION."
+and git add package.yaml
+and echo "Updating findata-transcoder.cabal…"
 and hpack
 and git add findata-transcoder.cabal
 and set NEW_VERSION (get-version)
 and echo "New version: $NEW_VERSION."
-and echo "Committing the new version."
+and echo "Committing the new version…"
 and git commit -m 'chore: release'
 and git push
-and echo "Tagging the new version."
+and echo "Tagging the new version ($NEW_VERSION)…"
 and git tag v$NEW_VERSION
 and git push origin v$NEW_VERSION
