@@ -36,6 +36,9 @@ default-extensions:
   - MultiWayIf
   - NoImplicitPrelude
   - OverloadedLabels
+  # OverloadedRecordDot enables the "record.field" syntax. Seems like a nice
+  # enabler without downsides (one can just not use it).
+  - OverloadedRecordDot
   - OverloadedStrings
   - QuasiQuotes
   - TypeFamilies

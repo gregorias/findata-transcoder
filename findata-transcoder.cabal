@@ -98,6 +98,7 @@ library
       MultiWayIf
       NoImplicitPrelude
       OverloadedLabels
+      OverloadedRecordDot
       OverloadedStrings
       QuasiQuotes
       TypeFamilies
@@ -154,6 +155,7 @@ executable findata-transcoder
       MultiWayIf
       NoImplicitPrelude
       OverloadedLabels
+      OverloadedRecordDot
       OverloadedStrings
       QuasiQuotes
       TypeFamilies
@@ -188,6 +190,7 @@ test-suite findata-transcoder-doctest
       MultiWayIf
       NoImplicitPrelude
       OverloadedLabels
+      OverloadedRecordDot
       OverloadedStrings
       QuasiQuotes
       TypeFamilies
@@ -266,6 +269,7 @@ test-suite findata-transcoder-test
       MultiWayIf
       NoImplicitPrelude
       OverloadedLabels
+      OverloadedRecordDot
       OverloadedStrings
       QuasiQuotes
       TypeFamilies
