@@ -67,11 +67,12 @@ ghc-options:
 
 library:
   source-dirs: src
+  ghc-options:
+    - -Wunused-packages
   dependencies:
     - aeson
     - Decimal
     - bytestring
-    - casing
     - cassava
     - containers
     - currency-codes
@@ -94,7 +95,6 @@ library:
     - th-lift-instances
     - time
     - time-compat
-    - transformers
     - unordered-containers
     - vector
     - witch
@@ -107,6 +107,7 @@ executables:
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
+      - -Wunused-packages
     dependencies:
       - bytestring
       - findata-transcoder
@@ -125,13 +126,13 @@ tests:
       - -rtsopts
       - -with-rtsopts=-N
       - -main-is Spec
+      - -Wunused-packages
     dependencies:
       - Decimal
       - aeson
       - bytestring
       - cassava
       - containers
-      - extra
       - hledger-lib
       - findata-transcoder
       - hspec
