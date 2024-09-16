@@ -75,11 +75,12 @@ entryNameToExpenseCategory entry =
   coffee = groceries <:> "Coffee"
   readyMeals = groceries <:> "Ready Meals"
   alcohol = groceries <:> "Alcohol"
-  health = "Gesundheit"
+  health = Wallet.health
   itemToExpenseCategoryPairs =
     [ ([regex|Stimorol|], groceries <:> "Chewing Gum")
     , ([regex|V6|], groceries <:> "Chewing Gum")
     , ([regex|Acqua Panna|], coffee)
+    , ([regex|Destillat|], coffee)
     , ([regex|Naturaplan Espresso Havelaar Bohnen|], coffee)
     , ([regex|Emmi Caffè Latte|], coffee <:> "Latte")
     , ([regex|Salmon Poké|], readyMeals)
@@ -98,6 +99,7 @@ entryNameToExpenseCategory entry =
     , ([regex|Schwamm|], household)
     , ([regex|Desinfektionstücher|], household)
     , ([regex|^À Table!|], household)
+    , ([regex|^Ariel|], household)
     , ([regex|^Persil|], household)
     , ([regex|^Flup|], household)
     , ([regex|^Dr.Beckmann|], household)
@@ -111,6 +113,7 @@ entryNameToExpenseCategory entry =
     , ([regex|Tesa|], household)
     , ([regex|CR2032|], household)
     , ([regex|Dübel|], household)
+    , ([regex|Colgate|], health)
     , ([regex|Listerine|], health)
     , ([regex|Nivea|], health)
     , ([regex|Mücken|], household <:> "Mückenschutz")

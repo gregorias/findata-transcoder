@@ -13,6 +13,7 @@ module Transcoder.Wallet (
   debtAssets,
   equity,
   expenses,
+  health,
   expensesOther,
   expensesTransport,
   expensesYtPremium,
@@ -61,6 +62,9 @@ expenses = "Expenses"
 
 financialServices :: AccountName
 financialServices = expenses <:> "Financial Services"
+
+health :: AccountName
+health = "Health"
 
 expensesOther :: AccountName
 expensesOther = expenses <:> "Other"

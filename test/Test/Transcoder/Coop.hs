@@ -45,12 +45,12 @@ tests = do
               [transactionQQ|
                 2021/04/09 * Coop
                   ! Assets:Liquid:BCGE  -0.07 CHF
-                  Expenses:Gesundheit             0.01 CHF ; Listerine Cool Mint milder Geschmack 500
-                  Expenses:Gesundheit             0.01 CHF ; Nivea Sun Protect&Dry Touch LSF50 200ML
                   Expenses:Groceries:Chewing Gum  0.01 CHF ; Stimorol Peppermint 14g
                   Expenses:Groceries:Ready Meals  0.01 CHF ; Findus Egli Knusperli MSC TK 230g
                   Expenses:Groceries:Ready Meals  0.01 CHF ; ZENBU Nigiri & Maki 218G
                   Expenses:Groceries:Ready Meals  0.01 CHF ; ZENBU Salmon Poké 270G
+                  Expenses:Health             0.01 CHF ; Listerine Cool Mint milder Geschmack 500
+                  Expenses:Health             0.01 CHF ; Nivea Sun Protect&Dry Touch LSF50 200ML
                   Expenses:Household              0.01 CHF ; Brita Kartusche Maxtra+ 3St
                 |]
 
