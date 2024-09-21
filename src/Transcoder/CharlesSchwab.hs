@@ -4,6 +4,7 @@ module Transcoder.CharlesSchwab (
   parseEacAccountHistory,
 ) where
 
+import Data.Aeson (Object, eitherDecodeStrict)
 import Data.ByteString.Lazy qualified as LBS
 import Hledger (Transaction)
 import Relude
@@ -20,5 +21,21 @@ parseBrokerageAccountHistory = fmap BLedger.brokerageHistoryToLedger . BCsv.pars
 -- | Parses a JSON history statement from an EAC account.
 parseEacAccountHistory :: ByteString -> Either Text [Transaction]
 parseEacAccountHistory stmt = do
+  -- An assertion that provides a helpful message to the caller if they
+  -- mistakenly provide something like a CSV file.
+  assertJsonObject stmt
   recordSheet <- EacJson.parseHistory stmt
   eacHistoryToLedger (Eac.rsRecords recordSheet)
+ where
+  -- \| Asserts that the given bytestring is a JSON object.
+  assertJsonObject :: ByteString -> Either Text ()
+  assertJsonObject bs =
+    either
+      ( \msg ->
+          Left
+            $ "Could not decode the input as a valid JSON object."
+            <> " EAC account history needs to be in the JSON format.\n"
+            <> toText msg
+      )
+      (const $ Right ())
+      (eitherDecodeStrict bs :: Either String Object)

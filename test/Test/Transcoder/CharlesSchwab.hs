@@ -3,7 +3,7 @@ module Test.Transcoder.CharlesSchwab (tests) where
 import Data.ByteString qualified as BS
 import Hledger.Read.TestUtils (transactionsQQ)
 import Relude
-import Test.HUnit.Extra (assertRight, assertRightOrFailPrint)
+import Test.HUnit.Extra (assertLeft, assertRight, assertRightOrFailPrint, textShouldContain)
 import Test.Hspec (describe, it)
 import Test.Hspec qualified as Hspec
 import Test.Hspec.Expectations.Pretty (shouldBe)
@@ -72,7 +72,16 @@ tests = do
             2024/07/31 Wire Sent
               * Assets:Liquid:Charles Schwab:Brokerage  USD -2250.18
               ! Todo|]
+
     describe "parseEacAccountHistory" $ do
+      it "prints a helpful error message if the input is not a JSON object" $ do
+        let csv = "Date,Description,Amount\n2023-06-28,GOOG Deposit,12.245\n"
+        errorMsg <- assertLeft $ CS.parseEacAccountHistory csv
+        errorMsg
+          `textShouldContain` ( "Could not decode the input as a valid JSON object."
+                                  <> " EAC account history needs to be in the JSON format.\n"
+                              )
+
       it "converts a JSON statement to a report" $ do
         json <- BS.readFile "test/data/cs-eac-account-history.json"
         trs <- assertRightOrFailPrint $ CS.parseEacAccountHistory json
