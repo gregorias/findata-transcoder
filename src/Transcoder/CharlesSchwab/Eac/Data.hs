@@ -9,6 +9,8 @@ module Transcoder.CharlesSchwab.Eac.Data (
   WireTransfer (..),
   Sale (..),
   Deposit (..),
+  Dividend (..),
+  TaxWithholding (..),
 ) where
 
 import Data.Decimal (Decimal)
@@ -28,6 +30,8 @@ data Record
   = RecordWireTransfer !WireTransfer
   | RecordSale !Sale
   | RecordDeposit !Deposit
+  | RecordDividend !Dividend
+  | RecordTaxWithholding !TaxWithholding
   deriving stock (Eq, Show, Generic)
 
 data WireTransfer = WireTransfer
@@ -53,5 +57,19 @@ data Deposit = Deposit
   , dSymbol :: !Text
   , dDescription :: !Text
   , dQuantity :: !Decimal
+  }
+  deriving stock (Eq, Show, Generic)
+
+data Dividend = Dividend
+  { dividendDate :: !Day
+  , dividendSymbol :: !Text
+  , dividendAmount :: !DollarAmount
+  }
+  deriving stock (Eq, Show, Generic)
+
+data TaxWithholding = TaxWithholding
+  { taxWithholdingDate :: !Day
+  , taxWithholdingSymbol :: !Text
+  , taxWithholdingAmount :: !DollarAmount
   }
   deriving stock (Eq, Show, Generic)

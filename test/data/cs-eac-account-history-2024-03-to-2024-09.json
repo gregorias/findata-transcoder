@@ -1,0 +1,281 @@
+{
+  "FromDate": "09/01/2023",
+  "ToDate": "09/21/2024",
+  "Transactions": [
+    {
+      "Date": "08/30/2024",
+      "Action": "Wire Transfer",
+      "Symbol": "GOOG",
+      "Quantity": null,
+      "Description": "Cash Disbursement",
+      "FeesAndCommissions": "",
+      "DisbursementElection": null,
+      "Amount": "-$6,634.84",
+      "TransactionDetails": []
+    },
+    {
+      "Date": "08/01/2024",
+      "Action": "Sale",
+      "Symbol": "GOOG",
+      "Quantity": "38.553",
+      "Description": "Share Sale",
+      "FeesAndCommissions": "$0.19",
+      "DisbursementElection": null,
+      "Amount": "$6,630.93",
+      "TransactionDetails": [
+        {
+          "Details": {
+            "Type": "RS",
+            "Shares": "8.08",
+            "SalePrice": "$172.00",
+            "SubscriptionDate": "",
+            "SubscriptionFairMarketValue": "",
+            "PurchaseDate": "",
+            "PurchasePrice": "",
+            "PurchaseFairMarketValue": "",
+            "DispositionType": null,
+            "GrantId": "C1232155",
+            "VestDate": "04/25/2024",
+            "VestFairMarketValue": "$161.10",
+            "GrossProceeds": "$1,389.76"
+          }
+        },
+        {
+          "Details": {
+            "Type": "RS",
+            "Shares": "7.459",
+            "SalePrice": "$172.00",
+            "SubscriptionDate": "",
+            "SubscriptionFairMarketValue": "",
+            "PurchaseDate": "",
+            "PurchasePrice": "",
+            "PurchaseFairMarketValue": "",
+            "DispositionType": null,
+            "GrantId": "C1232155",
+            "VestDate": "05/25/2024",
+            "VestFairMarketValue": "$176.33",
+            "GrossProceeds": "$1,282.95"
+          }
+        },
+        {
+          "Details": {
+            "Type": "RS",
+            "Shares": "6.914",
+            "SalePrice": "$172.00",
+            "SubscriptionDate": "",
+            "SubscriptionFairMarketValue": "",
+            "PurchaseDate": "",
+            "PurchasePrice": "",
+            "PurchaseFairMarketValue": "",
+            "DispositionType": null,
+            "GrantId": "C1232155",
+            "VestDate": "07/25/2024",
+            "VestFairMarketValue": "$174.37",
+            "GrossProceeds": "$1,189.21"
+          }
+        },
+        {
+          "Details": {
+            "Type": "RS",
+            "Shares": "7.458",
+            "SalePrice": "$172.00",
+            "SubscriptionDate": "",
+            "SubscriptionFairMarketValue": "",
+            "PurchaseDate": "",
+            "PurchasePrice": "",
+            "PurchaseFairMarketValue": "",
+            "DispositionType": null,
+            "GrantId": "C1232155",
+            "VestDate": "03/25/2024",
+            "VestFairMarketValue": "$151.77",
+            "GrossProceeds": "$1,282.78"
+          }
+        },
+        {
+          "Details": {
+            "Type": "RS",
+            "Shares": "8.089",
+            "SalePrice": "$172.00",
+            "SubscriptionDate": "",
+            "SubscriptionFairMarketValue": "",
+            "PurchaseDate": "",
+            "PurchasePrice": "",
+            "PurchaseFairMarketValue": "",
+            "DispositionType": null,
+            "GrantId": "C1232155",
+            "VestDate": "06/25/2024",
+            "VestFairMarketValue": "$180.79",
+            "GrossProceeds": "$1,391.31"
+          }
+        },
+        {
+          "Details": {
+            "Type": "RS",
+            "Shares": "0",
+            "SalePrice": "$172.00",
+            "SubscriptionDate": "",
+            "SubscriptionFairMarketValue": "",
+            "PurchaseDate": "",
+            "PurchasePrice": "",
+            "PurchaseFairMarketValue": "",
+            "DispositionType": null,
+            "GrantId": "C1232155",
+            "VestDate": "04/25/2024",
+            "VestFairMarketValue": "$161.10",
+            "GrossProceeds": ""
+          }
+        },
+        {
+          "Details": {
+            "Type": "RS",
+            "Shares": "0",
+            "SalePrice": "$172.00",
+            "SubscriptionDate": "",
+            "SubscriptionFairMarketValue": "",
+            "PurchaseDate": "",
+            "PurchasePrice": "",
+            "PurchaseFairMarketValue": "",
+            "DispositionType": null,
+            "GrantId": "C1232155",
+            "VestDate": "05/25/2024",
+            "VestFairMarketValue": "$176.33",
+            "GrossProceeds": ""
+          }
+        },
+        {
+          "Details": {
+            "Type": "RS",
+            "Shares": "0.553",
+            "SalePrice": "$172.00",
+            "SubscriptionDate": "",
+            "SubscriptionFairMarketValue": "",
+            "PurchaseDate": "",
+            "PurchasePrice": "",
+            "PurchaseFairMarketValue": "",
+            "DispositionType": null,
+            "GrantId": "C1232155",
+            "VestDate": "07/25/2024",
+            "VestFairMarketValue": "$174.37",
+            "GrossProceeds": "$95.12"
+          }
+        },
+        {
+          "Details": {
+            "Type": "RS",
+            "Shares": "0",
+            "SalePrice": "$172.00",
+            "SubscriptionDate": "",
+            "SubscriptionFairMarketValue": "",
+            "PurchaseDate": "",
+            "PurchasePrice": "",
+            "PurchaseFairMarketValue": "",
+            "DispositionType": null,
+            "GrantId": "C1232155",
+            "VestDate": "03/25/2024",
+            "VestFairMarketValue": "$151.77",
+            "GrossProceeds": ""
+          }
+        },
+        {
+          "Details": {
+            "Type": "RS",
+            "Shares": "0",
+            "SalePrice": "$172.00",
+            "SubscriptionDate": "",
+            "SubscriptionFairMarketValue": "",
+            "PurchaseDate": "",
+            "PurchasePrice": "",
+            "PurchaseFairMarketValue": "",
+            "DispositionType": null,
+            "GrantId": "C1232155",
+            "VestDate": "06/25/2024",
+            "VestFairMarketValue": "$180.79",
+            "GrossProceeds": ""
+          }
+        }
+      ]
+    },
+    {
+      "Date": "07/29/2024",
+      "Action": "Deposit",
+      "Symbol": "GOOG",
+      "Quantity": "7.467",
+      "Description": "RS",
+      "FeesAndCommissions": null,
+      "DisbursementElection": null,
+      "Amount": null,
+      "TransactionDetails": [
+        {
+          "Details": {
+            "AwardDate": "03/06/2024",
+            "AwardId": "C1232155",
+            "VestDate": "07/25/2024",
+            "VestFairMarketValue": "$174.37"
+          }
+        }
+      ]
+    },
+    {
+      "Date": "06/27/2024",
+      "Action": "Deposit",
+      "Symbol": "GOOG",
+      "Quantity": "8.089",
+      "Description": "RS",
+      "FeesAndCommissions": null,
+      "DisbursementElection": null,
+      "Amount": null,
+      "TransactionDetails": [
+        {
+          "Details": {
+            "AwardDate": "03/06/2024",
+            "AwardId": "C1232155",
+            "VestDate": "06/25/2024",
+            "VestFairMarketValue": "$180.79"
+          }
+        }
+      ]
+    },
+    {
+      "Date": "06/17/2024",
+      "Action": "Dividend",
+      "Symbol": "GOOG",
+      "Quantity": null,
+      "Description": "Credit",
+      "FeesAndCommissions": null,
+      "DisbursementElection": null,
+      "Amount": "$4.60",
+      "TransactionDetails": []
+    },
+    {
+      "Date": "06/17/2024",
+      "Action": "Tax Withholding",
+      "Symbol": "GOOG",
+      "Quantity": null,
+      "Description": "Debit",
+      "FeesAndCommissions": null,
+      "DisbursementElection": null,
+      "Amount": "-$0.69",
+      "TransactionDetails": []
+    },
+    {
+      "Date": "05/30/2024",
+      "Action": "Deposit",
+      "Symbol": "GOOG",
+      "Quantity": "7.459",
+      "Description": "RS",
+      "FeesAndCommissions": null,
+      "DisbursementElection": null,
+      "Amount": null,
+      "TransactionDetails": [
+        {
+          "Details": {
+            "AwardDate": "03/06/2024",
+            "AwardId": "C1232155",
+            "VestDate": "05/25/2024",
+            "VestFairMarketValue": "$176.33"
+          }
+        }
+      ]
+    }
+  ]
+}

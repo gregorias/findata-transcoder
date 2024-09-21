@@ -19,6 +19,8 @@ recordToTransaction :: Record -> Either Text Transaction
 recordToTransaction (RecordWireTransfer wt) = wireTransferToTransaction wt
 recordToTransaction (RecordSale s) = saleToTransaction s
 recordToTransaction (RecordDeposit d) = depositToTransaction d
+recordToTransaction (RecordDividend d) = dividendToTransaction d
+recordToTransaction (RecordTaxWithholding d) = taxWithholdingToTransaction d
 
 wireTransferToTransaction :: Eac.WireTransfer -> Either Text Transaction
 wireTransferToTransaction
@@ -104,6 +106,44 @@ depositToTransaction
             Nothing
             NoComment
         ]
+
+dividendToTransaction :: Eac.Dividend -> Either Text Transaction
+dividendToTransaction (Eac.Dividend{dividendDate = dividendDate, dividendAmount = dividendAmount}) =
+  return
+    $ makeTransaction
+      dividendDate
+      (Just Cleared)
+      "GOOG Dividend"
+      [ makePosting
+          Nothing
+          (liquidAssets <:> "Charles Schwab:EAC:USD")
+          (Just $ toAmount dividendAmount)
+          NoComment
+      , makePosting
+          Nothing
+          "Income:Capital Gains"
+          (Just . negate $ toAmount dividendAmount)
+          NoComment
+      ]
+
+taxWithholdingToTransaction :: Eac.TaxWithholding -> Either Text Transaction
+taxWithholdingToTransaction (Eac.TaxWithholding{taxWithholdingDate = taxWithholdingDate, taxWithholdingAmount = taxWithholdingAmount}) =
+  return
+    $ makeTransaction
+      taxWithholdingDate
+      (Just Cleared)
+      "GOOG Tax Withholding"
+      [ makePosting
+          Nothing
+          (liquidAssets <:> "Charles Schwab:EAC:USD")
+          (Just $ toAmount taxWithholdingAmount)
+          NoComment
+      , makePosting
+          Nothing
+          "State:2024:CS Withholding Tax:GOOG"
+          (Just . negate $ toAmount taxWithholdingAmount)
+          NoComment
+      ]
 
 eacHistoryToLedger :: [Record] -> Either Text [Transaction]
 eacHistoryToLedger = fmap reverse . mapM recordToTransaction

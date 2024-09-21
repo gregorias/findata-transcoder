@@ -82,7 +82,7 @@ tests = do
                                   <> " EAC account history needs to be in the JSON format.\n"
                               )
 
-      it "converts a JSON statement to a report" $ do
+      it "converts a JSON statement to a report (2023)" $ do
         json <- BS.readFile "test/data/cs-eac-account-history.json"
         trs <- assertRightOrFailPrint $ CS.parseEacAccountHistory json
         trs
@@ -105,4 +105,42 @@ tests = do
             2023/08/04 * Wire Transfer
               Assets:Liquid:Charles Schwab:EAC:USD   USD -19717.70
               ! Todo
+            |]
+
+      it "converts a JSON statement to a report (2024)" $ do
+        json <- BS.readFile "test/data/cs-eac-account-history-2024-03-to-2024-09.json"
+        trs <- assertRightOrFailPrint $ CS.parseEacAccountHistory json
+        trs
+          `shouldBe` [transactionsQQ|
+            2024/05/30 * GOOG Deposit
+                Assets:Investments:Charles Schwab:EAC  GOOG   7.459
+                ! Equity:Charles Schwab:Unvested GOOG  GOOG  -7.459 ; TODO: Check state on https://client.schwab.com/app/accounts/equityawards/#/ and add a balance assertion
+                Equity:Charles Schwab:Unvested GOOG Withholding Tax
+
+            2024/06/17 * GOOG Tax Withholding
+                Assets:Liquid:Charles Schwab:EAC:USD      -0.69 USD
+                State:2024:CS Withholding Tax:GOOG      USD 0.69
+
+            2024/06/17 * GOOG Dividend
+                Assets:Liquid:Charles Schwab:EAC:USD      4.60 USD
+                Income:Capital Gains                USD -4.60
+
+            2024/06/27 * GOOG Deposit
+                Assets:Investments:Charles Schwab:EAC  GOOG   8.089
+                ! Equity:Charles Schwab:Unvested GOOG  GOOG  -8.089 ; TODO: Check state on https://client.schwab.com/app/accounts/equityawards/#/ and add a balance assertion
+                Equity:Charles Schwab:Unvested GOOG Withholding Tax
+
+            2024/07/29 * GOOG Deposit
+                Assets:Investments:Charles Schwab:EAC  GOOG   7.467
+                ! Equity:Charles Schwab:Unvested GOOG  GOOG  -7.467 ; TODO: Check state on https://client.schwab.com/app/accounts/equityawards/#/ and add a balance assertion
+                Equity:Charles Schwab:Unvested GOOG Withholding Tax
+
+            2024/08/01 * GOOG Sale
+                Assets:Investments:Charles Schwab:EAC    -38.553 GOOG
+                Assets:Liquid:Charles Schwab:EAC:USD     6630.93  USD
+                Expenses:Financial Services                 0.19  USD
+
+            2024/08/30 * Wire Transfer
+                Assets:Liquid:Charles Schwab:EAC:USD   USD -6634.84
+                ! Todo
             |]

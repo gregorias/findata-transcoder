@@ -24,9 +24,11 @@ import Relude
 import Transcoder.CharlesSchwab.DollarAmount (DollarAmount)
 import Transcoder.CharlesSchwab.Eac.Data (
   Deposit (..),
+  Dividend (..),
   Record (..),
   RecordSheet (..),
   Sale (..),
+  TaxWithholding (..),
   WireTransfer (WireTransfer),
  )
 import Witch (
@@ -47,6 +49,8 @@ data RecordJson
   = RecordJsonWireTransfer !WireTransferJson
   | RecordJsonSale !SaleJson
   | RecordJsonDeposit !DepositJson
+  | RecordJsonDividend !DividendJson
+  | RecordJsonTaxWithholding !TaxWithholdingJson
   deriving stock (Eq, Show, Generic)
 
 data WireTransferJson = WireTransferJson
@@ -87,6 +91,28 @@ data DepositJson = DepositJson
 data DepositString = DepositString
   deriving stock (Eq, Show, Generic, Typeable)
 
+data DividendJson = DividendJson
+  { dividendJsonDate :: !CsDay
+  , dividendJsonAction :: !DividendString
+  , dividendJsonSymbol :: !Text
+  , dividendJsonAmount :: !DollarAmount
+  }
+  deriving stock (Eq, Show, Generic)
+
+data DividendString = DividendString
+  deriving stock (Eq, Show, Generic, Typeable)
+
+data TaxWithholdingJson = TaxWithholdingJson
+  { taxWithholdingJsonDate :: !CsDay
+  , taxWithholdingJsonAction :: !TaxWithholdingString
+  , taxWithholdingJsonSymbol :: !Text
+  , taxWithholdingJsonAmount :: !DollarAmount
+  }
+  deriving stock (Eq, Show, Generic)
+
+data TaxWithholdingString = TaxWithholdingString
+  deriving stock (Eq, Show, Generic, Typeable)
+
 newtype CsDay = CsDay {unCsDay :: Day}
   deriving newtype (Eq, Show)
 
@@ -125,6 +151,8 @@ instance From RecordJson Record where
     RecordJsonWireTransfer wireTransferJson -> RecordWireTransfer $ from wireTransferJson
     RecordJsonSale saleJson -> RecordSale $ from saleJson
     RecordJsonDeposit depositJson -> RecordDeposit $ from depositJson
+    RecordJsonDividend dividendJson -> RecordDividend $ from dividendJson
+    RecordJsonTaxWithholding taxWithholdingJson -> RecordTaxWithholding $ from taxWithholdingJson
 
 instance FromJSON WireTransferString where
   parseJSON = Aeson.withText "Wire Transfer" $ \text ->
@@ -190,4 +218,50 @@ instance FromJSON DepositString where
   parseJSON = Aeson.withText "Deposit" $ \text ->
     if text == "Deposit"
       then return DepositString
-      else fail $ toString text <> "is not a deposit"
+      else fail $ toString text <> " is not a deposit"
+
+instance FromJSON DividendJson where
+  parseJSON = Aeson.genericParseJSON (Aeson.defaultOptions{Aeson.fieldLabelModifier = drop 12})
+
+instance From DividendJson Dividend where
+  from
+    ( DividendJson
+        { dividendJsonDate = date
+        , dividendJsonSymbol = symbol
+        , dividendJsonAmount = amount
+        }
+      ) =
+      Dividend
+        { dividendDate = coerce date
+        , dividendSymbol = symbol
+        , dividendAmount = amount
+        }
+
+instance FromJSON DividendString where
+  parseJSON = Aeson.withText "Dividend" $ \text ->
+    if text == "Dividend"
+      then return DividendString
+      else fail $ toString text <> " is not a dividend"
+
+instance FromJSON TaxWithholdingJson where
+  parseJSON = Aeson.genericParseJSON (Aeson.defaultOptions{Aeson.fieldLabelModifier = drop 18})
+
+instance From TaxWithholdingJson TaxWithholding where
+  from
+    ( TaxWithholdingJson
+        { taxWithholdingJsonDate = date
+        , taxWithholdingJsonSymbol = symbol
+        , taxWithholdingJsonAmount = amount
+        }
+      ) =
+      TaxWithholding
+        { taxWithholdingDate = coerce date
+        , taxWithholdingSymbol = symbol
+        , taxWithholdingAmount = amount
+        }
+
+instance FromJSON TaxWithholdingString where
+  parseJSON = Aeson.withText "Tax Withholding" $ \text ->
+    if text == "Tax Withholding"
+      then return TaxWithholdingString
+      else fail $ toString text <> " is not a Tax WIthholding"
