@@ -1,11 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.38.0.
 --
 -- see: https://github.com/sol/hpack
 
 name:           findata-transcoder
-version:        2.7.0.0
+version:        2.7.1.0
 synopsis:       Transcode financial statements into Ledger transactions.
 description:    Please see the README on GitHub at <https://github.com/gregorias/findata-transcoder#readme>
 category:       Finance
