@@ -22,6 +22,16 @@ lefthook install
 [Lefthook]: https://github.com/evilmartians/lefthook
 [Hpack]: https://github.com/sol/hpack
 
+## Operations
+
+### Dependency update
+
+To update used dependencies:
+
+1. Update the Stackage version in `cabal.project`.
+  You can check the current Stackage at stackage.org.
+2. Update Cabal’s local package metadata with `cabal update`.
+
 ## ARDs
 
 ### Invidual items in Coop receipts
