@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.38.0.
+-- This file has been generated from package.yaml by hpack version 0.38.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -13,7 +13,7 @@ homepage:       https://github.com/gregorias/findata-transcoder#readme
 bug-reports:    https://github.com/gregorias/findata-transcoder/issues
 author:         Grzegorz Milka
 maintainer:     grzegorzmilka@gmail.com
-copyright:      2020-2024 Grzegorz Milka
+copyright:      2020-2025 Grzegorz Milka
 license:        AGPL-3
 license-file:   LICENSE
 build-type:     Simple
