@@ -6,14 +6,14 @@ module Transcoder.Ib (
   statementActivityToLedgerReport,
 ) where
 
-import qualified Control.Lens as L
+import Control.Lens qualified as L
 import Data.Decimal (Decimal)
-import qualified Data.Map as Map
+import Data.Map qualified as Map
 import Data.Ratio ((%))
 import Data.Time (Day)
 import Data.Time.Calendar.OrdinalDate (toOrdinalDate)
 import Hledger (
-  AmountPrice (UnitPrice),
+  AmountCost (UnitCost),
   MarketPrice (MarketPrice),
   Posting,
   Status (Cleared),
@@ -24,7 +24,7 @@ import Hledger (
  )
 import Hledger.Data.Extra (makeCommodityAmount, makeCurrencyAmount)
 import Hledger.Data.Lens (
-  aAmountPrice,
+  aAmountCost,
   pBalanceAssertion,
   pMaybeAmount,
   pStatus,
@@ -35,6 +35,8 @@ import Hledger.Data.Transaction (transaction)
 import Hledger.Data.Types (
   Transaction (..),
  )
+import Relude
+import Text.Printf (printf)
 import Transcoder.Data.Currency (Currency, chf, usd)
 import Transcoder.Data.LedgerReport (LedgerReport (..), todoPosting)
 import Transcoder.Ib.Csv (
@@ -43,14 +45,12 @@ import Transcoder.Ib.Csv (
   StockPosition (StockPosition),
   StockTrade (..),
  )
-import qualified Transcoder.Ib.Csv as IbCsv
+import Transcoder.Ib.Csv qualified as IbCsv
 import Transcoder.Ib.Csv.ActivityStatementParse (
   BaseCurrency (..),
   QuoteCurrency (..),
   QuotePair (QuotePair),
  )
-import Relude
-import Text.Printf (printf)
 
 data AssetClass = Stocks | Forex
 
@@ -68,17 +68,17 @@ endingCashToPosting :: EndingCash -> Posting
 endingCashToPosting (EndingCash currency amount) =
   post (cashAccountName currency) missingamt
     & L.set pMaybeAmount (Just $ makeCurrencyAmount currency 0)
-      . L.set
-        pBalanceAssertion
-        (balassert . makeCurrencyAmount currency $ amount)
+    . L.set
+      pBalanceAssertion
+      (balassert . makeCurrencyAmount currency $ amount)
 
 stockPositionToPosting :: StockPosition -> Posting
 stockPositionToPosting (StockPosition symbol quantity _price) =
   post (stockAccountName . toText $ symbol) missingamt
     & L.set pMaybeAmount (Just $ makeCommodityAmount (toText symbol) 0)
-      . L.set
-        pBalanceAssertion
-        (balassert . makeCommodityAmount (toText symbol) $ fromRational $ quantity % 1)
+    . L.set
+      pBalanceAssertion
+      (balassert . makeCommodityAmount (toText symbol) $ fromRational $ quantity % 1)
 
 stockPositionToStockPrice :: Day -> StockPosition -> MarketPrice
 stockPositionToStockPrice day (StockPosition sym _q price) =
@@ -91,7 +91,7 @@ cashMovementToTransaction
       date
       [ post (cashAccountName currency) missingamt
           & L.set pMaybeAmount (Just $ makeCurrencyAmount currency amount)
-            . L.set pStatus Cleared
+          . L.set pStatus Cleared
       , todoPosting
       ]
       & L.set tDescription "IB Deposit/Withdrawal"
@@ -135,8 +135,8 @@ withholdingTaxToUnmatchedWithholdingTax (IbCsv.WithholdingTax day symbol _) =
 unmatchedWithholdingTaxToErrorMessage ::
   UnmatchedWithholdingTax -> Text
 unmatchedWithholdingTaxToErrorMessage (UnmatchedWithholdingTax date symbol) =
-  toText @String $
-    printf
+  toText @String
+    $ printf
       "Could not find a dividend match for %s withholding tax from %s.\
       \ This could happen due to IB statement cut-off (fetch a broader \
       \statement) or wrong data assumptions."
@@ -189,14 +189,14 @@ dividendToTransaction
       , post whTaxTitle missingamt
           & L.set
             pMaybeAmount
-            (Just $ makeCurrencyAmount usd (- taxAmt))
+            (Just $ makeCurrencyAmount usd (-taxAmt))
       , post "Income:Capital Gains" missingamt
           & L.set
             pMaybeAmount
-            (Just $ makeCurrencyAmount usd (- divAmt))
+            (Just $ makeCurrencyAmount usd (-divAmt))
       ]
       & L.set tDescription title
-        . L.set tStatus Cleared
+      . L.set tStatus Cleared
    where
     title = sym <> " dividend @ " <> show dps <> " per share"
     whTaxTitle =
@@ -221,10 +221,10 @@ stockTradeToTransaction (StockTrade date sym q amount fee) =
     , post "Expenses:Financial Services" missingamt
         & L.set
           pMaybeAmount
-          (Just $ makeCurrencyAmount usd (- fee))
+          (Just $ makeCurrencyAmount usd (-fee))
     ]
     & L.set tDescription (toText sym <> " trade")
-      . L.set tStatus Cleared
+    . L.set tStatus Cleared
 
 forexTradeToTransaction :: IbCsv.ForexTrade -> Transaction
 forexTradeToTransaction
@@ -245,18 +245,19 @@ forexTradeToTransaction
           (cashAccountName base)
           ( makeCurrencyAmount base q
               & L.set
-                aAmountPrice
-                ( Just . UnitPrice $
-                    makeCommodityAmount (show quote) price
-                      & amountSetFullPrecision
+                aAmountCost
+                ( Just
+                    . UnitCost
+                    $ makeCommodityAmount (show quote) price
+                    & amountSetFullPrecision
                 )
           )
       , post (cashAccountName quote) (makeCurrencyAmount quote totalCost)
       , post (cashAccountName chf) (makeCurrencyAmount chf fee)
-      , post "Expenses:Financial Services" (makeCurrencyAmount chf (- fee))
+      , post "Expenses:Financial Services" (makeCurrencyAmount chf (-fee))
       ]
       & L.set tDescription (show base <> "." <> show quote)
-        . L.set tStatus Cleared
+      . L.set tStatus Cleared
 
 statementActivityToLedgerReport ::
   IbCsv.ActivityStatement ->
@@ -273,28 +274,28 @@ statementActivityToLedgerReport
     , asTaxes = taxes
     } = do
     dividendsWithTaxes <-
-      first unmatchedWithholdingTaxToErrorMessage $
-        joinDividendAndTaxRecords dividends taxes
+      first unmatchedWithholdingTaxToErrorMessage
+        $ joinDividendAndTaxRecords dividends taxes
     let cashStatusPostings = map endingCashToPosting cashes
         stockStatusPostings = map stockPositionToPosting stocks
         maybeStatus =
           ( do
               guard $ not (null cashStatusPostings && null stockStatusPostings)
-              return $
-                transaction
+              return
+                $ transaction
                   stmtDate
                   (cashStatusPostings <> stockStatusPostings)
-                  & L.set tDescription "IB Status"
-                    . L.set tStatus Cleared
+                & L.set tDescription "IB Status"
+                . L.set tStatus Cleared
           )
-    return $
-      LedgerReport
-        ( sortOn tdate $
-            (cashMovementToTransaction <$> cashTransfers)
-              <> (dividendToTransaction <$> dividendsWithTaxes)
-              <> (stockTradeToTransaction <$> stockTrades)
-              <> (forexTradeToTransaction <$> forexTrades)
-              <> maybeStatus
+    return
+      $ LedgerReport
+        ( sortOn tdate
+            $ (cashMovementToTransaction <$> cashTransfers)
+            <> (dividendToTransaction <$> dividendsWithTaxes)
+            <> (stockTradeToTransaction <$> stockTrades)
+            <> (forexTradeToTransaction <$> forexTrades)
+            <> maybeStatus
         )
         (stockPositionToStockPrice stmtDate <$> stocks)
 

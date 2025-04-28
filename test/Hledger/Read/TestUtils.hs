@@ -21,7 +21,7 @@ import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Hledger (
-  AmountPrice (..),
+  AmountCost (..),
   amountSetFullPrecision,
   missingamt,
   post,
@@ -164,12 +164,12 @@ statusP = toParser Hledger.statusp
 descriptionP :: Parser Text
 descriptionP = toParser Hledger.descriptionp
 
-amountPriceParser :: Parser AmountPrice
-amountPriceParser = do
+amountCostParser :: Parser AmountCost
+amountCostParser = do
   constructor <-
     choice
-      [ try (string "@@") $> TotalPrice
-      , single '@' $> UnitPrice
+      [ try (string "@@") $> TotalCost
+      , single '@' $> UnitCost
       ]
   void $ some spaceChar
   constructor . amountSetFullPrecision <$> commodityP
@@ -190,17 +190,17 @@ postingP = do
           Pending -> MP.hspace
           Cleared -> MP.hspace
         return status
-      )
+    )
   account <- accountParser
   amount <- whenCurrencyAdjustStyle <$> (try commodityP <|> pure missingamt)
   balAssert <- optional (try balanceAssertion)
   void $ many $ single ' '
-  amountPrice <- optional amountPriceParser
+  amountCost <- optional amountCostParser
   void $ many $ single ' '
   comment <- T.strip . fromMaybe "" <$> optional commentP
   let amount' =
         amount
-          { aprice = amountPrice
+          { acost = amountCost
           }
   void eolOrEof
   return

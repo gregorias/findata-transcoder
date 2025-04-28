@@ -2,7 +2,7 @@
 
 module Hledger.Data.Lens (
   aCommodity,
-  aAmountPrice,
+  aAmountCost,
   aStyle,
   asCommoditySpaced,
   asPrecision,
@@ -34,7 +34,7 @@ import Control.Lens (
   sets,
  )
 import Data.Map.Strict (assocs, elems)
-import Hledger (AmountPrice (TotalPrice, UnitPrice))
+import Hledger (AmountCost (TotalCost, UnitCost))
 import Hledger.Data.Types (
   Amount (..),
   AmountPrecision,
@@ -42,17 +42,17 @@ import Hledger.Data.Types (
   BalanceAssertion (..),
   CommoditySymbol,
   MixedAmount (..),
-  MixedAmountKey (MixedAmountKeyNoPrice, MixedAmountKeyTotalPrice, MixedAmountKeyUnitPrice),
+  MixedAmountKey (MixedAmountKeyNoCost, MixedAmountKeyTotalCost, MixedAmountKeyUnitCost),
   Posting (..),
   Status (..),
   Transaction (..),
  )
 import Relude
 
-aAmountPrice :: Lens' Amount (Maybe AmountPrice)
-aAmountPrice = lens aprice setter
+aAmountCost :: Lens' Amount (Maybe AmountCost)
+aAmountCost = lens acost setter
  where
-  setter a ap = a{aprice = ap}
+  setter a ac = a{acost = ac}
 
 aCommodity :: Lens' Amount CommoditySymbol
 aCommodity = lens acommodity setter
@@ -100,11 +100,11 @@ baAmount = lens baamount setter
   setter ba amt = ba{baamount = amt}
 
 amountToMixedAmountKey :: Amount -> MixedAmountKey
-amountToMixedAmountKey (Amount comm _ _ Nothing) = MixedAmountKeyNoPrice comm
+amountToMixedAmountKey (Amount comm _ _ Nothing) = MixedAmountKeyNoCost comm
 amountToMixedAmountKey (Amount comm _ _ (Just ap)) =
   case ap of
-    UnitPrice (Amount comm' q _ _) -> MixedAmountKeyUnitPrice comm comm' q
-    TotalPrice (Amount comm' _ _ __) -> MixedAmountKeyTotalPrice comm comm'
+    UnitCost (Amount comm' q _ _) -> MixedAmountKeyUnitCost comm comm' q
+    TotalCost (Amount comm' _ _ __) -> MixedAmountKeyTotalCost comm comm'
 
 maAmount :: Prism' MixedAmount Amount
 maAmount = prism' setter getter

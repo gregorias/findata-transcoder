@@ -33,7 +33,7 @@ deriving stock instance Lift H.Rounding
 
 deriving stock instance Lift H.AmountStyle
 
-deriving stock instance Lift H.AmountPrice
+deriving stock instance Lift H.AmountCost
 
 deriving stock instance Lift H.Amount
 

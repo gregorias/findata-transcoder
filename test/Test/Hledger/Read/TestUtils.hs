@@ -5,8 +5,8 @@ module Test.Hledger.Read.TestUtils (tests) where
 import Control.Lens qualified as L
 import Data.Time (fromGregorian)
 import Hledger (
-  Amount (aprice),
-  AmountPrice (UnitPrice),
+  Amount (acost),
+  AmountCost (UnitCost),
   amountSetFullPrecision,
   missingamt,
  )
@@ -23,7 +23,7 @@ import Hledger.Data.Posting (
 import Hledger.Data.Transaction (transaction)
 import Hledger.Data.Types (
   MixedAmount (..),
-  MixedAmountKey (MixedAmountKeyNoPrice),
+  MixedAmountKey (MixedAmountKeyNoCost),
   Posting (..),
   Status (..),
  )
@@ -195,7 +195,7 @@ tests = do
                     , pbalanceassertion =
                         balassert
                           $ makeCommodityAmount "SPY" 123
-                    , pamount = Mixed $ fromList [(MixedAmountKeyNoPrice "SPY", makeCommodityAmount "SPY" 100)]
+                    , pamount = Mixed $ fromList [(MixedAmountKeyNoCost "SPY", makeCommodityAmount "SPY" 100)]
                     }
                 , post "Expenses:Other" missingamt
                 ]
@@ -210,9 +210,9 @@ tests = do
               post
                 "Assets:Bank"
                 ( (makeCurrencyAmount usd 100)
-                    { aprice =
+                    { acost =
                         Just
-                          . UnitPrice
+                          . UnitCost
                           $ makeCommodityAmount "CHF" 0.9513
                           & amountSetFullPrecision
                     }

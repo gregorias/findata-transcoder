@@ -22,7 +22,7 @@ import Data.Text qualified as T
 import Data.Time (Day)
 import Data.Time.LocalTime (TimeOfDay)
 import Hledger (
-  AmountPrice (UnitPrice),
+  AmountCost (UnitCost),
   Status (Cleared, Pending),
   Transaction,
   amountSetFullPrecision,
@@ -39,7 +39,7 @@ import Hledger.Data.Extra (
   makeTransaction,
  )
 import Hledger.Data.Lens (
-  aAmountPrice,
+  aAmountCost,
   pAmount,
   pBalanceAssertion,
  )
@@ -176,9 +176,9 @@ instance ToTransaction StockTrade where
               prettyStockName
               (fromRational $ toInteger qty % 1)
               & set
-                aAmountPrice
+                aAmountCost
                 ( Just
-                    . UnitPrice
+                    . UnitCost
                     . amountSetFullPrecision
                     . toAmount
                     $ price
@@ -396,8 +396,7 @@ instance ToPosting FxPosting where
   toPosting (FxPosting _fx currency change balance) =
     post
       degiroAccount
-      ( toAmount (Cash currency change)
-      )
+      (toAmount (Cash currency change))
       & set pBalanceAssertion (balassert $ toAmount (Cash currency balance))
 
 data Fx = Fx
@@ -438,8 +437,8 @@ instance ToTransaction Fx where
    where
     setPrice postArg =
       set
-        (pAmount . aAmountPrice)
-        ( UnitPrice
+        (pAmount . aAmountCost)
+        ( UnitCost
             . amountSetFullPrecision
             . toAmount
             . Cash

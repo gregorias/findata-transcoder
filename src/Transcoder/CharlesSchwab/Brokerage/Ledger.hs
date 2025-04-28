@@ -9,7 +9,7 @@ import Data.Decimal (Decimal)
 import Data.Time (Day)
 import Hledger (
   AccountName,
-  AmountPrice (UnitPrice),
+  AmountCost (UnitCost),
   Status (Cleared, Pending),
   Transaction,
   amountSetFullPrecision,
@@ -24,7 +24,7 @@ import Hledger.Data.Extra (
   makeTransaction,
  )
 import Hledger.Data.Lens (
-  aAmountPrice,
+  aAmountCost,
  )
 import Relude
 import Transcoder.CharlesSchwab.Brokerage.Csv (
@@ -156,9 +156,9 @@ saleToLedgerTransaction rec = do
           (vestedStockAccount symbol)
           ( makeCommodityAmount symbol (-q)
               & L.set
-                aAmountPrice
+                aAmountCost
                 ( Just
-                    . UnitPrice
+                    . UnitCost
                     $ makeCommodityAmount "USD" price
                     & amountSetFullPrecision
                 )
