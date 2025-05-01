@@ -26,7 +26,11 @@ myDecDec = Lens.iso (\(MyDecimal d) -> d) MyDecimal
 instance Csv.FromField MyDecimal where
   parseField field =
     maybe
-      (fail "Could not parse a decimal")
+      ( fail
+          $ "Could not parse the string \""
+          <> decodeUtf8 field
+          <> "\" as a decimal."
+      )
       (pure . MyDecimal)
       $ parseMaybe @Void @String
         (decimalP (DecimalFormat (ChunkSep ',') (Just OptionalUnlimitedDecimalFraction)))

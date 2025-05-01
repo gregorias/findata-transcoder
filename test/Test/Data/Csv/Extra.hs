@@ -6,11 +6,13 @@ module Test.Data.Csv.Extra (
 
 import Data.Csv qualified as Csv
 import Data.Csv.Extra (FromNamedRecord (..), decodeByName, fieldP, lookup)
+import Data.Csv.Extra qualified as Csv
+import Data.HashMap.Strict qualified as HM
 import Data.Vector (Vector)
 import Relude
 import Test.HUnit.Extra (assertRightOrFailPrint)
 import Test.Hspec (SpecWith, describe, it)
-import Test.Hspec.Expectations.Pretty (shouldBe)
+import Test.Hspec.Expectations.Pretty (shouldBe, shouldContain)
 import Text.Megaparsec.Extra (parsePretty)
 
 data TestRecord
@@ -29,6 +31,12 @@ instance FromNamedRecord TestRecord where
 tests :: SpecWith ()
 tests = do
   describe "Data.Csv.Extra" $ do
+    describe "showNamedRecord" $ do
+      it "shows a named record" $ do
+        let nr = HM.fromList [("foo", "bar"), ("baz", "qux")]
+        let text = Csv.showNamedRecord nr
+        ["{baz:qux,foo:bar}", "{foo:bar,baz:qux}"] `shouldContain` [text]
+
     describe "decodeByName" $ do
       it "Decodes" $ do
         ( decodeByName "type\nA\nA\nB" ::

@@ -4,6 +4,12 @@
 
 -- | Extensions or replacements for Cassava
 module Data.Csv.Extra (
+  -- * Named record utilities
+  showNamedRecord,
+
+  -- * Parsing utilities
+  prependContextOnFailure,
+
   -- * Streamlined named record parsing
   FromNamedRecord (..),
   CassavaNamedRecord (..),
@@ -18,13 +24,39 @@ module Data.Csv.Extra (
 
 import Control.Applicative.Combinators.Extra (surroundedBy)
 import Control.Lens (each, over, _2, _Right)
+import Data.ByteString qualified as BS
 import Data.Csv qualified as Csv
+import Data.HashMap.Strict qualified as HM
+import Data.Text qualified as T
 import Data.Vector (Vector)
 import Relude
 import Text.Megaparsec (MonadParsec)
 import Text.Megaparsec qualified as MP
 import Text.Megaparsec.Char qualified as MP
 import Prelude hiding (elem, lookup)
+
+-- | Shows a named record in a human-readable format.
+--
+-- This is meant for debugging and logging. I don't care much about ambiguity.
+showNamedRecord :: Csv.NamedRecord -> Text
+showNamedRecord nr =
+  T.concat
+    [ "{"
+    , T.intercalate "," (map (\(k, v) -> decodeUtf8 k <> ":" <> decodeUtf8 v) items)
+    , "}"
+    ]
+ where
+  items :: [(BS.ByteString, BS.ByteString)]
+  items = HM.toList nr
+
+-- | Prepends context to a 'Csv.Parser' error message.
+prependContextOnFailure :: String -> Csv.Parser a -> Csv.Parser a
+prependContextOnFailure context parser = do
+  -- Csv.Parser is an opaque type, so there's no other way to prepend than to
+  -- use 'runParser' to deconstruct it.
+  case Csv.runParser parser of
+    Left err -> fail $ context <> err
+    Right val -> pure val
 
 type NamedRecordParser = ReaderT Csv.NamedRecord Csv.Parser
 

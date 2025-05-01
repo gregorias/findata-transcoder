@@ -3,19 +3,20 @@ module Transcoder.Revolut (
 ) where
 
 import Control.Lens (over, _Left)
-import qualified Control.Lens as L
-import qualified Data.Csv as Csv
+import Control.Lens qualified as L
+import Data.Csv qualified as Csv
+import Data.Csv.Extra (prependContextOnFailure, showNamedRecord)
 import Data.Decimal (Decimal)
 import Data.Time (Day, defaultTimeLocale, parseTimeM)
 import Hledger (AccountName, Status (Cleared, Pending), Transaction, balassert, missingamt)
 import Hledger.Data (post, transaction)
 import Hledger.Data.Extra (makeCurrencyAmount)
 import Hledger.Data.Lens (pBalanceAssertion, pStatus, tDescription, tStatus)
+import Relude
 import Transcoder.Data.Currency (Currency)
 import Transcoder.Data.LedgerReport (LedgerReport (LedgerReport))
 import Transcoder.Data.MyDecimal (MyDecimal (unMyDecimal))
 import Transcoder.Wallet (liquidAssets, (<:>))
-import Relude
 
 data TransactionType = Topup | CardPayment | Transfer | Exchange
 
@@ -48,21 +49,23 @@ instance Csv.FromField RevolutDay where
     parseTime fmt = parseTimeM True defaultTimeLocale fmt (decodeUtf8 field)
 
 instance Csv.FromNamedRecord RevolutTransaction where
-  parseNamedRecord nr = do
-    trType <- Csv.lookup nr "Type"
-    startedDate <- unRevolutDay <$> Csv.lookup nr "Started Date"
-    description <- Csv.lookup nr "Description"
-    amount <- unMyDecimal <$> Csv.lookup nr "Amount"
-    currency <- Csv.lookup nr "Currency"
-    balance <- unMyDecimal <$> Csv.lookup nr "Balance"
-    return $
-      RevolutTransaction
-        trType
-        startedDate
-        description
-        amount
-        currency
-        balance
+  parseNamedRecord nr = prependContextOnFailure
+    ("Couldn't parse " <> toString (showNamedRecord nr) <> "\n")
+    $ do
+      trType <- Csv.lookup nr "Type"
+      startedDate <- unRevolutDay <$> Csv.lookup nr "Started Date"
+      description <- Csv.lookup nr "Description"
+      amount <- unMyDecimal <$> Csv.lookup nr "Amount"
+      currency <- Csv.lookup nr "Currency"
+      balance <- unMyDecimal <$> Csv.lookup nr "Balance"
+      return
+        $ RevolutTransaction
+          trType
+          startedDate
+          description
+          amount
+          currency
+          balance
 
 decodeCsv :: LByteString -> Either Text [RevolutTransaction]
 decodeCsv csv = toList . snd <$> over _Left toText (Csv.decodeByName csv)
@@ -79,7 +82,7 @@ revolutTransactionToLedgerTransaction (RevolutTransaction _type date description
         & L.set pStatus Pending
     ]
     & L.set tDescription description
-      . L.set tStatus Cleared
+    . L.set tStatus Cleared
 
 parseCsvToLedger :: LByteString -> Either Text LedgerReport
 parseCsvToLedger csv = do
