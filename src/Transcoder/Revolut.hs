@@ -24,10 +24,10 @@ data RevolutTransaction = RevolutTransaction
   , _description :: !Text
   , _amount :: !Decimal
   , _currency :: !Currency
-  , _balance :: !Decimal
+  , _balance :: !(Maybe Decimal)
   }
 
-csvTransactionToRevolutTransaction :: RevolutCsv.Transaction -> Either Text RevolutTransaction
+csvTransactionToRevolutTransaction :: RevolutCsv.Transaction -> RevolutTransaction
 csvTransactionToRevolutTransaction
   ( RevolutCsv.TransactionCompletedTransaction
       ( RevolutCsv.CompletedTransaction
@@ -41,32 +41,47 @@ csvTransactionToRevolutTransaction
           balance
         )
     ) =
-    Right
-      $ RevolutTransaction
-        date
-        description
-        amount
-        currency
-        balance
-csvTransactionToRevolutTransaction _ = Left "Unimplemented"
+    RevolutTransaction
+      date
+      description
+      amount
+      currency
+      (Just balance)
+csvTransactionToRevolutTransaction
+  ( RevolutCsv.TransactionRevertedTransaction
+      ( RevolutCsv.RevertedTransaction
+          date
+          description
+          amount
+          _fee
+          currency
+        )
+    ) =
+    RevolutTransaction
+      date
+      description
+      (-amount)
+      currency
+      Nothing
 
 revolutTransactionToLedgerTransaction :: RevolutTransaction -> Transaction
 revolutTransactionToLedgerTransaction (RevolutTransaction date description amount currency balance) =
   transaction
     date
-    [ post (getAccountName currency) (makeCurrencyAmount currency amount)
-        & L.set
-          pBalanceAssertion
-          (balassert . makeCurrencyAmount currency $ balance)
+    [ revolutPostingWithoutBalance
+        & maybe id addBalance balance
     , post "Todo" missingamt
         & L.set pStatus Pending
     ]
     & L.set tDescription description
     . L.set tStatus Cleared
+ where
+  revolutPostingWithoutBalance = post (getAccountName currency) (makeCurrencyAmount currency amount)
+  addBalance balance = L.set pBalanceAssertion (balassert . makeCurrencyAmount currency $ balance)
 
 parseCsvToLedger :: LByteString -> Either Text LedgerReport
 parseCsvToLedger csv = do
   csvTransactions <- RevolutCsv.parse (CsvFile csv)
-  revolutTransactions <- mapM csvTransactionToRevolutTransaction csvTransactions
+  let revolutTransactions = map csvTransactionToRevolutTransaction csvTransactions
   let ledgerTransactions = revolutTransactionToLedgerTransaction <$> revolutTransactions
   return $ LedgerReport ledgerTransactions []

@@ -24,8 +24,8 @@ tests = do
       message <- assertLeft $ Revolut.parseCsvToLedger csv
       message `shouldBe` "parse error (Failed reading: conversion error: Couldn't parse {Amount:,Description:Cablemod,Fee:0.00,Balance:,Started Date:2025-03-21 06:43:41,State:REVERTED,Currency:EUR,Product:Current,Type:CARD_PAYMENT,Completed Date:}\nin named field \"Amount\": Could not parse the string \"\" as a decimal.) at \"\""
 
-    it "parses a CSV report to a LedgerReport" $ do
-      csv <- readFileLBS "test/data/revolut.csv"
+    it "parses a CSV 2021 report to a LedgerReport" $ do
+      csv <- readFileLBS "test/data/revolut0.csv"
       Revolut.parseCsvToLedger csv
         `shouldBe` Right
           ( LedgerReport
@@ -41,6 +41,21 @@ tests = do
                   ! Todo
                 2021/08/26 * Exchanged to PLN
                   Assets:Liquid:Revolut:CHF  CHF -86.05 = CHF 0
+                  ! Todo|]
+              []
+          )
+
+    it "parses a CSV 2025 report with a reversion to a LedgerReport" $ do
+      csv <- readFileLBS "test/data/revolut1.csv"
+      Revolut.parseCsvToLedger csv
+        `shouldBe` Right
+          ( LedgerReport
+              [transactionsQQ|
+                2025/03/16 * Amazon
+                  Assets:Liquid:Revolut:EUR  EUR -9.38 = EUR 134.90
+                  ! Todo
+                2025/03/21 * Cablemod
+                  Assets:Liquid:Revolut:EUR  EUR 77.91
                   ! Todo|]
               []
           )
