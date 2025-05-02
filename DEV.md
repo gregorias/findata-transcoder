@@ -32,6 +32,12 @@ To update used dependencies:
   You can check the current Stackage at stackage.org.
 2. Update Cabal’s local package metadata with `cabal update`.
 
+### Release
+
+1. Update the version in `package.yaml`.
+2. Run `hpack`.
+3. Commit the changes `git commit -am 'chore: bump version'`.
+
 ## ARDs
 
 ### Invidual items in Coop receipts
