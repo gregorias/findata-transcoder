@@ -8,6 +8,7 @@ module Data.Csv.Extra (
   showNamedRecord,
 
   -- * Parsing utilities
+  decodeByName',
   prependContextOnFailure,
 
   -- * Streamlined named record parsing
@@ -26,6 +27,7 @@ import Control.Applicative.Combinators.Extra (surroundedBy)
 import Control.Lens (each, over, _2, _Right)
 import Data.ByteString qualified as BS
 import Data.Csv qualified as Csv
+import Data.Either.Extra (mapLeft)
 import Data.HashMap.Strict qualified as HM
 import Data.Text qualified as T
 import Data.Vector (Vector)
@@ -48,6 +50,14 @@ showNamedRecord nr =
  where
   items :: [(BS.ByteString, BS.ByteString)]
   items = HM.toList nr
+
+-- | Decodes a CSV.
+--
+-- This is a variant of 'decodeByName' that’s adjusted for my use: returns
+-- values in a list and text.
+decodeByName' :: (Csv.FromNamedRecord a) => LByteString -> Either Text [a]
+decodeByName' csv =
+  toList . snd <$> mapLeft toText (Csv.decodeByName csv)
 
 -- | Prepends context to a 'Csv.Parser' error message.
 prependContextOnFailure :: String -> Csv.Parser a -> Csv.Parser a

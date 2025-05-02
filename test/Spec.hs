@@ -44,6 +44,7 @@ import Test.Transcoder.Ib.Csv.RawParse qualified
 import Test.Transcoder.Mbank (mbankTests)
 import Test.Transcoder.Patreon qualified
 import Test.Transcoder.Revolut qualified
+import Test.Transcoder.Revolut.Csv qualified
 import Test.Transcoder.Splitwise qualified
 import Test.Transcoder.UberEats qualified
 import Test.Witch.Extra qualified
@@ -93,6 +94,7 @@ tests = do
   Test.Transcoder.Ib.tests
   Test.Transcoder.Patreon.tests
   Test.Transcoder.Revolut.tests
+  Test.Transcoder.Revolut.Csv.tests
   Test.Transcoder.Splitwise.tests
   Test.Transcoder.UberEats.tests
   Test.Text.Megaparsec.Char.Extra.tests

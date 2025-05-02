@@ -79,6 +79,7 @@ library
       Transcoder.Mbank
       Transcoder.Patreon
       Transcoder.Revolut
+      Transcoder.Revolut.Csv
       Transcoder.Splitwise
       Transcoder.UberEats
       Transcoder.Wallet
@@ -249,6 +250,7 @@ test-suite findata-transcoder-test
       Test.Transcoder.Mbank
       Test.Transcoder.Patreon
       Test.Transcoder.Revolut
+      Test.Transcoder.Revolut.Csv
       Test.Transcoder.Splitwise
       Test.Transcoder.UberEats
       Test.Witch.Extra

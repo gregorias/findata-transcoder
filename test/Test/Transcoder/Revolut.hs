@@ -20,9 +20,9 @@ tests = do
               . toString
               $ [trimming|
            Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State,Balance
-           CARD_PAYMENT,Current,2025-03-21 06:43:41,,Cablemod,-77.91,0.00,EUR,REVERTED,|]
+           CARD_PAYMENT,Current,2025-03-21 06:43:41,,Cablemod,,0.00,EUR,REVERTED,|]
       message <- assertLeft $ Revolut.parseCsvToLedger csv
-      message `shouldBe` "parse error (Failed reading: conversion error: Couldn't parse {Amount:-77.91,Description:Cablemod,Fee:0.00,Balance:,Started Date:2025-03-21 06:43:41,State:REVERTED,Currency:EUR,Product:Current,Type:CARD_PAYMENT,Completed Date:}\nin named field \"Balance\": Could not parse the string \"\" as a decimal.) at \"\""
+      message `shouldBe` "parse error (Failed reading: conversion error: Couldn't parse {Amount:,Description:Cablemod,Fee:0.00,Balance:,Started Date:2025-03-21 06:43:41,State:REVERTED,Currency:EUR,Product:Current,Type:CARD_PAYMENT,Completed Date:}\nin named field \"Amount\": Could not parse the string \"\" as a decimal.) at \"\""
 
     it "parses a CSV report to a LedgerReport" $ do
       csv <- readFileLBS "test/data/revolut.csv"
