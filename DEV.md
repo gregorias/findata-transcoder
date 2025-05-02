@@ -37,7 +37,8 @@ To update used dependencies:
 1. Update the version in `package.yaml`.
 2. Run `hpack`.
 3. Commit the changes: `git commit -am 'chore: bump version'`.
-4. Create a tag: 'git tag vX.Y.Z'.
+4. Create a tag: `git tag vX.Y.Z`.
+5. Push the tag upstream: `git push origin vX.Y.Z`.
 
 ## ARDs
 
