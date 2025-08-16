@@ -1,4 +1,4 @@
-cabal-version: 1.12
+cabal-version: 3.12
 
 -- This file has been generated from package.yaml by hpack version 0.38.1.
 --
@@ -14,7 +14,7 @@ bug-reports:    https://github.com/gregorias/findata-transcoder/issues
 author:         Grzegorz Milka
 maintainer:     grzegorzmilka@gmail.com
 copyright:      2020-2025 Grzegorz Milka
-license:        AGPL-3
+license:        AGPL-3.0-only
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
@@ -86,6 +86,8 @@ library
       Witch.Extra
   other-modules:
       Paths_findata_transcoder
+  autogen-modules:
+      Paths_findata_transcoder
   hs-source-dirs:
       src
   default-extensions:
@@ -108,7 +110,7 @@ library
   build-depends:
       Decimal
     , aeson
-    , base >=4.18 && <5
+    , base >=4.20 && <5
     , bytestring
     , cassava
     , containers
@@ -141,6 +143,8 @@ executable findata-transcoder
   main-is: Main.hs
   other-modules:
       Paths_findata_transcoder
+  autogen-modules:
+      Paths_findata_transcoder
   hs-source-dirs:
       app
   default-extensions:
@@ -161,7 +165,7 @@ executable findata-transcoder
       TypeOperators
   ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N -Wunused-packages
   build-depends:
-      base >=4.18 && <5
+      base >=4.20 && <5
     , bytestring
     , findata-transcoder
     , hledger-lib
@@ -175,6 +179,8 @@ test-suite findata-transcoder-doctest
   type: exitcode-stdio-1.0
   main-is: DocTest.hs
   other-modules:
+      Paths_findata_transcoder
+  autogen-modules:
       Paths_findata_transcoder
   hs-source-dirs:
       doctest
@@ -196,7 +202,7 @@ test-suite findata-transcoder-doctest
       TypeOperators
   ghc-options: -Wall -Werror -Wcompat -Wmissing-deriving-strategies -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wpartial-fields -Wredundant-constraints -Wno-type-defaults -Wno-partial-type-signatures -Wno-name-shadowing -threaded -rtsopts -with-rtsopts=-N -main-is DocTest
   build-depends:
-      base >=4.18 && <5
+      base >=4.20 && <5
     , doctest-parallel
     , findata-transcoder
     , relude
@@ -256,6 +262,8 @@ test-suite findata-transcoder-test
       Test.Witch.Extra
       Text.Megaparsec.Match
       Paths_findata_transcoder
+  autogen-modules:
+      Paths_findata_transcoder
   hs-source-dirs:
       test
   default-extensions:
@@ -279,7 +287,7 @@ test-suite findata-transcoder-test
       Decimal
     , HUnit
     , aeson
-    , base >=4.18 && <5
+    , base >=4.20 && <5
     , bytestring
     , cassava
     , containers
