@@ -69,7 +69,7 @@ tests = do
                       }
                   )
                   ( StatutoryDeductions
-                      { statutoryDeductionsWht = Item 0 6855.20
+                      { statutoryDeductionsWht = Just (Item 0 6855.20)
                       , statutoryDeductionsUnemploymentInsurance = Item 0 135.85
                       , statutoryDeductionsSwissSocialSecurity = Item 0 2023.00
                       , statutoryDeductionsTotal = Item 0 9014.05
@@ -129,7 +129,7 @@ tests = do
                       }
                   )
                   ( StatutoryDeductions
-                      { statutoryDeductionsWht = Item 0 1714.00
+                      { statutoryDeductionsWht = Just (Item 0 1714.00)
                       , statutoryDeductionsSwissSocialSecurity = Item 23.60 788.95
                       , statutoryDeductionsUnemploymentInsurance = Item 0 135.85
                       , statutoryDeductionsTotal = Item 23.60 2638.80
@@ -189,7 +189,7 @@ tests = do
                       }
                   )
                   ( StatutoryDeductions
-                      { statutoryDeductionsWht = Item 0 4616.25
+                      { statutoryDeductionsWht = Just (Item 0 4616.25)
                       , statutoryDeductionsSwissSocialSecurity = Item 10.60 1513.75
                       , statutoryDeductionsUnemploymentInsurance = Item 0 135.85
                       , statutoryDeductionsTotal = Item 10.60 6265.85

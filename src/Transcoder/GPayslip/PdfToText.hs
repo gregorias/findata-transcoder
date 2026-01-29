@@ -91,7 +91,7 @@ data NotionalPay = NotionalPay
 
 -- | All statutory deductions.
 data StatutoryDeductions = StatutoryDeductions
-  { statutoryDeductionsWht :: !Item
+  { statutoryDeductionsWht :: !(Maybe Item)
   , statutoryDeductionsSwissSocialSecurity :: !Item
   , statutoryDeductionsUnemploymentInsurance :: !Item
   , statutoryDeductionsTotal :: !Item
@@ -274,7 +274,7 @@ statutoryDeductionsP = label "statutory deductions" $ do
     >> space1
     >> string "Current"
     >> newline
-  wht <- itemWithCurrentRateP "WHT"
+  wht <- optional $ itemWithCurrentRateP "WHT"
   swissSocialSecurity <- itemWithCurrentRateP "Swiss Social Security"
   unemploymentInsurance <- itemWithCurrentRateP "Unemployment Insurance"
   total <- itemP "Total Statutory Deductions"

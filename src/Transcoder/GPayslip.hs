@@ -73,9 +73,9 @@ payslipToLedger
         , mkPosting "Income:Google" (-payslipSummaryEarnings summary)
         , mkPosting (statePrefix <> "Mandatory Contributions:Social Security") (itemToTotal socialSecurity)
         , mkPosting (statePrefix <> "Mandatory Contributions:Unemployment Insurance") (itemToTotal unemploymentInsurance)
-        , mkPosting (statePrefix <> "Withholding Tax:Total") (itemToTotal wht)
-        , mkPosting secondPillarAccount (-(itemToTotal pensionContributionEe))
         ]
+          <> catMaybes [mkPosting (statePrefix <> "Withholding Tax:Total") . itemToTotal <$> wht]
+          <> [mkPosting secondPillarAccount (-(itemToTotal pensionContributionEe))]
           <> catMaybes
             [ mkPosting "Expenses:gGive" . negate . itemToTotal <$> gGive
             , mkPosting "Assets:Debts:Google" . negate . itemToTotal <$> gCardRepayment
